@@ -1,0 +1,240 @@
+{
+  "header": {
+    "notice": "SYNTHETIC DEMONSTRATION ARTIFACT. Partial excerpt prepared for expert review. Not an official System Security Plan or Security Assessment Report, not an assessment result, and not an authorization decision.",
+    "export_id": "exp-9b17b77ce0c3",
+    "package_id": "pkg-003-A",
+    "package_digest": "3447109e8f32daef9d817cf2354d008ce14545fd39e6979ebf63642848bb0791",
+    "created_at": "2026-09-23T15:00:00Z",
+    "export_mode": "current",
+    "status_at_export": "REVIEWED_FOR_DEMO",
+    "status_reasons": [],
+    "evidence_scope": [
+      "ev-audit-api-a1@fef3f617c86c (active)",
+      "ev-design-note-transport@2573cea4779d (active)",
+      "ev-tls-portal-api-a1@0c94bf858333 (active)"
+    ],
+    "model_snapshot": {
+      "id": "snap-001-A-814dfa8c",
+      "digest": "814dfa8cfa46fc4612ee107198006665e5b6e57a24e43be1e9c94aaf41110134",
+      "revision": "A"
+    },
+    "drafter_mode": "fixture"
+  },
+  "run_manifest": {
+    "dependencies": {
+      "snapshot": {
+        "id": "snap-001-A-814dfa8c",
+        "digest": "814dfa8cfa46fc4612ee107198006665e5b6e57a24e43be1e9c94aaf41110134",
+        "revision": "A"
+      },
+      "evidence": [
+        {
+          "id": "ev-audit-api-a1",
+          "digest": "fef3f617c86c71f72f8fd5c540d5cdc52625c867c3c8ca15b4dd2c59c0548006",
+          "status": "active"
+        },
+        {
+          "id": "ev-design-note-transport",
+          "digest": "2573cea4779d10d657ae934052905e6d1b3aa641d3944337df542bf8e2533440",
+          "status": "active"
+        },
+        {
+          "id": "ev-tls-portal-api-a1",
+          "digest": "0c94bf8583334cecd7e9547afc6d9161035f1d46f3772734781e487538623e17",
+          "status": "active"
+        }
+      ],
+      "catalog_digest": "abb4d5e45b773685bda70ea0583be298ffaf4b74009845df6e875510d6bbbe26",
+      "mappings_digest": "857dd5aa4e764d0909a989f8c712b0922c1761b9453021e4883e455cdd1549e8",
+      "policy_digest": "8659ebba72b538afbdf15c6ba5e6a305b2d447b929b3ff2e8499cc42804387e2",
+      "policy_tests_digest": "cf4197b4b0c3a983e1b611f6d87f488233c31c49187041c796cad2650925fceb"
+    },
+    "code": {
+      "git": "2a1db85",
+      "workbench_digest": "e3d037938afa280c7e4550f03b202e46aa75e41b151f337759e63499ffa71e94"
+    },
+    "drafter": {
+      "mode": "fixture",
+      "provider": "none",
+      "model": "fixture",
+      "prompt_version": null,
+      "synthetic_fixture": true
+    },
+    "tools": {
+      "opa": "1.20.0",
+      "opa_pinned": "1.20.0"
+    },
+    "schemas": {
+      "oscal_component_definition": "1.2.3",
+      "model_contract": "0.1"
+    },
+    "reviewer_protocol": "demo-review-v1",
+    "check_batch": "batch-cd578a59c13a",
+    "clock": "2026-09-23T15:00:00Z"
+  },
+  "rows": [
+    {
+      "row_id": "OBL-AC3-API::cmp:api-service",
+      "control_id": "ac-3",
+      "statement_id": "ac-3_smt",
+      "object_id": "cmp:api-service",
+      "object_revision": "a1",
+      "result": "PASS",
+      "evidence_state": "CURRENT",
+      "gaps": [],
+      "check_run_id": "chk-2f2ddada9350",
+      "inputs": [
+        {
+          "model_pointer": "/elements/1",
+          "element_revision": "a1"
+        },
+        {
+          "policy_digest": "8659ebba72b538afbdf15c6ba5e6a305b2d447b929b3ff2e8499cc42804387e2"
+        },
+        {
+          "tests_digest": "cf4197b4b0c3a983e1b611f6d87f488233c31c49187041c796cad2650925fceb"
+        }
+      ],
+      "tool_version": "opa 1.20.0",
+      "params": {}
+    },
+    {
+      "row_id": "OBL-AU12-API::cmp:api-service",
+      "control_id": "au-12",
+      "statement_id": "au-12_smt.c",
+      "object_id": "cmp:api-service",
+      "object_revision": "a1",
+      "result": "PASS",
+      "evidence_state": "CURRENT",
+      "gaps": [
+        "Parameter au-12_odp.01 is organization-defined and unresolved; a qualified reviewer must set it.",
+        "Parameter au-12_odp.02 is organization-defined and unresolved; a qualified reviewer must set it."
+      ],
+      "check_run_id": "chk-2d95ec371804",
+      "inputs": [
+        {
+          "model_pointer": "/elements/1/attributes/audit_events",
+          "element_revision": "a1"
+        },
+        {
+          "evidence_id": "ev-audit-api-a1",
+          "digest": "fef3f617c86c71f72f8fd5c540d5cdc52625c867c3c8ca15b4dd2c59c0548006"
+        }
+      ],
+      "tool_version": "opa 1.20.0",
+      "params": {
+        "au-12_odp.01": {
+          "state": "UNRESOLVED",
+          "value": null
+        },
+        "au-12_odp.02": {
+          "state": "UNRESOLVED",
+          "value": null
+        }
+      }
+    },
+    {
+      "row_id": "OBL-SC8-FLOW::flow:portal-api",
+      "control_id": "sc-8",
+      "statement_id": "sc-8_smt",
+      "object_id": "flow:portal-api",
+      "object_revision": "f1",
+      "result": "PASS",
+      "evidence_state": "CURRENT",
+      "gaps": [
+        "Parameter sc-08_odp is organization-defined and unresolved; a qualified reviewer must set it."
+      ],
+      "check_run_id": "chk-09508e8143b1",
+      "inputs": [
+        {
+          "model_pointer": "/flows/0/attributes/transport",
+          "flow_revision": "f1"
+        },
+        {
+          "evidence_id": "ev-tls-portal-api-a1",
+          "digest": "0c94bf8583334cecd7e9547afc6d9161035f1d46f3772734781e487538623e17"
+        }
+      ],
+      "tool_version": "opa 1.20.0",
+      "params": {
+        "sc-08_odp": {
+          "state": "UNRESOLVED",
+          "value": null
+        }
+      }
+    },
+    {
+      "row_id": "OBL-SC8-INHERIT::cmp:telemetry-db",
+      "control_id": "sc-8",
+      "statement_id": "sc-8_smt",
+      "object_id": "cmp:telemetry-db",
+      "object_revision": "d1",
+      "result": "UNKNOWN",
+      "evidence_state": "NONE",
+      "gaps": [
+        "inheritance claimed in the model; no provider/scope evidence. Left unresolved.",
+        "Parameter sc-08_odp is organization-defined and unresolved; a qualified reviewer must set it."
+      ],
+      "check_run_id": "chk-fe9ffd4c5da4",
+      "inputs": [
+        {
+          "model_pointer": "/elements/2/attributes/inherited_controls",
+          "element_revision": "d1"
+        }
+      ],
+      "tool_version": "opa 1.20.0",
+      "params": {
+        "sc-08_odp": {
+          "state": "UNRESOLVED",
+          "value": null
+        }
+      }
+    }
+  ],
+  "validation": {
+    "counts": {
+      "CITATIONS_RESOLVE": 42,
+      "NO_CITATION_REQUIRED": 1
+    },
+    "total_items": 43,
+    "flagged": 0
+  },
+  "review_decisions": [
+    {
+      "id": "dec-001",
+      "actor": "alice",
+      "actor_role": "reviewer",
+      "decision": "ACCEPT",
+      "reason": "Wording accepted for demo; inheritance and parameters remain open.",
+      "package_digest": "3447109e8f32daef9d817cf2354d008ce14545fd39e6979ebf63642848bb0791",
+      "dependency_digest": "4df4a425a21646798acb4f074856ba7894a3c3bb1ca34d6d720ffe8184a2464c",
+      "created_at": "2026-09-23T15:00:00Z",
+      "revoked": null,
+      "limitations": [
+        {
+          "row_id": "OBL-AU12-API::cmp:api-service",
+          "result": "PASS",
+          "gaps": [
+            "Parameter au-12_odp.01 is organization-defined and unresolved; a qualified reviewer must set it.",
+            "Parameter au-12_odp.02 is organization-defined and unresolved; a qualified reviewer must set it."
+          ]
+        },
+        {
+          "row_id": "OBL-SC8-FLOW::flow:portal-api",
+          "result": "PASS",
+          "gaps": [
+            "Parameter sc-08_odp is organization-defined and unresolved; a qualified reviewer must set it."
+          ]
+        },
+        {
+          "row_id": "OBL-SC8-INHERIT::cmp:telemetry-db",
+          "result": "UNKNOWN",
+          "gaps": [
+            "inheritance claimed in the model; no provider/scope evidence. Left unresolved.",
+            "Parameter sc-08_odp is organization-defined and unresolved; a qualified reviewer must set it."
+          ]
+        }
+      ]
+    }
+  ]
+}

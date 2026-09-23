@@ -1,0 +1,19 @@
+{
+  "synthetic": true,
+  "project": "proj-mtel",
+  "environment": "demo-synthetic",
+  "evidence_id": "ev-audit-api-a2",
+  "kind": "observation",
+  "type": "audit-sample",
+  "media_type": "application/json",
+  "producer": "synthetic audit export (fixture)",
+  "collection_method": "hand-authored fixture representing records captured from the API's audit stream",
+  "collected_at": "2026-09-16T10:30:00Z",
+  "expires_at": "2027-06-30T00:00:00Z",
+  "target": {
+    "element_revisions": {
+      "cmp:api-service": "a2"
+    }
+  },
+  "payload_file": "audit-api-a2.json"
+}

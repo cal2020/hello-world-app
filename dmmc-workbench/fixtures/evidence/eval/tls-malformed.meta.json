@@ -1,0 +1,21 @@
+{
+  "synthetic": true,
+  "project": "proj-mtel",
+  "environment": "demo-synthetic",
+  "evidence_id": "ev-tls-malformed",
+  "kind": "observation",
+  "type": "transport-test",
+  "media_type": "application/json",
+  "producer": "synthetic-tls-probe 0.1 (fixture; no network scan performed)",
+  "collection_method": "hand-authored fixture representing a transport test report",
+  "collected_at": "2026-09-03T13:00:00Z",
+  "expires_at": "2027-06-30T00:00:00Z",
+  "target": {
+    "flow_id": "flow:portal-api",
+    "element_revisions": {
+      "cmp:operator-portal": "p1",
+      "cmp:api-service": "a1"
+    }
+  },
+  "payload_file": "tls-malformed.json"
+}

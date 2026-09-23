@@ -1,0 +1,20 @@
+{
+  "synthetic": true,
+  "project": "proj-mtel",
+  "environment": "demo-synthetic",
+  "evidence_id": "ev-provider-interface-note",
+  "kind": "assertion",
+  "type": "design-note",
+  "media_type": "text/plain",
+  "producer": "synthetic provider document (fixture)",
+  "collection_method": "hand-authored fixture; contains a deliberate prompt-injection string",
+  "collected_at": "2026-09-14T00:00:00Z",
+  "expires_at": null,
+  "target": {
+    "element_revisions": {},
+    "about_flows": [
+      "flow:provider-api"
+    ]
+  },
+  "payload_file": "provider-interface-note.txt"
+}

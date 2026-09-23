@@ -1,0 +1,21 @@
+{
+  "synthetic": true,
+  "project": "proj-mtel",
+  "environment": "demo-synthetic",
+  "evidence_id": "ev-tls-expired",
+  "kind": "observation",
+  "type": "transport-test",
+  "media_type": "application/json",
+  "producer": "synthetic-tls-probe 0.1 (fixture; no network scan performed)",
+  "collection_method": "hand-authored fixture representing a transport test report",
+  "collected_at": "2025-09-01T10:00:00Z",
+  "expires_at": "2026-01-01T00:00:00Z",
+  "target": {
+    "flow_id": "flow:portal-api",
+    "element_revisions": {
+      "cmp:operator-portal": "p1",
+      "cmp:api-service": "a1"
+    }
+  },
+  "payload_file": "tls-expired.json"
+}

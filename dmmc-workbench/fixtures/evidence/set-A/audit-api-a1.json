@@ -1,0 +1,29 @@
+{
+  "records": [
+    {
+      "actor": "user:op-17",
+      "action": "telemetry.read",
+      "target": "telemetry/unit-4",
+      "time": "2026-09-02T09:00:01Z",
+      "outcome": "success"
+    },
+    {
+      "actor": "user:mx-03",
+      "action": "telemetry.write",
+      "target": "telemetry/unit-4",
+      "time": "2026-09-02T09:04:12Z",
+      "outcome": "success"
+    },
+    {
+      "actor": "user:op-17",
+      "action": "authz.denied",
+      "target": "telemetry/unit-4",
+      "time": "2026-09-02T09:05:40Z",
+      "outcome": "denied"
+    }
+  ],
+  "synthetic": true,
+  "collected_against": {
+    "cmp:api-service": "a1"
+  }
+}

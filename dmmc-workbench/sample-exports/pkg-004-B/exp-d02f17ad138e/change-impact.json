@@ -1,0 +1,113 @@
+{
+  "from": "snap-001-A-814dfa8c",
+  "to": "snap-002-B-37a981cb",
+  "changes": [
+    {
+      "kind": "element",
+      "id": "cmp:api-service",
+      "change": "changed",
+      "fields": [
+        "/attributes/permissions",
+        "/revision"
+      ],
+      "old_revision": "a1",
+      "new_revision": "a2"
+    },
+    {
+      "kind": "element",
+      "id": "cmp:provider-gateway",
+      "change": "added",
+      "new_revision": "g1",
+      "crosses_boundary": null
+    },
+    {
+      "kind": "flow",
+      "id": "flow:provider-api",
+      "change": "added",
+      "new_revision": "f1",
+      "crosses_boundary": true
+    },
+    {
+      "kind": "boundary",
+      "id": "bnd:provider-net",
+      "change": "added"
+    }
+  ],
+  "affected_rows": [
+    {
+      "row_id": "OBL-AC3-API::cmp:api-service",
+      "why": [
+        "cmp:api-service changed"
+      ]
+    },
+    {
+      "row_id": "OBL-AU12-API::cmp:api-service",
+      "why": [
+        "cmp:api-service changed"
+      ]
+    },
+    {
+      "row_id": "OBL-SC8-FLOW::flow:portal-api",
+      "why": [
+        "endpoint cmp:api-service changed"
+      ]
+    },
+    {
+      "row_id": "OBL-SC8-FLOW::flow:provider-api",
+      "why": [
+        "flow:provider-api changed",
+        "endpoint cmp:provider-gateway changed",
+        "endpoint cmp:api-service changed",
+        "NEW ROW: scope rule now selects this object (review scope enlarged)"
+      ]
+    }
+  ],
+  "removed_rows": [],
+  "new_scope_rows": [
+    "OBL-SC8-FLOW::flow:provider-api"
+  ],
+  "evidence_applicability_changes": [
+    {
+      "evidence_id": "ev-audit-api-a1",
+      "change": "no longer applicable",
+      "reasons": [
+        "collected against cmp:api-service revision a1; current revision is a2"
+      ]
+    },
+    {
+      "evidence_id": "ev-tls-portal-api-a1",
+      "change": "no longer applicable",
+      "reasons": [
+        "collected against cmp:api-service revision a1; current revision is a2"
+      ]
+    }
+  ],
+  "draft_sections_citing_changed_objects": [
+    {
+      "section_id": "sec:boundary",
+      "because": [
+        "cmp:api-service"
+      ]
+    },
+    {
+      "section_id": "sec:row:OBL-AC3-API::cmp:api-service",
+      "because": [
+        "row affected"
+      ]
+    },
+    {
+      "section_id": "sec:row:OBL-AU12-API::cmp:api-service",
+      "because": [
+        "row affected"
+      ]
+    },
+    {
+      "section_id": "sec:row:OBL-SC8-FLOW::flow:portal-api",
+      "because": [
+        "row affected"
+      ]
+    }
+  ],
+  "review_effect": "All prior reviews for this project are STALE: the dependency manifest changed. Invalidation does not depend on this impact list being complete.",
+  "completeness": "Known dependency paths only (stable-id citations, row scopes, evidence targets). Not claimed to be the complete impact set."
+}

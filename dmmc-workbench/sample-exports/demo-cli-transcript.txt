@@ -1,0 +1,23 @@
+== Step 1: import Version A and its evidence; build package ==
+snapshot snap-001-A-814dfa8c; package pkg-001-A: 3 of 4 selected demo obligation rows have current applicable evidence; results {'PASS': 3, 'UNKNOWN': 1}
+== Step 2: withdraw the portal->API transport test; rebuild ==
+pkg-002-A: SC-8 portal-api -> UNKNOWN (INAPPLICABLE_ONLY); design assertion state PRESENT; gaps: No current applicable observation. Existing evidence is inapplicable: ev-tls-portal-api-a1: status is withdrawn
+pkg-001-A is now STALE
+== Step 3: restore evidence, rebuild, reviewer accepts with gaps retained ==
+dec-001 ACCEPT on pkg-003-A (acknowledged gaps: 5); state REVIEWED_FOR_DEMO
+export exp-9b17b77ce0c3 -> ['evidence-manifest.json', 'oscal-component-definition.json', 'oscal-validation-report.json', 'ssp-excerpt.md']
+== Step 4: import Version B; prior review becomes STALE; current export refused ==
+snapshot snap-002-B-37a981cb; pkg-003-A is STALE: dependency manifest changed since this package was built (model, evidence, catalog, mappings or policy)
+refused as expected: cannot export as currently reviewed: state is STALE (dependency manifest changed since this package was built (model, evidence, catalog, mappings or policy))
+changes: changed cmp:api-service; added cmp:provider-gateway; added flow:provider-api; added bnd:provider-net
+affected rows: ['OBL-AC3-API::cmp:api-service', 'OBL-AU12-API::cmp:api-service', 'OBL-SC8-FLOW::flow:portal-api', 'OBL-SC8-FLOW::flow:provider-api']; new scope: ['OBL-SC8-FLOW::flow:provider-api']
+evidence no longer applicable: ['ev-audit-api-a1', 'ev-tls-portal-api-a1']
+== Step 5: add Version B evidence, rebuild, review, export with gaps ==
+  OBL-AC3-API::cmp:api-service             FAIL     evidence=CURRENT           gaps=2
+  OBL-AU12-API::cmp:api-service            PASS     evidence=CURRENT           gaps=2
+  OBL-SC8-FLOW::flow:portal-api            PASS     evidence=CURRENT           gaps=1
+  OBL-SC8-FLOW::flow:provider-api          UNKNOWN  evidence=NONE              gaps=2
+  OBL-SC8-INHERIT::cmp:telemetry-db        UNKNOWN  evidence=NONE              gaps=2
+dec-002 ACCEPT; export exp-d02f17ad138e files ['change-impact.json', 'evidence-manifest.json', 'oscal-component-definition.json', 'oscal-validation-report.json', 'ssp-excerpt.md']
+OSCAL schema_valid=True reference_errors=[]
+audit chain: {'ok': True, 'events': 23, 'head': '65475126210bbeee7723b31bf32e8a3b32f251a2f0863e6674b234f76954876b'}

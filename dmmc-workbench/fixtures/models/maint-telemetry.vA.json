@@ -1,0 +1,140 @@
+{
+  "contract": "dmmc-workbench/model-export",
+  "contract_version": "0.1",
+  "synthetic": true,
+  "synthetic_notice": "Fictional system. Not a Cameo/SysML export and not derived from any real program.",
+  "project": "proj-mtel",
+  "source_id": "synthetic-model:maint-telemetry",
+  "revision": "A",
+  "exported_at": "2026-09-01T12:00:00Z",
+  "exporter": "hand-authored fixture",
+  "boundaries": [
+    {
+      "id": "bnd:operator-zone",
+      "name": "Operator workstation zone",
+      "kind": "trust-zone"
+    },
+    {
+      "id": "bnd:enclave",
+      "name": "Maintenance telemetry enclave",
+      "kind": "authorization-boundary"
+    }
+  ],
+  "elements": [
+    {
+      "id": "cmp:operator-portal",
+      "type": "component",
+      "name": "Operator Portal",
+      "revision": "p1",
+      "boundary": "bnd:operator-zone",
+      "description": "Browser-based portal used by operators and maintainers to view and annotate telemetry.",
+      "attributes": {
+        "hosting": "demo container",
+        "session_timeout_minutes": 15
+      }
+    },
+    {
+      "id": "cmp:api-service",
+      "type": "component",
+      "name": "Telemetry API Service",
+      "revision": "a1",
+      "boundary": "bnd:enclave",
+      "description": "REST service that mediates all reads and writes of maintenance telemetry.",
+      "attributes": {
+        "permissions": [
+          {
+            "role": "operator",
+            "action": "read",
+            "resource": "telemetry"
+          },
+          {
+            "role": "maintainer",
+            "action": "read",
+            "resource": "telemetry"
+          },
+          {
+            "role": "maintainer",
+            "action": "write",
+            "resource": "telemetry"
+          }
+        ],
+        "audit_events": [
+          "telemetry.read",
+          "telemetry.write",
+          "authz.denied"
+        ],
+        "policy_bundle": "mtel.authz"
+      }
+    },
+    {
+      "id": "cmp:telemetry-db",
+      "type": "component",
+      "name": "Telemetry Database",
+      "revision": "d1",
+      "boundary": "bnd:enclave",
+      "description": "Relational store for telemetry records.",
+      "attributes": {
+        "encryption_at_rest": null,
+        "inherited_controls": [
+          {
+            "control": "sc-8",
+            "provider": "ExampleCloud Managed DB (fictional)",
+            "claim": "Provider states in-transit encryption is enforced for client connections.",
+            "evidence": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "cmp:audit-collector",
+      "type": "component",
+      "name": "Audit Collector",
+      "revision": "c1",
+      "boundary": "bnd:enclave",
+      "description": "Receives structured audit records from the API service.",
+      "attributes": {
+        "retention_days": null
+      }
+    }
+  ],
+  "flows": [
+    {
+      "id": "flow:portal-api",
+      "source": "cmp:operator-portal",
+      "target": "cmp:api-service",
+      "data": "telemetry queries and annotations",
+      "revision": "f1",
+      "attributes": {
+        "transport": {
+          "protection": "TLS",
+          "asserted_by": "design"
+        }
+      }
+    },
+    {
+      "id": "flow:api-db",
+      "source": "cmp:api-service",
+      "target": "cmp:telemetry-db",
+      "data": "telemetry records",
+      "revision": "f1",
+      "attributes": {
+        "transport": {
+          "protection": null
+        }
+      }
+    },
+    {
+      "id": "flow:api-audit",
+      "source": "cmp:api-service",
+      "target": "cmp:audit-collector",
+      "data": "audit records",
+      "revision": "f1",
+      "attributes": {
+        "transport": {
+          "protection": "TLS",
+          "asserted_by": "design"
+        }
+      }
+    }
+  ]
+}

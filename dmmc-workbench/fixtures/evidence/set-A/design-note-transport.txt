@@ -1,0 +1,5 @@
+Transport design note (synthetic).
+
+All interfaces that cross the maintenance telemetry enclave boundary are designed to use TLS 1.2 or later with certificates issued by the program demo CA.
+
+Internal enclave traffic between the API and the telemetry database has not yet been specified.

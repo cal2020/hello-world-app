@@ -1,0 +1,9 @@
+{
+  "schema": "OSCAL component definition JSON Schema v1.2.3",
+  "schema_file_sha256": "95e76881151ececd5cb1a93ff0f70ad74b8cc1aa58771626ac8b262bf2c8e001",
+  "schema_valid": true,
+  "schema_errors": [],
+  "reference_errors": [],
+  "valid_oscal_claim": true,
+  "meaning": "Structural conformance and reference integrity only. Says nothing about whether the statements are true."
+}

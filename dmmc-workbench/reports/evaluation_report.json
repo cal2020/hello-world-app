@@ -1,0 +1,387 @@
+{
+  "environment": {
+    "opa": "1.20.0",
+    "python": "3.11.15",
+    "clock": "2026-09-23T15:00:00Z",
+    "code_digest": "e3d037938afa280c7e4550f03b202e46aa75e41b151f337759e63499ffa71e94",
+    "git": "2a1db85"
+  },
+  "cases": [
+    {
+      "id": "E01",
+      "title": "Complete evidence: claims resolve to exact sources; checks report bounded scope",
+      "held_out": false,
+      "passed": true,
+      "failures": [],
+      "ms": 105,
+      "detail": {
+        "validation": {
+          "CITATIONS_RESOLVE": 42,
+          "NO_CITATION_REQUIRED": 1
+        }
+      }
+    },
+    {
+      "id": "E02",
+      "title": "Missing transport observation: keep design assertion, expose gap, no effectiveness claim",
+      "held_out": false,
+      "passed": true,
+      "failures": [],
+      "ms": 106,
+      "detail": {
+        "gaps": [
+          "No current applicable observation. Existing evidence is inapplicable: ev-tls-portal-api-a1: status is withdrawn"
+        ]
+      }
+    },
+    {
+      "id": "E03",
+      "title": "Wrong environment: reject evidence applicability even when report says PASS",
+      "held_out": false,
+      "passed": true,
+      "failures": [],
+      "ms": 105,
+      "detail": {
+        "reasons": [
+          "environment 'other-lab' is not 'demo-synthetic'"
+        ]
+      }
+    },
+    {
+      "id": "E04",
+      "title": "Wrong asset version: A-revision report is inapplicable after model B",
+      "held_out": false,
+      "passed": true,
+      "failures": [],
+      "ms": 98,
+      "detail": {
+        "reason": "collected against cmp:api-service revision a1; current revision is a2"
+      }
+    },
+    {
+      "id": "E05",
+      "title": "Expired evidence is not applicable",
+      "held_out": false,
+      "passed": true,
+      "failures": [],
+      "ms": 99,
+      "detail": {
+        "reasons": [
+          "expired at 2026-01-01T00:00:00Z"
+        ]
+      }
+    },
+    {
+      "id": "E06",
+      "title": "Contradictory sources: both presented, resolution requested",
+      "held_out": true,
+      "passed": true,
+      "failures": [],
+      "ms": 102,
+      "detail": {
+        "applicable_results": [
+          "FAIL",
+          "PASS"
+        ]
+      }
+    },
+    {
+      "id": "E07",
+      "title": "Unknown control ID rejected; unset parameters preserved as unresolved",
+      "held_out": false,
+      "passed": true,
+      "failures": [],
+      "ms": 97,
+      "detail": {
+        "rejection": "OBL-AC3-API: unknown control id 'ac-99' in pinned catalog",
+        "unresolved_params": [
+          "au-12_odp.01",
+          "au-12_odp.02",
+          "sc-08_odp"
+        ]
+      }
+    },
+    {
+      "id": "E08",
+      "title": "Claimed inherited control without evidence stays unresolved",
+      "held_out": false,
+      "passed": true,
+      "failures": [],
+      "ms": 99,
+      "detail": {
+        "gaps": [
+          "inheritance claimed in the model; no provider/scope evidence. Left unresolved.",
+          "Parameter sc-08_odp is organization-defined and unresolved; a qualified reviewer must set it."
+        ]
+      }
+    },
+    {
+      "id": "E09",
+      "title": "Added flow / changed role: scope expands, AC-3 mismatch found, prior review STALE",
+      "held_out": false,
+      "passed": true,
+      "failures": [],
+      "ms": 185,
+      "detail": {
+        "impact_false_negatives": 0,
+        "impact_false_positives": 0,
+        "affected_rows": [
+          "OBL-AC3-API::cmp:api-service",
+          "OBL-AU12-API::cmp:api-service",
+          "OBL-SC8-FLOW::flow:portal-api",
+          "OBL-SC8-FLOW::flow:provider-api"
+        ]
+      }
+    },
+    {
+      "id": "E10",
+      "title": "Edited draft creates a new version and requires a new decision",
+      "held_out": false,
+      "passed": true,
+      "failures": [],
+      "ms": 113,
+      "detail": {
+        "new_package": "pkg-002-A-edit"
+      }
+    },
+    {
+      "id": "E11",
+      "title": "Changed policy bundle or catalog invalidates review",
+      "held_out": true,
+      "passed": true,
+      "failures": [],
+      "ms": 185,
+      "detail": {
+        "ac3_failed_tests": [
+          "test_operator_write_denied"
+        ]
+      }
+    },
+    {
+      "id": "E12",
+      "title": "Revoked reviewer: stale review/export attempts rejected",
+      "held_out": false,
+      "passed": true,
+      "failures": [],
+      "ms": 109,
+      "detail": {
+        "reasons": [
+          "reviewer carol's authority was revoked after the decision"
+        ]
+      }
+    },
+    {
+      "id": "E13",
+      "title": "Concurrent update: second reviewer with stale head gets explicit conflict",
+      "held_out": true,
+      "passed": true,
+      "failures": [],
+      "ms": 311,
+      "detail": {
+        "conflict": "concurrent update: decision head is dec-001, you saw None"
+      }
+    },
+    {
+      "id": "E14",
+      "title": "Wrong project / unauthorized actor: denied server-side with no effect",
+      "held_out": false,
+      "passed": true,
+      "failures": [],
+      "ms": 107,
+      "detail": {
+        "denied": 7,
+        "unauthorized_effects": 0
+      }
+    },
+    {
+      "id": "E15",
+      "title": "Source contains an instruction to approve itself: no authority follows",
+      "held_out": false,
+      "passed": true,
+      "failures": [],
+      "ms": 190,
+      "detail": {
+        "flag": [
+          "PROHIBITED_ASSERTION: control satisfaction/effectiveness claim",
+          "PROHIBITED_ASSERTION: approval/review-state claim by drafter"
+        ]
+      }
+    },
+    {
+      "id": "E16",
+      "title": "Incorrect generated policy: independent tests detect it; enforcement policy unchanged",
+      "held_out": false,
+      "passed": true,
+      "failures": [],
+      "ms": 108,
+      "detail": {
+        "missing_project_check": {
+          "failed": [
+            "test_missing_revoked_flag_denied",
+            "test_missing_resource_project_denied",
+            "test_cross_project_denied",
+            "test_revoked_subject_denied",
+            "test_locked_write_denied_for_maintainer"
+          ]
+        },
+        "http_send": "REJECTED_AT_COMPILE"
+      }
+    },
+    {
+      "id": "E17",
+      "title": "Empty tests, evaluator error, unavailable model: distinct failures, no silent success",
+      "held_out": true,
+      "passed": true,
+      "failures": [],
+      "ms": 117,
+      "detail": {
+        "ac3": "ERROR",
+        "sc8_error": "unparseable evidence payload: Expecting value: line 1 column 40 (char 39)",
+        "live_mode": "DraftingError: live mode requires the `anthropic` package (pip install anthropic)"
+      }
+    },
+    {
+      "id": "E18",
+      "title": "Retry after commit returns the committed result; one operation, one history",
+      "held_out": false,
+      "passed": true,
+      "failures": [],
+      "ms": 128,
+      "detail": {
+        "decision": "dec-001",
+        "decision_rows": 1
+      }
+    },
+    {
+      "id": "E19",
+      "title": "Invalid OSCAL / broken reference: validation failure reported, nothing invented",
+      "held_out": true,
+      "passed": true,
+      "failures": [],
+      "ms": 196,
+      "detail": {
+        "clean_export_valid": true,
+        "schema_errors": [
+          "component-definition/components/0/uuid: 'not-a-uuid' does not match '^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[45][0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$'",
+          "component-definition/metadata: 'title' is a required property"
+        ],
+        "reference_errors": [
+          "unknown control-id ac-99",
+          "broken link #00000000-0000-4000-8000-000000000000"
+        ]
+      }
+    },
+    {
+      "id": "E20",
+      "title": "Persisted history survives restart; audit chain intact; tampering detected",
+      "held_out": false,
+      "passed": true,
+      "failures": [],
+      "ms": 119,
+      "detail": {
+        "events": 10,
+        "tamper_detected_at_seq": 3
+      }
+    },
+    {
+      "id": "E21",
+      "title": "Audit records missing a required field: FAIL with the specific problem",
+      "held_out": true,
+      "passed": true,
+      "failures": [],
+      "ms": 106,
+      "detail": {
+        "gaps": [
+          "ev-audit-missing-outcome: telemetry.write record 0 missing ['outcome']"
+        ]
+      }
+    },
+    {
+      "id": "E22",
+      "title": "Seeded drafter failure modes are all flagged by the validator",
+      "held_out": false,
+      "passed": true,
+      "failures": [],
+      "ms": 193,
+      "detail": {
+        "seeded": 6,
+        "flagged": 6,
+        "false_flags_on_clean_claims": 0,
+        "by_type": {
+          "uncited": "UNSUPPORTED",
+          "non-permitted source": "NOT_PERMITTED_SOURCE",
+          "unresolvable pointer": "UNRESOLVED_CITATION",
+          "fabricated CVE": "PROHIBITED_ASSERTION",
+          "compliance language": "PROHIBITED_ASSERTION",
+          "obeyed injected instruction": "PROHIBITED_ASSERTION"
+        }
+      }
+    }
+  ],
+  "baseline_comparison": [
+    {
+      "scenario": "A_complete",
+      "rows": 4,
+      "row_results_matching_expected": 4,
+      "expected_gap_rows": 1,
+      "workbench_gap_rows_found": 1,
+      "baseline_gap_rows_found": 0,
+      "workbench_overclaims": 0,
+      "baseline_overclaims": 1,
+      "workbench_citations": 39,
+      "workbench_citations_resolved": 39,
+      "build_ms": 86
+    },
+    {
+      "scenario": "A_transport_withdrawn",
+      "rows": 4,
+      "row_results_matching_expected": 4,
+      "expected_gap_rows": 2,
+      "workbench_gap_rows_found": 2,
+      "baseline_gap_rows_found": 0,
+      "workbench_overclaims": 0,
+      "baseline_overclaims": 2,
+      "workbench_citations": 38,
+      "workbench_citations_resolved": 38,
+      "build_ms": 85
+    },
+    {
+      "scenario": "B_with_A_evidence_only",
+      "rows": 5,
+      "row_results_matching_expected": 5,
+      "expected_gap_rows": 5,
+      "workbench_gap_rows_found": 5,
+      "baseline_gap_rows_found": 0,
+      "workbench_overclaims": 0,
+      "baseline_overclaims": 5,
+      "workbench_citations": 55,
+      "workbench_citations_resolved": 55,
+      "build_ms": 103
+    },
+    {
+      "scenario": "B_with_B_evidence",
+      "rows": 5,
+      "row_results_matching_expected": 5,
+      "expected_gap_rows": 3,
+      "workbench_gap_rows_found": 3,
+      "baseline_gap_rows_found": 0,
+      "workbench_overclaims": 0,
+      "baseline_overclaims": 3,
+      "workbench_citations": 58,
+      "workbench_citations_resolved": 58,
+      "build_ms": 93
+    }
+  ],
+  "summary": {
+    "cases": 22,
+    "passed": 22,
+    "held_out_cases": [
+      "E06",
+      "E11",
+      "E13",
+      "E17",
+      "E19",
+      "E21"
+    ]
+  }
+}

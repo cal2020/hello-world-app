@@ -1,0 +1,226 @@
+{
+  "component-definition": {
+    "uuid": "053f82f0-974f-54a4-97c6-fb2e15d05459",
+    "metadata": {
+      "title": "Synthetic component definition for proj-mtel (pkg-003-A)",
+      "last-modified": "2026-09-23T15:00:00Z",
+      "version": "3447109e8f32",
+      "oscal-version": "1.2.3",
+      "remarks": "SYNTHETIC DEMONSTRATION ARTIFACT. Partial excerpt prepared for expert review. Not an official System Security Plan or Security Assessment Report, not an assessment result, and not an authorization decision. Status at export: REVIEWED_FOR_DEMO."
+    },
+    "components": [
+      {
+        "uuid": "5ad077d4-248f-5ada-8ce5-52fc5d082b77",
+        "type": "software",
+        "title": "Telemetry API Service (synthetic)",
+        "description": "REST service that mediates all reads and writes of maintenance telemetry. Fictional demonstration data.",
+        "props": [
+          {
+            "name": "model-id",
+            "ns": "urn:x-dmmc-workbench:demo",
+            "value": "cmp:api-service"
+          },
+          {
+            "name": "model-revision",
+            "ns": "urn:x-dmmc-workbench:demo",
+            "value": "a1"
+          }
+        ],
+        "control-implementations": [
+          {
+            "uuid": "03a18cf1-b772-5268-b291-3aca0c0e3bf8",
+            "source": "https://raw.githubusercontent.com/usnistgov/oscal-content/main/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json",
+            "description": "Demo implementation statements drafted for review. Check results apply only to local demo predicates.",
+            "implemented-requirements": [
+              {
+                "uuid": "1bb86685-4873-56ad-a8be-450138cc85aa",
+                "control-id": "ac-3",
+                "description": "Local demo obligation: The reviewed policy bundle for the API allows exactly the role/action/resource combinations declared in the model and denies the independently authored negative cases. Check result: PASS (predicate-bounded; not a statement of control effectiveness). No open gaps recorded by the check.",
+                "props": [
+                  {
+                    "name": "check-result",
+                    "ns": "urn:x-dmmc-workbench:demo",
+                    "value": "PASS"
+                  },
+                  {
+                    "name": "evidence-state",
+                    "ns": "urn:x-dmmc-workbench:demo",
+                    "value": "CURRENT"
+                  },
+                  {
+                    "name": "statement-id",
+                    "ns": "urn:x-dmmc-workbench:demo",
+                    "value": "ac-3_smt"
+                  }
+                ],
+                "links": [
+                  {
+                    "href": "#7c60fa3e-b7df-51c7-b9aa-3404533b16dc",
+                    "rel": "reference"
+                  }
+                ]
+              },
+              {
+                "uuid": "c28fc98a-7891-516b-a9a7-3c465af5e297",
+                "control-id": "au-12",
+                "description": "Local demo obligation: Synthetic audit records captured from the API include actor, action, target, time and outcome for every event type the model declares for the API. Check result: PASS (predicate-bounded; not a statement of control effectiveness). Open gaps: Parameter au-12_odp.01 is organization-defined and unresolved; a qualified reviewer must set it. | Parameter au-12_odp.02 is organization-defined and unresolved; a qualified reviewer must set it.",
+                "props": [
+                  {
+                    "name": "check-result",
+                    "ns": "urn:x-dmmc-workbench:demo",
+                    "value": "PASS"
+                  },
+                  {
+                    "name": "evidence-state",
+                    "ns": "urn:x-dmmc-workbench:demo",
+                    "value": "CURRENT"
+                  },
+                  {
+                    "name": "statement-id",
+                    "ns": "urn:x-dmmc-workbench:demo",
+                    "value": "au-12_smt.c"
+                  }
+                ],
+                "links": [
+                  {
+                    "href": "#7c60fa3e-b7df-51c7-b9aa-3404533b16dc",
+                    "rel": "reference"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "uuid": "11092259-3dcc-56d8-832d-88ca0a5d71ff",
+        "type": "interconnection",
+        "title": "Flow flow:portal-api (synthetic)",
+        "description": "Synthetic data flow carrying telemetry queries and annotations. Fictional demonstration data.",
+        "props": [
+          {
+            "name": "model-id",
+            "ns": "urn:x-dmmc-workbench:demo",
+            "value": "flow:portal-api"
+          },
+          {
+            "name": "model-revision",
+            "ns": "urn:x-dmmc-workbench:demo",
+            "value": "f1"
+          }
+        ],
+        "control-implementations": [
+          {
+            "uuid": "9677feb5-1386-5700-804a-159c834c463a",
+            "source": "https://raw.githubusercontent.com/usnistgov/oscal-content/main/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json",
+            "description": "Demo implementation statements drafted for review. Check results apply only to local demo predicates.",
+            "implemented-requirements": [
+              {
+                "uuid": "8b77d6fa-98be-51f4-b880-684cde224f91",
+                "control-id": "sc-8",
+                "description": "Local demo obligation: Each flow whose endpoints sit in different boundaries has (a) a design transport assertion and (b) a current, applicable transport test observation reporting pass. Check result: PASS (predicate-bounded; not a statement of control effectiveness). Open gaps: Parameter sc-08_odp is organization-defined and unresolved; a qualified reviewer must set it.",
+                "props": [
+                  {
+                    "name": "check-result",
+                    "ns": "urn:x-dmmc-workbench:demo",
+                    "value": "PASS"
+                  },
+                  {
+                    "name": "evidence-state",
+                    "ns": "urn:x-dmmc-workbench:demo",
+                    "value": "CURRENT"
+                  },
+                  {
+                    "name": "statement-id",
+                    "ns": "urn:x-dmmc-workbench:demo",
+                    "value": "sc-8_smt"
+                  }
+                ],
+                "links": [
+                  {
+                    "href": "#7c60fa3e-b7df-51c7-b9aa-3404533b16dc",
+                    "rel": "reference"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "uuid": "65861b47-c403-53d1-a797-3cb06bd6f32a",
+        "type": "software",
+        "title": "Telemetry Database (synthetic)",
+        "description": "Relational store for telemetry records. Fictional demonstration data.",
+        "props": [
+          {
+            "name": "model-id",
+            "ns": "urn:x-dmmc-workbench:demo",
+            "value": "cmp:telemetry-db"
+          },
+          {
+            "name": "model-revision",
+            "ns": "urn:x-dmmc-workbench:demo",
+            "value": "d1"
+          }
+        ],
+        "control-implementations": [
+          {
+            "uuid": "adc52616-29ee-5ab8-b039-2632d6bdca62",
+            "source": "https://raw.githubusercontent.com/usnistgov/oscal-content/main/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json",
+            "description": "Demo implementation statements drafted for review. Check results apply only to local demo predicates.",
+            "implemented-requirements": [
+              {
+                "uuid": "27ea7e74-e231-5903-b5f4-72a55ca40aff",
+                "control-id": "sc-8",
+                "description": "Local demo obligation: A claimed inherited SC-8 implementation is supported by provider/scope evidence that names the provider and the covered component. Check result: UNKNOWN (predicate-bounded; not a statement of control effectiveness). Open gaps: inheritance claimed in the model; no provider/scope evidence. Left unresolved. | Parameter sc-08_odp is organization-defined and unresolved; a qualified reviewer must set it.",
+                "props": [
+                  {
+                    "name": "check-result",
+                    "ns": "urn:x-dmmc-workbench:demo",
+                    "value": "UNKNOWN"
+                  },
+                  {
+                    "name": "evidence-state",
+                    "ns": "urn:x-dmmc-workbench:demo",
+                    "value": "NONE"
+                  },
+                  {
+                    "name": "statement-id",
+                    "ns": "urn:x-dmmc-workbench:demo",
+                    "value": "sc-8_smt"
+                  }
+                ],
+                "links": [
+                  {
+                    "href": "#7c60fa3e-b7df-51c7-b9aa-3404533b16dc",
+                    "rel": "reference"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "back-matter": {
+      "resources": [
+        {
+          "uuid": "7c60fa3e-b7df-51c7-b9aa-3404533b16dc",
+          "title": "Electronic (OSCAL) Version of NIST SP 800-53 Rev 5.2.0 Controls and SP 800-53A Rev 5.2.0 Assessment Procedures",
+          "rlinks": [
+            {
+              "href": "https://raw.githubusercontent.com/usnistgov/oscal-content/main/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json",
+              "hashes": [
+                {
+                  "algorithm": "SHA-256",
+                  "value": "01f37cf90ea99d92242c936cbfbdebcc338eef1f71454e2acac36cc56e9bc062"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

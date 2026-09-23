@@ -1,0 +1,54 @@
+{
+  "mapping_set": "demo-mappings",
+  "version": "1",
+  "state": "reviewed",
+  "curated_by": "curator (simulated identity)",
+  "notice": "Illustrative subset of three NIST SP 800-53 Rev 5 control references. Not a baseline, not a tailoring decision, and passing a check does not mean a control is satisfied.",
+  "obligations": [
+    {
+      "id": "OBL-AC3-API",
+      "control_id": "ac-3",
+      "statement_id": "ac-3_smt",
+      "scope": {"element": "cmp:api-service"},
+      "check": "ac3_policy_matches_model",
+      "local_obligation": "The reviewed policy bundle for the API allows exactly the role/action/resource combinations declared in the model and denies the independently authored negative cases.",
+      "limits": "Does not show that the policy is deployed, that every API route calls it, or that access enforcement is complete.",
+      "params": {},
+      "rationale": "The API is the only component the model shows mediating telemetry writes."
+    },
+    {
+      "id": "OBL-AU12-API",
+      "control_id": "au-12",
+      "statement_id": "au-12_smt.c",
+      "scope": {"element": "cmp:api-service"},
+      "check": "au12_record_content",
+      "local_obligation": "Synthetic audit records captured from the API include actor, action, target, time and outcome for every event type the model declares for the API.",
+      "required_fields": ["actor", "action", "target", "time", "outcome"],
+      "limits": "Does not show production log completeness, retention, or protection of audit records.",
+      "params": {"au-12_odp.01": null, "au-12_odp.02": null},
+      "rationale": "The model declares audit event types on the API component."
+    },
+    {
+      "id": "OBL-SC8-FLOW",
+      "control_id": "sc-8",
+      "statement_id": "sc-8_smt",
+      "scope": {"rule": "boundary-crossing-flows"},
+      "check": "sc8_transport_evidence",
+      "local_obligation": "Each flow whose endpoints sit in different boundaries has (a) a design transport assertion and (b) a current, applicable transport test observation reporting pass.",
+      "limits": "A model attribute alone cannot establish transport protection. A synthetic test report is not an observation of a real system.",
+      "params": {"sc-08_odp": null},
+      "rationale": "Scope rule rather than a list, so new boundary-crossing flows enlarge the review scope automatically."
+    },
+    {
+      "id": "OBL-SC8-INHERIT",
+      "control_id": "sc-8",
+      "statement_id": "sc-8_smt",
+      "scope": {"rule": "inheritance-claims", "control_id": "sc-8"},
+      "check": "inheritance_support",
+      "local_obligation": "A claimed inherited SC-8 implementation is supported by provider/scope evidence that names the provider and the covered component.",
+      "limits": "A provider statement is an assertion. Inheritance must not become satisfied because a vendor says so.",
+      "params": {"sc-08_odp": null},
+      "rationale": "The model records an inheritance claim on the telemetry database."
+    }
+  ]
+}

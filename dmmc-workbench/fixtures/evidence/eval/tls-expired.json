@@ -1,0 +1,15 @@
+{
+  "report": "transport-test",
+  "flow_id": "flow:portal-api",
+  "result": "pass",
+  "protocol": "TLSv1.3",
+  "observations": [
+    "handshake completed",
+    "certificate chain validated against demo CA"
+  ],
+  "synthetic": true,
+  "collected_against": {
+    "cmp:operator-portal": "p1",
+    "cmp:api-service": "a1"
+  }
+}

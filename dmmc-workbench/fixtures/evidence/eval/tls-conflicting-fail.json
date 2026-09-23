@@ -1,0 +1,14 @@
+{
+  "report": "transport-test",
+  "flow_id": "flow:portal-api",
+  "result": "fail",
+  "protocol": "none negotiated",
+  "observations": [
+    "plaintext HTTP listener answered on port 8080"
+  ],
+  "synthetic": true,
+  "collected_against": {
+    "cmp:operator-portal": "p1",
+    "cmp:api-service": "a1"
+  }
+}

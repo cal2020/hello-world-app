@@ -1,0 +1,7 @@
+# Optional. The core workbench runs on the Python 3.11 standard library.
+# Needed only for OSCAL schema validation (without them the export says "validation NOT RUN"
+# and does not label the file as OSCAL).
+jsonschema==4.26.0
+regex==2026.9.10
+# Optional live drafting mode only:
+# anthropic

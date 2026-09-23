@@ -1,0 +1,166 @@
+{
+  "excerpt_of": {
+    "title": "Electronic (OSCAL) Version of NIST SP 800-53 Rev 5.2.0 Controls and SP 800-53A Rev 5.2.0 Assessment Procedures",
+    "catalog_uuid": "ea7c7688-79c5-463b-a91b-0650f2d98623",
+    "version": "5.2.0",
+    "last_modified": "2026-05-11T16:01:09.00000-00:00",
+    "oscal_version": "1.2.2",
+    "upstream_url": "https://raw.githubusercontent.com/usnistgov/oscal-content/main/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json",
+    "upstream_sha256": "01f37cf90ea99d92242c936cbfbdebcc338eef1f71454e2acac36cc56e9bc062",
+    "fetched_at": "2026-09-23",
+    "note": "Verbatim JSON objects for three controls (statement, guidance, params) extracted from the upstream file. Assessment parts omitted. This excerpt is an illustrative subset, not a baseline."
+  },
+  "controls": [
+    {
+      "id": "ac-3",
+      "title": "Access Enforcement",
+      "family": "ac",
+      "params": [],
+      "parts": [
+        {
+          "id": "ac-3_smt",
+          "name": "statement",
+          "prose": "Enforce approved authorizations for logical access to information and system resources in accordance with applicable access control policies."
+        },
+        {
+          "id": "ac-3_gdn",
+          "name": "guidance",
+          "prose": "Access control policies control access between active entities or subjects (i.e., users or processes acting on behalf of users) and passive entities or objects (i.e., devices, files, records, domains) in organizational systems. In addition to enforcing authorized access at the system level and recognizing that systems can host many applications and services in support of mission and business functions, access enforcement mechanisms can also be employed at the application and service level to provide increased information security and privacy. In contrast to logical access controls that are implemented within the system, physical access controls are addressed by the controls in the Physical and Environmental Protection ( [PE](#pe) ) family."
+        }
+      ]
+    },
+    {
+      "id": "au-12",
+      "title": "Audit Record Generation",
+      "family": "au",
+      "params": [
+        {
+          "id": "au-12_odp.01",
+          "props": [
+            {
+              "name": "alt-identifier",
+              "value": "au-12_prm_1"
+            },
+            {
+              "name": "label",
+              "value": "AU-12_ODP[01]",
+              "class": "sp800-53a"
+            }
+          ],
+          "label": "system components",
+          "guidelines": [
+            {
+              "prose": "system components that provide an audit record generation capability for the events types (defined in AU-02_ODP[02]) are defined;"
+            }
+          ]
+        },
+        {
+          "id": "au-12_odp.02",
+          "props": [
+            {
+              "name": "alt-identifier",
+              "value": "au-12_prm_2"
+            },
+            {
+              "name": "label",
+              "value": "AU-12_ODP[02]",
+              "class": "sp800-53a"
+            }
+          ],
+          "label": "personnel or roles",
+          "guidelines": [
+            {
+              "prose": "personnel or roles allowed to select the event types that are to be logged by specific components of the system is/are defined;"
+            }
+          ]
+        }
+      ],
+      "parts": [
+        {
+          "id": "au-12_smt",
+          "name": "statement",
+          "parts": [
+            {
+              "id": "au-12_smt.a",
+              "name": "item",
+              "props": [
+                {
+                  "name": "label",
+                  "value": "a."
+                }
+              ],
+              "prose": "Provide audit record generation capability for the event types the system is capable of auditing as defined in [AU-2a](#au-2_smt.a) on {{ insert: param, au-12_odp.01 }};"
+            },
+            {
+              "id": "au-12_smt.b",
+              "name": "item",
+              "props": [
+                {
+                  "name": "label",
+                  "value": "b."
+                }
+              ],
+              "prose": "Allow {{ insert: param, au-12_odp.02 }} to select the event types that are to be logged by specific components of the system; and"
+            },
+            {
+              "id": "au-12_smt.c",
+              "name": "item",
+              "props": [
+                {
+                  "name": "label",
+                  "value": "c."
+                }
+              ],
+              "prose": "Generate audit records for the event types defined in [AU-2c](#au-2_smt.c) that include the audit record content defined in [AU-3](#au-3)."
+            }
+          ]
+        },
+        {
+          "id": "au-12_gdn",
+          "name": "guidance",
+          "prose": "Audit records can be generated from many different system components. The event types specified in [AU-2d](#au-2_smt.d) are the event types for which audit logs are to be generated and are a subset of all event types for which the system can generate audit records."
+        }
+      ]
+    },
+    {
+      "id": "sc-8",
+      "title": "Transmission Confidentiality and Integrity",
+      "family": "sc",
+      "params": [
+        {
+          "id": "sc-08_odp",
+          "props": [
+            {
+              "name": "alt-identifier",
+              "value": "sc-8_prm_1"
+            },
+            {
+              "name": "label",
+              "value": "SC-08_ODP",
+              "class": "sp800-53a"
+            }
+          ],
+          "select": {
+            "how-many": "one-or-more",
+            "choice": [
+              "confidentiality",
+              "integrity"
+            ]
+          }
+        }
+      ],
+      "parts": [
+        {
+          "id": "sc-8_smt",
+          "name": "statement",
+          "prose": "Protect the {{ insert: param, sc-08_odp }} of transmitted information."
+        },
+        {
+          "id": "sc-8_gdn",
+          "name": "guidance",
+          "prose": "Protecting the confidentiality and integrity of transmitted information applies to internal and external networks as well as any system components that can transmit information, including servers, notebook computers, desktop computers, mobile devices, printers, copiers, scanners, facsimile machines, and radios. Unprotected communication paths are exposed to the possibility of interception and modification. Protecting the confidentiality and integrity of information can be accomplished by physical or logical means. Physical protection can be achieved by using protected distribution systems. A protected distribution system is a wireline or fiber-optics telecommunications system that includes terminals and adequate electromagnetic, acoustical, electrical, and physical controls to permit its use for the unencrypted transmission of classified information. Logical protection can be achieved by employing encryption techniques.\n\nOrganizations that rely on commercial providers who offer transmission services as commodity services rather than as fully dedicated services may find it difficult to obtain the necessary assurances regarding the implementation of needed controls for transmission confidentiality and integrity. In such situations, organizations determine what types of confidentiality or integrity services are available in standard, commercial telecommunications service packages. If it is not feasible to obtain the necessary controls and assurances of control effectiveness through appropriate contracting vehicles, organizations can implement appropriate compensating controls."
+        }
+      ]
+    }
+  ]
+}

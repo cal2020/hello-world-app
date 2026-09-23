@@ -1,0 +1,36 @@
+{
+  "_note": "Expected outcomes written from the fixture specification (docs/MODEL_EXPORT_CONTRACT.md and the fixture design), not copied from program output. Same author as the code, so these are NOT independent labels.",
+  "scenarios": {
+    "A_complete": {
+      "rows": {"OBL-AC3-API::cmp:api-service": "PASS", "OBL-AU12-API::cmp:api-service": "PASS",
+               "OBL-SC8-FLOW::flow:portal-api": "PASS", "OBL-SC8-INHERIT::cmp:telemetry-db": "UNKNOWN"},
+      "gap_rows": ["OBL-SC8-INHERIT::cmp:telemetry-db"]
+    },
+    "A_transport_withdrawn": {
+      "rows": {"OBL-AC3-API::cmp:api-service": "PASS", "OBL-AU12-API::cmp:api-service": "PASS",
+               "OBL-SC8-FLOW::flow:portal-api": "UNKNOWN", "OBL-SC8-INHERIT::cmp:telemetry-db": "UNKNOWN"},
+      "gap_rows": ["OBL-SC8-FLOW::flow:portal-api", "OBL-SC8-INHERIT::cmp:telemetry-db"]
+    },
+    "B_with_A_evidence_only": {
+      "rows": {"OBL-AC3-API::cmp:api-service": "FAIL", "OBL-AU12-API::cmp:api-service": "UNKNOWN",
+               "OBL-SC8-FLOW::flow:portal-api": "UNKNOWN", "OBL-SC8-FLOW::flow:provider-api": "UNKNOWN",
+               "OBL-SC8-INHERIT::cmp:telemetry-db": "UNKNOWN"},
+      "gap_rows": ["OBL-AC3-API::cmp:api-service", "OBL-AU12-API::cmp:api-service", "OBL-SC8-FLOW::flow:portal-api",
+                   "OBL-SC8-FLOW::flow:provider-api", "OBL-SC8-INHERIT::cmp:telemetry-db"]
+    },
+    "B_with_B_evidence": {
+      "rows": {"OBL-AC3-API::cmp:api-service": "FAIL", "OBL-AU12-API::cmp:api-service": "PASS",
+               "OBL-SC8-FLOW::flow:portal-api": "PASS", "OBL-SC8-FLOW::flow:provider-api": "UNKNOWN",
+               "OBL-SC8-INHERIT::cmp:telemetry-db": "UNKNOWN"},
+      "gap_rows": ["OBL-AC3-API::cmp:api-service", "OBL-SC8-FLOW::flow:provider-api", "OBL-SC8-INHERIT::cmp:telemetry-db"]
+    }
+  },
+  "impact_A_to_B": {
+    "changed_objects": ["cmp:api-service", "cmp:provider-gateway", "flow:provider-api", "bnd:provider-net"],
+    "affected_rows": ["OBL-AC3-API::cmp:api-service", "OBL-AU12-API::cmp:api-service",
+                      "OBL-SC8-FLOW::flow:portal-api", "OBL-SC8-FLOW::flow:provider-api"],
+    "new_scope_rows": ["OBL-SC8-FLOW::flow:provider-api"],
+    "evidence_no_longer_applicable": ["ev-audit-api-a1", "ev-tls-portal-api-a1"]
+  },
+  "seeded_drafter_errors": 6
+}

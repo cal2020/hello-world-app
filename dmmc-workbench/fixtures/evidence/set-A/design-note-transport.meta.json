@@ -1,0 +1,20 @@
+{
+  "synthetic": true,
+  "project": "proj-mtel",
+  "environment": "demo-synthetic",
+  "evidence_id": "ev-design-note-transport",
+  "kind": "assertion",
+  "type": "design-note",
+  "media_type": "text/plain",
+  "producer": "synthetic architecture note (fixture)",
+  "collection_method": "hand-authored fixture",
+  "collected_at": "2026-08-20T00:00:00Z",
+  "expires_at": null,
+  "target": {
+    "element_revisions": {},
+    "about_flows": [
+      "flow:portal-api"
+    ]
+  },
+  "payload_file": "design-note-transport.txt"
+}
