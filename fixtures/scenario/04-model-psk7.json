@@ -1,0 +1,32 @@
+{
+  "sourceId": "MODEL-PSK7",
+  "revision": "3",
+  "revisionSeq": 3,
+  "kind": "system_model",
+  "title": "PSK-7 portable sensor kit: simulated system-model export",
+  "origin": "SIMULATED model export (hand-written JSON). Not produced by Cameo or any modeling tool.",
+  "accessLabel": "PERMITTED",
+  "effectiveFrom": "2026-03-02",
+  "structured": {
+    "elements": [
+      { "id": "EQ-PSK7", "type": "Equipment", "name": "PSK-7 portable sensor kit" },
+      { "id": "IP-HOUSING", "type": "InspectionPoint", "name": "Housing seal condition", "passage": "p2" },
+      { "id": "IP-BATTERY", "type": "InspectionPoint", "name": "Battery contact condition", "passage": "p3" },
+      { "id": "IP-SELFTEST", "type": "InspectionPoint", "name": "Display self-test result", "passage": "p4" }
+    ],
+    "relationships": [
+      { "from": "EQ-PSK7", "type": "hasInspectionPoint", "to": "IP-HOUSING" },
+      { "from": "EQ-PSK7", "type": "hasInspectionPoint", "to": "IP-BATTERY" },
+      { "from": "EQ-PSK7", "type": "hasInspectionPoint", "to": "IP-SELFTEST" },
+      { "from": "EQ-PSK7", "type": "governedBy", "to": "REQ-001" },
+      { "from": "EQ-PSK7", "type": "governedBy", "to": "REQ-002" },
+      { "from": "EQ-PSK7", "type": "governedBy", "to": "REQ-003" }
+    ]
+  },
+  "passages": [
+    { "id": "p1", "text": "Element EQ-PSK7 (Equipment): PSK-7 portable sensor kit. Governed by REQ-001, REQ-002 and REQ-003. Has inspection points IP-HOUSING, IP-BATTERY and IP-SELFTEST." },
+    { "id": "p2", "text": "Element IP-HOUSING (InspectionPoint): Housing seal condition, observed visually and recorded as PASS or FAIL." },
+    { "id": "p3", "text": "Element IP-BATTERY (InspectionPoint): Battery contact condition, observed visually and recorded as PASS or FAIL." },
+    { "id": "p4", "text": "Element IP-SELFTEST (InspectionPoint): Display self-test result, recorded as PASS or FAIL after power-on." }
+  ]
+}

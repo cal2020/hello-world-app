@@ -1,0 +1,14 @@
+{
+  "sourceId": "ASSET-REG",
+  "revision": "1",
+  "revisionSeq": 1,
+  "kind": "record",
+  "title": "Asset register entry DEV-0193",
+  "origin": "SYNTHETIC record (interview fixture)",
+  "accessLabel": "PERMITTED",
+  "effectiveFrom": "2026-02-10",
+  "structured": { "recordType": "asset_register", "deviceId": "DEV-0193", "serial": "PSK7-00193", "equipment": "EQ-PSK7" },
+  "passages": [
+    { "id": "p1", "text": "Device DEV-0193, equipment EQ-PSK7. Serial number: PSK7-00193. Location: Bay 2 (synthetic)." }
+  ]
+}

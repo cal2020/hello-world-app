@@ -1,0 +1,14 @@
+{
+  "sourceId": "CAL-0412",
+  "revision": "1",
+  "revisionSeq": 1,
+  "kind": "record",
+  "title": "Calibration certificate CAL-0412 (most recent)",
+  "origin": "SYNTHETIC record (interview fixture)",
+  "accessLabel": "PERMITTED",
+  "effectiveFrom": "2026-06-01",
+  "structured": { "recordType": "calibration_certificate", "deviceSerial": "PSK7-00193", "calibrationDate": "2026-06-01" },
+  "passages": [
+    { "id": "p1", "text": "Certificate CAL-0412 for serial PSK7-00193. Calibration date: 2026-06-01. Result: within tolerance." }
+  ]
+}

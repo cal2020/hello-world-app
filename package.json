@@ -1,12 +1,23 @@
 {
-  "name": "hello-world-app",
+  "name": "ttp-workbench",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Evidence-grounded procedure development workbench (interview prototype, synthetic data).",
   "type": "module",
+  "engines": { "node": ">=22.13" },
   "scripts": {
+    "start": "vite build && node --disable-warning=ExperimentalWarning server/index.js",
+    "server": "node --disable-warning=ExperimentalWarning server/index.js",
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.js",
+    "demo:reset": "node --disable-warning=ExperimentalWarning scripts/reset.js",
+    "demo:walkthrough": "node --disable-warning=ExperimentalWarning scripts/walkthrough.js",
+    "eval": "node --disable-warning=ExperimentalWarning scripts/run-eval.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0"
   },
   "devDependencies": {
     "vite": "^7.1.7"

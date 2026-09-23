@@ -1,0 +1,17 @@
+{
+  "label": "Restricted personnel note (must not enter model context)",
+  "source": {
+    "sourceId": "PERS-NOTE-1",
+    "revision": "1",
+    "revisionSeq": 1,
+    "kind": "record",
+    "title": "Personnel availability note",
+    "origin": "SYNTHETIC restricted record (interview fixture)",
+    "accessLabel": "RESTRICTED",
+    "effectiveFrom": "2026-09-20",
+    "structured": { "recordType": "personnel_note" },
+    "passages": [
+      { "id": "p1", "text": "RESTRICTED-MARKER-7731: synthetic personnel scheduling detail that must not be sent to a model." }
+    ]
+  }
+}

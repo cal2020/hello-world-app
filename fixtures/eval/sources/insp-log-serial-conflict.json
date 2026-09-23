@@ -1,0 +1,51 @@
+{
+  "sourceId": "INSP-LOG-2291",
+  "revision": "1",
+  "revisionSeq": 1,
+  "kind": "record",
+  "title": "Inspection log 2291 (eval variant: serial conflict)",
+  "origin": "SYNTHETIC record (interview fixture)",
+  "accessLabel": "PERMITTED",
+  "effectiveFrom": "2026-09-23",
+  "structured": {
+    "recordType": "inspection_log",
+    "deviceId": "DEV-0193",
+    "recordedSerial": "PSK7-00198",
+    "date": "2026-09-22",
+    "observations": [
+      {
+        "point": "IP-HOUSING",
+        "result": "PASS",
+        "passage": "p2"
+      },
+      {
+        "point": "IP-SELFTEST",
+        "result": "PASS",
+        "passage": "p3"
+      },
+      {
+        "point": "IP-BATTERY",
+        "result": "PASS",
+        "passage": "p4"
+      }
+    ]
+  },
+  "passages": [
+    {
+      "id": "p1",
+      "text": "Inspection log 2291, device DEV-0193, dated 2026-09-22. Recorded serial number: PSK7-00198."
+    },
+    {
+      "id": "p2",
+      "text": "Observation IP-HOUSING: PASS. Seal intact, no cracking."
+    },
+    {
+      "id": "p3",
+      "text": "Observation IP-SELFTEST: PASS. Display completed self-test."
+    },
+    {
+      "id": "p4",
+      "text": "Observation IP-BATTERY: PASS. Contacts clean, no corrosion."
+    }
+  ]
+}

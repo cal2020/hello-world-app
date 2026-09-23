@@ -1,0 +1,15 @@
+{
+  "sourceId": "REQ-001",
+  "revision": "A",
+  "revisionSeq": 1,
+  "kind": "requirement",
+  "title": "Device identification",
+  "origin": "SYNTHETIC requirement set PSK-RS (interview fixture, not a real publication)",
+  "accessLabel": "PERMITTED",
+  "effectiveFrom": "2026-01-15",
+  "structured": { "reqId": "REQ-001", "mandatory": true, "topic": "identification" },
+  "passages": [
+    { "id": "p1", "text": "The inspector shall record the device serial number exactly as shown on the device nameplate before starting the inspection." },
+    { "id": "p2", "text": "The recorded serial number shall match the asset register entry for the device." }
+  ]
+}

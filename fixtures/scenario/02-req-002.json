@@ -1,0 +1,15 @@
+{
+  "sourceId": "REQ-002",
+  "revision": "A",
+  "revisionSeq": 1,
+  "kind": "requirement",
+  "title": "Calibration currency",
+  "origin": "SYNTHETIC requirement set PSK-RS (interview fixture, not a real publication)",
+  "accessLabel": "PERMITTED",
+  "effectiveFrom": "2026-01-15",
+  "structured": { "reqId": "REQ-002", "mandatory": true, "topic": "calibration", "maxCalibrationAgeDays": 180 },
+  "passages": [
+    { "id": "p1", "text": "Calibration evidence is current when the most recent calibration certificate for the device is dated no more than 180 days before the inspection date." },
+    { "id": "p2", "text": "If calibration evidence is not current, the device shall be tagged HOLD and the inspection shall not proceed to functional checks." }
+  ]
+}

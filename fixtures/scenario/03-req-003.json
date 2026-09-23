@@ -1,0 +1,14 @@
+{
+  "sourceId": "REQ-003",
+  "revision": "A",
+  "revisionSeq": 1,
+  "kind": "requirement",
+  "title": "Reviewer disposition",
+  "origin": "SYNTHETIC requirement set PSK-RS (interview fixture, not a real publication)",
+  "accessLabel": "PERMITTED",
+  "effectiveFrom": "2026-01-15",
+  "structured": { "reqId": "REQ-003", "mandatory": true, "topic": "disposition" },
+  "passages": [
+    { "id": "p1", "text": "Each completed inspection shall carry a disposition of SERVICEABLE, HOLD or REMOVE, recorded by an identified reviewer with the date and rationale." }
+  ]
+}

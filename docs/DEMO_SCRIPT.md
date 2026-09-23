@@ -1,0 +1,19 @@
+# Five-minute demo script
+
+**Setup (before the call):** run `npm run demo:reset`, then `npm start`. Open http://localhost:8787 at 125% browser zoom for Teams. Set "Acting as" to *R. Alvarez (reviewer)*. Keep a terminal ready with `npm run demo:walkthrough` as the fallback.
+
+**Fallback levels:** (1) `npm run demo:reset -- --stage=reviewed` jumps straight to step 4. (2) `npm run demo:walkthrough` prints the whole path from real execution in the terminal; say it is the CLI, not the UI. (3) The screenshots in `docs/screenshots/` are static captures from an earlier run and should be labeled that way.
+
+Observed results below come from runs on 2026-09-23 at the code revision in `docs/EVALUATION_REPORT.md`. Generated ids and timestamps differ on every run.
+
+| Time | Say | Do | Observable result | Claim proved |
+|---|---|---|---|---|
+| 0:00–0:40 | "Everything here is synthetic: an invented sensor kit, three requirements, some records. The system-model export is hand-written JSON. Nothing connects to Cameo." | **1 Sources.** Click `REQ-002@A`. | Eight snapshots with revision and hash. REQ-002 passage p1 says "180 days"; structured field `maxCalibrationAgeDays: 180`. | Stable ids, revisions, hashes, provenance |
+| 0:40–1:40 | "The generator here is a deterministic stand-in with one seeded error. It proposes; code checks." | Click **Generate candidate**. Click the red citation on S7. | v1 `DRAFT` with 5 blocking findings: quote mismatch (C14), missing IP-BATTERY observation, serial conflict, and the gap and conflict the draft declares itself. Evidence panel: "quote not in passage". | Citation existence is checked mechanically; gaps and conflicts are visible |
+| 1:40–2:00 | "Can I just accept it?" | Type a rationale, click **Accept for demo**. | `409 REVIEW_BLOCKED` with the list of reasons. | The server enforces the gate |
+| 2:00–3:10 | "The inspector corrects the log. Watch v1." | **Sources** → Import *Corrected inspection log*. Regenerate. On the new version: click *does not support* on C14, then *remove*, add an edit note, **Save as new version**. Click the bulk-judge button, then **Accept for demo**. **Export as reviewed.** | Import message: "1 candidate version(s) marked STALE". v2 still contains the fabricated step. The edit creates v3 `NEEDS_REVIEW`. The acceptance moves it to `REVIEWED_FOR_DEMO`. Export banner: "REVIEWED FOR DEMO … not an approval, publication or authorization." | Edits create versions; decisions bind to the exact digest and manifest |
+| 3:10–4:20 | "Now the requirement changes: 180 days becomes 90." | **Sources** → Import *REQ-002 revision B*. Open **3 Change impact**. | v3 `STALE`. Structured field 180 → 90. REASSESS C4 (cited passage changed), REASSESS C6 (computed PASS → FAIL: 114 days > 90), RECONFIRM C7 (source revised, passage text unchanged). Only step S3 is affected; 11 claims are unaffected. The decision "no longer applies: REQ-002@A -> REQ-002@B". | Which conclusions need reassessment, and why |
+| 4:20–4:40 | "And the old approval cannot be reused." | **2 Candidate** → **Export as reviewed**. | `409 EXPORT_BLOCKED`: source manifest changed since the decision. | Stale decisions are rejected at use |
+| 4:40–5:00 | "Every step is recorded, and the evaluation includes a case I expect to fail." | **4 Runs & evaluation** (point to H08), then **5 History**. | Run mode `SIMULATED`, config hash. Gate PASS with 0 unsafe outcomes. H08 `FAIL_KNOWN_LIMITATION`. Hash-chained audit, verified. | Complete workflow evaluated, not just the output |
+
+**Closing line:** "The model's job is to draft and point at evidence. Code owns the ids, hashes, dates and state transitions. A named reviewer owns 'this passage supports this claim'. When a requirement changes, the system tells you which conclusions to revisit instead of silently keeping an old approval."

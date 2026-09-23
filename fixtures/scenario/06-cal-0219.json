@@ -1,0 +1,14 @@
+{
+  "sourceId": "CAL-0219",
+  "revision": "1",
+  "revisionSeq": 1,
+  "kind": "record",
+  "title": "Calibration certificate CAL-0219 (older)",
+  "origin": "SYNTHETIC record (interview fixture)",
+  "accessLabel": "PERMITTED",
+  "effectiveFrom": "2025-11-20",
+  "structured": { "recordType": "calibration_certificate", "deviceSerial": "PSK7-00193", "calibrationDate": "2025-11-20" },
+  "passages": [
+    { "id": "p1", "text": "Certificate CAL-0219 for serial PSK7-00193. Calibration date: 2025-11-20. Result: within tolerance." }
+  ]
+}

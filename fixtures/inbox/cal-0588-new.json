@@ -1,0 +1,17 @@
+{
+  "label": "New calibration certificate CAL-0588 (new relevant evidence)",
+  "source": {
+    "sourceId": "CAL-0588",
+    "revision": "1",
+    "revisionSeq": 1,
+    "kind": "record",
+    "title": "Calibration certificate CAL-0588 (newest)",
+    "origin": "SYNTHETIC record (interview fixture)",
+    "accessLabel": "PERMITTED",
+    "effectiveFrom": "2026-09-10",
+    "structured": { "recordType": "calibration_certificate", "deviceSerial": "PSK7-00193", "calibrationDate": "2026-09-10" },
+    "passages": [
+      { "id": "p1", "text": "Certificate CAL-0588 for serial PSK7-00193. Calibration date: 2026-09-10. Result: within tolerance." }
+    ]
+  }
+}
