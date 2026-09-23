@@ -1,6 +1,6 @@
 {
- "generated_at": "2026-09-23 23:31 UTC",
- "code_version": "2a1db853ecce+dirty",
+ "generated_at": "2026-09-23 23:32 UTC",
+ "code_version": "e79d2a8e9f3d",
  "python": "3.11.15",
  "platform": "Linux",
  "live_requested": false,
@@ -228,7 +228,7 @@
      }
     ],
     "run": {
-     "run_id": "run_21667e3b9784",
+     "run_id": "run_c03e90aeae7d",
      "provider": "deterministic",
      "model": "exact-serial+curated-alias/1",
      "elapsed_ms": 1,
@@ -317,10 +317,10 @@
      }
     ],
     "run": {
-     "run_id": "run_0b7bfba412d0",
+     "run_id": "run_4b45ba20be26",
      "provider": "fixture",
      "model": "fixture:cmms.json",
-     "elapsed_ms": 2,
+     "elapsed_ms": 1,
      "label": "FIXTURE MODE: scripted outputs; not evidence of model quality"
     }
    }
@@ -393,7 +393,7 @@
      }
     ],
     "run": {
-     "run_id": "run_d356602dba94",
+     "run_id": "run_b06865fff97b",
      "provider": "deterministic",
      "model": "exact-serial+curated-alias/1",
      "elapsed_ms": 0,
@@ -475,7 +475,7 @@
      }
     ],
     "run": {
-     "run_id": "run_8561a68a4160",
+     "run_id": "run_d573ac09f4a4",
      "provider": "fixture",
      "model": "fixture:cmms-heldout.json",
      "elapsed_ms": 1,
@@ -487,28 +487,28 @@
  "timings": {
   "import_A_ms": {
    "n": 5,
-   "median": 4.0,
-   "max": 4.3
+   "median": 4.6,
+   "max": 5.5
   },
   "build_ms": {
    "n": 5,
-   "median": 60.6,
-   "max": 62.1
+   "median": 59.9,
+   "max": 73.5
   },
   "consumer_checks_ms": {
    "n": 5,
-   "median": 23.4,
-   "max": 39.6
+   "median": 23.0,
+   "max": 27.8
   },
   "activate_ms": {
    "n": 5,
    "median": 2.6,
-   "max": 3.0
+   "max": 3.1
   },
   "delivery_ms": {
    "n": 5,
-   "median": 11.5,
-   "max": 12.7
+   "median": 12.5,
+   "max": 25.4
   }
  }
 }

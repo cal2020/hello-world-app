@@ -1,6 +1,6 @@
 # Evaluation report (generated)
 
-Generated 2026-09-23 23:31 UTC by `scripts/evaluate.py` at code version `2a1db853ecce+dirty` on Python 3.11.15 / Linux. Every number below comes from this run. Synthetic fixtures only. Results are about this prototype's behavior on these cases, not about production reliability, standards conformance, Cameo compatibility or real-model quality.
+Generated 2026-09-23 23:32 UTC by `scripts/evaluate.py` at code version `e79d2a8e9f3d` on Python 3.11.15 / Linux. Every number below comes from this run. Synthetic fixtures only. Results are about this prototype's behavior on these cases, not about production reliability, standards conformance, Cameo compatibility or real-model quality.
 
 ## 1. Integration correctness (independent negative tests)
 
@@ -60,11 +60,11 @@ Wall-clock on this machine, loopback HTTP, SQLite. Each step was measured on a f
 
 | Step | n | median ms | max ms |
 |---|---|---|---|
-| import_A_ms | 5 | 4.0 | 4.3 |
-| build_ms | 5 | 60.6 | 62.1 |
-| consumer_checks_ms | 5 | 23.4 | 39.6 |
-| activate_ms | 5 | 2.6 | 3.0 |
-| delivery_ms | 5 | 11.5 | 12.7 |
+| import_A_ms | 5 | 4.6 | 5.5 |
+| build_ms | 5 | 59.9 | 73.5 |
+| consumer_checks_ms | 5 | 23.0 | 27.8 |
+| activate_ms | 5 | 2.6 | 3.1 |
+| delivery_ms | 5 | 12.5 | 25.4 |
 
 ## 4. Readiness gate
 
