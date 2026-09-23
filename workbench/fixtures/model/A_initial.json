@@ -1,0 +1,326 @@
+{
+  "format": "lwb-synthetic-export/1",
+  "source": "synthmodeler",
+  "project": "ehm",
+  "revision": "7c1e9a",
+  "parent_revision": null,
+  "kind": "snapshot",
+  "scope": {
+    "kind": "complete"
+  },
+  "definitions": {
+    "types": {
+      "Pump": {
+        "properties": {
+          "tag": {
+            "type": "string"
+          }
+        }
+      },
+      "Sensor": {
+        "properties": {
+          "serialNumber": {
+            "type": "string"
+          },
+          "sampleInterval": {
+            "type": "number",
+            "unit": "ms"
+          },
+          "measurand": {
+            "type": "string",
+            "enum": [
+              "vibration",
+              "temperature",
+              "pressure"
+            ]
+          },
+          "mountPosition": {
+            "type": "string"
+          },
+          "calibrationOffset": {
+            "type": "number",
+            "unit": "mm/s"
+          }
+        }
+      },
+      "Gateway": {
+        "properties": {
+          "firmware": {
+            "type": "string"
+          },
+          "site": {
+            "type": "string"
+          }
+        }
+      },
+      "TelemetryService": {
+        "properties": {
+          "endpoint": {
+            "type": "string"
+          },
+          "retentionDays": {
+            "type": "integer",
+            "unit": "d"
+          }
+        }
+      },
+      "Requirement": {
+        "properties": {
+          "reqId": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "VerificationRecord": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "test",
+              "analysis",
+              "inspection"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "fail",
+              "open"
+            ]
+          }
+        }
+      }
+    },
+    "relationshipTypes": {
+      "connectsTo": {
+        "from": "Sensor",
+        "to": "Gateway",
+        "multiplicity": "1"
+      },
+      "publishesTo": {
+        "from": "Gateway",
+        "to": "TelemetryService",
+        "multiplicity": "1..*"
+      },
+      "monitors": {
+        "from": "Sensor",
+        "to": "Pump",
+        "multiplicity": "1"
+      },
+      "satisfies": {
+        "from": "*",
+        "to": "Requirement"
+      },
+      "verifies": {
+        "from": "VerificationRecord",
+        "to": "Requirement"
+      }
+    }
+  },
+  "elements": [
+    {
+      "id": "el-P101",
+      "type": "Pump",
+      "name": "Feedwater Pump P-101",
+      "owner": "pkg-equipment",
+      "properties": {
+        "tag": "P-101"
+      }
+    },
+    {
+      "id": "el-P102",
+      "type": "Pump",
+      "name": "Feedwater Pump P-102",
+      "owner": "pkg-equipment",
+      "properties": {
+        "tag": "P-102"
+      }
+    },
+    {
+      "id": "el-VS101DE",
+      "type": "Sensor",
+      "name": "Vibration Sensor P-101 DE",
+      "owner": "pkg-sensors",
+      "properties": {
+        "serialNumber": "VS-4471",
+        "sampleInterval": 500,
+        "measurand": "vibration",
+        "mountPosition": "drive end",
+        "calibrationOffset": 0
+      }
+    },
+    {
+      "id": "el-VS101NDE",
+      "type": "Sensor",
+      "name": "Vibration Sensor P-101 NDE",
+      "owner": "pkg-sensors",
+      "properties": {
+        "serialNumber": "VS-4472",
+        "sampleInterval": 500,
+        "measurand": "vibration",
+        "mountPosition": "non-drive end"
+      }
+    },
+    {
+      "id": "el-TS101",
+      "type": "Sensor",
+      "name": "Temperature Sensor P-101",
+      "owner": "pkg-sensors",
+      "properties": {
+        "serialNumber": "TS-2210",
+        "sampleInterval": 1000,
+        "measurand": "temperature",
+        "mountPosition": null
+      }
+    },
+    {
+      "id": "el-VS102DE",
+      "type": "Sensor",
+      "name": "Vibration Sensor P-102 DE",
+      "owner": "pkg-sensors",
+      "properties": {
+        "serialNumber": "VS-5580",
+        "sampleInterval": 500,
+        "measurand": "vibration",
+        "mountPosition": ""
+      }
+    },
+    {
+      "id": "el-GW1",
+      "type": "Gateway",
+      "name": "Edge Gateway North",
+      "owner": "pkg-network",
+      "properties": {
+        "firmware": "4.2.0",
+        "site": "North Plant",
+        "x_cableColor": "grey"
+      }
+    },
+    {
+      "id": "el-TEL1",
+      "type": "TelemetryService",
+      "name": "Telemetry Ingest Service",
+      "owner": "pkg-network",
+      "properties": {
+        "endpoint": "tcp://telemetry.invalid:9000",
+        "retentionDays": 90
+      }
+    },
+    {
+      "id": "el-REQ1",
+      "type": "Requirement",
+      "name": "Vibration sampling rate",
+      "owner": "pkg-requirements",
+      "properties": {
+        "reqId": "EHM-R-012",
+        "text": "Vibration shall be sampled at least once per second."
+      }
+    },
+    {
+      "id": "el-REQ2",
+      "type": "Requirement",
+      "name": "Telemetry retention",
+      "owner": "pkg-requirements",
+      "properties": {
+        "reqId": "EHM-R-020",
+        "text": "Sensor telemetry shall be retained for 90 days."
+      }
+    },
+    {
+      "id": "el-VER1",
+      "type": "VerificationRecord",
+      "name": "Sampling rate bench test",
+      "owner": "pkg-requirements",
+      "properties": {
+        "method": "test",
+        "status": "pass"
+      }
+    },
+    {
+      "id": "el-DIAG1",
+      "type": "x-VendorDiagram",
+      "name": "Overview diagram",
+      "owner": "pkg-network",
+      "properties": {
+        "layout": "auto"
+      },
+      "x-vendor-geometry": {
+        "w": 800,
+        "h": 600
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "id": "rel-01",
+      "type": "connectsTo",
+      "source": "el-VS101DE",
+      "target": "el-GW1"
+    },
+    {
+      "id": "rel-02",
+      "type": "connectsTo",
+      "source": "el-VS101NDE",
+      "target": "el-GW1"
+    },
+    {
+      "id": "rel-03",
+      "type": "connectsTo",
+      "source": "el-TS101",
+      "target": "el-GW1"
+    },
+    {
+      "id": "rel-04",
+      "type": "connectsTo",
+      "source": "el-VS102DE",
+      "target": "el-GW1"
+    },
+    {
+      "id": "rel-05",
+      "type": "publishesTo",
+      "source": "el-GW1",
+      "target": "el-TEL1"
+    },
+    {
+      "id": "rel-06",
+      "type": "monitors",
+      "source": "el-VS101DE",
+      "target": "el-P101"
+    },
+    {
+      "id": "rel-07",
+      "type": "monitors",
+      "source": "el-VS101NDE",
+      "target": "el-P101"
+    },
+    {
+      "id": "rel-08",
+      "type": "monitors",
+      "source": "el-TS101",
+      "target": "el-P101"
+    },
+    {
+      "id": "rel-09",
+      "type": "monitors",
+      "source": "el-VS102DE",
+      "target": "el-P102"
+    },
+    {
+      "id": "rel-10",
+      "type": "verifies",
+      "source": "el-VER1",
+      "target": "el-REQ1"
+    },
+    {
+      "id": "rel-11",
+      "type": "satisfies",
+      "source": "el-VS101DE",
+      "target": "el-REQ1"
+    }
+  ],
+  "x_exporter_note": "unrecognized top-level key preserved in raw import"
+}

@@ -1,0 +1,17 @@
+{
+  "note": "Gold labels authored from the fixture texts, independently of any proposer output. Proposers never read this directory. 'null' means no single element is supported by the permitted evidence.",
+  "predicate": "maintenance_record_references_element",
+  "splits": {
+    "dev": {"record_source": "cmms", "labels": {
+      "MR-1001": "el-VS101DE", "MR-1002": "el-VS101DE", "MR-1003": "el-VS101NDE",
+      "MR-1004": "el-GW1", "MR-1005": "el-TS101", "MR-1006": null}},
+    "heldout": {"record_source": "cmms-heldout", "labels": {
+      "MR-2001": "el-VS102DE", "MR-2002": "el-VS102DE", "MR-2003": "el-VS101NDE",
+      "MR-2004": "el-TEL1", "MR-2005": null, "MR-2006": null}}
+  },
+  "rationale": {
+    "MR-1003": "Record alone is ambiguous (DE vs NDE); note N-2 states the NDE unit.",
+    "MR-2005": "P-101 has two vibration sensors; 'checked during walkdown' does not identify one.",
+    "MR-2002": "'P-102 drive end vibration probe' - only one vibration sensor on P-102 (DE)."
+  }
+}

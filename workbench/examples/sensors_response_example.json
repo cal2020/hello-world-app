@@ -1,0 +1,61 @@
+{
+  "project": "ehm",
+  "releaseId": "rel_939fa34badf9",
+  "contract": {
+    "id": "equipment-health-api",
+    "version": "1",
+    "digest": "33abe25392f2bb9ca789d4733fc9726d8d6d2759e40802486a49d6a4c3313dfd"
+  },
+  "source": {
+    "snapshotId": "snap_ba217b5ce721",
+    "revision": "31d8e0",
+    "headRevision": "31d8e0",
+    "isCurrentHead": true,
+    "headsBehind": 0
+  },
+  "items": [
+    {
+      "id": "ent_302abd8e0d16df20",
+      "sourceId": "el-VS102DE",
+      "versionId": "ev_2a4c96d5a028048a7d27",
+      "measurand": "vibration",
+      "mountPosition": "",
+      "name": "Vibration Sensor P-102 DE",
+      "sampleIntervalMs": 500,
+      "serialNumber": "VS-5580",
+      "gateway": {
+        "id": "ent_a0db7982c56145f5",
+        "sourceId": "el-GW1"
+      },
+      "_provenance": {
+        "snapshotId": "snap_ba217b5ce721",
+        "sourceRevision": "31d8e0",
+        "elementVersionId": "ev_2a4c96d5a028048a7d27",
+        "sourcePointer": "imp_37225a7fed56#/elements/5",
+        "conversions": []
+      }
+    },
+    {
+      "id": "ent_55bddbee65257cc6",
+      "sourceId": "el-VS101DE",
+      "versionId": "ev_4bba097ddeaab0a23f63",
+      "measurand": "vibration",
+      "mountPosition": "drive end",
+      "name": "Vibration Sensor P-101 DE",
+      "sampleIntervalMs": 500,
+      "serialNumber": "VS-4471",
+      "gateway": {
+        "id": "ent_a0db7982c56145f5",
+        "sourceId": "el-GW1"
+      },
+      "_provenance": {
+        "snapshotId": "snap_ba217b5ce721",
+        "sourceRevision": "31d8e0",
+        "elementVersionId": "ev_4bba097ddeaab0a23f63",
+        "sourcePointer": "imp_37225a7fed56#/elements/2",
+        "conversions": []
+      }
+    }
+  ],
+  "next": "/api/releases/rel_939fa34badf9/resources/sensors?limit=2&cursor=ZW50XzU1YmRkYmVlNjUyNTdjYzY="
+}

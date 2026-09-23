@@ -1,0 +1,155 @@
+{
+  "format": "lwb-synthetic-export/1",
+  "source": "synthmodeler",
+  "project": "radar",
+  "revision": "rad-1",
+  "parent_revision": null,
+  "kind": "snapshot",
+  "scope": {
+    "kind": "complete"
+  },
+  "definitions": {
+    "types": {
+      "Pump": {
+        "properties": {
+          "tag": {
+            "type": "string"
+          }
+        }
+      },
+      "Sensor": {
+        "properties": {
+          "serialNumber": {
+            "type": "string"
+          },
+          "sampleInterval": {
+            "type": "number",
+            "unit": "ms"
+          },
+          "measurand": {
+            "type": "string",
+            "enum": [
+              "vibration",
+              "temperature",
+              "pressure"
+            ]
+          },
+          "mountPosition": {
+            "type": "string"
+          },
+          "calibrationOffset": {
+            "type": "number",
+            "unit": "mm/s"
+          }
+        }
+      },
+      "Gateway": {
+        "properties": {
+          "firmware": {
+            "type": "string"
+          },
+          "site": {
+            "type": "string"
+          }
+        }
+      },
+      "TelemetryService": {
+        "properties": {
+          "endpoint": {
+            "type": "string"
+          },
+          "retentionDays": {
+            "type": "integer",
+            "unit": "d"
+          }
+        }
+      },
+      "Requirement": {
+        "properties": {
+          "reqId": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "VerificationRecord": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "test",
+              "analysis",
+              "inspection"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "fail",
+              "open"
+            ]
+          }
+        }
+      }
+    },
+    "relationshipTypes": {
+      "connectsTo": {
+        "from": "Sensor",
+        "to": "Gateway",
+        "multiplicity": "1"
+      },
+      "publishesTo": {
+        "from": "Gateway",
+        "to": "TelemetryService",
+        "multiplicity": "1..*"
+      },
+      "monitors": {
+        "from": "Sensor",
+        "to": "Pump",
+        "multiplicity": "1"
+      },
+      "satisfies": {
+        "from": "*",
+        "to": "Requirement"
+      },
+      "verifies": {
+        "from": "VerificationRecord",
+        "to": "Requirement"
+      }
+    }
+  },
+  "elements": [
+    {
+      "id": "el-VS101DE",
+      "type": "Sensor",
+      "name": "Vibration Sensor P-101 DE",
+      "owner": "pkg-sensors",
+      "properties": {
+        "serialNumber": "RS-0009",
+        "sampleInterval": 100,
+        "measurand": "vibration"
+      }
+    },
+    {
+      "id": "el-GWR",
+      "type": "Gateway",
+      "name": "Radar Mast Gateway",
+      "owner": "pkg-network",
+      "properties": {
+        "firmware": "1.0",
+        "site": "Range 3"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "id": "rel-r1",
+      "type": "connectsTo",
+      "source": "el-VS101DE",
+      "target": "el-GWR"
+    }
+  ]
+}

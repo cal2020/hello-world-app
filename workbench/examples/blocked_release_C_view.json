@@ -1,0 +1,181 @@
+{
+  "release_id": "rel_c118a6b8258e",
+  "project": "ehm",
+  "status": "blocked_generation",
+  "is_active": false,
+  "manifest": {
+    "adapter_version": "lwb-synthetic-export-adapter/0.3.0",
+    "code_version": "2a1db853ecce+dirty",
+    "contract": {
+      "digest": "33abe25392f2bb9ca789d4733fc9726d8d6d2759e40802486a49d6a4c3313dfd",
+      "id": "equipment-health-api",
+      "version": "1"
+    },
+    "generator_version": "lwb-contractgen/0.3.0",
+    "project": "ehm",
+    "projection": {
+      "digest": "c1dc2fb3cb962720fa839c2485eb92fde14ba7b6951b90d79f829b3d5da16b80",
+      "id": "equipment-health",
+      "version": "1.0.0"
+    },
+    "record_snapshot_id": "snap_c42fd171bfed",
+    "release_id": "rel_c118a6b8258e",
+    "source_snapshots": [
+      {
+        "normalized_digest": "d6f45c0793bc0a92ed879983fdaa3e38e2170ec37f8979887827709d5f02f9b3",
+        "revision": "31d8e0",
+        "snapshot_id": "snap_ba217b5ce721",
+        "source": "synthmodeler"
+      }
+    ]
+  },
+  "manifest_digest": "c33574c29322e6ead369c9f1952d15137ae0f8b8d02a61c52163f39c7afe1429",
+  "diagnostics": [
+    {
+      "code": "definition_missing",
+      "class": "structural",
+      "resource": "sensors",
+      "field": "serialNumber",
+      "source_property": "Sensor.serialNumber",
+      "fix": "Map the field to an existing property (new projection version) or release a new contract version that drops it; consumers must be retested."
+    }
+  ],
+  "contract_diff_vs_active": {
+    "baseline": "1",
+    "changes": []
+  },
+  "source_diff_vs_active": null,
+  "active_release_id": "rel_939fa34badf9",
+  "consumer_test_runs": [
+    {
+      "run_id": "ctr_d497a968a13d",
+      "release_id": "rel_c118a6b8258e",
+      "consumer_id": "dashboard-consumer",
+      "consumer_version": "1.0.0",
+      "expectations_digest": "5695b0a8659a129a70b12e5bc3613b5e834fc729182584f89b06db246d45513f",
+      "passed": 0,
+      "started_at": "2026-09-23T23:29:25.023Z",
+      "finished_at": "2026-09-23T23:29:25.045Z",
+      "results": {
+        "consumer_id": "dashboard-consumer",
+        "consumer_version": "1.0.0",
+        "expectations_digest": "5695b0a8659a129a70b12e5bc3613b5e834fc729182584f89b06db246d45513f",
+        "passed": false,
+        "profiles": [
+          {
+            "profile": "dashboard",
+            "passed": false,
+            "checks": [
+              {
+                "check": "sensors: fetch",
+                "passed": true,
+                "detail": "4 items from release rel_c118a6b8258e (revision 31d8e0)"
+              },
+              {
+                "check": "sensors/el-VS102DE: required fields",
+                "passed": false,
+                "detail": "missing ['serialNumber']"
+              },
+              {
+                "check": "sensors/el-VS101DE: required fields",
+                "passed": false,
+                "detail": "missing ['serialNumber']"
+              },
+              {
+                "check": "sensors/el-VS101NDE: required fields",
+                "passed": false,
+                "detail": "missing ['serialNumber']"
+              },
+              {
+                "check": "sensors/el-TS101: required fields",
+                "passed": false,
+                "detail": "missing ['serialNumber']"
+              },
+              {
+                "check": "sensors: contract declares sampleIntervalMs in ms",
+                "passed": true,
+                "detail": "x-unit=ms"
+              },
+              {
+                "check": "gateways: fetch",
+                "passed": true,
+                "detail": "1 items from release rel_c118a6b8258e (revision 31d8e0)"
+              },
+              {
+                "check": "gateways: all item expectations",
+                "passed": true,
+                "detail": "1 items"
+              },
+              {
+                "check": "unauthenticated request refused",
+                "passed": true,
+                "detail": "HTTP 401"
+              },
+              {
+                "check": "unknown release is 404",
+                "passed": true,
+                "detail": "HTTP 404"
+              }
+            ]
+          },
+          {
+            "profile": "archive-export",
+            "passed": false,
+            "checks": [
+              {
+                "check": "sensors: fetch",
+                "passed": true,
+                "detail": "4 items from release rel_c118a6b8258e (revision 31d8e0)"
+              },
+              {
+                "check": "sensors/el-VS102DE: required fields",
+                "passed": false,
+                "detail": "missing ['serialNumber']"
+              },
+              {
+                "check": "sensors/el-VS101DE: required fields",
+                "passed": false,
+                "detail": "missing ['serialNumber']"
+              },
+              {
+                "check": "sensors/el-VS101NDE: required fields",
+                "passed": false,
+                "detail": "missing ['serialNumber']"
+              },
+              {
+                "check": "sensors/el-TS101: required fields",
+                "passed": false,
+                "detail": "missing ['serialNumber']"
+              }
+            ]
+          }
+        ]
+      },
+      "schema_check": {
+        "passed": false,
+        "resources": [
+          {
+            "resource": "gateways",
+            "pages": 1,
+            "valid": true,
+            "errors": []
+          },
+          {
+            "resource": "sensors",
+            "pages": 2,
+            "valid": false,
+            "errors": [
+              "items/0: 'serialNumber' is a required property",
+              "items/1: 'serialNumber' is a required property",
+              "items/2: 'serialNumber' is a required property",
+              "items/0: 'serialNumber' is a required property"
+            ]
+          }
+        ],
+        "note": "Structural validation only (JSON Schema 2020-12 via jsonschema 4.23.0). Does not prove units, relationship meaning, or permissions."
+      }
+    }
+  ],
+  "created_by": "carol",
+  "created_at": "2026-09-23T23:29:25.018Z"
+}

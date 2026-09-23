@@ -1,0 +1,32 @@
+{
+  "consumer_id": "dashboard-consumer",
+  "consumer_version": "1.0.0",
+  "note": "Authored independently of the generator. These are what the consuming team needs, not what the generator happens to emit.",
+  "profiles": {
+    "dashboard": {
+      "description": "Operator dashboard. Tolerates extra fields.",
+      "resources": {
+        "sensors": {
+          "required": ["id", "sourceId", "versionId", "name", "serialNumber", "sampleIntervalMs", "measurand", "gateway"],
+          "numeric_ranges": {"sampleIntervalMs": [50, 60000]},
+          "units": {"sampleIntervalMs": "ms"},
+          "enums": {"measurand": ["vibration", "temperature", "pressure"]},
+          "relations": {"gateway": "gateways"}
+        },
+        "gateways": {"required": ["id", "sourceId", "name"]}
+      },
+      "identity_stability": true,
+      "permission_checks": true
+    },
+    "archive-export": {
+      "description": "Nightly archive export. Strict: rejects fields it does not know.",
+      "resources": {
+        "sensors": {
+          "allowed_fields": ["id", "sourceId", "versionId", "_provenance", "name", "serialNumber", "sampleIntervalMs",
+                             "measurand", "mountPosition", "gateway"],
+          "required": ["id", "serialNumber"]
+        }
+      }
+    }
+  }
+}

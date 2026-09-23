@@ -1,0 +1,45 @@
+{
+  "format": "lwb-external-records/1",
+  "source": "cmms-heldout",
+  "project": "ehm",
+  "revision": "h-20260915",
+  "parent_revision": null,
+  "records": [
+    {
+      "id": "MR-2001",
+      "kind": "maintenance",
+      "asset_ref": "VS-5580",
+      "text": "Vibration sensor VS-5580 on P-102 cable replaced."
+    },
+    {
+      "id": "MR-2002",
+      "kind": "maintenance",
+      "asset_ref": "pump 102 vib",
+      "text": "P-102 drive end vibration probe showing drift; scheduled swap."
+    },
+    {
+      "id": "MR-2003",
+      "kind": "maintenance",
+      "asset_ref": "P-101 NDE vib",
+      "text": "Non-drive-end vibration sensor on P-101 remounted after bracket crack."
+    },
+    {
+      "id": "MR-2004",
+      "kind": "maintenance",
+      "asset_ref": "telemetry ingest",
+      "text": "Telemetry ingest service retention job failed overnight; rerun succeeded."
+    },
+    {
+      "id": "MR-2005",
+      "kind": "maintenance",
+      "asset_ref": "P-101 vib",
+      "text": "Vibration reading on P-101 checked during walkdown; no issue."
+    },
+    {
+      "id": "MR-2006",
+      "kind": "maintenance",
+      "asset_ref": "CHL-2",
+      "text": "Chiller 2 refrigerant top-up."
+    }
+  ]
+}

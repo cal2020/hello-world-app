@@ -1,0 +1,520 @@
+{
+  "components": {
+    "schemas": {
+      "Error": {
+        "properties": {
+          "error": {
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "type": "object"
+      },
+      "Gateways": {
+        "additionalProperties": false,
+        "properties": {
+          "_provenance": {
+            "$ref": "#/components/schemas/Provenance"
+          },
+          "firmware": {
+            "type": "string"
+          },
+          "id": {
+            "description": "Stable logical identity (namespaced source ID).",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "string"
+          },
+          "versionId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_provenance",
+          "id",
+          "name",
+          "sourceId",
+          "versionId"
+        ],
+        "type": "object"
+      },
+      "GatewaysPage": {
+        "additionalProperties": false,
+        "properties": {
+          "contract": {
+            "type": "object"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Gateways"
+            },
+            "type": "array"
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project": {
+            "type": "string"
+          },
+          "releaseId": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceSelection"
+          }
+        },
+        "required": [
+          "project",
+          "releaseId",
+          "contract",
+          "source",
+          "items",
+          "next"
+        ],
+        "type": "object"
+      },
+      "Provenance": {
+        "additionalProperties": false,
+        "properties": {
+          "conversions": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "elementVersionId": {
+            "type": "string"
+          },
+          "missingValues": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "snapshotId": {
+            "type": "string"
+          },
+          "sourcePointer": {
+            "type": "string"
+          },
+          "sourceRevision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "snapshotId",
+          "sourceRevision",
+          "elementVersionId",
+          "sourcePointer",
+          "conversions"
+        ],
+        "type": "object"
+      },
+      "Ref": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "sourceId"
+        ],
+        "type": "object"
+      },
+      "Sensors": {
+        "additionalProperties": false,
+        "properties": {
+          "_provenance": {
+            "$ref": "#/components/schemas/Provenance"
+          },
+          "gateway": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Ref"
+              }
+            ],
+            "x-relation": {
+              "direction": "outgoing",
+              "predicate": "connectsTo",
+              "targetResource": "gateways"
+            }
+          },
+          "id": {
+            "description": "Stable logical identity (namespaced source ID).",
+            "type": "string"
+          },
+          "measurand": {
+            "enum": [
+              "vibration",
+              "temperature",
+              "pressure"
+            ],
+            "type": "string"
+          },
+          "mountPosition": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "sampleIntervalMs": {
+            "description": "Unit: ms",
+            "type": "number",
+            "x-unit": "ms"
+          },
+          "serialNumber": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "string"
+          },
+          "versionId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_provenance",
+          "gateway",
+          "id",
+          "measurand",
+          "name",
+          "sampleIntervalMs",
+          "serialNumber",
+          "sourceId",
+          "versionId"
+        ],
+        "type": "object"
+      },
+      "SensorsPage": {
+        "additionalProperties": false,
+        "properties": {
+          "contract": {
+            "type": "object"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Sensors"
+            },
+            "type": "array"
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project": {
+            "type": "string"
+          },
+          "releaseId": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceSelection"
+          }
+        },
+        "required": [
+          "project",
+          "releaseId",
+          "contract",
+          "source",
+          "items",
+          "next"
+        ],
+        "type": "object"
+      },
+      "SourceSelection": {
+        "additionalProperties": false,
+        "properties": {
+          "headRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "headsBehind": {
+            "type": "integer"
+          },
+          "isCurrentHead": {
+            "type": "boolean"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "snapshotId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "snapshotId",
+          "revision",
+          "headRevision",
+          "isCurrentHead",
+          "headsBehind"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "title": "equipment-health-api (generated)",
+    "version": "1",
+    "x-lwb": {
+      "contractId": "equipment-health-api",
+      "generator": "lwb-contractgen/0.3.0",
+      "note": "Generated from a reviewed projection over synthetic data."
+    }
+  },
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "openapi": "3.1.1",
+  "paths": {
+    "/releases/{releaseId}/resources/gateways": {
+      "get": {
+        "operationId": "list_Gateways",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "releaseId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewaysPage"
+                }
+              }
+            },
+            "description": "Snapshot-pinned page"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        }
+      }
+    },
+    "/releases/{releaseId}/resources/gateways/{entityId}": {
+      "get": {
+        "operationId": "get_Gateways",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "releaseId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "entityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Gateways"
+                }
+              }
+            },
+            "description": "One item"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        }
+      }
+    },
+    "/releases/{releaseId}/resources/sensors": {
+      "get": {
+        "operationId": "list_Sensors",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "releaseId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SensorsPage"
+                }
+              }
+            },
+            "description": "Snapshot-pinned page"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        }
+      }
+    },
+    "/releases/{releaseId}/resources/sensors/{entityId}": {
+      "get": {
+        "operationId": "get_Sensors",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "releaseId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "entityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sensors"
+                }
+              }
+            },
+            "description": "One item"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearer": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "/api"
+    }
+  ]
+}

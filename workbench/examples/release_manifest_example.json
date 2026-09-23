@@ -1,0 +1,26 @@
+{
+  "adapter_version": "lwb-synthetic-export-adapter/0.3.0",
+  "code_version": "2a1db853ecce+dirty",
+  "contract": {
+    "digest": "33abe25392f2bb9ca789d4733fc9726d8d6d2759e40802486a49d6a4c3313dfd",
+    "id": "equipment-health-api",
+    "version": "1"
+  },
+  "generator_version": "lwb-contractgen/0.3.0",
+  "project": "ehm",
+  "projection": {
+    "digest": "30563c6f8ae601e275d7cc9327912cc1288dbf05c2f30f55d70801cb275c1c2d",
+    "id": "equipment-health",
+    "version": "1.1.0"
+  },
+  "record_snapshot_id": "snap_c42fd171bfed",
+  "release_id": "rel_939fa34badf9",
+  "source_snapshots": [
+    {
+      "normalized_digest": "d6f45c0793bc0a92ed879983fdaa3e38e2170ec37f8979887827709d5f02f9b3",
+      "revision": "31d8e0",
+      "snapshot_id": "snap_ba217b5ce721",
+      "source": "synthmodeler"
+    }
+  ]
+}

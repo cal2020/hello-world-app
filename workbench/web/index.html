@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Integration Workbench</title>
+<link rel="stylesheet" href="/web/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="title-row">
+    <h1>Integration Workbench — synthetic data</h1>
+    <span class="banner">Synthetic fixtures. Not a Cameo integration.</span>
+  </div>
+  <div class="controls-row">
+    <label class="identity">Simulated identity (not production auth)
+      <select id="token">
+        <option value="demo-alice">demo-alice</option>
+        <option value="demo-bob">demo-bob</option>
+        <option value="demo-carol" selected>demo-carol</option>
+        <option value="demo-dana">demo-dana</option>
+        <option value="demo-admin">demo-admin</option>
+      </select>
+    </label>
+    <span id="whoami" class="muted"></span>
+    <label>Project <select id="project"></select></label>
+    <button id="refresh" class="primary">Refresh</button>
+  </div>
+</header>
+
+<div id="toasts" aria-live="assertive"></div>
+
+<main>
+  <section class="panel" id="panel-controls">
+    <h2>Demo controls</h2>
+    <div class="ctl-grid">
+      <fieldset>
+        <legend>Import fixture</legend>
+        <div id="import-buttons" class="btn-wrap"></div>
+        <label class="inline"><input type="checkbox" id="send-idem"> send Idempotency-Key</label>
+        <button id="retry-last" title="Re-send the previous import/decision/activation request with the same key, headers and body">Retry last request with same key</button>
+        <div id="retry-desc" class="muted small"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Projections &amp; releases</legend>
+        <div class="row">
+          <select id="proj-fixture"></select>
+          <button id="btn-register">Register + approve projection</button>
+        </div>
+        <div class="row">
+          <select id="proj-approved"></select>
+          <button id="btn-build">Build candidate</button>
+        </div>
+        <div class="row">
+          <select id="release-select"></select>
+          <button id="btn-checks">Run consumer checks</button>
+          <button id="btn-activate">Activate</button>
+        </div>
+        <div class="row"><button id="btn-rollback">Rollback</button></div>
+      </fieldset>
+      <fieldset>
+        <legend>Relationship proposals</legend>
+        <div class="btn-wrap">
+          <button data-run="deterministic">Run proposals: deterministic</button>
+          <button data-run="fixture">Run proposals: fixture-model</button>
+          <button data-run="live">Run proposals: live model</button>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Outbox &amp; consumer faults</legend>
+        <div class="btn-wrap">
+          <button data-outbox="pause">Outbox: pause</button>
+          <button data-outbox="resume">Outbox: resume</button>
+          <button data-outbox="deliver">Outbox: deliver now</button>
+          <button id="btn-fault">Inject lost-ack fault</button>
+        </div>
+        <div class="row">
+          <select id="event-select"></select>
+          <button id="btn-redeliver">Redeliver event</button>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Permissions (needs demo-admin)</legend>
+        <div class="row">
+          <label>User <select id="g-user">
+            <option>alice</option><option>bob</option><option selected>carol</option><option>dana</option>
+            <option>svc-consumer</option><option>svc-release-check</option></select></label>
+          <label>Project <input id="g-project" value="ehm" size="6"></label>
+        </div>
+        <div class="row">
+          <label>Permission <select id="g-perm">
+            <option>read</option><option>import</option><option selected>release:manage</option>
+            <option>projection:review</option><option>link:review</option><option>link:approve</option>
+            <option>grants:manage</option></select></label>
+          <label>Action <select id="g-action"><option selected>revoke</option><option>grant</option></select></label>
+          <button id="btn-grant">Apply</button>
+        </div>
+      </fieldset>
+    </div>
+    <details id="last-response" class="lastresp">
+      <summary>Last response: <span id="lr-summary" class="muted">none yet</span></summary>
+      <pre id="lr-body"></pre>
+    </details>
+  </section>
+
+  <section class="panel" id="panel-model">
+    <h2>Model / revision explorer</h2>
+    <div id="model-body"></div>
+  </section>
+
+  <section class="panel" id="panel-release">
+    <h2>Release status &amp; contract diff</h2>
+    <div id="release-body"></div>
+  </section>
+
+  <section class="panel" id="panel-review">
+    <h2>Relationship review</h2>
+    <div id="review-body"></div>
+  </section>
+
+  <section class="panel" id="panel-history">
+    <h2>Operation history
+      <label class="inline small"><input type="checkbox" id="hist-auto"> auto-refresh every 3s</label>
+    </h2>
+    <div id="history-body"></div>
+  </section>
+</main>
+<script src="/web/app.js"></script>
+</body>
+</html>

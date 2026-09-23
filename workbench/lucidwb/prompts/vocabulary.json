@@ -1,0 +1,10 @@
+{
+  "version": "vocab-1",
+  "predicates": {
+    "maintenance_record_references_element": {
+      "description": "An external maintenance record describes work on, or an observation of, exactly this model element.",
+      "record_kinds": ["maintenance"],
+      "target_types": ["Sensor", "Gateway", "TelemetryService", "Pump"]
+    }
+  }
+}

@@ -1,0 +1,68 @@
+RECORDED run of scripts/demo.py --self-host (not a live run). Synthetic data.
+
+==============================================================================
+0. Baseline: projections registered (1.0.0 reviewed), CMMS records imported
+==============================================================================
+  simulated identities: carol=release manager, alice=reviewer/approver (not production auth)
+
+==============================================================================
+1. Import model A -> build contract -> consumer checks -> activate -> consumer reads HTTP
+==============================================================================
+  import imp_c350b5131bd6: accepted_head  revision=7c1e9a  counts={'elements_present': 12, 'elements_deleted': 0, 'relationships_present': 11, 'records': 0, 'total_logical_entities_in_project': 12, 'total_snapshots_in_project': 2}
+  warnings kept, not flattened: ['unknown_element_type', 'unrecognized_element_key', 'unrecognized_property', 'unrecognized_top_level_key']
+  candidate rel_cdb9b28929ad status=candidate contract=33abe25392f2
+  consumer checks: tested_pass  profiles=[('dashboard', True), ('archive-export', True)]  schema=True
+  activated pointer_seq=1  outbox event seq=3
+  GET /api/current/ehm/resources/sensors -> releaseId=rel_cdb9b28929ad source={'snapshotId': 'snap_33af85f6ca30', 'revision': '7c1e9a', 'headRevision': '7c1e9a', 'isCurrentHead': True, 'headsBehind': 0}
+    next (pinned to the same release): /api/releases/rel_cdb9b28929ad/resources/sensors?limit=2&cursor=ZW50XzU1YmRkYmVlNjUyNTdjYzY=
+    item: el-VS102DE id=ent_302abd8e0d16df20 sampleIntervalMs=500 provenance.revision=7c1e9a
+  consumer pinned_release=rel_cdb9b28929ad revision=7c1e9a sensors=4
+
+==============================================================================
+2. Import A again: identical revision and content
+==============================================================================
+  outcome=duplicate_no_change duplicate_of=imp_c350b5131bd6 (original receipt retained)
+  counts unchanged: True  -> {'elements_present': 12, 'elements_deleted': 0, 'relationships_present': 11, 'records': 0, 'total_logical_entities_in_project': 12, 'total_snapshots_in_project': 2}
+
+==============================================================================
+3. Propose links; inspect evidence; resolve an ambiguous candidate; bind review to exact revisions
+==============================================================================
+  deterministic baseline: 3 candidates [('MR-1001', 'el-VS101DE'), ('MR-1004', 'el-GW1'), ('MR-1005', 'el-TS101')]
+  FIXTURE MODE: scripted outputs; not evidence of model quality
+    MR-1001  -> el-VS101DE     validation=valid                            conf=0.97
+    MR-1001  -> el-GW1         validation=invalid_citation                 conf=0.31
+    MR-1002  -> el-VS101DE     validation=valid                            conf=0.82
+    MR-1002  -> el-P101        validation=unsupported_predicate            conf=0.4
+    MR-1003  -> el-VS101DE     validation=valid                            conf=0.45
+    MR-1003  -> el-VS101NDE    validation=valid                            conf=0.55
+    MR-1004  -> el-GW1         validation=valid                            conf=0.9
+    MR-1005  -> el-TS101       validation=valid                            conf=0.96
+    MR-1006  -> None           validation=no_match_suggested               conf=0.9
+    MR-1006  -> None           validation=reference_outside_permitted_set  conf=0.99
+    MR-1003/NDE evidence MR-1003[0:42] "Vibration sensor on pump 101 recalibrated." valid=True
+    MR-1003/NDE evidence N-2[42:87] "performed on the NDE unit, serial ending 4472" valid=True
+  accepted MR-1003 -> el-VS101NDE as reviewer_accepted link lnk_623071b109ea (bound to model 7c1e9a / records m-20260901); DE candidate rejected and retained
+  MR-1004 -> el-GW1 left open for review (etag "9c53cfb6ff700bdc48c6bceb0a668344")
+
+==============================================================================
+4. Import B (rename) and C (field removed); stale write rejected; incompatible candidate blocked
+==============================================================================
+  B: 'Edge Gateway North' -> 'Plant Edge Gateway North-1'  same entity_uid: True (ent_a0db7982c56145f5); logical entities still 12
+  accept MR-1004 approved against revision 7c1e9a: HTTP 409 stale_dependency issues=['model_revision_changed', 'target_version_changed']
+  C candidate rel_c118a6b8258e status=blocked_generation diagnostics=[('definition_missing', 'structural', 'Sensor.serialNumber')]
+  source diff vs active: structural=['property_definition_added:assetSerial', 'property_definition_removed:serialNumber']
+  consumer checks failed (8), e.g. sensors/el-VS102DE: required fields missing ['serialNumber']
+  activate -> HTTP 409 activation_blocked problems=['blocking_diagnostics', 'consumer_checks_failed']
+  consumer still served rel_cdb9b28929ad revision=7c1e9a isCurrentHead=False headsBehind=2
+
+==============================================================================
+5. Explicit compatible projection 1.1.0 -> retest -> activate; lost ack after consumer commit
+==============================================================================
+  candidate rel_939fa34badf9 status=candidate contract digest unchanged: True  contract diff=[]
+  consumer checks: tested_pass
+  activated rel_939fa34badf9; event evt_013e135e8229 seq=7
+    delivery seq=7 release.activated      attempt=1 -> no_acknowledgment
+    delivery seq=7 release.activated      attempt=2 -> acknowledged
+  consumer: deliveries of evt_013e135e8229=2  committed effects=1  pinned_release=rel_939fa34badf9 revision=31d8e0
+  current -> rel_939fa34badf9 revision=31d8e0 isCurrentHead=True serialNumber=VS-5580
+  client retry of the activation with the same key -> HTTP 200 Idempotent-Replay=true pointer_seq=2

@@ -1,0 +1,76 @@
+{
+  "projection_id": "equipment-health",
+  "version": "9.9.9",
+  "project": "ehm",
+  "contract": {
+    "id": "equipment-health-api",
+    "version": "1"
+  },
+  "schema_dialect": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Dashboard view of sensors and gateways. Exposes only allowlisted fields.",
+  "resources": {
+    "gateways": {
+      "element_type": "Gateway",
+      "fields": {
+        "name": {
+          "from": "__import__('os').system('id')",
+          "type": "string",
+          "required": true
+        },
+        "firmware": {
+          "from": "properties.firmware",
+          "type": "string",
+          "required": false
+        }
+      }
+    },
+    "sensors; DROP TABLE release": {
+      "element_type": "Sensor",
+      "fields": {
+        "name": {
+          "from": "name",
+          "type": "string",
+          "required": true
+        },
+        "serialNumber": {
+          "from": "properties.serialNumber",
+          "type": "string",
+          "required": true
+        },
+        "sampleIntervalMs": {
+          "from": "properties.sampleInterval",
+          "type": "number",
+          "unit": "ms",
+          "required": true
+        },
+        "measurand": {
+          "from": "properties.measurand",
+          "type": "string",
+          "enum": [
+            "vibration",
+            "temperature",
+            "pressure"
+          ],
+          "required": true
+        },
+        "mountPosition": {
+          "from": "properties.mountPosition",
+          "type": [
+            "string",
+            "null"
+          ],
+          "required": false
+        }
+      },
+      "relations": {
+        "gateway": {
+          "predicate": "connectsTo",
+          "direction": "outgoing",
+          "target_resource": "gateways",
+          "cardinality": "one",
+          "required": true
+        }
+      }
+    }
+  }
+}

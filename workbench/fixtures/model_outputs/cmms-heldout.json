@@ -1,0 +1,23 @@
+{
+  "note": "Scripted stand-in outputs for the held-out records (mechanics only). Includes one wrong single-target guess (MR-2005).",
+  "proposals": [
+    {"record_id": "MR-2001", "element_id": "el-VS102DE", "predicate": "maintenance_record_references_element",
+     "evidence": [{"record_id": "MR-2001", "quote": "Vibration sensor VS-5580 on P-102 cable replaced."}],
+     "contradictions": [], "confidence": 0.97},
+    {"record_id": "MR-2002", "element_id": "el-VS102DE", "predicate": "maintenance_record_references_element",
+     "evidence": [{"record_id": "MR-2002", "quote": "P-102 drive end vibration probe showing drift"}],
+     "contradictions": [], "confidence": 0.8},
+    {"record_id": "MR-2003", "element_id": "el-VS101NDE", "predicate": "maintenance_record_references_element",
+     "evidence": [{"record_id": "MR-2003", "quote": "Non-drive-end vibration sensor on P-101 remounted"}],
+     "contradictions": [], "confidence": 0.85},
+    {"record_id": "MR-2004", "element_id": "el-TEL1", "predicate": "maintenance_record_references_element",
+     "evidence": [{"record_id": "MR-2004", "quote": "Telemetry ingest service retention job failed overnight"}],
+     "contradictions": [], "confidence": 0.8},
+    {"record_id": "MR-2005", "element_id": "el-VS101DE", "predicate": "maintenance_record_references_element",
+     "evidence": [{"record_id": "MR-2005", "quote": "Vibration reading on P-101 checked during walkdown"}],
+     "contradictions": [], "confidence": 0.6},
+    {"record_id": "MR-2006", "element_id": null, "predicate": "maintenance_record_references_element",
+     "evidence": [{"record_id": "MR-2006", "quote": "Chiller 2 refrigerant top-up."}],
+     "contradictions": [], "confidence": 0.9}
+  ]
+}

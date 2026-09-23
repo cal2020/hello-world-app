@@ -1,0 +1,167 @@
+{
+  "format": "lwb-synthetic-export/1",
+  "source": "synthmodeler",
+  "project": "ehm",
+  "revision": "p-55e1",
+  "parent_revision": "f02b44",
+  "kind": "snapshot",
+  "scope": {
+    "kind": "partial",
+    "packages": [
+      "pkg-sensors"
+    ]
+  },
+  "definitions": {
+    "types": {
+      "Pump": {
+        "properties": {
+          "tag": {
+            "type": "string"
+          }
+        }
+      },
+      "Sensor": {
+        "properties": {
+          "serialNumber": {
+            "type": "string"
+          },
+          "sampleInterval": {
+            "type": "number",
+            "unit": "ms"
+          },
+          "measurand": {
+            "type": "string",
+            "enum": [
+              "vibration",
+              "temperature",
+              "pressure"
+            ]
+          },
+          "mountPosition": {
+            "type": "string"
+          },
+          "calibrationOffset": {
+            "type": "number",
+            "unit": "mm/s"
+          }
+        }
+      },
+      "Gateway": {
+        "properties": {
+          "firmware": {
+            "type": "string"
+          },
+          "site": {
+            "type": "string"
+          }
+        }
+      },
+      "TelemetryService": {
+        "properties": {
+          "endpoint": {
+            "type": "string"
+          },
+          "retentionDays": {
+            "type": "integer",
+            "unit": "d"
+          }
+        }
+      },
+      "Requirement": {
+        "properties": {
+          "reqId": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "VerificationRecord": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "test",
+              "analysis",
+              "inspection"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "fail",
+              "open"
+            ]
+          }
+        }
+      }
+    },
+    "relationshipTypes": {
+      "connectsTo": {
+        "from": "Sensor",
+        "to": "Gateway",
+        "multiplicity": "1"
+      },
+      "publishesTo": {
+        "from": "Gateway",
+        "to": "TelemetryService",
+        "multiplicity": "1..*"
+      },
+      "monitors": {
+        "from": "Sensor",
+        "to": "Pump",
+        "multiplicity": "1"
+      },
+      "satisfies": {
+        "from": "*",
+        "to": "Requirement"
+      },
+      "verifies": {
+        "from": "VerificationRecord",
+        "to": "Requirement"
+      }
+    }
+  },
+  "elements": [
+    {
+      "id": "el-VS101DE",
+      "type": "Sensor",
+      "name": "Vibration Sensor P-101 DE",
+      "owner": "pkg-sensors",
+      "properties": {
+        "serialNumber": "VS-4471",
+        "sampleInterval": 500,
+        "measurand": "vibration",
+        "mountPosition": "drive end",
+        "calibrationOffset": 0
+      }
+    },
+    {
+      "id": "el-VS101NDE",
+      "type": "Sensor",
+      "name": "Vibration Sensor P-101 NDE",
+      "owner": "pkg-sensors",
+      "properties": {
+        "serialNumber": "VS-4472",
+        "sampleInterval": 500,
+        "measurand": "vibration",
+        "mountPosition": "non-drive end"
+      }
+    },
+    {
+      "id": "el-VS102DE",
+      "type": "Sensor",
+      "name": "Vibration Sensor P-102 DE",
+      "owner": "pkg-sensors",
+      "properties": {
+        "serialNumber": "VS-5580",
+        "sampleInterval": 500,
+        "measurand": "vibration",
+        "mountPosition": "drive end"
+      }
+    }
+  ],
+  "relationships": []
+}

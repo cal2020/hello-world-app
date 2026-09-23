@@ -1,0 +1,79 @@
+{
+  "projection_id": "equipment-health",
+  "version": "1.2.0",
+  "project": "ehm",
+  "contract": {
+    "id": "equipment-health-api",
+    "version": "1"
+  },
+  "schema_dialect": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Adds a declared, reviewed s->ms conversion after the source changed sampleInterval to seconds.",
+  "resources": {
+    "sensors": {
+      "element_type": "Sensor",
+      "fields": {
+        "name": {
+          "from": "name",
+          "type": "string",
+          "required": true
+        },
+        "serialNumber": {
+          "from": "properties.assetSerial",
+          "type": "string",
+          "required": true
+        },
+        "sampleIntervalMs": {
+          "from": "properties.sampleInterval",
+          "type": "number",
+          "unit": "ms",
+          "required": true,
+          "convert": {
+            "rule": "s_to_ms"
+          }
+        },
+        "measurand": {
+          "from": "properties.measurand",
+          "type": "string",
+          "enum": [
+            "vibration",
+            "temperature",
+            "pressure"
+          ],
+          "required": true
+        },
+        "mountPosition": {
+          "from": "properties.mountPosition",
+          "type": [
+            "string",
+            "null"
+          ],
+          "required": false
+        }
+      },
+      "relations": {
+        "gateway": {
+          "predicate": "connectsTo",
+          "direction": "outgoing",
+          "target_resource": "gateways",
+          "cardinality": "one",
+          "required": true
+        }
+      }
+    },
+    "gateways": {
+      "element_type": "Gateway",
+      "fields": {
+        "name": {
+          "from": "name",
+          "type": "string",
+          "required": true
+        },
+        "firmware": {
+          "from": "properties.firmware",
+          "type": "string",
+          "required": false
+        }
+      }
+    }
+  }
+}

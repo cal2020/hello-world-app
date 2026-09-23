@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Equipment dashboard (mock consumer)</title>
+<style>
+  :root {
+    --bg: #f4f5f7; --panel: #fff; --text: #111418; --muted: #555c66; --border: #c9ced6;
+    --green-bg: #d8f3dc; --green-fg: #0f5132; --grey-bg: #e3e5e8; --grey-fg: #333a42;
+    --amber-bg: #fff1c2; --amber-fg: #6b4a00; --red-bg: #ffd9d6; --red-fg: #8a1410; --blue-bg: #dbe7ff; --blue-fg: #0a3a8c;
+    --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  * { box-sizing: border-box; }
+  html { font-size: 15px; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { background: var(--panel); border-bottom: 2px solid var(--border); padding: .6rem 1rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+  h1 { font-size: 1.3rem; margin: 0; }
+  h2 { font-size: 1.05rem; margin: 0 0 .5rem; }
+  main { max-width: 1300px; margin: 0 auto; padding: 1rem; display: grid; gap: 1rem; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: .8rem 1rem; overflow-x: auto; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .6rem; }
+  .stat { border: 1px solid var(--border); border-radius: 4px; padding: .4rem .6rem; }
+  .stat .k { color: var(--muted); font-size: .85rem; }
+  .stat .v { font-family: var(--mono); font-size: 1.05rem; font-weight: 600; word-break: break-all; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { border: 1px solid var(--border); padding: .25rem .45rem; text-align: left; vertical-align: top; }
+  th { background: #e9ecf1; }
+  .mono { font-family: var(--mono); font-size: .88rem; }
+  .badge { display: inline-block; padding: .05rem .45rem; border-radius: 10px; font-size: .8rem; font-weight: 600; }
+  .b-green { background: var(--green-bg); color: var(--green-fg); } .b-grey { background: var(--grey-bg); color: var(--grey-fg); }
+  .b-amber { background: var(--amber-bg); color: var(--amber-fg); } .b-red { background: var(--red-bg); color: var(--red-fg); }
+  .b-blue { background: var(--blue-bg); color: var(--blue-fg); }
+  tr.dup td { background: var(--red-bg); color: var(--red-fg); font-weight: 700; }
+  .alert { background: var(--red-bg); color: var(--red-fg); border: 2px solid #c92a2a; padding: .5rem .8rem; border-radius: 4px; font-weight: 700; }
+  .warn { background: var(--amber-bg); color: var(--amber-fg); border: 1px solid #e0c060; padding: .4rem .8rem; border-radius: 4px; font-weight: 600; }
+  .muted { color: var(--muted); } .empty { color: var(--muted); font-style: italic; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Equipment dashboard (mock consumer)</h1>
+  <span class="muted">Independent mock consuming app · polls <span class="mono">GET /state</span> every 2s</span>
+  <span id="status" class="badge b-grey">loading…</span>
+</header>
+<main>
+  <div id="error"></div>
+  <section class="panel"><h2>Stream state</h2><div id="stream"></div></section>
+  <section class="panel"><h2>Sensors (from pinned release)</h2><div id="sensors"></div></section>
+  <section class="panel"><h2>Links</h2><div id="links"></div></section>
+  <section class="panel"><h2>Received events &amp; effects</h2><div id="events"></div></section>
+</main>
+<script>
+"use strict";
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) if (v != null) el.setAttribute(k, v);
+  for (const kid of kids.flat()) if (kid != null) el.appendChild(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+  return el;
+}
+const badge = (t, c) => h("span", { class: "badge b-" + c }, t);
+const fmt = (v) => v == null ? "—" : String(v);
+function table(cols, rows, rowClass) {
+  if (!rows.length) return h("div", { class: "empty" }, "None.");
+  return h("table", null, h("thead", null, h("tr", null, cols.map((c) => h("th", null, c[0])))),
+    h("tbody", null, rows.map((r) => h("tr", { class: rowClass ? rowClass(r) : null },
+      cols.map((c) => { const v = c[1](r); return h("td", c[2] ? { class: "mono" } : null, v instanceof Node ? v : fmt(v)); })))));
+}
+function stat(k, v, extra) { return h("div", { class: "stat" }, h("div", { class: "k" }, k), h("div", { class: "v" }, fmt(v)), extra || null); }
+function set(id, node) { document.getElementById(id).replaceChildren(node); }
+
+function render(s) {
+  const st = s.stream || {};
+  const stale = st.pinned_revision && st.latest_known_head && st.pinned_revision !== st.latest_known_head;
+  set("stream", h("div", null,
+    h("div", { class: "stats" },
+      stat("Pinned release", st.pinned_release), stat("Pinned source revision", st.pinned_revision),
+      stat("Latest known head", st.latest_known_head), stat("last_seq", st.last_seq),
+      stat("Gaps detected", st.gaps_detected ?? 0), stat("Resyncs", st.resyncs ?? 0),
+      stat("Consumer", `${s.consumer_id} v${s.consumer_version}`),
+      stat("Faults armed", JSON.stringify(s.faults))),
+    stale ? h("div", { class: "warn", style: "margin-top:.5rem" },
+      `Showing pinned revision ${st.pinned_revision}; a newer source head (${st.latest_known_head}) exists but is not released.`) : null,
+    s.stream ? null : h("div", { class: "empty" }, "No events received yet.")));
+  set("sensors", table([["source_id", (r) => r.source_id, 1], ["name", (r) => r.name], ["serial", (r) => r.serial, 1],
+    ["interval_ms", (r) => r.interval_ms], ["measurand", (r) => r.measurand], ["gateway", (r) => r.gateway, 1],
+    ["id", (r) => r.id, 1]], s.sensors));
+  set("links", table([["link_id", (r) => r.link_id, 1], ["record_id", (r) => r.record_id, 1],
+    ["target_uid", (r) => r.target_uid, 1], ["status", (r) => badge(r.status, r.status === "active" ? "green" : "grey")]], s.links));
+  const counts = s.effect_count_by_event || {};
+  const dups = s.received_events.filter((e) => (counts[e.event_id] || 0) > 1);
+  const effectsBy = {};
+  s.effects.forEach((e) => (effectsBy[e.event_id] = effectsBy[e.event_id] || []).push(e));
+  set("events", h("div", null,
+    dups.length ? h("div", { class: "alert" }, `DUPLICATE EFFECT BUG: ${dups.length} event(s) applied more than once.`) : null,
+    table([["seq", (r) => r.seq], ["event_id", (r) => r.event_id, 1], ["type", (r) => r.type],
+      ["handling", (r) => badge(r.handling, r.handling === "applied" ? "green" : r.handling === "gap_resync" ? "blue" : "grey")],
+      ["deliveries", (r) => r.deliveries > 1 ? badge(`${r.deliveries} (duplicate delivery acked)`, "amber") : r.deliveries],
+      ["effects", (r) => { const n = counts[r.event_id] || 0; return n > 1 ? badge(`${n} — DUPLICATE`, "red") : String(n); }],
+      ["effect detail", (r) => (effectsBy[r.event_id] || []).map((e) => `${e.kind} ${e.detail}`).join("\n") || "—"],
+      ["received_at", (r) => r.received_at]],
+    s.received_events, (r) => (counts[r.event_id] || 0) > 1 ? "dup" : null)));
+}
+
+async function poll() {
+  const status = document.getElementById("status");
+  try {
+    const r = await fetch("/state", { cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    render(await r.json());
+    status.className = "badge b-green"; status.textContent = "updated " + new Date().toLocaleTimeString();
+    set("error", document.createTextNode(""));
+  } catch (e) {
+    status.className = "badge b-red"; status.textContent = "poll failed";
+    set("error", h("div", { class: "alert" }, "GET /state failed: " + e.message));
+  }
+}
+poll();
+setInterval(poll, 2000);
+</script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+{
+  "projection_id": "equipment-health",
+  "version": "1.3.0",
+  "project": "ehm",
+  "contract": {
+    "id": "equipment-health-api",
+    "version": "1"
+  },
+  "schema_dialect": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Adds an optional field but (incorrectly) keeps contract version 1.",
+  "resources": {
+    "sensors": {
+      "element_type": "Sensor",
+      "fields": {
+        "name": {
+          "from": "name",
+          "type": "string",
+          "required": true
+        },
+        "serialNumber": {
+          "from": "properties.serialNumber",
+          "type": "string",
+          "required": true
+        },
+        "sampleIntervalMs": {
+          "from": "properties.sampleInterval",
+          "type": "number",
+          "unit": "ms",
+          "required": true
+        },
+        "measurand": {
+          "from": "properties.measurand",
+          "type": "string",
+          "enum": [
+            "vibration",
+            "temperature",
+            "pressure"
+          ],
+          "required": true
+        },
+        "mountPosition": {
+          "from": "properties.mountPosition",
+          "type": [
+            "string",
+            "null"
+          ],
+          "required": false
+        },
+        "calibrationOffset": {
+          "from": "properties.calibrationOffset",
+          "type": "number",
+          "unit": "mm/s",
+          "required": false
+        }
+      },
+      "relations": {
+        "gateway": {
+          "predicate": "connectsTo",
+          "direction": "outgoing",
+          "target_resource": "gateways",
+          "cardinality": "one",
+          "required": true
+        }
+      }
+    },
+    "gateways": {
+      "element_type": "Gateway",
+      "fields": {
+        "name": {
+          "from": "name",
+          "type": "string",
+          "required": true
+        },
+        "firmware": {
+          "from": "properties.firmware",
+          "type": "string",
+          "required": false
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,514 @@
+{
+ "generated_at": "2026-09-23 23:31 UTC",
+ "code_version": "2a1db853ecce+dirty",
+ "python": "3.11.15",
+ "platform": "Linux",
+ "live_requested": false,
+ "tests": {
+  "ran": 36,
+  "failed": [],
+  "skipped": 0,
+  "cases": [
+   {
+    "id": "tests.test_integration.Contracts.test_IC08_unit_change_is_semantic_even_when_payload_validates",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Contracts.test_IC08b_relationship_direction_change_is_surfaced",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Contracts.test_IC09_missing_instance_value_is_data_not_schema",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Contracts.test_IC10_removed_required_definition_fails_and_active_release_stays",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Contracts.test_IC11_new_field_needs_declared_consumer_tests",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Contracts.test_IC11b_new_enum_value_is_checked_against_contract",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Contracts.test_hostile_projection_labels_are_rejected",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Contracts.test_pagination_stays_on_the_selected_release",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Contracts.test_unreviewed_projection_cannot_be_built",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Delivery.test_IC16b_lost_ack_after_consumer_commit_yields_one_effect",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Delivery.test_IC17_duplicate_older_and_gapped_events",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Delivery.test_IC19_failed_activation_and_rollback_keep_current_permissions",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Delivery.test_restart_persists_state_and_delivers_pending_events",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Identity.test_IC01_exact_repeated_import_has_no_duplicate_effects",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Identity.test_IC02_rename_preserves_identity_and_history",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Identity.test_IC03_similar_names_different_projects_no_merge_no_disclosure",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Identity.test_IC04_same_revision_different_content_is_quarantined",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Identity.test_IC05_partial_export_does_not_infer_deletion",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Identity.test_IC06_explicit_deletion_and_complete_scope_removal_keep_history",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Identity.test_IC06b_complete_snapshot_removal_flags_possible_replacement_without_merging",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Identity.test_IC07_out_of_order_and_missing_parent_never_regress_head",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Identity.test_IC_duplicate_identity_inside_export_is_quarantined",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Links.test_IC12_permission_revoked_between_proposal_and_commit",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Links.test_IC13_stale_etag_and_changed_source_require_new_review",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Links.test_IC13b_deleted_target_cannot_be_rebased",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Links.test_IC14_concurrent_head_update_during_acceptance",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Links.test_IC14b_two_concurrent_accepts_one_wins",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Links.test_IC15_same_key_different_request_is_rejected",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Links.test_IC16a_lost_http_ack_retry_returns_prior_result",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Links.test_IC18_forged_instructions_and_invalid_citations_gain_no_authority",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Links.test_ambiguous_candidates_are_flagged_and_resolved_by_review",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Links.test_live_mode_failure_is_visible_and_not_replaced_by_fixture",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Metamorphic.test_null_empty_zero_and_missing_stay_distinct",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Metamorphic.test_reordered_rows_and_whitespace_are_the_same_revision",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Metamorphic.test_unrecognized_content_is_preserved_but_not_exposed",
+    "passed": true
+   },
+   {
+    "id": "tests.test_integration.Metamorphic.test_unrelated_permitted_note_does_not_change_established_links",
+    "passed": true
+   }
+  ]
+ },
+ "relationships": {
+  "dev": {
+   "deterministic": {
+    "summary": {
+     "records": 6,
+     "positives": 5,
+     "correct_links": 3,
+     "false_links": 0,
+     "missed_links": 2,
+     "no_match_correct": 1,
+     "no_match_cases": 1,
+     "flagged_ambiguous": 0,
+     "rejected_by_validation": 0,
+     "predicate_correct": 3,
+     "predicate_judged": 3,
+     "needs_review": 3,
+     "citation_validity": "3/3",
+     "recall": "3/5",
+     "precision_of_valid_candidates": "3/3",
+     "accepted_incorrect_links": "not measured (no human review in this run)",
+     "review_time": "not measured (no human reviewers)"
+    },
+    "per_record": [
+     {
+      "record": "MR-1001",
+      "gold": "el-VS101DE",
+      "valid_targets": [
+       "el-VS101DE"
+      ],
+      "outcome": "correct",
+      "invalid_proposals": []
+     },
+     {
+      "record": "MR-1002",
+      "gold": "el-VS101DE",
+      "valid_targets": [],
+      "outcome": "missed",
+      "invalid_proposals": []
+     },
+     {
+      "record": "MR-1003",
+      "gold": "el-VS101NDE",
+      "valid_targets": [],
+      "outcome": "missed",
+      "invalid_proposals": []
+     },
+     {
+      "record": "MR-1004",
+      "gold": "el-GW1",
+      "valid_targets": [
+       "el-GW1"
+      ],
+      "outcome": "correct",
+      "invalid_proposals": []
+     },
+     {
+      "record": "MR-1005",
+      "gold": "el-TS101",
+      "valid_targets": [
+       "el-TS101"
+      ],
+      "outcome": "correct",
+      "invalid_proposals": []
+     },
+     {
+      "record": "MR-1006",
+      "gold": null,
+      "valid_targets": [],
+      "outcome": "correct_no_link",
+      "invalid_proposals": []
+     }
+    ],
+    "run": {
+     "run_id": "run_21667e3b9784",
+     "provider": "deterministic",
+     "model": "exact-serial+curated-alias/1",
+     "elapsed_ms": 1,
+     "label": null
+    }
+   },
+   "model:fixture": {
+    "summary": {
+     "records": 6,
+     "positives": 5,
+     "correct_links": 5,
+     "false_links": 1,
+     "missed_links": 0,
+     "no_match_correct": 1,
+     "no_match_cases": 1,
+     "flagged_ambiguous": 1,
+     "rejected_by_validation": 3,
+     "predicate_correct": 5,
+     "predicate_judged": 5,
+     "needs_review": 7,
+     "citation_validity": "11/12",
+     "recall": "5/5",
+     "precision_of_valid_candidates": "5/6",
+     "accepted_incorrect_links": "not measured (no human review in this run)",
+     "review_time": "not measured (no human reviewers)"
+    },
+    "per_record": [
+     {
+      "record": "MR-1001",
+      "gold": "el-VS101DE",
+      "valid_targets": [
+       "el-VS101DE"
+      ],
+      "outcome": "correct",
+      "invalid_proposals": [
+       "invalid_citation"
+      ]
+     },
+     {
+      "record": "MR-1002",
+      "gold": "el-VS101DE",
+      "valid_targets": [
+       "el-VS101DE"
+      ],
+      "outcome": "correct",
+      "invalid_proposals": [
+       "unsupported_predicate"
+      ]
+     },
+     {
+      "record": "MR-1003",
+      "gold": "el-VS101NDE",
+      "valid_targets": [
+       "el-VS101DE",
+       "el-VS101NDE"
+      ],
+      "outcome": "correct_plus_competing",
+      "invalid_proposals": []
+     },
+     {
+      "record": "MR-1004",
+      "gold": "el-GW1",
+      "valid_targets": [
+       "el-GW1"
+      ],
+      "outcome": "correct",
+      "invalid_proposals": []
+     },
+     {
+      "record": "MR-1005",
+      "gold": "el-TS101",
+      "valid_targets": [
+       "el-TS101"
+      ],
+      "outcome": "correct",
+      "invalid_proposals": []
+     },
+     {
+      "record": "MR-1006",
+      "gold": null,
+      "valid_targets": [],
+      "outcome": "correct_no_link",
+      "invalid_proposals": [
+       "reference_outside_permitted_set"
+      ]
+     }
+    ],
+    "run": {
+     "run_id": "run_0b7bfba412d0",
+     "provider": "fixture",
+     "model": "fixture:cmms.json",
+     "elapsed_ms": 2,
+     "label": "FIXTURE MODE: scripted outputs; not evidence of model quality"
+    }
+   }
+  },
+  "heldout": {
+   "deterministic": {
+    "summary": {
+     "records": 6,
+     "positives": 4,
+     "correct_links": 1,
+     "false_links": 0,
+     "missed_links": 3,
+     "no_match_correct": 2,
+     "no_match_cases": 2,
+     "flagged_ambiguous": 0,
+     "rejected_by_validation": 0,
+     "predicate_correct": 1,
+     "predicate_judged": 1,
+     "needs_review": 1,
+     "citation_validity": "1/1",
+     "recall": "1/4",
+     "precision_of_valid_candidates": "1/1",
+     "accepted_incorrect_links": "not measured (no human review in this run)",
+     "review_time": "not measured (no human reviewers)"
+    },
+    "per_record": [
+     {
+      "record": "MR-2001",
+      "gold": "el-VS102DE",
+      "valid_targets": [
+       "el-VS102DE"
+      ],
+      "outcome": "correct",
+      "invalid_proposals": []
+     },
+     {
+      "record": "MR-2002",
+      "gold": "el-VS102DE",
+      "valid_targets": [],
+      "outcome": "missed",
+      "invalid_proposals": []
+     },
+     {
+      "record": "MR-2003",
+      "gold": "el-VS101NDE",
+      "valid_targets": [],
+      "outcome": "missed",
+      "invalid_proposals": []
+     },
+     {
+      "record": "MR-2004",
+      "gold": "el-TEL1",
+      "valid_targets": [],
+      "outcome": "missed",
+      "invalid_proposals": []
+     },
+     {
+      "record": "MR-2005",
+      "gold": null,
+      "valid_targets": [],
+      "outcome": "correct_no_link",
+      "invalid_proposals": []
+     },
+     {
+      "record": "MR-2006",
+      "gold": null,
+      "valid_targets": [],
+      "outcome": "correct_no_link",
+      "invalid_proposals": []
+     }
+    ],
+    "run": {
+     "run_id": "run_d356602dba94",
+     "provider": "deterministic",
+     "model": "exact-serial+curated-alias/1",
+     "elapsed_ms": 0,
+     "label": null
+    }
+   },
+   "model:fixture": {
+    "summary": {
+     "records": 6,
+     "positives": 4,
+     "correct_links": 4,
+     "false_links": 1,
+     "missed_links": 0,
+     "no_match_correct": 1,
+     "no_match_cases": 2,
+     "flagged_ambiguous": 0,
+     "rejected_by_validation": 0,
+     "predicate_correct": 4,
+     "predicate_judged": 4,
+     "needs_review": 6,
+     "citation_validity": "6/6",
+     "recall": "4/4",
+     "precision_of_valid_candidates": "4/5",
+     "accepted_incorrect_links": "not measured (no human review in this run)",
+     "review_time": "not measured (no human reviewers)"
+    },
+    "per_record": [
+     {
+      "record": "MR-2001",
+      "gold": "el-VS102DE",
+      "valid_targets": [
+       "el-VS102DE"
+      ],
+      "outcome": "correct",
+      "invalid_proposals": []
+     },
+     {
+      "record": "MR-2002",
+      "gold": "el-VS102DE",
+      "valid_targets": [
+       "el-VS102DE"
+      ],
+      "outcome": "correct",
+      "invalid_proposals": []
+     },
+     {
+      "record": "MR-2003",
+      "gold": "el-VS101NDE",
+      "valid_targets": [
+       "el-VS101NDE"
+      ],
+      "outcome": "correct",
+      "invalid_proposals": []
+     },
+     {
+      "record": "MR-2004",
+      "gold": "el-TEL1",
+      "valid_targets": [
+       "el-TEL1"
+      ],
+      "outcome": "correct",
+      "invalid_proposals": []
+     },
+     {
+      "record": "MR-2005",
+      "gold": null,
+      "valid_targets": [
+       "el-VS101DE"
+      ],
+      "outcome": "false_link",
+      "invalid_proposals": []
+     },
+     {
+      "record": "MR-2006",
+      "gold": null,
+      "valid_targets": [],
+      "outcome": "correct_no_link",
+      "invalid_proposals": []
+     }
+    ],
+    "run": {
+     "run_id": "run_8561a68a4160",
+     "provider": "fixture",
+     "model": "fixture:cmms-heldout.json",
+     "elapsed_ms": 1,
+     "label": "FIXTURE MODE: scripted outputs; not evidence of model quality"
+    }
+   }
+  }
+ },
+ "timings": {
+  "import_A_ms": {
+   "n": 5,
+   "median": 4.0,
+   "max": 4.3
+  },
+  "build_ms": {
+   "n": 5,
+   "median": 60.6,
+   "max": 62.1
+  },
+  "consumer_checks_ms": {
+   "n": 5,
+   "median": 23.4,
+   "max": 39.6
+  },
+  "activate_ms": {
+   "n": 5,
+   "median": 2.6,
+   "max": 3.0
+  },
+  "delivery_ms": {
+   "n": 5,
+   "median": 11.5,
+   "max": 12.7
+  }
+ }
+}
