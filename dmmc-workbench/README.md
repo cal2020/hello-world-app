@@ -34,7 +34,7 @@ Without OPA, policy checks return `ERROR`, never `PASS`.
 |---|---|---|
 | 1 | Import model A + evidence set A, build package | 4 obligation rows; 3 of 4 rows have current applicable evidence; AC-3/AU-12/SC-8 portal PASS; inherited SC-8 UNKNOWN |
 | 2 | Withdraw the portal→API transport test, rebuild | SC-8 portal→API UNKNOWN; design assertion still PRESENT; gap explains why; previous package STALE |
-| 3 | Restore, rebuild, review as `alice` | ACCEPT bound to the exact package digest, 6 gaps acknowledged, export succeeds |
+| 3 | Restore, rebuild, review as `alice` | ACCEPT bound to the exact package digest, gap rows recorded as acknowledged limitations, export succeeds |
 | 4 | Import model B | Prior review STALE; "export as currently reviewed" refused; impact report: API changed, provider gateway + flow added, new SC-8 row, two evidence items no longer applicable |
 | 5 | Import evidence set B, rebuild, review, export | 5 rows; AC-3 FAIL (model and reviewed policy disagree about write roles); provider flow SC-8 UNKNOWN (no test); exports + schema-valid OSCAL component definition |
 
