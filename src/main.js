@@ -7,10 +7,12 @@ import { renderPlan, renderNotes } from './content.js'
 import { esc, highlight } from './html.js'
 
 const STORAGE_KEY = 'evidence-link-bench:v1'
+// Public builds (VITE_PUBLIC=1) omit the personal interview notes.
+const PUBLIC_BUILD = import.meta.env.VITE_PUBLIC === '1'
 const TABS = [
   ['bench', 'Review bench'],
   ['plan', 'Evaluation plan'],
-  ['notes', 'Interview notes'],
+  ...(PUBLIC_BUILD ? [] : [['notes', 'Interview notes']]),
 ]
 const DECISIONS = {
   verifies: { label: 'Accept “verifies” link', short: 'Accepted · verifies', tone: 'pass' },
@@ -99,7 +101,7 @@ function render() {
       </nav>
     </header>
     <main class="page">
-      ${state.tab === 'bench' ? renderBench() : state.tab === 'plan' ? renderPlan() : renderNotes()}
+      ${state.tab === 'bench' ? renderBench() : state.tab === 'plan' ? renderPlan() : PUBLIC_BUILD ? renderBench() : renderNotes()}
     </main>
     <div class="toast" role="status" aria-live="polite" ${state.toast ? '' : 'hidden'}>${esc(state.toast)}</div>
   `

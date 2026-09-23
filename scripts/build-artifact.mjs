@@ -11,6 +11,7 @@ const result = await build({
   write: false,
   outdir: 'dist-artifact',
   target: 'es2020',
+  define: { 'import.meta.env.VITE_PUBLIC': JSON.stringify(process.env.VITE_PUBLIC ?? '') },
 })
 
 const js = result.outputFiles.find((f) => f.path.endsWith('.js')).text

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:public": "VITE_PUBLIC=1 vite build",
     "build:single": "node scripts/build-artifact.mjs",
     "preview": "vite preview",
     "test": "node --test test/*.test.js"
