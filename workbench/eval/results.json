@@ -1,14 +1,26 @@
 {
- "generated_at": "2026-09-23 23:32 UTC",
- "code_version": "e79d2a8e9f3d",
+ "generated_at": "2026-09-24 08:56 UTC",
+ "code_version": "ecfa9ee4fe44",
  "python": "3.11.15",
  "platform": "Linux",
  "live_requested": false,
  "tests": {
-  "ran": 36,
+  "ran": 39,
   "failed": [],
   "skipped": 0,
   "cases": [
+   {
+    "id": "tests.test_deploy.Gate.test_internal_checks_and_delivery_work_behind_the_gate",
+    "passed": true
+   },
+   {
+    "id": "tests.test_deploy.Gate.test_login_cookie_grants_access_and_wrong_code_does_not",
+    "passed": true
+   },
+   {
+    "id": "tests.test_deploy.Gate.test_without_code_everything_but_healthz_is_refused",
+    "passed": true
+   },
    {
     "id": "tests.test_integration.Contracts.test_IC08_unit_change_is_semantic_even_when_payload_validates",
     "passed": true
@@ -228,7 +240,7 @@
      }
     ],
     "run": {
-     "run_id": "run_c03e90aeae7d",
+     "run_id": "run_c54496944e9d",
      "provider": "deterministic",
      "model": "exact-serial+curated-alias/1",
      "elapsed_ms": 1,
@@ -317,10 +329,10 @@
      }
     ],
     "run": {
-     "run_id": "run_4b45ba20be26",
+     "run_id": "run_5c3c6a1f978c",
      "provider": "fixture",
      "model": "fixture:cmms.json",
-     "elapsed_ms": 1,
+     "elapsed_ms": 2,
      "label": "FIXTURE MODE: scripted outputs; not evidence of model quality"
     }
    }
@@ -393,7 +405,7 @@
      }
     ],
     "run": {
-     "run_id": "run_b06865fff97b",
+     "run_id": "run_b906864b1a1d",
      "provider": "deterministic",
      "model": "exact-serial+curated-alias/1",
      "elapsed_ms": 0,
@@ -475,7 +487,7 @@
      }
     ],
     "run": {
-     "run_id": "run_d573ac09f4a4",
+     "run_id": "run_c29bdb69d6ea",
      "provider": "fixture",
      "model": "fixture:cmms-heldout.json",
      "elapsed_ms": 1,
@@ -487,28 +499,28 @@
  "timings": {
   "import_A_ms": {
    "n": 5,
-   "median": 4.6,
-   "max": 5.5
+   "median": 4.7,
+   "max": 16.9
   },
   "build_ms": {
    "n": 5,
-   "median": 59.9,
-   "max": 73.5
+   "median": 60.6,
+   "max": 72.0
   },
   "consumer_checks_ms": {
    "n": 5,
-   "median": 23.0,
-   "max": 27.8
+   "median": 23.6,
+   "max": 25.8
   },
   "activate_ms": {
    "n": 5,
-   "median": 2.6,
-   "max": 3.1
+   "median": 2.7,
+   "max": 2.8
   },
   "delivery_ms": {
    "n": 5,
-   "median": 12.5,
-   "max": 25.4
+   "median": 11.5,
+   "max": 13.9
   }
  }
 }

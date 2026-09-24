@@ -1,10 +1,10 @@
 # Evaluation report (generated)
 
-Generated 2026-09-23 23:32 UTC by `scripts/evaluate.py` at code version `e79d2a8e9f3d` on Python 3.11.15 / Linux. Every number below comes from this run. Synthetic fixtures only. Results are about this prototype's behavior on these cases, not about production reliability, standards conformance, Cameo compatibility or real-model quality.
+Generated 2026-09-24 08:56 UTC by `scripts/evaluate.py` at code version `ecfa9ee4fe44` on Python 3.11.15 / Linux. Every number below comes from this run. Synthetic fixtures only. Results are about this prototype's behavior on these cases, not about production reliability, standards conformance, Cameo compatibility or real-model quality.
 
 ## 1. Integration correctness (independent negative tests)
 
-Test suite: **36/36 passed**, 0 skipped. Each test drives the real HTTP API of a fresh local stack (workbench server and consumer server on loopback ports inside the test process, separate SQLite files).
+Test suite: **39/39 passed**, 0 skipped. Each test drives the real HTTP API of a fresh local stack (workbench server and consumer server on loopback ports inside the test process, separate SQLite files).
 
 | Case | Required outcome (from brief) | Test(s) | Result |
 |---|---|---|---|
@@ -28,7 +28,7 @@ Test suite: **36/36 passed**, 0 skipped. Each test drives the real HTTP API of a
 | IC18 | Forged source instructions or invalid citation | test_IC18_forged_instructions_and_invalid_citations_gain_no_authority | pass |
 | IC19 | Failed activation and rollback | test_IC19_failed_activation_and_rollback_keep_current_permissions | pass |
 
-Additional tests (11): test_hostile_projection_labels_are_rejected (pass), test_pagination_stays_on_the_selected_release (pass), test_unreviewed_projection_cannot_be_built (pass), test_restart_persists_state_and_delivers_pending_events (pass), test_IC_duplicate_identity_inside_export_is_quarantined (pass), test_ambiguous_candidates_are_flagged_and_resolved_by_review (pass), test_live_mode_failure_is_visible_and_not_replaced_by_fixture (pass), test_null_empty_zero_and_missing_stay_distinct (pass), test_reordered_rows_and_whitespace_are_the_same_revision (pass), test_unrecognized_content_is_preserved_but_not_exposed (pass), test_unrelated_permitted_note_does_not_change_established_links (pass)
+Additional tests (14): test_internal_checks_and_delivery_work_behind_the_gate (pass), test_login_cookie_grants_access_and_wrong_code_does_not (pass), test_without_code_everything_but_healthz_is_refused (pass), test_hostile_projection_labels_are_rejected (pass), test_pagination_stays_on_the_selected_release (pass), test_unreviewed_projection_cannot_be_built (pass), test_restart_persists_state_and_delivers_pending_events (pass), test_IC_duplicate_identity_inside_export_is_quarantined (pass), test_ambiguous_candidates_are_flagged_and_resolved_by_review (pass), test_live_mode_failure_is_visible_and_not_replaced_by_fixture (pass), test_null_empty_zero_and_missing_stay_distinct (pass), test_reordered_rows_and_whitespace_are_the_same_revision (pass), test_unrecognized_content_is_preserved_but_not_exposed (pass), test_unrelated_permitted_note_does_not_change_established_links (pass)
 
 ## 2. Relationship proposals
 
@@ -60,11 +60,11 @@ Wall-clock on this machine, loopback HTTP, SQLite. Each step was measured on a f
 
 | Step | n | median ms | max ms |
 |---|---|---|---|
-| import_A_ms | 5 | 4.6 | 5.5 |
-| build_ms | 5 | 59.9 | 73.5 |
-| consumer_checks_ms | 5 | 23.0 | 27.8 |
-| activate_ms | 5 | 2.6 | 3.1 |
-| delivery_ms | 5 | 12.5 | 25.4 |
+| import_A_ms | 5 | 4.7 | 16.9 |
+| build_ms | 5 | 60.6 | 72.0 |
+| consumer_checks_ms | 5 | 23.6 | 25.8 |
+| activate_ms | 5 | 2.7 | 2.8 |
+| delivery_ms | 5 | 11.5 | 13.9 |
 
 ## 4. Readiness gate
 
