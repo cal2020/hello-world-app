@@ -69,6 +69,8 @@ def http_get(path_or_url, token=TOKEN):
     req = urllib.request.Request(url)
     if token:
         req.add_header("Authorization", f"Bearer {token}")
+    if os.environ.get("LWB_ACCESS_CODE"):  # deployment gate in front of the workbench
+        req.add_header("X-Access-Code", os.environ["LWB_ACCESS_CODE"])
     try:
         with urllib.request.urlopen(req, timeout=15) as r:
             return r.status, json.loads(r.read())

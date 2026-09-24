@@ -1,0 +1,8 @@
+.venv
+var
+eval
+examples
+tests
+__pycache__
+*.pyc
+*.md

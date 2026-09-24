@@ -166,6 +166,8 @@ def _http_json(method, url, token=None, body=None, timeout=20):
     req.add_header("Content-Type", "application/json")
     if token:
         req.add_header("Authorization", f"Bearer {token}")
+    if os.environ.get("LWB_ACCESS_CODE"):
+        req.add_header("X-Access-Code", os.environ["LWB_ACCESS_CODE"])
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return resp.status, json.loads(resp.read() or b"null")

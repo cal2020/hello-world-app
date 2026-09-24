@@ -44,7 +44,6 @@ def must(resp, *codes):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://127.0.0.1:8780")
-    ap.add_argument("--consumer", default="http://127.0.0.1:8781")
     ap.add_argument("--pause", action="store_true")
     ap.add_argument("--self-host", action="store_true")
     ap.add_argument("--export", help="directory to write example artifacts and the transcript")
@@ -55,9 +54,10 @@ def main():
         import os
         os.environ["LWB_QUIET"] = "1"
         stack = Stack(tempfile.mkdtemp(prefix="lwb-demo-"), wb_port=0, consumer_port=0)
-        a.base, a.consumer = stack.wb_url, stack.consumer_url
+        a.base = stack.wb_url
     carol, alice = Client(a.base, "demo-carol"), Client(a.base, "demo-alice")
-    svc, cons = Client(a.base, "demo-svc-consumer"), Client(a.consumer, None)
+    svc = Client(a.base, "demo-svc-consumer")
+    cons = Client(a.base + "/consumer", None)  # consumer dashboard state, proxied by the workbench
 
     def wait_consumer(pred, timeout=8):
         end = time.time() + timeout
@@ -166,7 +166,7 @@ def main():
         if not must(carol.post("/manage/outbox/deliver"), 200)[1]["outcomes"]:
             break
     must(carol.post("/manage/outbox/pause"), 200)
-    must(cons.post("/faults", {"drop_ack_after_commit": 1}), 200)
+    must(carol.post("/manage/consumer/faults", {"drop_ack_after_commit": 1}), 200)
     _, act, _ = must(carol.post(f"/manage/releases/{rel_d['release_id']}/activate",
                                 {"expected_active_release_id": rel_a["release_id"], "reason": "C with compatible projection"},
                                 headers={"Idempotency-Key": "demo-activate-c"}), 200)

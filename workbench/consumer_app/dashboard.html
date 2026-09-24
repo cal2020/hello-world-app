@@ -105,7 +105,7 @@ function render(s) {
 async function poll() {
   const status = document.getElementById("status");
   try {
-    const r = await fetch("/state", { cache: "no-store" });
+    const r = await fetch("state", { cache: "no-store" });
     if (!r.ok) throw new Error("HTTP " + r.status);
     render(await r.json());
     status.className = "badge b-green"; status.textContent = "updated " + new Date().toLocaleTimeString();

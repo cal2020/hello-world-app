@@ -22,9 +22,11 @@ cd workbench
 * Workbench UI: <http://127.0.0.1:8780/>. Use the identity switcher, which is labeled as simulated.
 * Consumer dashboard: <http://127.0.0.1:8781/>
 * Scripted five-minute flow: `.venv/bin/python scripts/demo.py --pause`. Press Enter to advance each step. `--self-host` runs against a private temporary stack.
-* Tests: `.venv/bin/python -m unittest discover -s tests -t .` (36 tests, each on a fresh stack)
+* Tests: `.venv/bin/python -m unittest discover -s tests -t .` (39 tests, each on a fresh stack)
 * Evaluation report: `.venv/bin/python scripts/evaluate.py`, which rewrites `EVALUATION.md` and `eval/results.json`.
 * Optional live model: `.venv/bin/pip install -r requirements-live.txt`, then set `ANTHROPIC_API_KEY` (optionally `LWB_MODEL`, default `claude-opus-5`). Then choose "Run proposals: live" in the UI or set `LWB_EVAL_LIVE=1`. A live failure is recorded on the run and shown. The workbench never falls back to fixture data silently.
+
+To host it (container, access-code gate, Fly.io/Render/Docker host), see `DEPLOY.md`.
 
 Reset means stopping `run.py` and starting it again with `--reset`. Local state lives in `workbench/var/` and is gitignored.
 

@@ -1,0 +1,15 @@
+# Render blueprint (not yet deployed from this repo; see workbench/DEPLOY.md).
+services:
+  - type: web
+    name: lucid-workbench-demo
+    runtime: docker
+    rootDir: workbench
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    disk:
+      name: lwb-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: LWB_ACCESS_CODE
+        sync: false   # entered in the dashboard; never committed

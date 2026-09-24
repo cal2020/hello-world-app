@@ -1,5 +1,6 @@
 """Tiny HTTP client used by the seed/demo/eval scripts and tests."""
 import json
+import os
 import pathlib
 import urllib.error
 import urllib.request
@@ -21,6 +22,8 @@ class Client:
         r.add_header("Content-Type", "application/json")
         if self.token:
             r.add_header("Authorization", f"Bearer {self.token}")
+        if os.environ.get("LWB_ACCESS_CODE"):
+            r.add_header("X-Access-Code", os.environ["LWB_ACCESS_CODE"])
         for k, v in (headers or {}).items():
             r.add_header(k, v)
         try:

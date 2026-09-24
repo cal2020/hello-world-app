@@ -2,6 +2,9 @@
 
 Standard library only (http.server). Local demonstration server, not a production web stack.
 """
+import hashlib
+import hmac
+import http.client
 import json
 import mimetypes
 import os
@@ -20,6 +23,26 @@ from .util import ApiError
 WEB = pathlib.Path(__file__).resolve().parent.parent / "web"
 FIXTURES = pathlib.Path(__file__).resolve().parent.parent / "fixtures"  # synthetic, safe to serve for the demo UI
 ROUTES = []
+COOKIE = "lwb_access"
+LOGIN_PAGE = b"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport"
+content="width=device-width,initial-scale=1"><title>Workbench access</title><style>
+body{font:16px system-ui,sans-serif;background:#f4f6f8;color:#1b1f24;display:grid;place-items:center;min-height:100vh;margin:0}
+form{background:#fff;padding:28px;border-radius:10px;box-shadow:0 2px 12px #0002;max-width:360px}
+input,button{font:inherit;padding:8px 10px;width:100%;box-sizing:border-box;margin-top:10px}
+button{background:#1f5fbf;color:#fff;border:0;border-radius:6px;cursor:pointer}
+p{color:#555;font-size:14px}</style></head><body><form method="post" action="/login">
+<strong>Integration Workbench (synthetic demo)</strong><p>Enter the access code you were given.</p>
+<input type="password" name="code" autofocus autocomplete="current-password" aria-label="Access code">
+<button type="submit">Enter</button>__MSG__</form></body></html>"""
+
+
+def access_code():
+    """Deployment gate. Unset = local mode (no gate). Read per request so tests can toggle it."""
+    return os.environ.get("LWB_ACCESS_CODE") or None
+
+
+def _cookie_value(code):
+    return hmac.new(code.encode(), b"lwb-access-v1", hashlib.sha256).hexdigest()
 
 
 def route(method, pattern):
@@ -54,6 +77,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(data)))
         self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Referrer-Policy", "no-referrer")
         for k, v in (headers or {}).items():
             self.send_header(k, v)
         self.end_headers()
@@ -81,6 +107,16 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         self.query = {k: v[0] for k, v in urllib.parse.parse_qs(parsed.query).items()}
         path = parsed.path
+        if path == "/healthz":
+            return self._send(200, {"ok": True})
+        if path == "/login":
+            return self._login(method)
+        if not self._gate_ok():
+            if method == "GET" and (path == "/" or path.startswith("/consumer")):
+                return self._redirect("/login")
+            return self._send(401, {"error": {"code": "access_required", "message": "Access code required."}})
+        if method == "GET" and path.startswith("/consumer"):
+            return self._consumer_proxy(path)
         if method == "GET" and (path == "/" or path.startswith("/web/")):
             return self._static(path)
         for m, rx, fn in ROUTES:
@@ -111,6 +147,64 @@ class Handler(BaseHTTPRequestHandler):
                         self.user = None
                     return
         self._send(404, {"error": {"code": "not_found", "message": "Resource not found."}})
+
+    def _gate_ok(self):
+        code = access_code()
+        if not code:
+            return True
+        hdr = self.headers.get("X-Access-Code") or ""
+        if hdr and hmac.compare_digest(hdr, code):
+            return True
+        for part in (self.headers.get("Cookie") or "").split(";"):
+            k, _, v = part.strip().partition("=")
+            if k == COOKIE and hmac.compare_digest(v, _cookie_value(code)):
+                return True
+        return False
+
+    def _redirect(self, where, cookie=None):
+        self.send_response(303)
+        self.send_header("Location", where)
+        self.send_header("Content-Length", "0")
+        if cookie:
+            self.send_header("Set-Cookie", cookie)
+        self.end_headers()
+
+    def _login(self, method):
+        code = access_code()
+        if not code:
+            return self._redirect("/")
+        if method == "POST":
+            n = int(self.headers.get("Content-Length") or 0)
+            form = urllib.parse.parse_qs(self.rfile.read(min(n, 4096)).decode(errors="replace"))
+            given = (form.get("code") or [""])[0]
+            if hmac.compare_digest(given, code):
+                secure = "; Secure" if os.environ.get("LWB_COOKIE_SECURE", "1") == "1" else ""
+                return self._redirect("/", f"{COOKIE}={_cookie_value(code)}; HttpOnly; SameSite=Strict; Path=/; "
+                                           f"Max-Age=43200{secure}")
+            import time as _t
+            _t.sleep(1.0)  # slow down guessing
+            return self._send(401, None, raw=LOGIN_PAGE.replace(b"__MSG__", b"<p style='color:#b00020'>Wrong code.</p>"),
+                              ctype="text/html; charset=utf-8")
+        return self._send(200, None, raw=LOGIN_PAGE.replace(b"__MSG__", b""), ctype="text/html; charset=utf-8")
+
+    def _consumer_proxy(self, path):
+        """Expose the consumer's read-only dashboard through the single public port."""
+        from . import release as _rel
+        sub = path[len("/consumer"):] or "/"
+        if sub not in ("/", "/state"):
+            return self._send(404, {"error": {"code": "not_found", "message": "Resource not found."}})
+        u = urllib.parse.urlparse(_rel.CONSUMER_URL)
+        try:
+            conn = http.client.HTTPConnection(u.hostname, u.port, timeout=10)
+            conn.request("GET", sub)
+            r = conn.getresponse()
+            data = r.read()
+            conn.close()
+        except OSError:
+            return self._send(502, {"error": {"code": "consumer_unreachable", "message": "Consumer app unreachable."}})
+        if sub == "/" and path == "/consumer":
+            return self._redirect("/consumer/")
+        self._send(r.status, None, raw=data, ctype=r.getheader("Content-Type") or "application/octet-stream")
 
     def _static(self, path):
         root, rel = WEB, ("index.html" if path == "/" else path[len("/web/"):])

@@ -1,0 +1,28 @@
+# Fly.io config (not yet deployed from this repo; see DEPLOY.md). Change `app` to a unique name.
+app = "lucid-workbench-demo"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  LWB_SEED_ON_START = "1"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[mounts]]
+  source = "lwb_data"
+  destination = "/data"
+
+[checks]
+  [checks.health]
+    type = "http"
+    port = 8080
+    path = "/healthz"
+    interval = "30s"
+    timeout = "5s"

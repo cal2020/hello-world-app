@@ -7,12 +7,13 @@ from . import outbox, release, server
 
 
 class Stack:
-    def __init__(self, var_dir, wb_port=8780, consumer_port=8781, start_worker=True):
+    def __init__(self, var_dir, wb_port=8780, consumer_port=8781, start_worker=True, wb_host="127.0.0.1"):
         var = pathlib.Path(var_dir)
         var.mkdir(parents=True, exist_ok=True)
-        self.wb = server.serve(str(var / "workbench.db"), port=wb_port, start_worker=False)
+        self.wb = server.serve(str(var / "workbench.db"), host=wb_host, port=wb_port,
+                               start_worker=False)
         self.cons = consumer.serve(str(var / "consumer.db"), port=consumer_port)
-        self.wb_url = f"http://127.0.0.1:{self.wb.server_address[1]}"
+        self.wb_url = f"http://127.0.0.1:{self.wb.server_address[1]}"  # loopback for internal calls
         self.consumer_url = f"http://127.0.0.1:{self.cons.server_address[1]}"
         # Wire the two processes' addresses (module-level settings, read at call time).
         release.PUBLIC_URL = self.wb_url
