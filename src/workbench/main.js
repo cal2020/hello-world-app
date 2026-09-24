@@ -24,7 +24,7 @@ const S = {
   evidence: null, pending: { remove: new Set(), text: {} },
   impact: null, diffFrom: null, diffTo: null, diff: null,
   runs: [], run: null, evaluation: null, events: [], exportDoc: null,
-  notice: null, busy: false, sourceView: null
+  notice: null, busy: false, sourceView: null, editing: null, revoking: null
 }
 
 function notify(kind, title, body = '') {
@@ -85,6 +85,8 @@ async function refresh() {
 async function selectVersion(id) {
   S.versionId = id
   S.pending = { remove: new Set(), text: {} }
+  S.editing = null
+  S.revoking = null
   S.evidence = null
   S.exportDoc = null
   S.version = await api('GET', `/api/versions/${id}`)
@@ -98,8 +100,8 @@ function render() {
   $('#app').innerHTML = `
   <header class="top">
     <div class="brand">
-      <h1>TTP Development Workbench <span class="muted">prototype</span></h1>
-      <div class="badges">${chip('SYNTHETIC DATA', 'warn')} ${chip('Simulated system-model export (no Cameo connection)', 'warn')} ${chip(live ? 'Live model available' : 'No live model configured', live ? 'ok' : '')}</div>
+      <h1>Procedure Evidence Workbench <span class="muted">prototype</span></h1>
+      <div class="badges">${window.__WB_STATIC__ ? `${chip('Runs entirely in your browser; resets on reload', 'info')} <button class="tiny" data-act="reset-demo">Reset demo</button> ` : ''}${chip('SYNTHETIC DATA', 'warn')} ${chip('Simulated system-model export (no Cameo connection)', 'warn')} ${chip(live ? 'Live model available' : 'No live model configured', live ? 'ok' : '')}</div>
     </div>
     <div class="who">
       <label>Acting as <select id="who">${S.users.map((u) => `<option value="${esc(u.demoToken)}" ${u.userId === S.me?.userId ? 'selected' : ''}>${esc(u.name)}</option>`).join('')}</select></label>
@@ -180,7 +182,8 @@ function viewCandidate() {
     const kindChip = c.kind === 'hypothesis' ? chip('HYPOTHESIS', 'warn') : c.kind === 'computed' ? chip('COMPUTED BY CODE', 'info') : chip('fact', '')
     return `<div class="claim ${removed ? 'removed' : ''}">
       <div class="claim-head"><code>${esc(c.id)}</code> ${kindChip}
-        <span class="claim-text">${comp ? `<strong>${esc(comp.result === 'PASS' ? 'CURRENT' : comp.result === 'FAIL' ? 'NOT CURRENT' : 'UNKNOWN')}</strong>: ${esc(comp.text)}` : esc(text)}</span></div>
+        <span class="claim-text">${comp ? `<strong>${esc(comp.result === 'PASS' ? 'CURRENT' : comp.result === 'FAIL' ? 'NOT CURRENT' : 'UNKNOWN')}</strong>: ${esc(comp.text)}` : esc(text)}${S.pending.text[c.id] ? ' ' + chip('edited, unsaved', 'warn') : ''}</span></div>
+      ${S.editing === c.id ? `<div class="inline-edit"><label for="edit-text">New wording for ${esc(c.id)}</label><textarea id="edit-text" rows="2">${esc(text)}</textarea><div class="row"><button class="tiny primary" data-act="apply-edit">Apply</button><button class="tiny" data-act="cancel-edit">Cancel</button></div></div>` : ''}
       <div class="claim-meta">
         ${links.map((l, i) => { const [lab, cls] = LINK_LABEL[l.status] || [l.status, 'bad']; return `<button class="cite ${cls} ${S.evidence?.claimId === c.id && S.evidence.i === i ? 'sel' : ''}" data-cite="${esc(c.id)}|${i}">${esc(l.snapshotId)} ${esc(l.passageId)} · ${lab}</button>` }).join('')}
         ${c.kind === 'fact' ? (j ? chip(`${SUPPORT_LABEL[j.support][0]} (${j.reviewer.split(' (')[0]})`, SUPPORT_LABEL[j.support][1]) : chip('not yet judged', 'muted')) : ''}
@@ -258,7 +261,7 @@ function viewReviewPanel(v) {
       <div class="small">"${esc(d.rationale)}"</div>
       <div class="small muted">bound to digest <code>${short(d.candidateDigest)}</code> + sources <code>${short(d.manifestHash)}</code></div>
       ${d.decision === 'ACCEPT_FOR_DEMO' ? (d.status.valid ? chip('applies now', 'ok') : `${chip('no longer applies', 'bad')}<ul class="small">${d.status.reasons.map((r) => `<li>${esc(r.message)}</li>`).join('')}</ul>`) : ''}
-      ${reviewer && d.decision === 'ACCEPT_FOR_DEMO' && !d.revokedAt ? `<button class="tiny" data-revoke="${esc(d.decisionId)}">revoke</button>` : ''}
+      ${reviewer && d.decision === 'ACCEPT_FOR_DEMO' && !d.revokedAt ? (S.revoking === d.decisionId ? `<div class="inline-edit"><label for="revoke-reason">Reason for revoking</label><input id="revoke-reason" placeholder="What changed or what is in doubt" /><div class="row"><button class="tiny primary" data-act="confirm-revoke">Revoke acceptance</button><button class="tiny" data-act="cancel-revoke">Cancel</button></div></div>` : `<button class="tiny" data-revoke="${esc(d.decisionId)}">revoke</button>`) : ''}
     </li>`).join('')
   const unjudged = v.content.claims.filter((c) => c.kind === 'fact' && !v.judgments[c.id].current && (v.checks.links[c.id] || []).every((l) => l.status === 'RESOLVED'))
   return `<div class="card review">
@@ -398,6 +401,7 @@ document.addEventListener('click', async (ev) => {
     await refresh()
     return
   }
+  if (d.act === 'reset-demo') { location.reload(); return }
   if (d.act === 'dismiss') { S.notice = null; renderNotice(); return }
   if (d.source) { S.sourceView = d.source; render(); return }
   if (d.import) {
@@ -439,10 +443,14 @@ document.addEventListener('click', async (ev) => {
     return
   }
   if (d.remove) { S.pending.remove.has(d.remove) ? S.pending.remove.delete(d.remove) : S.pending.remove.add(d.remove); render(); return }
-  if (d.edit) {
-    const c = S.version.content.claims.find((x) => x.id === d.edit)
-    const next = prompt(`Edit claim ${c.id}`, S.pending.text[c.id] ?? c.text)
-    if (next !== null && next.trim() && next !== c.text) S.pending.text[c.id] = next.trim()
+  if (d.edit) { S.editing = d.edit; render(); $('#edit-text')?.focus(); return }
+  if (d.act === 'cancel-edit') { S.editing = null; render(); return }
+  if (d.act === 'apply-edit') {
+    const c = S.version.content.claims.find((x) => x.id === S.editing)
+    const next = $('#edit-text').value.trim()
+    if (next && next !== c.text) S.pending.text[c.id] = next
+    else delete S.pending.text[c.id]
+    S.editing = null
     render()
     return
   }
@@ -464,10 +472,13 @@ document.addEventListener('click', async (ev) => {
     await refresh()
     return
   }
-  if (d.revoke) {
-    const reason = prompt('Reason for revoking this acceptance')
-    if (!reason) return
-    await act('Revocation', () => api('POST', `/api/decisions/${d.revoke}/revoke`, { opId: newOpId(), reason }), { success: () => 'Acceptance revoked; it stays in history.' })
+  if (d.revoke) { S.revoking = d.revoke; render(); $('#revoke-reason')?.focus(); return }
+  if (d.act === 'cancel-revoke') { S.revoking = null; render(); return }
+  if (d.act === 'confirm-revoke') {
+    const reason = $('#revoke-reason').value
+    const id = S.revoking
+    const r = await act('Revocation', () => api('POST', `/api/decisions/${id}/revoke`, { opId: newOpId(), reason }), { success: () => 'Acceptance revoked; it stays in history.' })
+    if (r) S.revoking = null
     await refresh()
     return
   }
@@ -493,6 +504,10 @@ document.addEventListener('click', async (ev) => {
   }
 })
 
-refresh().catch((e) => {
+// Started explicitly by boot.js (server build) or src/static/entry.js
+// (browser-only build, after its in-page API is ready).
+export function start() {
+  return refresh().catch((e) => {
   document.querySelector('#app').innerHTML = `<div class="card"><h2>Cannot reach the workbench API</h2><p>${esc(e.message)}</p><p>Start it with <code>npm start</code> (built UI) or <code>npm run server</code> + <code>npm run dev</code>.</p></div>`
 })
+}

@@ -2,6 +2,8 @@
 
 **Setup (before the call):** run `npm run demo:reset`, then `npm start`. Open http://localhost:8787 at 125% browser zoom for Teams. Set "Acting as" to *R. Alvarez (reviewer)*. Keep a terminal ready with `npm run demo:walkthrough` as the fallback.
 
+**Hosted alternative:** the browser-only build at https://claude.ai/artifact/KgfLNw5us6t1U3ga1uixrA (add `#reviewed` to start at step 4) needs no local setup. It supports the same path, but state resets on reload. Share it from the page's Share menu before sending it to anyone.
+
 **Fallback levels:** (1) `npm run demo:reset -- --stage=reviewed` jumps straight to step 4. (2) `npm run demo:walkthrough` prints the whole path from real execution in the terminal; say it is the CLI, not the UI. (3) The screenshots in `docs/screenshots/` are static captures from an earlier run and should be labeled that way.
 
 Observed results below come from runs on 2026-09-23 at the code revision in `docs/EVALUATION_REPORT.md`. Generated ids and timestamps differ on every run.

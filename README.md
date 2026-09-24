@@ -1,5 +1,7 @@
 # Evidence-grounded procedure workbench (interview prototype)
 
+**Live demo:** https://claude.ai/artifact/KgfLNw5us6t1U3ga1uixrA. It is a browser-only build: the same server code runs inside the page on an in-memory SQLite (sql.js), and state resets on reload. Add `#draft` or `#reviewed` to the URL to start at a later stage. The link is private until it is shared from the page's Share menu.
+
 A small, working prototype of a system that helps experts **develop and evaluate candidate procedures**. Each step carries its assumptions, supporting evidence, open questions and review status. When a source requirement changes, the system identifies which conclusions need reassessment.
 
 The seed scenario is a **synthetic, non-combat maintenance inspection** of an invented "PSK-7 portable sensor kit". Every device, requirement, record and person is fictional. The prototype demonstrates an engineering workflow similar in shape to tactics, techniques and procedures (TTP) development. It is **not** an Air Force process, a TTP, or a validated procedure, and it approves nothing operationally.
@@ -32,6 +34,8 @@ npm start                   # builds the UI and serves UI + API on http://localh
 ```
 
 Development mode: run `npm run server` and `npm run dev` in two terminals. The Vite dev server on :5173 proxies `/api` to :8787.
+
+Browser-only build (the hosted demo): `npm run build:static` writes `artifact/index.html`, a single self-contained page. It uses the unchanged `server/` code with shims for Node built-ins (`src/static/`). Differences from the Node server: data is in memory only, there is no crash/restart persistence, and the live model is unavailable because an API key cannot be kept secret in a static page.
 
 Other commands:
 

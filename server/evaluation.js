@@ -7,10 +7,8 @@
 // template baseline. It does not measure real-model quality: the "fixture"
 // configuration is deterministic code written by the same author as the cases.
 // Case expectations are never passed to a generator.
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { createWorkbench, codeRevision, runConfig, DEFAULT_FIXTURE_FAULTS } from './workbench.js'
-import { loadScenario, loadInbox, FIXTURE_DIR } from './fixtures.js'
+import { loadScenario, loadInbox, loadEvalCases, loadEvalCriteria, loadEvalSource } from './fixtures.js'
 import { hashOf, newId, nowIso, WorkbenchError } from './util.js'
 
 const CONFIGS = [
@@ -21,14 +19,14 @@ const FIXTURE_REPEATS = 2
 const SCRIPTED_REVIEWER = 'scripted-reviewer (automation, not a human judgment)'
 
 export function loadSuite() {
-  const cases = JSON.parse(readFileSync(join(FIXTURE_DIR, 'eval', 'cases.json'), 'utf8'))
-  const criteriaText = readFileSync(join(FIXTURE_DIR, 'eval', 'criteria.json'), 'utf8')
-  return { cases, criteria: JSON.parse(criteriaText), criteriaHash: hashOf(JSON.parse(criteriaText)), suiteHash: hashOf(cases) }
+  const cases = loadEvalCases()
+  const criteria = loadEvalCriteria()
+  return { cases, criteria, criteriaHash: hashOf(criteria), suiteHash: hashOf(cases) }
 }
 
 function evalSource(ref) {
   if (ref.startsWith('inbox:')) return loadInbox(ref.slice(6))
-  if (ref.startsWith('eval:')) return JSON.parse(readFileSync(join(FIXTURE_DIR, 'eval', 'sources', ref.slice(5) + '.json'), 'utf8'))
+  if (ref.startsWith('eval:')) return loadEvalSource(ref.slice(5))
   throw new Error(`Unknown source ref ${ref}`)
 }
 

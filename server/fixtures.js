@@ -23,3 +23,15 @@ export function loadInbox(name) {
   if (!item) throw new Error(`Unknown inbox item ${name}`)
   return item.source
 }
+
+export function loadEvalCases() {
+  return JSON.parse(readFileSync(join(FIXTURE_DIR, 'eval', 'cases.json'), 'utf8'))
+}
+
+export function loadEvalCriteria() {
+  return JSON.parse(readFileSync(join(FIXTURE_DIR, 'eval', 'criteria.json'), 'utf8'))
+}
+
+export function loadEvalSource(name) {
+  return JSON.parse(readFileSync(join(FIXTURE_DIR, 'eval', 'sources', name + '.json'), 'utf8'))
+}
