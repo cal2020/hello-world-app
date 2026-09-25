@@ -33,14 +33,38 @@ These were run in the build sandbox on 2026-09-24:
   * `/` redirects to `/login`.
   * The API returns 401 without the code, and a wrong code gets 401.
   * The right code sets an HttpOnly cookie and the UI loads (checked in headless Chromium).
-  * `/consumer/` is proxied, port 8781 is not exposed, and the container runs as non-root user `app`.
+  * `/consumer/` is proxied, port 8781 is not exposed, and the server runs as non-root user `app` (the entrypoint starts as root only to fix volume ownership).
 * **The full `scripts/demo.py` flow** ran against the container through the gate, including the lost-ack retry.
 * **State** survived `docker restart`. `LWB_RESET_ON_START=1` gave a clean, re-seeded start.
 * **Tests:** `tests/test_deploy.py` covers the gate. The full suite has 39 tests.
 
 **Not done:** no cloud deployment has been made from this repository. The platform steps below have not been run.
 
-## Option A: Fly.io (`fly.toml` included)
+## Option A (chosen): Railway
+
+The repo contains `workbench/railway.json`, which sets a Dockerfile build, the `/healthz` health check and restart-on-failure. Everything else is set in the Railway dashboard. Dashboard labels may differ slightly from the names below.
+
+1. **Create the service.** New Project → *Deploy from GitHub repo* → `cal2020/hello-world-app`. In the service's *Source* settings, choose the branch `claude/kbr-interview-prep-s59ic7`, or `master` if you merge it there.
+2. **Root directory.** Service *Settings* → *Root Directory* = `workbench`.
+3. **Config file.** Set *Config-as-code / Railway config file* = `/workbench/railway.json`. Railway may not look for the config file inside the root directory by itself, so set the path explicitly. If it isn't picked up, set the health check path to `/healthz` in the dashboard instead.
+4. **Variables.** Add `LWB_ACCESS_CODE` with a long random value, for example from `python3 -c "import secrets; print(secrets.token_urlsafe(18))"`. Do **not** set `PORT`; Railway provides it and the app listens on it.
+5. **Volume.** Attach a volume to the service with mount path **`/data`**. Without it the app still runs, but its data is lost on every redeploy.
+6. **Replicas.** Keep the replica count at **1**. SQLite and the in-process event worker require a single instance.
+7. **Public URL.** *Networking* → *Generate Domain*. Railway serves it over HTTPS.
+8. **Deploy.** The deploy logs should show `seeded baseline …` on the first start and `Access gate: ON`. The domain should open the login page; enter the code to get the workbench. The consumer dashboard is at `/consumer/`.
+
+To reset between demo sessions, add `LWB_RESET_ON_START=1`, restart the service, then remove the variable. Railway bills by usage and for volume storage, so check its current pricing.
+
+### Verified for Railway in the build sandbox
+
+These were not run on Railway itself.
+
+* **Root-owned volume.** The image started with a root-owned directory mounted at `/data`, as Railway mounts volumes. `scripts/entrypoint.sh` changed ownership of the directory, then dropped to the unprivileged `app` user (uid 10001). The data files were written by that user.
+* **Platform port.** With `PORT=5555` set by the "platform", `/healthz` returned 200 on that port.
+* **Full demo.** The complete `scripts/demo.py` flow passed through the access gate.
+* **Not verified:** `railway.json` could not be checked against Railway's schema, because Railway's docs and schema URLs are blocked from the sandbox.
+
+## Option B: Fly.io (`fly.toml` included)
 
 ```sh
 cd workbench
@@ -51,7 +75,7 @@ fly deploy
 fly scale count 1                           # single instance (SQLite)
 ```
 
-## Option B: Render (`render.yaml` at the repository root)
+## Option C: Render (`render.yaml` at the repository root)
 
 Create a Blueprint from the repo, or a Docker web service with root directory `workbench`. Then:
 
@@ -59,7 +83,7 @@ Create a Blueprint from the repo, or a Docker web service with root directory `w
 2. Set `LWB_ACCESS_CODE` in the dashboard.
 3. Keep the instance count at 1.
 
-## Option C: any Docker host (VM, Lightsail instance, internal server)
+## Option D: any Docker host (VM, Lightsail instance, internal server)
 
 ```sh
 docker build -t lucid-workbench ./workbench
