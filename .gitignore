@@ -25,3 +25,4 @@ dist-ssr
 data/
 dist-static/
 artifact/
+.claude/settings.local.json
