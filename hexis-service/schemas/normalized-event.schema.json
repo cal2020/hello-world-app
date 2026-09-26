@@ -1,0 +1,75 @@
+{
+  "$id": "hexis-service/normalized-event.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "index": {
+      "title": "Index",
+      "type": "integer"
+    },
+    "inputs": {
+      "default": null,
+      "title": "Inputs"
+    },
+    "interaction_type": {
+      "default": "",
+      "title": "Interaction Type",
+      "type": "string"
+    },
+    "kind": {
+      "title": "Kind",
+      "type": "string"
+    },
+    "labels": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Labels",
+      "type": "array"
+    },
+    "outcome": {
+      "default": "",
+      "title": "Outcome",
+      "type": "string"
+    },
+    "outputs": {
+      "additionalProperties": true,
+      "title": "Outputs",
+      "type": "object"
+    },
+    "phase": {
+      "default": "",
+      "title": "Phase",
+      "type": "string"
+    },
+    "role": {
+      "default": "",
+      "title": "Role",
+      "type": "string"
+    },
+    "source_steps": {
+      "items": {
+        "type": "integer"
+      },
+      "title": "Source Steps",
+      "type": "array"
+    },
+    "terminal": {
+      "default": "",
+      "title": "Terminal",
+      "type": "string"
+    },
+    "tool": {
+      "default": "",
+      "title": "Tool",
+      "type": "string"
+    }
+  },
+  "required": [
+    "index",
+    "source_steps",
+    "kind"
+  ],
+  "title": "NormalizedEvent",
+  "type": "object"
+}

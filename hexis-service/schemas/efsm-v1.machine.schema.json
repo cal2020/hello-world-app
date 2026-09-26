@@ -1,0 +1,605 @@
+{
+  "$defs": {
+    "EndAction": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "end",
+          "default": "end",
+          "title": "Kind",
+          "type": "string"
+        },
+        "terminal": {
+          "title": "Terminal",
+          "type": "string"
+        }
+      },
+      "required": [
+        "terminal"
+      ],
+      "title": "EndAction",
+      "type": "object"
+    },
+    "Example": {
+      "additionalProperties": true,
+      "properties": {
+        "label": {
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label"
+      ],
+      "title": "Example",
+      "type": "object"
+    },
+    "JudgeAction": {
+      "additionalProperties": false,
+      "properties": {
+        "abstain": {
+          "default": "abstain",
+          "title": "Abstain",
+          "type": "string"
+        },
+        "error_rate": {
+          "default": 0.0,
+          "title": "Error Rate",
+          "type": "number"
+        },
+        "examples": {
+          "items": {
+            "$ref": "#/$defs/Example"
+          },
+          "title": "Examples",
+          "type": "array"
+        },
+        "gold_from": {
+          "default": "",
+          "title": "Gold From",
+          "type": "string"
+        },
+        "introduced": {
+          "default": false,
+          "title": "Introduced",
+          "type": "boolean"
+        },
+        "kind": {
+          "const": "judge",
+          "default": "judge",
+          "title": "Kind",
+          "type": "string"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "type": "string"
+        },
+        "reads": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reads",
+          "type": "array"
+        },
+        "support": {
+          "default": 0,
+          "title": "Support",
+          "type": "integer"
+        },
+        "writes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Writes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "prompt",
+        "reads",
+        "writes",
+        "labels"
+      ],
+      "title": "JudgeAction",
+      "type": "object"
+    },
+    "ModelAction": {
+      "additionalProperties": false,
+      "properties": {
+        "introduced": {
+          "default": false,
+          "title": "Introduced",
+          "type": "boolean"
+        },
+        "kind": {
+          "const": "model",
+          "default": "model",
+          "title": "Kind",
+          "type": "string"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "observable": {
+          "default": false,
+          "title": "Observable",
+          "type": "boolean"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "type": "string"
+        },
+        "reads": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reads",
+          "type": "array"
+        },
+        "writes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Writes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "prompt"
+      ],
+      "title": "ModelAction",
+      "type": "object"
+    },
+    "Prohibition": {
+      "additionalProperties": false,
+      "properties": {
+        "check": {
+          "enum": [
+            "absent",
+            "present",
+            "regex",
+            "forbid_action",
+            "require_before"
+          ],
+          "title": "Check",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "pattern": {
+          "title": "Pattern"
+        }
+      },
+      "required": [
+        "id",
+        "check",
+        "pattern"
+      ],
+      "title": "Prohibition",
+      "type": "object"
+    },
+    "State": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "discriminator": {
+            "mapping": {
+              "end": "#/$defs/EndAction",
+              "judge": "#/$defs/JudgeAction",
+              "model": "#/$defs/ModelAction",
+              "tool": "#/$defs/ToolAction",
+              "user": "#/$defs/UserAction"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ToolAction"
+            },
+            {
+              "$ref": "#/$defs/ModelAction"
+            },
+            {
+              "$ref": "#/$defs/JudgeAction"
+            },
+            {
+              "$ref": "#/$defs/UserAction"
+            },
+            {
+              "$ref": "#/$defs/EndAction"
+            }
+          ],
+          "title": "Action"
+        },
+        "clause": {
+          "default": "",
+          "title": "Clause",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "locator": {
+          "default": "",
+          "title": "Locator",
+          "type": "string"
+        },
+        "origin": {
+          "default": "",
+          "title": "Origin",
+          "type": "string"
+        },
+        "transitions": {
+          "items": {
+            "$ref": "#/$defs/Transition"
+          },
+          "title": "Transitions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "action"
+      ],
+      "title": "State",
+      "type": "object"
+    },
+    "Terminal": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "default": "",
+          "title": "Kind",
+          "type": "string"
+        },
+        "output": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Output",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "Terminal",
+      "type": "object"
+    },
+    "Thresholds": {
+      "additionalProperties": false,
+      "properties": {
+        "acc_thr": {
+          "default": 0.9,
+          "title": "Acc Thr",
+          "type": "number"
+        },
+        "fallback_rate_target": {
+          "default": 0.15,
+          "title": "Fallback Rate Target",
+          "type": "number"
+        },
+        "holdout_ratio": {
+          "default": 0.2,
+          "title": "Holdout Ratio",
+          "type": "number"
+        },
+        "judge_err_max": {
+          "default": 0.2,
+          "title": "Judge Err Max",
+          "type": "number"
+        },
+        "judge_rewrite_max": {
+          "default": 2,
+          "title": "Judge Rewrite Max",
+          "type": "integer"
+        },
+        "loop_margin": {
+          "default": 1.5,
+          "title": "Loop Margin",
+          "type": "number"
+        },
+        "min_support": {
+          "default": 2,
+          "title": "Min Support",
+          "type": "integer"
+        },
+        "retry_budget": {
+          "default": 3,
+          "title": "Retry Budget",
+          "type": "integer"
+        }
+      },
+      "title": "Thresholds",
+      "type": "object"
+    },
+    "ToolAction": {
+      "additionalProperties": false,
+      "properties": {
+        "binds": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Binds",
+          "type": "object"
+        },
+        "input": {
+          "additionalProperties": true,
+          "title": "Input",
+          "type": "object"
+        },
+        "kind": {
+          "const": "tool",
+          "default": "tool",
+          "title": "Kind",
+          "type": "string"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "phase": {
+          "default": "",
+          "title": "Phase",
+          "type": "string"
+        },
+        "reads": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reads",
+          "type": "array"
+        },
+        "writes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Writes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ToolAction",
+      "type": "object"
+    },
+    "Transition": {
+      "additionalProperties": false,
+      "properties": {
+        "if": {
+          "default": "",
+          "title": "If",
+          "type": "string"
+        },
+        "inc": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Inc"
+        },
+        "origin": {
+          "default": "",
+          "title": "Origin",
+          "type": "string"
+        },
+        "support": {
+          "default": 0,
+          "title": "Support",
+          "type": "integer"
+        },
+        "to": {
+          "title": "To",
+          "type": "string"
+        }
+      },
+      "required": [
+        "to"
+      ],
+      "title": "Transition",
+      "type": "object"
+    },
+    "UserAction": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "user",
+          "default": "user",
+          "title": "Kind",
+          "type": "string"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "prompt": {
+          "default": "",
+          "title": "Prompt",
+          "type": "string"
+        },
+        "reads": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reads",
+          "type": "array"
+        },
+        "writes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Writes",
+          "type": "array"
+        }
+      },
+      "title": "UserAction",
+      "type": "object"
+    },
+    "Variable": {
+      "additionalProperties": false,
+      "properties": {
+        "init": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Init"
+        },
+        "init_from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Init From"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "default": "string",
+          "enum": [
+            "string",
+            "integer",
+            "number",
+            "boolean",
+            "array",
+            "object"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "Variable",
+      "type": "object"
+    }
+  },
+  "$id": "hexis-service/efsm-v1.machine.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "audit_tools": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Audit Tools",
+      "type": "array"
+    },
+    "fallback": {
+      "default": "FALLBACK",
+      "title": "Fallback",
+      "type": "string"
+    },
+    "format": {
+      "const": "efsm-v1",
+      "default": "efsm-v1",
+      "title": "Format",
+      "type": "string"
+    },
+    "initial": {
+      "title": "Initial",
+      "type": "string"
+    },
+    "max_steps": {
+      "default": 24,
+      "title": "Max Steps",
+      "type": "integer"
+    },
+    "phase_rules": {
+      "default": "",
+      "title": "Phase Rules",
+      "type": "string"
+    },
+    "prohibitions": {
+      "items": {
+        "$ref": "#/$defs/Prohibition"
+      },
+      "title": "Prohibitions",
+      "type": "array"
+    },
+    "skill_id": {
+      "title": "Skill Id",
+      "type": "string"
+    },
+    "states": {
+      "additionalProperties": {
+        "$ref": "#/$defs/State"
+      },
+      "title": "States",
+      "type": "object"
+    },
+    "terminals": {
+      "items": {
+        "$ref": "#/$defs/Terminal"
+      },
+      "title": "Terminals",
+      "type": "array"
+    },
+    "thresholds": {
+      "$ref": "#/$defs/Thresholds"
+    },
+    "variables": {
+      "items": {
+        "$ref": "#/$defs/Variable"
+      },
+      "title": "Variables",
+      "type": "array"
+    },
+    "version": {
+      "default": "0.1.0",
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "skill_id",
+    "initial"
+  ],
+  "title": "Machine",
+  "type": "object"
+}

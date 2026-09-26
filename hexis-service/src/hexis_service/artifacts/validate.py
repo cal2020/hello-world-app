@@ -507,6 +507,26 @@ def validate_package(pkg: MachinePackage, catalog: ToolCatalog, profile: str = "
             err("ORDERING_VIOLATION", f"requirement {req.id}: path reaches {req.before} without "
                 f"{' or '.join(req.requires)} (after last change to {req.invalidated_by or 'nothing'})",
                 state=path[-1], clause=req.clause or None, detail={"path": path, "requirement": req.id})
+    for sid, ic in C.interactions.items():
+        st = m.states.get(sid)
+        if ic.type != "approval" or st is None or st.action.kind != "user" or not st.action.writes:
+            continue
+        dvar = st.action.writes[0]
+        enum = (C.variables.get(dvar).schema_ if dvar in C.variables else {}).get("enum") or []
+        for i, t in enumerate(st.transitions):
+            if t.to != ic.approves_state:
+                continue
+            weak = []
+            for val in [v for v in enum if v != "approved"] + ["\u0000other"]:
+                env = {**{v: 0 for v in types}, dvar: val}
+                try:
+                    if not t.cond or G.evaluate(t.cond, {k: env[k] for k in G.vars_of(t.cond)} if t.cond else {}):
+                        weak.append(val)
+                except G.GuardError:
+                    weak.append(val)
+            if weak:
+                err("APPROVAL_GUARD_WEAK", f"{sid} edge {i} enters {ic.approves_state} for decision values "
+                    f"{weak}; only 'approved' may", state=sid, edge=i)
     for tid, tc in C.terminals.items():
         if tc.category == "verified":
             if not tc.evidence:

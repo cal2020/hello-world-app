@@ -1,0 +1,77 @@
+{
+  "$id": "hexis-service/observation.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A validated, recorded input to one state visit.",
+  "properties": {
+    "actor": {
+      "default": "",
+      "title": "Actor",
+      "type": "string"
+    },
+    "engine": {
+      "additionalProperties": true,
+      "title": "Engine",
+      "type": "object"
+    },
+    "failure": {
+      "default": "",
+      "title": "Failure",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "tool",
+        "model",
+        "judge",
+        "user",
+        "end"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "outputs": {
+      "additionalProperties": true,
+      "title": "Outputs",
+      "type": "object"
+    },
+    "receipt_ref": {
+      "default": "",
+      "title": "Receipt Ref",
+      "type": "string"
+    },
+    "record_schema": {
+      "const": "hexis-observation/1",
+      "default": "hexis-observation/1",
+      "title": "Record Schema",
+      "type": "string"
+    },
+    "revision": {
+      "title": "Revision",
+      "type": "integer"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "state_id": {
+      "title": "State Id",
+      "type": "string"
+    },
+    "usage": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Usage",
+      "type": "object"
+    }
+  },
+  "required": [
+    "run_id",
+    "state_id",
+    "revision",
+    "kind"
+  ],
+  "title": "Observation",
+  "type": "object"
+}

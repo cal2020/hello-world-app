@@ -1,0 +1,1306 @@
+{
+  "$defs": {
+    "AdmissionRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "admitted_at": {
+          "title": "Admitted At",
+          "type": "string"
+        },
+        "approver": {
+          "title": "Approver",
+          "type": "string"
+        },
+        "artifact_hash": {
+          "title": "Artifact Hash",
+          "type": "string"
+        },
+        "environment": {
+          "title": "Environment",
+          "type": "string"
+        },
+        "key_id": {
+          "title": "Key Id",
+          "type": "string"
+        },
+        "replay_archive_digest": {
+          "title": "Replay Archive Digest",
+          "type": "string"
+        },
+        "signature": {
+          "default": "",
+          "title": "Signature",
+          "type": "string"
+        },
+        "validation_report_digest": {
+          "title": "Validation Report Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_hash",
+        "environment",
+        "approver",
+        "admitted_at",
+        "validation_report_digest",
+        "replay_archive_digest",
+        "key_id"
+      ],
+      "title": "AdmissionRecord",
+      "type": "object"
+    },
+    "Budgets": {
+      "additionalProperties": false,
+      "properties": {
+        "max_elapsed_s": {
+          "default": 604800,
+          "title": "Max Elapsed S",
+          "type": "integer"
+        },
+        "max_model_calls": {
+          "default": 16,
+          "title": "Max Model Calls",
+          "type": "integer"
+        },
+        "max_spend_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Spend Usd"
+        },
+        "max_steps": {
+          "default": 64,
+          "title": "Max Steps",
+          "type": "integer"
+        },
+        "max_tokens": {
+          "default": 200000,
+          "title": "Max Tokens",
+          "type": "integer"
+        },
+        "max_tool_calls": {
+          "default": 32,
+          "title": "Max Tool Calls",
+          "type": "integer"
+        }
+      },
+      "title": "Budgets",
+      "type": "object"
+    },
+    "ClauseCoverage": {
+      "additionalProperties": false,
+      "properties": {
+        "classification": {
+          "enum": [
+            "executable_control",
+            "state_local_knowledge",
+            "external_precondition",
+            "unsupported",
+            "non_material"
+          ],
+          "title": "Classification",
+          "type": "string"
+        },
+        "critical": {
+          "default": false,
+          "title": "Critical",
+          "type": "boolean"
+        },
+        "justification": {
+          "title": "Justification",
+          "type": "string"
+        },
+        "states": {
+          "items": {
+            "type": "string"
+          },
+          "title": "States",
+          "type": "array"
+        }
+      },
+      "required": [
+        "classification",
+        "justification"
+      ],
+      "title": "ClauseCoverage",
+      "type": "object"
+    },
+    "ClauseRef": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "title": "End",
+          "type": "integer"
+        },
+        "heading": {
+          "default": "",
+          "title": "Heading",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "start": {
+          "title": "Start",
+          "type": "integer"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "start",
+        "end",
+        "text",
+        "sha256"
+      ],
+      "title": "ClauseRef",
+      "type": "object"
+    },
+    "CompilerManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "compiler": {
+          "title": "Compiler",
+          "type": "string"
+        },
+        "compiler_commit": {
+          "default": "unknown",
+          "title": "Compiler Commit",
+          "type": "string"
+        },
+        "model_id": {
+          "title": "Model Id",
+          "type": "string"
+        },
+        "model_settings": {
+          "additionalProperties": true,
+          "title": "Model Settings",
+          "type": "object"
+        },
+        "normalizer_version": {
+          "title": "Normalizer Version",
+          "type": "string"
+        },
+        "prompts_sha256": {
+          "default": "",
+          "title": "Prompts Sha256",
+          "type": "string"
+        },
+        "upstream_reference": {
+          "default": "Worldbuilder013/HEXIS@96be2719ee79fc5071dc7eb2aeed816dc03aaa6c (format reference only)",
+          "title": "Upstream Reference",
+          "type": "string"
+        },
+        "validator_version": {
+          "title": "Validator Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "compiler",
+        "model_id",
+        "validator_version",
+        "normalizer_version"
+      ],
+      "title": "CompilerManifest",
+      "type": "object"
+    },
+    "Contracts": {
+      "additionalProperties": false,
+      "properties": {
+        "clause_coverage": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ClauseCoverage"
+          },
+          "title": "Clause Coverage",
+          "type": "object"
+        },
+        "explained_unreachable": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Explained Unreachable",
+          "type": "object"
+        },
+        "field_scoped_writes": {
+          "additionalProperties": {
+            "$ref": "#/$defs/FieldScope"
+          },
+          "title": "Field Scoped Writes",
+          "type": "object"
+        },
+        "interactions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/InteractionContract"
+          },
+          "title": "Interactions",
+          "type": "object"
+        },
+        "ordering": {
+          "items": {
+            "$ref": "#/$defs/OrderingRequirement"
+          },
+          "title": "Ordering",
+          "type": "array"
+        },
+        "task_input_schema": {
+          "additionalProperties": true,
+          "title": "Task Input Schema",
+          "type": "object"
+        },
+        "terminals": {
+          "additionalProperties": {
+            "$ref": "#/$defs/TerminalContract"
+          },
+          "title": "Terminals",
+          "type": "object"
+        },
+        "variables": {
+          "additionalProperties": {
+            "$ref": "#/$defs/VariableContract"
+          },
+          "title": "Variables",
+          "type": "object"
+        }
+      },
+      "required": [
+        "variables",
+        "terminals"
+      ],
+      "title": "Contracts",
+      "type": "object"
+    },
+    "EndAction": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "end",
+          "default": "end",
+          "title": "Kind",
+          "type": "string"
+        },
+        "terminal": {
+          "title": "Terminal",
+          "type": "string"
+        }
+      },
+      "required": [
+        "terminal"
+      ],
+      "title": "EndAction",
+      "type": "object"
+    },
+    "EvidenceRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "claim": {
+          "title": "Claim",
+          "type": "string"
+        },
+        "subject_vars": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Subject Vars",
+          "type": "array"
+        },
+        "verifier_tool": {
+          "title": "Verifier Tool",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claim",
+        "verifier_tool",
+        "subject_vars"
+      ],
+      "title": "EvidenceRequirement",
+      "type": "object"
+    },
+    "Example": {
+      "additionalProperties": true,
+      "properties": {
+        "label": {
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label"
+      ],
+      "title": "Example",
+      "type": "object"
+    },
+    "ExecutionPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "approval_expiry_s": {
+          "default": 86400,
+          "title": "Approval Expiry S",
+          "type": "integer"
+        },
+        "budgets": {
+          "$ref": "#/$defs/Budgets"
+        },
+        "capability_ceiling": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Capability Ceiling",
+          "type": "array"
+        },
+        "fallback_mode": {
+          "default": "stop_for_review",
+          "enum": [
+            "stop_for_review",
+            "sandbox_interpret"
+          ],
+          "title": "Fallback Mode",
+          "type": "string"
+        },
+        "max_loop_bound": {
+          "default": 3,
+          "title": "Max Loop Bound",
+          "type": "integer"
+        },
+        "structured_output_repairs": {
+          "default": 1,
+          "title": "Structured Output Repairs",
+          "type": "integer"
+        },
+        "transport_retries": {
+          "default": 2,
+          "title": "Transport Retries",
+          "type": "integer"
+        },
+        "write_workflow": {
+          "default": true,
+          "title": "Write Workflow",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "capability_ceiling"
+      ],
+      "title": "ExecutionPolicy",
+      "type": "object"
+    },
+    "FieldScope": {
+      "additionalProperties": false,
+      "description": "A model state may change only the object fields named by an issue list (e.g. repair).",
+      "properties": {
+        "allowed_fields_from": {
+          "title": "Allowed Fields From",
+          "type": "string"
+        },
+        "field_key": {
+          "default": "field",
+          "title": "Field Key",
+          "type": "string"
+        },
+        "variable": {
+          "title": "Variable",
+          "type": "string"
+        }
+      },
+      "required": [
+        "variable",
+        "allowed_fields_from"
+      ],
+      "title": "FieldScope",
+      "type": "object"
+    },
+    "InteractionContract": {
+      "additionalProperties": false,
+      "properties": {
+        "approves_state": {
+          "default": "",
+          "title": "Approves State",
+          "type": "string"
+        },
+        "required_role": {
+          "default": "",
+          "title": "Required Role",
+          "type": "string"
+        },
+        "response_schema": {
+          "additionalProperties": true,
+          "title": "Response Schema",
+          "type": "object"
+        },
+        "type": {
+          "enum": [
+            "input",
+            "approval"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "InteractionContract",
+      "type": "object"
+    },
+    "JudgeAction": {
+      "additionalProperties": false,
+      "properties": {
+        "abstain": {
+          "default": "abstain",
+          "title": "Abstain",
+          "type": "string"
+        },
+        "error_rate": {
+          "default": 0.0,
+          "title": "Error Rate",
+          "type": "number"
+        },
+        "examples": {
+          "items": {
+            "$ref": "#/$defs/Example"
+          },
+          "title": "Examples",
+          "type": "array"
+        },
+        "gold_from": {
+          "default": "",
+          "title": "Gold From",
+          "type": "string"
+        },
+        "introduced": {
+          "default": false,
+          "title": "Introduced",
+          "type": "boolean"
+        },
+        "kind": {
+          "const": "judge",
+          "default": "judge",
+          "title": "Kind",
+          "type": "string"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "type": "string"
+        },
+        "reads": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reads",
+          "type": "array"
+        },
+        "support": {
+          "default": 0,
+          "title": "Support",
+          "type": "integer"
+        },
+        "writes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Writes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "prompt",
+        "reads",
+        "writes",
+        "labels"
+      ],
+      "title": "JudgeAction",
+      "type": "object"
+    },
+    "Lineage": {
+      "additionalProperties": false,
+      "properties": {
+        "changes": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Changes",
+          "type": "array"
+        },
+        "parent_hash": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Hash"
+        },
+        "trace_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Trace Ids",
+          "type": "array"
+        }
+      },
+      "title": "Lineage",
+      "type": "object"
+    },
+    "Machine": {
+      "additionalProperties": false,
+      "properties": {
+        "audit_tools": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Audit Tools",
+          "type": "array"
+        },
+        "fallback": {
+          "default": "FALLBACK",
+          "title": "Fallback",
+          "type": "string"
+        },
+        "format": {
+          "const": "efsm-v1",
+          "default": "efsm-v1",
+          "title": "Format",
+          "type": "string"
+        },
+        "initial": {
+          "title": "Initial",
+          "type": "string"
+        },
+        "max_steps": {
+          "default": 24,
+          "title": "Max Steps",
+          "type": "integer"
+        },
+        "phase_rules": {
+          "default": "",
+          "title": "Phase Rules",
+          "type": "string"
+        },
+        "prohibitions": {
+          "items": {
+            "$ref": "#/$defs/Prohibition"
+          },
+          "title": "Prohibitions",
+          "type": "array"
+        },
+        "skill_id": {
+          "title": "Skill Id",
+          "type": "string"
+        },
+        "states": {
+          "additionalProperties": {
+            "$ref": "#/$defs/State"
+          },
+          "title": "States",
+          "type": "object"
+        },
+        "terminals": {
+          "items": {
+            "$ref": "#/$defs/Terminal"
+          },
+          "title": "Terminals",
+          "type": "array"
+        },
+        "thresholds": {
+          "$ref": "#/$defs/Thresholds"
+        },
+        "variables": {
+          "items": {
+            "$ref": "#/$defs/Variable"
+          },
+          "title": "Variables",
+          "type": "array"
+        },
+        "version": {
+          "default": "0.1.0",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "skill_id",
+        "initial"
+      ],
+      "title": "Machine",
+      "type": "object"
+    },
+    "ModelAction": {
+      "additionalProperties": false,
+      "properties": {
+        "introduced": {
+          "default": false,
+          "title": "Introduced",
+          "type": "boolean"
+        },
+        "kind": {
+          "const": "model",
+          "default": "model",
+          "title": "Kind",
+          "type": "string"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "observable": {
+          "default": false,
+          "title": "Observable",
+          "type": "boolean"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "type": "string"
+        },
+        "reads": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reads",
+          "type": "array"
+        },
+        "writes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Writes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "prompt"
+      ],
+      "title": "ModelAction",
+      "type": "object"
+    },
+    "OrderingRequirement": {
+      "additionalProperties": false,
+      "description": "Every path to a state satisfying ``before`` must pass a state satisfying ``requires`` after\nthe last write to any ``invalidated_by`` variable. Selectors: ``tool:<name>``, ``state:<id>``,\n``terminal:<id>``, ``user:<interaction type>``.",
+      "properties": {
+        "before": {
+          "title": "Before",
+          "type": "string"
+        },
+        "clause": {
+          "default": "",
+          "title": "Clause",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "invalidated_by": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Invalidated By",
+          "type": "array"
+        },
+        "requires": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Requires",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "requires",
+        "before"
+      ],
+      "title": "OrderingRequirement",
+      "type": "object"
+    },
+    "Prohibition": {
+      "additionalProperties": false,
+      "properties": {
+        "check": {
+          "enum": [
+            "absent",
+            "present",
+            "regex",
+            "forbid_action",
+            "require_before"
+          ],
+          "title": "Check",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "pattern": {
+          "title": "Pattern"
+        }
+      },
+      "required": [
+        "id",
+        "check",
+        "pattern"
+      ],
+      "title": "Prohibition",
+      "type": "object"
+    },
+    "SourceManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "clauses": {
+          "items": {
+            "$ref": "#/$defs/ClauseRef"
+          },
+          "title": "Clauses",
+          "type": "array"
+        },
+        "deployment_policy_sha256": {
+          "default": "",
+          "title": "Deployment Policy Sha256",
+          "type": "string"
+        },
+        "input_contract_sha256": {
+          "default": "",
+          "title": "Input Contract Sha256",
+          "type": "string"
+        },
+        "resources": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Resources",
+          "type": "object"
+        },
+        "skill_path": {
+          "default": "",
+          "title": "Skill Path",
+          "type": "string"
+        },
+        "skill_sha256": {
+          "title": "Skill Sha256",
+          "type": "string"
+        },
+        "tool_catalog_sha256": {
+          "title": "Tool Catalog Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "skill_sha256",
+        "tool_catalog_sha256"
+      ],
+      "title": "SourceManifest",
+      "type": "object"
+    },
+    "State": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "discriminator": {
+            "mapping": {
+              "end": "#/$defs/EndAction",
+              "judge": "#/$defs/JudgeAction",
+              "model": "#/$defs/ModelAction",
+              "tool": "#/$defs/ToolAction",
+              "user": "#/$defs/UserAction"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ToolAction"
+            },
+            {
+              "$ref": "#/$defs/ModelAction"
+            },
+            {
+              "$ref": "#/$defs/JudgeAction"
+            },
+            {
+              "$ref": "#/$defs/UserAction"
+            },
+            {
+              "$ref": "#/$defs/EndAction"
+            }
+          ],
+          "title": "Action"
+        },
+        "clause": {
+          "default": "",
+          "title": "Clause",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "locator": {
+          "default": "",
+          "title": "Locator",
+          "type": "string"
+        },
+        "origin": {
+          "default": "",
+          "title": "Origin",
+          "type": "string"
+        },
+        "transitions": {
+          "items": {
+            "$ref": "#/$defs/Transition"
+          },
+          "title": "Transitions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "action"
+      ],
+      "title": "State",
+      "type": "object"
+    },
+    "Terminal": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "default": "",
+          "title": "Kind",
+          "type": "string"
+        },
+        "output": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Output",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "Terminal",
+      "type": "object"
+    },
+    "TerminalContract": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "enum": [
+            "verified",
+            "unverified",
+            "fallback"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRequirement"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "verification_scope": {
+          "default": "",
+          "title": "Verification Scope",
+          "type": "string"
+        }
+      },
+      "required": [
+        "category"
+      ],
+      "title": "TerminalContract",
+      "type": "object"
+    },
+    "Thresholds": {
+      "additionalProperties": false,
+      "properties": {
+        "acc_thr": {
+          "default": 0.9,
+          "title": "Acc Thr",
+          "type": "number"
+        },
+        "fallback_rate_target": {
+          "default": 0.15,
+          "title": "Fallback Rate Target",
+          "type": "number"
+        },
+        "holdout_ratio": {
+          "default": 0.2,
+          "title": "Holdout Ratio",
+          "type": "number"
+        },
+        "judge_err_max": {
+          "default": 0.2,
+          "title": "Judge Err Max",
+          "type": "number"
+        },
+        "judge_rewrite_max": {
+          "default": 2,
+          "title": "Judge Rewrite Max",
+          "type": "integer"
+        },
+        "loop_margin": {
+          "default": 1.5,
+          "title": "Loop Margin",
+          "type": "number"
+        },
+        "min_support": {
+          "default": 2,
+          "title": "Min Support",
+          "type": "integer"
+        },
+        "retry_budget": {
+          "default": 3,
+          "title": "Retry Budget",
+          "type": "integer"
+        }
+      },
+      "title": "Thresholds",
+      "type": "object"
+    },
+    "ToolAction": {
+      "additionalProperties": false,
+      "properties": {
+        "binds": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Binds",
+          "type": "object"
+        },
+        "input": {
+          "additionalProperties": true,
+          "title": "Input",
+          "type": "object"
+        },
+        "kind": {
+          "const": "tool",
+          "default": "tool",
+          "title": "Kind",
+          "type": "string"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "phase": {
+          "default": "",
+          "title": "Phase",
+          "type": "string"
+        },
+        "reads": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reads",
+          "type": "array"
+        },
+        "writes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Writes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ToolAction",
+      "type": "object"
+    },
+    "Transition": {
+      "additionalProperties": false,
+      "properties": {
+        "if": {
+          "default": "",
+          "title": "If",
+          "type": "string"
+        },
+        "inc": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Inc"
+        },
+        "origin": {
+          "default": "",
+          "title": "Origin",
+          "type": "string"
+        },
+        "support": {
+          "default": 0,
+          "title": "Support",
+          "type": "integer"
+        },
+        "to": {
+          "title": "To",
+          "type": "string"
+        }
+      },
+      "required": [
+        "to"
+      ],
+      "title": "Transition",
+      "type": "object"
+    },
+    "UserAction": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "user",
+          "default": "user",
+          "title": "Kind",
+          "type": "string"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "prompt": {
+          "default": "",
+          "title": "Prompt",
+          "type": "string"
+        },
+        "reads": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reads",
+          "type": "array"
+        },
+        "writes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Writes",
+          "type": "array"
+        }
+      },
+      "title": "UserAction",
+      "type": "object"
+    },
+    "ValidationManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "findings": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Findings",
+          "type": "array"
+        },
+        "passed": {
+          "default": false,
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "profile": {
+          "default": "",
+          "title": "Profile",
+          "type": "string"
+        },
+        "replay_archive_digest": {
+          "default": "",
+          "title": "Replay Archive Digest",
+          "type": "string"
+        },
+        "report_digest": {
+          "default": "",
+          "title": "Report Digest",
+          "type": "string"
+        },
+        "unresolved_limitations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Unresolved Limitations",
+          "type": "array"
+        }
+      },
+      "title": "ValidationManifest",
+      "type": "object"
+    },
+    "Variable": {
+      "additionalProperties": false,
+      "properties": {
+        "init": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Init"
+        },
+        "init_from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Init From"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "default": "string",
+          "enum": [
+            "string",
+            "integer",
+            "number",
+            "boolean",
+            "array",
+            "object"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "Variable",
+      "type": "object"
+    },
+    "VariableContract": {
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "enum": [
+            "model",
+            "tool",
+            "user",
+            "engine",
+            "task"
+          ],
+          "title": "Owner",
+          "type": "string"
+        },
+        "schema": {
+          "additionalProperties": true,
+          "title": "Schema",
+          "type": "object"
+        }
+      },
+      "required": [
+        "owner"
+      ],
+      "title": "VariableContract",
+      "type": "object"
+    }
+  },
+  "$id": "hexis-service/machine-package.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "admission": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AdmissionRecord"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "artifact_hash": {
+      "default": "",
+      "title": "Artifact Hash",
+      "type": "string"
+    },
+    "compiler_manifest": {
+      "$ref": "#/$defs/CompilerManifest"
+    },
+    "contracts": {
+      "$ref": "#/$defs/Contracts"
+    },
+    "execution_policy": {
+      "$ref": "#/$defs/ExecutionPolicy"
+    },
+    "lineage": {
+      "$ref": "#/$defs/Lineage"
+    },
+    "machine": {
+      "$ref": "#/$defs/Machine"
+    },
+    "package_schema": {
+      "const": "hexis-production-package/1",
+      "default": "hexis-production-package/1",
+      "title": "Package Schema",
+      "type": "string"
+    },
+    "source_manifest": {
+      "$ref": "#/$defs/SourceManifest"
+    },
+    "validation_manifest": {
+      "$ref": "#/$defs/ValidationManifest"
+    }
+  },
+  "required": [
+    "machine",
+    "source_manifest",
+    "compiler_manifest",
+    "contracts",
+    "execution_policy"
+  ],
+  "title": "MachinePackage",
+  "type": "object"
+}

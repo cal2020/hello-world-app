@@ -1,0 +1,174 @@
+{
+  "$defs": {
+    "Assurance": {
+      "additionalProperties": false,
+      "properties": {
+        "diagnostics": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Diagnostics",
+          "type": "array"
+        },
+        "entered_fallback": {
+          "default": false,
+          "title": "Entered Fallback",
+          "type": "boolean"
+        },
+        "fallback_reason": {
+          "default": "",
+          "title": "Fallback Reason",
+          "type": "string"
+        },
+        "missing_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Evidence",
+          "type": "array"
+        },
+        "policy_violations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Policy Violations",
+          "type": "array"
+        },
+        "unresolved_effects": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Unresolved Effects",
+          "type": "array"
+        },
+        "verification_scope": {
+          "default": "",
+          "title": "Verification Scope",
+          "type": "string"
+        }
+      },
+      "title": "Assurance",
+      "type": "object"
+    },
+    "Budget": {
+      "additionalProperties": false,
+      "properties": {
+        "model_calls": {
+          "default": 0,
+          "title": "Model Calls",
+          "type": "integer"
+        },
+        "output_repairs": {
+          "default": 0,
+          "title": "Output Repairs",
+          "type": "integer"
+        },
+        "steps": {
+          "default": 0,
+          "title": "Steps",
+          "type": "integer"
+        },
+        "tokens": {
+          "default": 0,
+          "title": "Tokens",
+          "type": "integer"
+        },
+        "tool_calls": {
+          "default": 0,
+          "title": "Tool Calls",
+          "type": "integer"
+        }
+      },
+      "title": "Budget",
+      "type": "object"
+    }
+  },
+  "$id": "hexis-service/run-checkpoint.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_hash": {
+      "title": "Artifact Hash",
+      "type": "string"
+    },
+    "assurance": {
+      "$ref": "#/$defs/Assurance"
+    },
+    "budget": {
+      "$ref": "#/$defs/Budget"
+    },
+    "evidence_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "outcome": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Outcome"
+    },
+    "record_schema": {
+      "const": "hexis-checkpoint/1",
+      "default": "hexis-checkpoint/1",
+      "title": "Record Schema",
+      "type": "string"
+    },
+    "revision": {
+      "default": 0,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "state_id": {
+      "title": "State Id",
+      "type": "string"
+    },
+    "status": {
+      "default": "RUNNING",
+      "enum": [
+        "READY",
+        "RUNNING",
+        "WAITING_FOR_INPUT",
+        "WAITING_FOR_APPROVAL",
+        "RECONCILING",
+        "COMPLETED",
+        "FAILED",
+        "CANCELLED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "variables": {
+      "additionalProperties": true,
+      "title": "Variables",
+      "type": "object"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "run_id",
+    "artifact_hash",
+    "state_id",
+    "variables"
+  ],
+  "title": "RunCheckpoint",
+  "type": "object"
+}

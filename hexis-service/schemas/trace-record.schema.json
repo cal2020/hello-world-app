@@ -1,0 +1,46 @@
+{
+  "$id": "hexis-service/trace-record.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "additionalProperties": true,
+      "title": "Action",
+      "type": "object"
+    },
+    "clause": {
+      "default": "",
+      "title": "Clause",
+      "type": "string"
+    },
+    "meta": {
+      "additionalProperties": true,
+      "title": "Meta",
+      "type": "object"
+    },
+    "output": {
+      "additionalProperties": true,
+      "title": "Output",
+      "type": "object"
+    },
+    "state": {
+      "default": "",
+      "title": "State",
+      "type": "string"
+    },
+    "step": {
+      "title": "Step",
+      "type": "integer"
+    },
+    "vars": {
+      "additionalProperties": true,
+      "title": "Vars",
+      "type": "object"
+    }
+  },
+  "required": [
+    "step"
+  ],
+  "title": "Record",
+  "type": "object"
+}

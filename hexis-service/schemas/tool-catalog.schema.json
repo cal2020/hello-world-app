@@ -1,0 +1,96 @@
+{
+  "$defs": {
+    "ToolSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "business_reference_field": {
+          "default": "",
+          "title": "Business Reference Field",
+          "type": "string"
+        },
+        "capability": {
+          "title": "Capability",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "effect": {
+          "enum": [
+            "read",
+            "pure",
+            "idempotent_write",
+            "reconciliable_write",
+            "non_idempotent_write"
+          ],
+          "title": "Effect",
+          "type": "string"
+        },
+        "input_schema": {
+          "additionalProperties": true,
+          "title": "Input Schema",
+          "type": "object"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "output_schema": {
+          "additionalProperties": true,
+          "title": "Output Schema",
+          "type": "object"
+        },
+        "verifier_claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Verifier Claims",
+          "type": "array"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "input_schema",
+        "output_schema",
+        "effect",
+        "capability"
+      ],
+      "title": "ToolSpec",
+      "type": "object"
+    }
+  },
+  "$id": "hexis-service/tool-catalog.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "catalog_id": {
+      "title": "Catalog Id",
+      "type": "string"
+    },
+    "tools": {
+      "additionalProperties": {
+        "$ref": "#/$defs/ToolSpec"
+      },
+      "title": "Tools",
+      "type": "object"
+    },
+    "version": {
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "catalog_id",
+    "version",
+    "tools"
+  ],
+  "title": "ToolCatalog",
+  "type": "object"
+}

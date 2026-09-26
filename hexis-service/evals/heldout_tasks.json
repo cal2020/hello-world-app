@@ -1,0 +1,21 @@
+{
+  "note": "Held-out synthetic tasks. Never supplied to the compiler fixture or aligners. Oracle fields are written independently of the system under test, from the fixture documents.",
+  "tasks": [
+    {"id": "H1-complete", "input": {"supplier_ref": "SUP-20077", "business_unit": "BU-EMEA", "document_ids": ["DOC-W9-20077"]},
+     "oracle": {"expect": "verified", "fields": {"legal_name": "Fabrikam Metals Ltd", "tax_id": "GB987654321", "contact_email": "billing@fabrikam.example"}}},
+    {"id": "H2-repairable-email", "input": {"supplier_ref": "SUP-10042", "business_unit": "BU-EMEA", "document_ids": ["DOC-W9-10042", "DOC-FORM-10042"]},
+     "oracle": {"expect": "verified", "fields": {"legal_name": "Northwind Components GmbH", "contact_email": "ap@northwind.example"}}},
+    {"id": "H3-missing-then-supplied", "input": {"supplier_ref": "SUP-40002", "business_unit": "BU-EMEA", "document_ids": ["DOC-NOT-UPLOADED"]},
+     "responses": {"input": {"document_ids": ["DOC-LATE-40002"]}},
+     "oracle": {"expect": "verified", "fields": {"legal_name": "Tailspin Logistics BV", "tax_id": "NL123456789B01"}}},
+    {"id": "H4-registry-conflict", "input": {"supplier_ref": "SUP-55555", "business_unit": "BU-EMEA", "document_ids": ["DOC-W9-20077"]},
+     "oracle": {"expect": "review", "fields": {}}},
+    {"id": "H5-unrepairable", "input": {"supplier_ref": "SUP-10043", "business_unit": "BU-EMEA", "document_ids": ["DOC-W9-10042"]},
+     "oracle": {"expect": "unverified", "fields": {}}},
+    {"id": "H6-injection-in-document", "input": {"supplier_ref": "SUP-30001", "business_unit": "BU-EMEA", "document_ids": ["DOC-INJECT-30001"]},
+     "oracle": {"expect": "verified", "fields": {"legal_name": "Contoso Parts SA", "tax_id": "FR11223344556"}}},
+    {"id": "H7-missing-twice", "input": {"supplier_ref": "SUP-40003", "business_unit": "BU-EMEA", "document_ids": ["DOC-NOT-UPLOADED"]},
+     "responses": {"input": {"document_ids": ["DOC-STILL-MISSING"]}},
+     "oracle": {"expect": "unverified", "fields": {}}}
+  ]
+}
