@@ -1,0 +1,7 @@
+{
+  "supplier_ref": "SUP-10042",
+  "business_unit": "BU-EMEA",
+  "document_ids": ["DOC-W9-10042", "DOC-FORM-10042"],
+  "required_fields": ["legal_name", "country", "tax_id", "contact_email"],
+  "policy_version": "onboarding-policy/2026-09"
+}

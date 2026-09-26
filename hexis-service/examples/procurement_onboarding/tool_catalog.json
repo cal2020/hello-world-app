@@ -1,0 +1,76 @@
+{
+  "catalog_id": "procurement-trusted-tools",
+  "version": "2026-09-26.1",
+  "tools": {
+    "documents.read": {
+      "name": "documents.read", "version": "1.0.0",
+      "description": "Retrieve authorized immutable intake documents for the caller's tenant.",
+      "input_schema": {"type": "object", "additionalProperties": false, "required": ["document_ids"],
+        "properties": {"document_ids": {"type": "array", "items": {"type": "string"}, "maxItems": 20}}},
+      "output_schema": {"type": "object", "additionalProperties": false, "required": ["status", "documents", "missing_ids"],
+        "properties": {
+          "status": {"enum": ["available", "missing"]},
+          "documents": {"type": "array", "items": {"type": "object", "additionalProperties": false,
+            "required": ["document_id", "sha256", "content"],
+            "properties": {"document_id": {"type": "string"}, "sha256": {"type": "string"}, "content": {"type": "string"}}}},
+          "missing_ids": {"type": "array", "items": {"type": "string"}}}},
+      "effect": "read", "capability": "documents:read"
+    },
+    "supplier.lookup": {
+      "name": "supplier.lookup", "version": "1.0.0",
+      "description": "Read authoritative supplier identity/status for a reference within a business unit.",
+      "input_schema": {"type": "object", "additionalProperties": false, "required": ["supplier_ref", "business_unit"],
+        "properties": {"supplier_ref": {"type": "string"}, "business_unit": {"type": "string"}}},
+      "output_schema": {"type": "object", "additionalProperties": false, "required": ["status", "existing"],
+        "properties": {"status": {"enum": ["new", "exists_compatible", "conflict"]}, "existing": {"type": "object"}}},
+      "effect": "read", "capability": "supplier:read"
+    },
+    "draft.validate": {
+      "name": "draft.validate", "version": "1.0.0",
+      "description": "Deterministic schema, required-field, duplicate and onboarding-policy validation.",
+      "input_schema": {"type": "object", "additionalProperties": false, "required": ["draft", "required_fields", "policy_version"],
+        "properties": {"draft": {"type": "object"}, "required_fields": {"type": "array", "items": {"type": "string"}},
+          "policy_version": {"type": "string"}}},
+      "output_schema": {"type": "object", "additionalProperties": false, "required": ["status", "issues", "draft_digest"],
+        "properties": {"status": {"enum": ["pass", "repairable", "fail"]},
+          "issues": {"type": "array", "items": {"type": "object", "required": ["field", "code"],
+            "properties": {"field": {"type": "string"}, "code": {"type": "string"}, "message": {"type": "string"}}}},
+          "draft_digest": {"type": "string"}}},
+      "effect": "pure", "capability": "draft:validate",
+      "verifier_claims": ["draft_satisfies_onboarding_policy"]
+    },
+    "erp.create_draft": {
+      "name": "erp.create_draft", "version": "1.0.0",
+      "description": "Persist one supplier draft using an idempotency key; reconcilable by business reference.",
+      "input_schema": {"type": "object", "additionalProperties": false, "required": ["draft", "draft_digest", "supplier_ref"],
+        "properties": {"draft": {"type": "object"}, "draft_digest": {"type": "string"}, "supplier_ref": {"type": "string"}}},
+      "output_schema": {"type": "object", "additionalProperties": false, "required": ["status", "draft_id", "version"],
+        "properties": {"status": {"enum": ["created", "existing"]}, "draft_id": {"type": "string"},
+          "version": {"type": "integer", "minimum": 1}}},
+      "effect": "reconciliable_write", "capability": "erp:draft:create",
+      "business_reference_field": "draft_digest"
+    },
+    "erp.read_draft": {
+      "name": "erp.read_draft", "version": "1.0.0",
+      "description": "Read a persisted draft and its version.",
+      "input_schema": {"type": "object", "additionalProperties": false, "required": ["draft_id"],
+        "properties": {"draft_id": {"type": "string"}}},
+      "output_schema": {"type": "object", "additionalProperties": false, "required": ["status", "draft", "version"],
+        "properties": {"status": {"enum": ["found", "unavailable"]}, "draft": {"type": ["object", "null"]},
+          "version": {"type": ["integer", "null"]}}},
+      "effect": "read", "capability": "erp:draft:read"
+    },
+    "draft.verify_persisted": {
+      "name": "draft.verify_persisted", "version": "1.0.0",
+      "description": "Compare the approved canonical payload digest with the persisted draft fields.",
+      "input_schema": {"type": "object", "additionalProperties": false,
+        "required": ["draft_id", "persisted_version", "persisted_draft", "approved_digest"],
+        "properties": {"draft_id": {"type": "string"}, "persisted_version": {"type": "integer"},
+          "persisted_draft": {"type": "object"}, "approved_digest": {"type": "string"}}},
+      "output_schema": {"type": "object", "additionalProperties": false, "required": ["status", "receipt_id"],
+        "properties": {"status": {"enum": ["match", "mismatch"]}, "receipt_id": {"type": "string"}}},
+      "effect": "pure", "capability": "draft:verify",
+      "verifier_claims": ["persisted_draft_matches_approved_payload"]
+    }
+  }
+}

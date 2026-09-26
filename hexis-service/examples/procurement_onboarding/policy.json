@@ -1,0 +1,78 @@
+{
+  "policy_version": "onboarding-policy/2026-09",
+  "note": "Simulated identities for the offline demonstration. This is not production authentication.",
+  "principals": {
+    "user:alice": {
+      "tenant_id": "acme",
+      "roles": [
+        "procurement_specialist"
+      ],
+      "capabilities": [
+        "documents:read",
+        "supplier:read",
+        "draft:validate",
+        "erp:draft:create",
+        "erp:draft:read",
+        "draft:verify"
+      ],
+      "business_units": [
+        "BU-EMEA",
+        "BU-NA"
+      ]
+    },
+    "user:bob": {
+      "tenant_id": "acme",
+      "roles": [
+        "procurement_approver"
+      ],
+      "capabilities": [],
+      "business_units": [
+        "BU-EMEA",
+        "BU-NA"
+      ]
+    },
+    "user:carol": {
+      "tenant_id": "acme",
+      "roles": [
+        "procurement_specialist"
+      ],
+      "capabilities": [
+        "documents:read"
+      ],
+      "business_units": [
+        "BU-EMEA"
+      ]
+    },
+    "user:mallory": {
+      "tenant_id": "globex",
+      "roles": [
+        "procurement_approver",
+        "procurement_specialist"
+      ],
+      "capabilities": [
+        "documents:read",
+        "supplier:read",
+        "draft:validate",
+        "erp:draft:create",
+        "erp:draft:read",
+        "draft:verify"
+      ],
+      "business_units": [
+        "BU-EMEA"
+      ]
+    },
+    "user:dana": {
+      "tenant_id": "acme",
+      "roles": [
+        "artifact_admin"
+      ],
+      "capabilities": [],
+      "business_units": []
+    }
+  },
+  "approval_required_capabilities": [
+    "erp:draft:create"
+  ],
+  "approver_role": "procurement_approver",
+  "separation_of_duties": true
+}

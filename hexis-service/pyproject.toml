@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hexis-service"
+version = "0.1.0"
+description = "Production extension layer for HEXIS-style compiled skill EFSMs: admission, deterministic kernel, broker, durable runs, trace refinement."
+requires-python = ">=3.12"
+license = "LicenseRef-Proprietary-Unresolved"
+dependencies = [
+    "pydantic==2.13.5",
+    "jsonschema==4.25.1",
+    "httpx==0.28.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1", "hypothesis==6.140.2", "ruff==0.13.2"]
+anthropic = ["anthropic==1.8.0"]
+
+[project.scripts]
+hexisctl = "hexis_service.cli.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hexis_service"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E9", "F", "B006", "B008"]
