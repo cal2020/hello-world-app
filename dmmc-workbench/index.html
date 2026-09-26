@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Recorded walkthrough of a synthetic prototype that traces a system-model element through a NIST control check and its evidence to draft SSP text, and shows what happens when the model changes.">
+<title>Model-to-Evidence Workbench</title>
+</head>
+<body>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#f6f7f5; --paper:#ffffff; --ink:#1b2126; --muted:#56606a; --line:#d8ddd9;
+  --accent:#20566b; --accent-soft:#e3eef1;
+  --pass:#1f6b3d; --pass-bg:#e4f2e8; --fail:#a3262e; --fail-bg:#f8e4e5;
+  --unk:#8a5a00; --unk-bg:#f7eed8; --err:#6a3a9c;
+  --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#12171a; --paper:#192024; --ink:#e7ecec; --muted:#9aa6ad; --line:#2d373c;
+    --accent:#8cc4d6; --accent-soft:#1d3139;
+    --pass:#7fd39c; --pass-bg:#173024; --fail:#ff9aa0; --fail-bg:#3a1c1f;
+    --unk:#f0c66e; --unk-bg:#352a12; --err:#c7a6f2;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#12171a; --paper:#192024; --ink:#e7ecec; --muted:#9aa6ad; --line:#2d373c;
+  --accent:#8cc4d6; --accent-soft:#1d3139;
+  --pass:#7fd39c; --pass-bg:#173024; --fail:#ff9aa0; --fail-bg:#3a1c1f;
+  --unk:#f0c66e; --unk-bg:#352a12; --err:#c7a6f2;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font:16px/1.6 var(--sans);padding-inline:20px;padding-block:28px 64px}
+.wrap{max-width:1040px;margin:0 auto;display:grid;gap:56px}
+h1,h2,h3{font-family:var(--serif);font-weight:600;text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:clamp(34px,5vw,50px);letter-spacing:-.01em}
+h2{font-size:28px}
+h3{font-size:20px}
+p{margin:0;max-width:68ch}
+.eyebrow{font:500 12px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+code,.mono{font-family:var(--mono);font-size:.88em}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+section{display:grid;gap:18px}
+
+header{display:grid;gap:16px}
+.lede{font-size:19px;color:var(--ink)}
+.scope{display:flex;flex-wrap:wrap;gap:8px}
+.scope span{font-size:13px;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:4px 12px;color:var(--muted)}
+
+/* the trace row */
+.trace{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:20px;overflow-x:auto}
+.chain{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:0;min-width:760px}
+.link{padding:0 14px;border-left:1px solid var(--line);display:grid;gap:6px;align-content:start}
+.link:first-child{border-left:none;padding-left:0}
+.link .k{font:500 11px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.link .v{font-family:var(--mono);font-size:13px;word-break:break-word}
+.link .n{font-size:13.5px;color:var(--muted)}
+.trace-note{margin-top:16px;font-size:14px;color:var(--muted)}
+
+.pill{display:inline-block;font:600 12px/1 var(--mono);padding:4px 8px;border-radius:4px;letter-spacing:.02em}
+.PASS{color:var(--pass);background:var(--pass-bg)}
+.FAIL{color:var(--fail);background:var(--fail-bg)}
+.UNKNOWN,.STALE{color:var(--unk);background:var(--unk-bg)}
+
+/* steps */
+.steps{display:grid;gap:40px;counter-reset:step;list-style:none;padding:0;margin:0}
+.step{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:28px;align-items:start}
+.step-text{display:grid;gap:10px}
+.step-num{font:600 13px/1 var(--mono);color:var(--accent)}
+.observed{border-left:3px solid var(--accent);background:var(--accent-soft);padding:10px 14px;font-size:14.5px;border-radius:0 6px 6px 0}
+.observed b{font-weight:600}
+figure{margin:0;display:grid;gap:6px}
+figure img{width:100%;height:auto;border:1px solid var(--line);border-radius:8px;display:block;background:var(--paper)}
+figcaption{font-size:13px;color:var(--muted)}
+@media (max-width:760px){.step{grid-template-columns:1fr}}
+
+/* tables */
+.tbl{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 12px/1.3 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+tr:last-child td{border-bottom:none}
+td.num{text-align:right;font-family:var(--mono)}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+.two>div{align-content:start}
+@media (max-width:760px){.two{grid-template-columns:1fr}}
+.list{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.list li{padding-left:16px;position:relative;max-width:68ch}
+.list li::before{content:"";position:absolute;left:0;top:.7em;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.limits li::before{background:var(--unk)}
+.diagram{background:#ffffff;border:1px solid var(--line);border-radius:10px;padding:16px;overflow-x:auto}
+.diagram-svg svg{max-width:100%;height:auto;min-width:640px}
+footer{font-size:13.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:18px;display:grid;gap:6px}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Synthetic prototype · recorded run, 23 September 2026</div>
+  <h1>Model-to-Evidence Workbench</h1>
+  <p class="lede">A security plan generated from a system model is only useful if each statement can be traced to a current source, and if people can see when a model change makes a statement, or a review of it, out of date. This prototype follows one element from the model to a draft SSP paragraph, then changes the model.</p>
+  <div class="scope">
+    <span>Fictional maintenance-telemetry system</span>
+    <span>3 NIST SP 800-53 Rev 5 statements: AC-3, AU-12, SC-8</span>
+    <span>Fixture evidence, not real observations</span>
+    <span>Not Cameo data · not an SSP · not an assessment</span>
+  </div>
+</header>
+
+<section aria-labelledby="trace-h">
+  <div class="eyebrow">One row of the matrix</div>
+  <h2 id="trace-h">What “traceable” means here</h2>
+  <div class="trace">
+    <div class="chain">
+      <div class="link"><span class="k">Model element</span><span class="v">flow:portal-api</span><span class="n">Operator Portal → Telemetry API, crosses a boundary. Model says <code>TLS</code> (a design assertion).</span></div>
+      <div class="link"><span class="k">Control statement</span><span class="v">sc-8_smt</span><span class="n">“Protect the [confidentiality; integrity] of transmitted information.” Parameter left unresolved for a qualified reviewer.</span></div>
+      <div class="link"><span class="k">Local obligation</span><span class="v">OBL-SC8-FLOW</span><span class="n">Design assertion present and a current, applicable transport test reports pass.</span></div>
+      <div class="link"><span class="k">Evidence + check</span><span class="v">ev-tls-portal-api-a1</span><span class="n">Synthetic test against API revision a1. <span class="pill PASS">PASS</span> for this predicate only.</span></div>
+      <div class="link"><span class="k">Draft text</span><span class="v">sec:row:…portal-api</span><span class="n">Every sentence cites a source pinned by SHA-256. Citations resolve to the exact imported bytes.</span></div>
+    </div>
+    <p class="trace-note">Imported descriptions count as assertions. A check result applies only to its stated inputs and versions. Accepting the wording is a document review, not a finding that a control is effective.</p>
+  </div>
+</section>
+
+<section aria-labelledby="walk-h">
+  <div class="eyebrow">The demonstration, in order</div>
+  <h2 id="walk-h">Five steps, as recorded</h2>
+  <ol class="steps">
+    <li class="step">
+      <div class="step-text">
+        <span class="step-num">Step 1</span>
+        <h3>Import model revision A and its evidence</h3>
+        <p>Four components, three flows, two boundaries. The workbench builds one row per model object and selected control statement.</p>
+        <div class="observed"><b>Observed:</b> 3 of 4 selected rows have current applicable evidence. AC-3, AU-12 and SC-8 on the portal flow <span class="pill PASS">PASS</span>. The database's inherited SC-8 claim stays <span class="pill UNKNOWN">UNKNOWN</span> because no provider evidence exists.</div>
+      </div>
+      <figure><img src="shots/01-package-A-matrix.png" alt="Package for model A showing the control and evidence matrix with three PASS rows and one UNKNOWN row" loading="lazy"><figcaption>Package pkg-001-A, control and evidence matrix.</figcaption></figure>
+    </li>
+    <li class="step">
+      <div class="step-text">
+        <span class="step-num">Step 2</span>
+        <h3>Withdraw the transport test</h3>
+        <p>The model still says TLS. The workbench won't let a model attribute stand in for a test.</p>
+        <div class="observed"><b>Observed:</b> SC-8 portal→API drops to <span class="pill UNKNOWN">UNKNOWN</span> with the reason “no current applicable observation”. The design assertion is kept. The previous package becomes <span class="pill STALE">STALE</span>.</div>
+      </div>
+      <figure><img src="shots/03-gap-after-withdrawal.png" alt="Package after withdrawal: SC-8 row UNKNOWN with the gap explained" loading="lazy"><figcaption>The gap is stated, not hidden.</figcaption></figure>
+    </li>
+    <li class="step">
+      <div class="step-text">
+        <span class="step-num">Step 3</span>
+        <h3>Restore, rebuild, and review</h3>
+        <p>A reviewer accepts the wording. The decision is bound to the package's exact digest and to the current set of dependencies, and open gaps are recorded as acknowledged limitations.</p>
+        <div class="observed"><b>Observed:</b> the engineer's own review attempt is denied. The reviewer's ACCEPT succeeds and export produces a Markdown excerpt, an evidence manifest and an OSCAL component definition.</div>
+      </div>
+      <figure><img src="shots/04-reviewed-and-exported-A.png" alt="Package marked REVIEWED_FOR_DEMO with export files listed" loading="lazy"><figcaption>Reviewed for the demo and exported.</figcaption></figure>
+    </li>
+    <li class="step">
+      <div class="step-text">
+        <span class="step-num">Step 4</span>
+        <h3>The model changes to revision B</h3>
+        <p>Revision B adds an external maintenance provider and changes which role may write telemetry.</p>
+        <div class="observed"><b>Observed:</b> exporting the accepted package as current is refused because it is <span class="pill STALE">STALE</span>. The impact view lists, by stable ID: the API changed; a new boundary-crossing flow created a new SC-8 row; two evidence items no longer apply because they were collected against API revision a1. Those reports say PASS and are still not reused.</div>
+      </div>
+      <figure><img src="shots/06-change-impact.png" alt="Change impact page listing model changes, affected rows and evidence that no longer applies" loading="lazy"><figcaption>Change impact from A to B.</figcaption></figure>
+    </li>
+    <li class="step">
+      <div class="step-text">
+        <span class="step-num">Step 5</span>
+        <h3>New evidence for B, rebuild, review</h3>
+        <p>AC-3 compares the model's declared permissions with a reviewed OPA policy, using tests written from the requirements rather than from the policy.</p>
+        <div class="observed"><b>Observed:</b> AC-3 <span class="pill FAIL">FAIL</span>. The model and the reviewed policy disagree about who may write telemetry, which is a finding for a person to resolve. The provider flow's SC-8 row is <span class="pill UNKNOWN">UNKNOWN</span> (no test). The reviewer accepts the wording with those gaps recorded.</div>
+      </div>
+      <figure><img src="shots/07-package-B-matrix.png" alt="Package for model B with AC-3 FAIL showing two role mismatches" loading="lazy"><figcaption>AC-3 mismatch shown row by row.</figcaption></figure>
+    </li>
+  </ol>
+</section>
+
+<section aria-labelledby="ai-h">
+  <div class="eyebrow">Where AI sits</div>
+  <h2 id="ai-h">Drafting inside a review boundary</h2>
+  <div class="two">
+    <div style="display:grid;gap:14px">
+      <p>The drafter proposes text and questions. It sees only permitted, digest-pinned sources, has no tools, and cannot change evidence, review state or policy. A validator checks every claim.</p>
+      <ul class="list">
+        <li>A deliberately bad draft with six seeded problems (an uncited claim, an unresolvable citation, an unpermitted source, a fabricated CVE, “compliant with SC-8”, and a line obeying an instruction hidden in a provider document): all six flagged, no review state changed.</li>
+        <li>A plausible generated Rego policy, run in quarantine against the independent tests: fails 5 of 15. The enforcement policy's digest is unchanged. A candidate calling <code>http.send</code> is rejected at compile time.</li>
+        <li>The drafting shown is a deterministic fixture. It demonstrates the controls around AI, not the quality of a language model.</li>
+      </ul>
+    </div>
+    <figure><img src="shots/09-validator-flags-seeded-errors.png" alt="Draft view with six seeded statements flagged in red by the validator" loading="lazy"><figcaption>Seeded failure modes, flagged.</figcaption></figure>
+  </div>
+</section>
+
+<section aria-labelledby="res-h">
+  <div class="eyebrow">Evaluation</div>
+  <h2 id="res-h">Results on synthetic scenarios</h2>
+  <p>22 of 22 acceptance scenarios passed, each on a fresh database. They cover stale, other-environment and expired evidence, conflicting sources, revoked reviewers, concurrent review, retry after commit, prompt injection, empty policy tests and invalid OSCAL. Verification also caught two real defects in the first version, both fixed.</p>
+  <div class="tbl">
+    <table>
+      <caption class="eyebrow" style="text-align:left;padding:14px 14px 0">Template baseline vs. workbench, same four scenarios</caption>
+      <thead><tr><th>Scenario</th><th>Rows</th><th>Expected gap rows</th><th>Gap rows found<br>workbench / template</th><th>Unsupported “implemented” claims<br>workbench / template</th><th>Citations resolved</th></tr></thead>
+      <tbody>
+        <tr><td>A, complete</td><td class="num">4</td><td class="num">1</td><td class="num">1 / 0</td><td class="num">0 / 1</td><td class="num">39 / 39</td></tr>
+        <tr><td>A, transport test withdrawn</td><td class="num">4</td><td class="num">2</td><td class="num">2 / 0</td><td class="num">0 / 2</td><td class="num">38 / 38</td></tr>
+        <tr><td>B, only A's evidence</td><td class="num">5</td><td class="num">5</td><td class="num">5 / 0</td><td class="num">0 / 5</td><td class="num">55 / 55</td></tr>
+        <tr><td>B, with B's evidence</td><td class="num">5</td><td class="num">3</td><td class="num">3 / 0</td><td class="num">0 / 3</td><td class="num">58 / 58</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:14.5px;color:var(--muted)">The advantage over the template comes from the deterministic checks and applicability rules, not from AI. The cases, expected values and code were written by the same author, so these are engineering checks rather than independent measurements.</p>
+</section>
+
+<section aria-labelledby="arch-h">
+  <div class="eyebrow">How it is built</div>
+  <h2 id="arch-h">Architecture</h2>
+  <div class="diagram">
+<div class="diagram-svg" role="img" aria-label="Architecture: synthetic inputs flow through import, checks, an untrusted drafter and a claim validator into a package, a digest-bound review and exports, all persisted in SQLite; checks call a pinned OPA binary."><svg aria-roledescription="flowchart-v2" role="graphics-document document" viewBox="0 0 2699 328" style="max-width: 2699px;" class="flowchart" xmlns="http://www.w3.org/2000/svg" width="100%" id="dneutral"><style>#dneutral{font-family:IBM Plex Sans,system-ui,sans-serif;font-size:16px;fill:#000000;}#dneutral .error-icon{fill:#552222;}#dneutral .error-text{fill:#552222;stroke:#552222;}#dneutral .edge-thickness-normal{stroke-width:1px;}#dneutral .edge-thickness-thick{stroke-width:3.5px;}#dneutral .edge-pattern-solid{stroke-dasharray:0;}#dneutral .edge-thickness-invisible{stroke-width:0;fill:none;}#dneutral .edge-pattern-dashed{stroke-dasharray:3;}#dneutral .edge-pattern-dotted{stroke-dasharray:2;}#dneutral .marker{fill:#666;stroke:#666;}#dneutral .marker.cross{stroke:#666;}#dneutral svg{font-family:IBM Plex Sans,system-ui,sans-serif;font-size:16px;}#dneutral p{margin:0;}#dneutral .label{font-family:IBM Plex Sans,system-ui,sans-serif;color:#000000;}#dneutral .cluster-label text{fill:#333;}#dneutral .cluster-label span{color:#333;}#dneutral .cluster-label span p{background-color:transparent;}#dneutral .label text,#dneutral span{fill:#000000;color:#000000;}#dneutral .node rect,#dneutral .node circle,#dneutral .node ellipse,#dneutral .node polygon,#dneutral .node path{fill:#eee;stroke:#999;stroke-width:1px;}#dneutral .rough-node .label text,#dneutral .node .label text,#dneutral .image-shape .label,#dneutral .icon-shape .label{text-anchor:middle;}#dneutral .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#dneutral .rough-node .label,#dneutral .node .label,#dneutral .image-shape .label,#dneutral .icon-shape .label{text-align:center;}#dneutral .node.clickable{cursor:pointer;}#dneutral .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#dneutral .arrowheadPath{fill:#333333;}#dneutral .edgePath .path{stroke:#666;stroke-width:2.0px;}#dneutral .flowchart-link{stroke:#666;fill:none;}#dneutral .edgeLabel{background-color:white;text-align:center;}#dneutral .edgeLabel p{background-color:white;}#dneutral .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#dneutral .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#dneutral .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#dneutral .cluster text{fill:#333;}#dneutral .cluster span{color:#333;}#dneutral div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:IBM Plex Sans,system-ui,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#dneutral .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#dneutral rect.text{fill:none;stroke-width:0;}#dneutral .icon-shape,#dneutral .image-shape{background-color:white;text-align:center;}#dneutral .icon-shape p,#dneutral .image-shape p{background-color:white;padding:2px;}#dneutral .icon-shape rect,#dneutral .image-shape rect{opacity:0.5;background-color:white;fill:white;}#dneutral :root{--mermaid-font-family:IBM Plex Sans,system-ui,sans-serif;}</style><g><marker orient="auto" markerHeight="8" markerWidth="8" markerUnits="userSpaceOnUse" refY="5" refX="5" viewBox="0 0 10 10" class="marker flowchart-v2" id="dneutral_flowchart-v2-pointEnd"><path style="stroke-width: 1; stroke-dasharray: 1, 0;" class="arrowMarkerPath" d="M 0 0 L 10 5 L 0 10 z"></path></marker><marker orient="auto" markerHeight="8" markerWidth="8" markerUnits="userSpaceOnUse" refY="5" refX="4.5" viewBox="0 0 10 10" class="marker flowchart-v2" id="dneutral_flowchart-v2-pointStart"><path style="stroke-width: 1; stroke-dasharray: 1, 0;" class="arrowMarkerPath" d="M 0 5 L 10 10 L 10 0 z"></path></marker><marker orient="auto" markerHeight="11" markerWidth="11" markerUnits="userSpaceOnUse" refY="5" refX="11" viewBox="0 0 10 10" class="marker flowchart-v2" id="dneutral_flowchart-v2-circleEnd"><circle style="stroke-width: 1; stroke-dasharray: 1, 0;" class="arrowMarkerPath" r="5" cy="5" cx="5"></circle></marker><marker orient="auto" markerHeight="11" markerWidth="11" markerUnits="userSpaceOnUse" refY="5" refX="-1" viewBox="0 0 10 10" class="marker flowchart-v2" id="dneutral_flowchart-v2-circleStart"><circle style="stroke-width: 1; stroke-dasharray: 1, 0;" class="arrowMarkerPath" r="5" cy="5" cx="5"></circle></marker><marker orient="auto" markerHeight="11" markerWidth="11" markerUnits="userSpaceOnUse" refY="5.2" refX="12" viewBox="0 0 11 11" class="marker cross flowchart-v2" id="dneutral_flowchart-v2-crossEnd"><path style="stroke-width: 2; stroke-dasharray: 1, 0;" class="arrowMarkerPath" d="M 1,1 l 9,9 M 10,1 l -9,9"></path></marker><marker orient="auto" markerHeight="11" markerWidth="11" markerUnits="userSpaceOnUse" refY="5.2" refX="-1" viewBox="0 0 11 11" class="marker cross flowchart-v2" id="dneutral_flowchart-v2-crossStart"><path style="stroke-width: 2; stroke-dasharray: 1, 0;" class="arrowMarkerPath" d="M 1,1 l 9,9 M 10,1 l -9,9"></path></marker><g class="root"><g class="clusters"></g><g class="edgePaths"><path marker-end="url(#dneutral_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_M_I_0" d="M268,153L272.167,153C276.333,153,284.667,153,301.638,159.691C318.608,166.382,344.217,179.765,357.021,186.456L369.825,193.147"></path><path marker-end="url(#dneutral_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_E_I_1" d="M268,281L272.167,281C276.333,281,284.667,281,292.593,279.86C300.518,278.72,308.037,276.44,311.796,275.301L315.555,274.161"></path><path marker-end="url(#dneutral_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_R_P_2" d="M1508,59L1512.167,59C1516.333,59,1524.667,59,1532.352,59.84C1540.036,60.68,1547.073,62.359,1550.591,63.199L1554.109,64.039"></path><path marker-end="url(#dneutral_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_I_C_3" d="M576.617,195L581.014,193.667C585.411,192.333,594.206,189.667,602.103,188.333C610,187,617,187,620.5,187L624,187"></path><path marker-end="url(#dneutral_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_C_O_4" d="M807.549,148L825.124,134.167C842.699,120.333,877.85,92.667,905.756,78.833C933.661,65,954.323,65,964.654,65L974.984,65"></path><path marker-end="url(#dneutral_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_C_D_5" d="M888,187L892.167,187C896.333,187,904.667,187,912.333,187C920,187,927,187,930.5,187L934,187"></path><path marker-end="url(#dneutral_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_D_V_6" d="M1198,187L1202.167,187C1206.333,187,1214.667,187,1228.891,187C1243.115,187,1263.229,187,1273.286,187L1283.344,187"></path><path marker-end="url(#dneutral_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_V_P_7" d="M1468.656,187L1479.38,187C1490.104,187,1511.552,187,1536.463,178.671C1561.374,170.342,1589.748,153.683,1603.935,145.354L1618.122,137.025"></path><path marker-end="url(#dneutral_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_P_RV_8" d="M1818,70L1822.167,69.167C1826.333,68.333,1834.667,66.667,1842.333,65.833C1850,65,1857,65,1860.5,65L1864,65"></path><path marker-end="url(#dneutral_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_RV_X_9" d="M2116,56.678L2120.167,56.398C2124.333,56.119,2132.667,55.559,2140.333,55.28C2148,55,2155,55,2158.5,55L2162,55"></path><path marker-end="url(#dneutral_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_I_DB_10" d="M576.617,273L581.014,274.333C585.411,275.667,594.206,278.333,624.436,279.667C654.667,281,706.333,281,758,281C809.667,281,861.333,281,913,281C964.667,281,1016.333,281,1068,281C1119.667,281,1171.333,281,1223,281C1274.667,281,1326.333,281,1378,281C1429.667,281,1481.333,281,1533,281C1584.667,281,1636.333,281,1688,281C1739.667,281,1791.333,281,1842,281C1892.667,281,1942.333,281,1992,281C2041.667,281,2091.333,281,2142,281C2192.667,281,2244.333,281,2296,281C2347.667,281,2399.333,281,2433.758,274.134C2468.183,267.269,2485.365,253.538,2493.957,246.672L2502.548,239.807"></path><path marker-end="url(#dneutral_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_C_DB_11" d="M839.689,226L851.908,231.833C864.126,237.667,888.563,249.333,926.615,255.167C964.667,261,1016.333,261,1068,261C1119.667,261,1171.333,261,1223,261C1274.667,261,1326.333,261,1378,261C1429.667,261,1481.333,261,1533,261C1584.667,261,1636.333,261,1688,261C1739.667,261,1791.333,261,1842,261C1892.667,261,1942.333,261,1992,261C2041.667,261,2091.333,261,2142,261C2192.667,261,2244.333,261,2296,261C2347.667,261,2399.333,261,2430.264,256.699C2461.194,252.398,2471.388,243.795,2476.485,239.494L2481.581,235.193"></path><path marker-end="url(#dneutral_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_P_DB_12" d="M1739.229,135L1756.524,148.167C1773.819,161.333,1808.41,187.667,1850.538,200.833C1892.667,214,1942.333,214,1992,214C2041.667,214,2091.333,214,2142,214C2192.667,214,2244.333,214,2296,214C2347.667,214,2399.333,214,2428.68,213.284C2458.027,212.568,2465.054,211.136,2468.567,210.42L2472.081,209.704"></path><path marker-end="url(#dneutral_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_RV_DB_13" d="M2029.25,92L2047.875,105.5C2066.5,119,2103.75,146,2148.208,159.5C2192.667,173,2244.333,173,2296,173C2347.667,173,2399.333,173,2428.67,173.37C2458.007,173.74,2465.015,174.481,2468.518,174.851L2472.022,175.221"></path><path marker-end="url(#dneutral_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_X_DB_14" d="M2426,55L2430.167,55C2434.333,55,2442.667,55,2459.214,67.698C2475.762,80.395,2500.523,105.791,2512.904,118.488L2525.285,131.186"></path></g><g class="edgeLabels"><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"></span></div></foreignObject></g></g></g><g class="nodes"><g transform="translate(138, 153)" id="flowchart-M-0" class="node default"><rect height="78" width="260" y="-39" x="-130" style="" class="basic label-container"></rect><g transform="translate(-100, -24)" style="" class="label"><rect></rect><foreignObject height="48" width="200"><div style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>Model export JSON (synthetic)</p></span></div></foreignObject></g></g><g transform="translate(448, 234)" id="flowchart-I-1" class="node default"><rect height="78" width="260" y="-39" x="-130" style="" class="basic label-container"></rect><g transform="translate(-100, -24)" style="" class="label"><rect></rect><foreignObject height="48" width="200"><div style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>Import: validate, digest, JSON Pointer</p></span></div></foreignObject></g></g><g transform="translate(138, 281)" id="flowchart-E-2" class="node default"><rect height="78" width="260" y="-39" x="-130" style="" class="basic label-container"></rect><g transform="translate(-100, -24)" style="" class="label"><rect></rect><foreignObject height="48" width="200"><div style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>Evidence: assertion or observation</p></span></div></foreignObject></g></g><g transform="translate(1378, 59)" id="flowchart-R-4" class="node default"><rect height="102" width="260" y="-51" x="-130" style="" class="basic label-container"></rect><g transform="translate(-100, -36)" style="" class="label"><rect></rect><foreignObject height="72" width="200"><div style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>Pinned: NIST catalog excerpt, mappings, Rego + tests</p></span></div></foreignObject></g></g><g transform="translate(1688, 96)" id="flowchart-P-5" class="node default"><rect height="78" width="260" y="-39" x="-130" style="" class="basic label-container"></rect><g transform="translate(-100, -24)" style="" class="label"><rect></rect><foreignObject height="48" width="200"><div style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>Package + dependency manifest</p></span></div></foreignObject></g></g><g transform="translate(758, 187)" id="flowchart-C-7" class="node default"><rect height="78" width="260" y="-39" x="-130" style="" class="basic label-container"></rect><g transform="translate(-100, -24)" style="" class="label"><rect></rect><foreignObject height="48" width="200"><div style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>Checks: AC-3, AU-12, SC-8</p></span></div></foreignObject></g></g><g transform="translate(1068, 65)" id="flowchart-O-9" class="node default"><rect height="54" width="178.03125" y="-27" x="-89.015625" style="" class="basic label-container"></rect><g transform="translate(-59.015625, -12)" style="" class="label"><rect></rect><foreignObject height="24" width="118.03125"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>OPA 1.20.0 CLI</p></span></div></foreignObject></g></g><g transform="translate(1068, 187)" id="flowchart-D-11" class="node default"><rect height="78" width="260" y="-39" x="-130" style="" class="basic label-container"></rect><g transform="translate(-100, -24)" style="" class="label"><rect></rect><foreignObject height="48" width="200"><div style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>Drafter (untrusted, no tools)</p></span></div></foreignObject></g></g><g transform="translate(1378, 187)" id="flowchart-V-12" class="node default"><rect height="54" width="181.3125" y="-27" x="-90.65625" style="" class="basic label-container"></rect><g transform="translate(-60.65625, -12)" style="" class="label"><rect></rect><foreignObject height="24" width="121.3125"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>Claim validator</p></span></div></foreignObject></g></g><g transform="translate(1992, 65)" id="flowchart-RV-15" class="node default"><rect height="54" width="248" y="-27" x="-124" style="" class="basic label-container"></rect><g transform="translate(-94, -12)" style="" class="label"><rect></rect><foreignObject height="24" width="188"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>Review bound to digest</p></span></div></foreignObject></g></g><g transform="translate(2296, 55)" id="flowchart-X-16" class="node default"><rect height="78" width="260" y="-39" x="-130" style="" class="basic label-container"></rect><g transform="translate(-100, -24)" style="" class="label"><rect></rect><foreignObject height="48" width="200"><div style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>Export: Markdown, JSON, OSCAL</p></span></div></foreignObject></g></g><g transform="translate(2583.5, 187)" id="flowchart-DB-22" class="node default"><path transform="translate(-107.5, -55.21323529411765)" style="" class="basic label-container" d="M0,15.808823529411764 a107.5,15.808823529411764 0,0,0 215,0 a107.5,15.808823529411764 0,0,0 -215,0 l0,78.80882352941177 a107.5,15.808823529411764 0,0,0 215,0 l0,-78.80882352941177"></path><g transform="translate(-100, -14)" style="" class="label"><rect></rect><foreignObject height="48" width="200"><div style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>SQLite: append-only, hash-chained audit</p></span></div></foreignObject></g></g></g></g></g></svg></div>
+  </div>
+  <div class="two">
+    <div style="display:grid;gap:10px">
+      <h3>Key decisions</h3>
+      <ul class="list">
+        <li><b>Conservative invalidation.</b> Any change to model, evidence, catalog, mappings or policy makes a review stale. The impact analysis guides re-review but never keeps an approval alive. A wrong “still reviewed” is the expensive failure.</li>
+        <li><b>Stable IDs for identity, pointers for citation.</b> Array positions move between revisions; namespaced IDs don't. Pointers stay exact because they cite a digest-pinned snapshot.</li>
+        <li><b>One applicability rule.</b> Status, environment, expiry and target revision are checked in one place, so “why wasn't this report used” has one answer.</li>
+        <li><b>Review in one transaction.</b> The reviewer's authority, the digest they saw, freshness and the decision head are re-checked under a write lock, so concurrent reviewers get an explicit conflict.</li>
+      </ul>
+    </div>
+    <div style="display:grid;gap:10px">
+      <h3>Limitations</h3>
+      <ul class="list limits">
+        <li>No Cameo, Teamwork Cloud or program system is connected. The model format is a documented synthetic JSON contract.</li>
+        <li>Evidence is fictional. Identities are simulated; there is no authentication.</li>
+        <li>Language-model drafting quality is unmeasured. An optional adapter exists but was not run.</li>
+        <li>Control mappings are illustrative and not assessor-validated.</li>
+        <li>Implemented in one session with an AI coding agent from a written specification, then verified with the tests above.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="next-h">
+  <div class="eyebrow">Next</div>
+  <h2 id="next-h">One bounded experiment</h2>
+  <p>Take one authorized model export and one artifact section. Compare AI-assisted drafting with the current template on 16 to 24 packages, with two reviewers and a held-out third of the cases. Measure supported-claim rate, unsupported assertions and reviewer time. Stop if unsupported assertions rise or reviewer time doesn't fall. The same pieces (source identity, citation validation, digest-bound review, staleness on source change) would carry over to an AI-assisted procedure-drafting experiment with subject-matter-expert review.</p>
+</section>
+
+
+<section aria-labelledby="files-h">
+  <div class="eyebrow">Artifacts from the recorded run</div>
+  <h2 id="files-h">Exported files (model revision B)</h2>
+  <ul class="list">
+    <li><a href="sample-export/ssp-excerpt.md.txt">Draft SSP excerpt</a> (Markdown shown as text): matrix, cited claims, gaps, hypotheses, review record.</li>
+    <li><a href="sample-export/evidence-manifest.json">Evidence manifest</a>: run manifest with code, tool and schema versions, rows, inputs and decisions.</li>
+    <li><a href="sample-export/change-impact.json">Change-impact report</a> from revision A to B.</li>
+    <li><a href="sample-export/oscal-component-definition.json">OSCAL 1.2.3 component definition</a> and its <a href="sample-export/oscal-validation-report.json">validation report</a> (structure and references only).</li>
+    <li><a href="sample-export/demo-cli-transcript.txt">Command-line transcript</a> of the full five-step run.</li>
+  </ul>
+</section>
+
+<footer>
+  <span>Prepared by Evren Çakır. Stack: Python 3.11 standard library, SQLite, OPA 1.20.0, NIST OSCAL 1.2.3 schema, NIST SP 800-53 Rev 5.2.0 catalog excerpt.</span>
+  <span>All data on this page is synthetic. Screenshots are from a recorded local run, not a live system.</span>
+</footer>
+
+</div>
+
+</body>
+</html>
