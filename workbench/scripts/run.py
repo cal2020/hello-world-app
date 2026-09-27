@@ -5,11 +5,13 @@
 Environment (all optional):
   PORT / LWB_PORT          public port of the workbench (default 8780)
   LWB_HOST                 bind address (default 127.0.0.1; the container uses 0.0.0.0)
+  LWB_CONSUMER_PORT        internal port of the mock consumer (default 8781; 0 = any free port)
   LWB_VAR                  data directory for the SQLite files (default workbench/var)
   LWB_ACCESS_CODE          if set, every page and API call needs this code (login page / X-Access-Code)
   LWB_RESET_ON_START=1     wipe the data directory at start (clean demo on every restart)
   LWB_SEED_ON_START=1      seed projections + CMMS records if the database is empty
-The consumer always binds to 127.0.0.1; its dashboard is proxied at /consumer/.
+The consumer always binds to 127.0.0.1 (on a free port if its port equals the workbench's);
+its dashboard is proxied at /consumer/.
 """
 import argparse
 import os
@@ -34,18 +36,20 @@ ap.add_argument("--seed", action="store_true", default=env("LWB_SEED_ON_START") 
                 help="seed baseline data if the database is empty")
 ap.add_argument("--host", default=env("LWB_HOST", "127.0.0.1"))
 ap.add_argument("--port", type=int, default=int(env("PORT") or env("LWB_PORT") or 8780))
+ap.add_argument("--consumer-port", type=int, default=int(env("LWB_CONSUMER_PORT") or 8781))
 a = ap.parse_args()
 
 if a.reset and pathlib.Path(a.var).exists():
     for child in pathlib.Path(a.var).iterdir():  # keep the dir itself (it may be a mounted volume)
         shutil.rmtree(child) if child.is_dir() else child.unlink()
-s = Stack(a.var, wb_host=a.host, wb_port=a.port)
+s = Stack(a.var, wb_host=a.host, wb_port=a.port, consumer_port=a.consumer_port)
 if a.seed:
     c = s.app.db.read()
     if not c.execute("SELECT 1 FROM projection_definition LIMIT 1").fetchone():
         seed(s.wb_url)
         print("seeded baseline (projections + CMMS records)")
 print(f"Workbench:  http://{a.host}:{a.port}/   consumer dashboard: /consumer/")
+print(f"Consumer (internal): {s.consumer_url}/")
 print("Access gate:", "ON" if env("LWB_ACCESS_CODE") else "off (local mode)")
 print("Simulated identities only (demo tokens). Synthetic data only.")
 stop = threading.Event()

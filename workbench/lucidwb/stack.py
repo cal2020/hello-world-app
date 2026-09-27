@@ -12,6 +12,8 @@ class Stack:
         var.mkdir(parents=True, exist_ok=True)
         self.wb = server.serve(str(var / "workbench.db"), host=wb_host, port=wb_port,
                                start_worker=False)
+        if consumer_port and consumer_port == self.wb.server_address[1]:
+            consumer_port = 0  # e.g. PORT=8781: the internal consumer takes any free port instead of crashing
         self.cons = consumer.serve(str(var / "consumer.db"), port=consumer_port)
         self.wb_url = f"http://127.0.0.1:{self.wb.server_address[1]}"  # loopback for internal calls
         self.consumer_url = f"http://127.0.0.1:{self.cons.server_address[1]}"

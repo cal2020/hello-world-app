@@ -16,8 +16,14 @@ COPY web/ web/
 COPY fixtures/ fixtures/
 
 # Starts as root only to fix volume ownership, then runs as 'app' (see scripts/entrypoint.sh).
+# No VOLUME instruction: Railway's builder rejects it; the platform (or docker run -v) mounts /data.
 RUN useradd --system --uid 10001 --user-group app && mkdir -p /data && chown app:app /data
-VOLUME ["/data"]
+
+# The image has no .git, so release manifests take the code version from here
+# (docker build --build-arg LWB_CODE_VERSION=$(git rev-parse --short=12 HEAD) .).
+ARG LWB_CODE_VERSION=
+ENV LWB_CODE_VERSION=${LWB_CODE_VERSION}
+
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=3s CMD python -c "import os,urllib.request;urllib.request.urlopen('http://127.0.0.1:%s/healthz' % os.environ.get('PORT','8080'))"
