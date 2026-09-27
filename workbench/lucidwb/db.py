@@ -30,9 +30,12 @@ CREATE TABLE IF NOT EXISTS source_snapshot (
   parent_revision TEXT, kind TEXT NOT NULL, completeness TEXT NOT NULL, scope_json TEXT NOT NULL,
   raw_digest TEXT NOT NULL, normalized_digest TEXT NOT NULL, adapter_version TEXT NOT NULL,
   status TEXT NOT NULL, definitions_json TEXT NOT NULL, import_id TEXT NOT NULL, created_at TEXT NOT NULL,
-  warnings_json TEXT NOT NULL,
-  UNIQUE (source, project, revision)
+  warnings_json TEXT NOT NULL, unrecognized_json TEXT NOT NULL DEFAULT '{}'
 );
+-- One head-eligible snapshot per revision. A staged partial view of revision R has its own namespace,
+-- so it never blocks the complete export of R.
+CREATE UNIQUE INDEX IF NOT EXISTS source_snapshot_revision
+  ON source_snapshot (source, project, revision, completeness = 'partial');
 CREATE TABLE IF NOT EXISTS source_head (
   source TEXT NOT NULL, project TEXT NOT NULL, revision TEXT NOT NULL, snapshot_id TEXT NOT NULL,
   head_seq INTEGER NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY (source, project)
@@ -57,7 +60,7 @@ CREATE TABLE IF NOT EXISTS snapshot_element (
 CREATE TABLE IF NOT EXISTS relationship_version (
   version_id TEXT PRIMARY KEY, rel_uid TEXT NOT NULL, native_id TEXT, predicate TEXT NOT NULL,
   source_uid TEXT NOT NULL, target_uid TEXT NOT NULL, multiplicity TEXT, authority TEXT NOT NULL,
-  input_versions_json TEXT NOT NULL, content_digest TEXT NOT NULL
+  input_versions_json TEXT NOT NULL, content_digest TEXT NOT NULL, unrecognized_json TEXT NOT NULL DEFAULT '{}'
 );
 CREATE TABLE IF NOT EXISTS snapshot_relationship (
   snapshot_id TEXT NOT NULL, rel_uid TEXT NOT NULL, version_id TEXT NOT NULL, state TEXT NOT NULL,
@@ -65,7 +68,8 @@ CREATE TABLE IF NOT EXISTS snapshot_relationship (
 );
 CREATE TABLE IF NOT EXISTS external_record (
   snapshot_id TEXT NOT NULL, record_id TEXT NOT NULL, record_version TEXT NOT NULL, kind TEXT NOT NULL,
-  asset_ref TEXT, text TEXT NOT NULL, PRIMARY KEY (snapshot_id, record_id)
+  asset_ref TEXT, text TEXT NOT NULL, unrecognized_json TEXT NOT NULL DEFAULT '{}',
+  PRIMARY KEY (snapshot_id, record_id)
 );
 
 CREATE TABLE IF NOT EXISTS projection_definition (
@@ -153,6 +157,7 @@ class Database:
         self._local = threading.local()
         with self.connect() as c:
             c.executescript(SCHEMA)
+            migrate(c)
 
     def connect(self) -> sqlite3.Connection:
         conn = getattr(self._local, "conn", None)
@@ -179,6 +184,32 @@ class Database:
 
     def read(self):
         return self.connect()
+
+
+# Columns added after the first release. Existing rows get the default.
+ADDED_COLUMNS = [("source_snapshot", "unrecognized_json", "TEXT NOT NULL DEFAULT '{}'"),
+                 ("relationship_version", "unrecognized_json", "TEXT NOT NULL DEFAULT '{}'"),
+                 ("external_record", "unrecognized_json", "TEXT NOT NULL DEFAULT '{}'")]
+
+
+def migrate(c):
+    """Upgrade a database written by an earlier version in place (state may live on a mounted volume)."""
+    for table, column, decl in ADDED_COLUMNS:
+        if column not in {r["name"] for r in c.execute(f"PRAGMA table_info({table})")}:
+            c.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
+    sql = c.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='source_snapshot'").fetchone()["sql"]
+    if "UNIQUE (source, project, revision)" in sql:
+        # The old table constraint also covered staged partial views. Rebuild the table without it; the
+        # replacement index (see SCHEMA) is created on the new table.
+        try:
+            c.executescript("BEGIN IMMEDIATE; ALTER TABLE source_snapshot RENAME TO source_snapshot_old; "
+                            "DROP INDEX IF EXISTS source_snapshot_revision; " + SCHEMA +
+                            "; INSERT INTO source_snapshot SELECT * FROM source_snapshot_old; "
+                            "DROP TABLE source_snapshot_old; COMMIT;")
+        except BaseException:
+            if c.in_transaction:
+                c.execute("ROLLBACK")
+            raise
 
 
 def audit(c, actor, project, action, outcome, operation_id=None, detail=None):

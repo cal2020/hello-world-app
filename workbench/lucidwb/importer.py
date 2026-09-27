@@ -7,13 +7,17 @@ Rules implemented here (see ARCHITECTURE.md for rationale):
   parent is the current head, advances the head. Everything else is recorded and
   quarantined/staged with a machine-readable outcome.
 * Partial exports are staged views; they never infer deletion of unseen elements.
-* Unknown content is preserved in raw bytes and in `unrecognized_json`, with warnings.
+* Unknown content is preserved in raw bytes and in `unrecognized_json` (per element, relationship, record
+  and snapshot), with warnings. Unknown element, relationship and record content is part of the normalized
+  digest; unknown top-level (envelope) keys are not, so exporter metadata alone never makes a conflict.
+* Field shapes are validated before anything is stored, so malformed input is quarantined, not a 500.
 """
 import json
+import math
 
 from . import ADAPTER_VERSION, RECORDS_ADAPTER_VERSION
 from .db import audit, enqueue_event
-from .util import ApiError, digest, new_id, now, sha256
+from .util import ApiError, canonical_json, digest, new_id, now, sha256
 
 MODEL_FORMAT = "lwb-synthetic-export/1"
 RECORDS_FORMAT = "lwb-external-records/1"
@@ -21,6 +25,12 @@ KNOWN_TOP = {"format", "source", "project", "revision", "parent_revision", "kind
              "elements", "relationships", "deletions"}
 KNOWN_EL = {"id", "type", "name", "owner", "properties"}
 KNOWN_REL = {"id", "type", "source", "target", "multiplicity"}
+KNOWN_RECORDS_TOP = {"format", "source", "project", "revision", "parent_revision", "records"}
+KNOWN_RECORD = {"id", "kind", "asset_ref", "text"}
+EXPECT = {"non-empty string": lambda v: isinstance(v, str) and v != "",
+          "string or null": lambda v: v is None or isinstance(v, str),
+          "object or null": lambda v: v is None or isinstance(v, dict),
+          "list or null": lambda v: v is None or isinstance(v, list)}
 
 
 def entity_uid(source, project, native_id):
@@ -41,9 +51,72 @@ def peek_project(raw: bytes):
     return doc
 
 
+# ---------------------------------------------------------------- validation helpers
+def _ptr(base, key):
+    return f"{base}/" + str(key).replace("~", "~0").replace("/", "~1")
+
+
+def _check(errors, obj, pointer, fields):
+    """Append an invalid_field error for each field whose JSON type is not what storage assumes."""
+    ok = True
+    for key, expected in fields.items():
+        if not EXPECT[expected](obj.get(key)):
+            errors.append({"code": "invalid_field", "pointer": _ptr(pointer, key), "expected": expected})
+            ok = False
+    return ok
+
+
+def _list(doc, key):
+    return doc[key] if isinstance(doc.get(key), list) else []
+
+
+def _text(v):
+    return v if isinstance(v, str) else None
+
+
+def _definition_errors(defs):
+    """Definitions are objects all the way down to one property; enums are lists of strings."""
+    errors = []
+    for section in ("types", "relationshipTypes"):
+        if not _check(errors, defs, "/definitions", {section: "object or null"}):
+            continue
+        for name, d in (defs.get(section) or {}).items():
+            pointer = _ptr(f"/definitions/{section}", name)
+            if not isinstance(d, dict):
+                errors.append({"code": "invalid_field", "pointer": pointer, "expected": "object"})
+            elif section == "types" and _check(errors, d, pointer, {"properties": "object or null"}):
+                for pname, pd in (d.get("properties") or {}).items():
+                    ppointer = _ptr(f"{pointer}/properties", pname)
+                    if not isinstance(pd, dict):
+                        errors.append({"code": "invalid_field", "pointer": ppointer, "expected": "object"})
+                    elif pd.get("enum") is not None and not (
+                            isinstance(pd["enum"], list) and all(isinstance(x, str) for x in pd["enum"])):
+                        errors.append({"code": "invalid_field", "pointer": f"{ppointer}/enum",
+                                       "expected": "list of strings or null"})
+    return errors
+
+
+def _non_finite_numbers(doc):
+    """NaN / Infinity are not JSON (RFC 8259), but Python's parser accepts them and turns 1e400 into inf."""
+    found, stack = [], [("", doc)]
+    while stack:  # iterative: nesting depth is bounded only by the parser
+        pointer, v = stack.pop()
+        if isinstance(v, float) and not math.isfinite(v):
+            found.append(pointer)
+        elif isinstance(v, dict):
+            stack.extend((_ptr(pointer, k), x) for k, x in v.items())
+        elif isinstance(v, list):
+            stack.extend((_ptr(pointer, i), x) for i, x in enumerate(v))
+    if not found:
+        return []
+    return [{"code": "non_finite_number", "count": len(found), "pointers": sorted(found)[:20],
+             "message": "NaN and Infinity are not valid JSON numbers."}]
+
+
 # ---------------------------------------------------------------- normalization
-def normalize_model(doc):
-    """Return (normalized, warnings, errors). Pure function of the export document."""
+def normalize_model(doc, base_definitions=None):
+    """Return (normalized, elements, rels, warnings, errors). Pure function of the export document and, for a
+    delta or partial export that omits definitions, the definitions of its parent snapshot."""
     warnings, errors = [], []
     for k in doc:
         if k not in KNOWN_TOP:
@@ -54,12 +127,23 @@ def normalize_model(doc):
     if doc.get("kind") not in ("snapshot", "delta"):
         errors.append({"code": "invalid_kind", "value": doc.get("kind")})
     scope = doc.get("scope") or {}
-    if scope.get("kind") not in ("complete", "partial"):
+    if not isinstance(scope, dict) or scope.get("kind") not in ("complete", "partial"):
         errors.append({"code": "invalid_scope", "value": scope})
-    defs = doc.get("definitions") or {}
-    types = defs.get("types") or {}
+    _check(errors, doc, "", {"parent_revision": "string or null", "definitions": "object or null",
+                             "elements": "list or null", "relationships": "list or null",
+                             "deletions": "list or null"})
+    defs = doc.get("definitions") if isinstance(doc.get("definitions"), dict) else {}
+    # Lookups use the parent's definitions when the export omits its own; the normalized form (and so the
+    # digest) still records only what the export declared.
+    effective = defs or base_definitions or {}
+    bad_defs = _definition_errors(effective)
+    if bad_defs:
+        if effective is defs:
+            errors += bad_defs
+        effective = {}
+    types = effective.get("types") or {}
     elements, seen = [], set()
-    for i, e in enumerate(doc.get("elements") or []):
+    for i, e in enumerate(_list(doc, "elements")):
         if not isinstance(e, dict) or not isinstance(e.get("id"), str) or not e["id"]:
             errors.append({"code": "element_without_identity", "index": i})
             continue
@@ -67,7 +151,10 @@ def normalize_model(doc):
             errors.append({"code": "duplicate_identity", "id": e["id"]})
             continue
         seen.add(e["id"])
-        tdef = types.get(e.get("type"))
+        if not _check(errors, e, f"/elements/{i}", {"type": "non-empty string", "name": "string or null",
+                                                    "owner": "string or null", "properties": "object or null"}):
+            continue
+        tdef = types.get(e["type"])
         props = e.get("properties") or {}
         known, unrec = {}, {}
         if tdef is None:
@@ -75,7 +162,7 @@ def normalize_model(doc):
             unrec["properties"] = props
         else:
             for pk, pv in props.items():
-                if pk in tdef.get("properties", {}):
+                if pk in (tdef.get("properties") or {}):
                     known[pk] = pv  # missing / null / "" / 0 stay distinct
                 else:
                     unrec.setdefault("properties", {})[pk] = pv
@@ -87,19 +174,33 @@ def normalize_model(doc):
         elements.append({"id": e["id"], "type": e.get("type"), "name": e.get("name"), "owner": e.get("owner"),
                          "properties": known, "unrecognized": unrec, "pointer": f"/elements/{i}"})
     rels, rseen = [], set()
-    for i, r in enumerate(doc.get("relationships") or []):
-        if not isinstance(r, dict) or not r.get("id"):
+    for i, r in enumerate(_list(doc, "relationships")):
+        if not isinstance(r, dict) or not isinstance(r.get("id"), str) or not r["id"]:
             errors.append({"code": "relationship_without_identity", "index": i})
             continue
         if r["id"] in rseen:
             errors.append({"code": "duplicate_identity", "id": r["id"]})
             continue
         rseen.add(r["id"])
-        if r.get("type") not in (defs.get("relationshipTypes") or {}):
+        if not _check(errors, r, f"/relationships/{i}", {"type": "non-empty string", "source": "string or null",
+                                                         "target": "string or null"}):
+            continue
+        if r["type"] not in (effective.get("relationshipTypes") or {}):
             warnings.append({"code": "unknown_relationship_type", "id": r["id"], "type": r.get("type")})
-        rels.append({"id": r["id"], "type": r.get("type"), "source": r.get("source"), "target": r.get("target"),
-                     "multiplicity": r.get("multiplicity"), "pointer": f"/relationships/{i}"})
-    deletions = list(doc.get("deletions") or [])
+        rel = {"id": r["id"], "type": r["type"], "source": r.get("source"), "target": r.get("target"),
+               "multiplicity": r.get("multiplicity"), "pointer": f"/relationships/{i}"}
+        unrec = {k: v for k, v in r.items() if k not in KNOWN_REL}
+        for k in unrec:
+            warnings.append({"code": "unrecognized_relationship_key", "id": r["id"], "key": k})
+        if unrec:  # only when present, so plain relationships keep their digests
+            rel["unrecognized"] = unrec
+        rels.append(rel)
+    deletions = []
+    for j, d in enumerate(_list(doc, "deletions")):
+        if isinstance(d, str) and d:
+            deletions.append(d)
+        else:
+            errors.append({"code": "invalid_field", "pointer": f"/deletions/{j}", "expected": "non-empty string"})
     if deletions and doc.get("kind") != "delta":
         errors.append({"code": "deletions_only_allowed_in_delta"})
     normalized = {
@@ -114,56 +215,85 @@ def normalize_model(doc):
 
 def normalize_records(doc):
     warnings, errors, out, seen = [], [], [], set()
+    for k in doc:
+        if k not in KNOWN_RECORDS_TOP:
+            warnings.append({"code": "unrecognized_top_level_key", "key": k})
     for key in ("source", "revision"):
         if not isinstance(doc.get(key), str) or not doc.get(key):
             errors.append({"code": "missing_field", "field": key})
-    for i, r in enumerate(doc.get("records") or []):
-        if not isinstance(r, dict) or not r.get("id") or not isinstance(r.get("text"), str):
+    _check(errors, doc, "", {"parent_revision": "string or null", "records": "list or null"})
+    for i, r in enumerate(_list(doc, "records")):
+        if (not isinstance(r, dict) or not isinstance(r.get("id"), str) or not r["id"]
+                or not isinstance(r.get("text"), str)):
             errors.append({"code": "record_without_identity_or_text", "index": i})
             continue
         if r["id"] in seen:
             errors.append({"code": "duplicate_identity", "id": r["id"]})
             continue
         seen.add(r["id"])
-        out.append({"id": r["id"], "kind": r.get("kind") or "record", "asset_ref": r.get("asset_ref"),
-                    "text": r["text"]})
+        if not _check(errors, r, f"/records/{i}", {"kind": "string or null", "asset_ref": "string or null"}):
+            continue
+        rec = {"id": r["id"], "kind": r.get("kind") or "record", "asset_ref": r.get("asset_ref"), "text": r["text"]}
+        unrec = {k: v for k, v in r.items() if k not in KNOWN_RECORD}
+        for k in unrec:
+            warnings.append({"code": "unrecognized_record_key", "id": r["id"], "key": k})
+        if unrec:  # only when present, so plain records keep their versions
+            rec["unrecognized"] = unrec
+        out.append(rec)
     normalized = {"records": sorted(out, key=lambda x: x["id"]), "parent_revision": doc.get("parent_revision")}
     return normalized, out, warnings, errors
 
 
 # ---------------------------------------------------------------- import entry point
-def import_export(c, actor, raw: bytes, doc: dict):
-    """Runs inside the caller's write transaction. Returns (http_status, body, affected)."""
+def import_export(c, actor, raw: bytes, doc: dict, declared=None):
+    """Runs inside the caller's write transaction. Returns (http_status, body, affected).
+
+    `declared` is the export as the source sent it, when `doc` carries a reconciliation override of the
+    parent. The normalized digest covers the declared export, so re-sent bytes stay duplicates."""
     fmt = doc.get("format")
     project, source, revision = doc.get("project"), doc.get("source"), doc.get("revision")
     raw_digest = sha256(raw)
     import_id = new_id("imp")
+    declared = declared or doc
 
     if fmt == MODEL_FORMAT:
-        normalized, elements, rels, warnings, errors = normalize_model(doc)
+        normalized, elements, rels, warnings, errors = normalize_model(declared, _base_definitions(c, declared))
         adapter = ADAPTER_VERSION
     elif fmt == RECORDS_FORMAT:
-        normalized, records, warnings, errors = normalize_records(doc)
+        normalized, records, warnings, errors = normalize_records(declared)
         adapter = RECORDS_ADAPTER_VERSION
     else:
         _record_import(c, import_id, doc, raw, raw_digest, "n/a", "rejected_unsupported_format", None,
-                       [{"code": "unsupported_format", "format": fmt}], actor)
+                       [{"code": "unsupported_format", "format": _text(fmt)}], actor)
         return 400, _receipt(c, import_id), {}
-    norm_digest = digest(normalized)
     kind = doc.get("kind") if fmt == MODEL_FORMAT else "snapshot"
     scope = doc.get("scope") or {"kind": "complete"}
 
     def done(outcome, status, diags, snapshot_id=None, duplicate_of=None):
         _record_import(c, import_id, doc, raw, raw_digest, adapter, outcome, snapshot_id, diags, actor, duplicate_of)
         audit(c, actor, project, "source.import", outcome, None,
-              {"import_id": import_id, "source": source, "revision": revision})
+              {"import_id": import_id, "source": _text(source), "revision": _text(revision)})
         return status, _receipt(c, import_id), {"import_id": import_id, "snapshot_id": snapshot_id}
 
+    non_finite = _non_finite_numbers(doc)
+    if non_finite:  # checked first: these diagnostics echo no values, so nothing non-JSON is stored or served
+        return done("quarantined_invalid", 422, non_finite)
     if errors:
         return done("quarantined_invalid", 422, errors + warnings)
+    norm_digest = digest(normalized)
 
-    existing = c.execute("SELECT * FROM source_snapshot WHERE source=? AND project=? AND revision=?",
-                         (source, project, revision)).fetchone()
+    # A source keeps one format: a records dump must not replace a model head, nor the reverse.
+    prior = c.execute("SELECT i.format FROM source_snapshot s JOIN source_import i ON i.import_id=s.import_id "
+                      "WHERE s.source=? AND s.project=? LIMIT 1", (source, project)).fetchone()
+    if prior and prior["format"] != fmt:
+        return done("rejected_format_mismatch", 409,
+                    [{"code": "format_mismatch", "source": source, "format": fmt, "source_format": prior["format"],
+                      "message": "Source already holds snapshots in another format. Source head unchanged."}]
+                    + warnings)
+
+    partial = fmt == MODEL_FORMAT and scope.get("kind") == "partial"
+    existing = c.execute("SELECT * FROM source_snapshot WHERE source=? AND project=? AND revision=? "
+                         "AND (completeness='partial')=?", (source, project, revision, partial)).fetchone()
     if existing:
         if existing["normalized_digest"] == norm_digest:
             first = existing["import_id"]
@@ -180,16 +310,18 @@ def import_export(c, actor, raw: bytes, doc: dict):
     parent = doc.get("parent_revision")
     parent_snap = None
     if parent is not None:
-        parent_snap = c.execute("SELECT * FROM source_snapshot WHERE source=? AND project=? AND revision=?",
-                                (source, project, parent)).fetchone()
+        parent_snap = _snapshot_at(c, source, project, parent)
 
-    if fmt == MODEL_FORMAT and scope.get("kind") == "partial":
+    if partial:
         if parent_snap is None:
             return done("quarantined_missing_parent", 409,
                         [{"code": "missing_parent", "parent_revision": parent}] + warnings)
-        sid = _store_model_snapshot(c, doc, import_id, raw_digest, norm_digest, normalized, elements, rels,
-                                    warnings, base=parent_snap, status="staged_partial")
-        return done("staged_partial", 202, warnings + [{
+        ambiguous = _ambiguous_deletions(c, source, project, None, elements, rels, normalized["deletions"])
+        if ambiguous:
+            return done("quarantined_invalid", 422, ambiguous + warnings)
+        sid, del_warn = _store_model_snapshot(c, doc, import_id, raw_digest, norm_digest, normalized, elements,
+                                              rels, warnings, base=parent_snap, status="staged_partial")
+        return done("staged_partial", 202, warnings + del_warn + [{
             "code": "partial_scope_not_applied_to_head",
             "message": "Partial export staged. Elements outside the observed scope are NOT inferred deleted; "
                        "source head unchanged."}], sid)
@@ -213,13 +345,19 @@ def import_export(c, actor, raw: bytes, doc: dict):
                       "message": "Based on a revision that is not the current head. Not applied as head."}]
                     + warnings)
 
+    del_warn = []
     if fmt == RECORDS_FORMAT:
         sid = _store_record_snapshot(c, doc, import_id, raw_digest, norm_digest, records, warnings)
     else:
-        sid = _store_model_snapshot(c, doc, import_id, raw_digest, norm_digest, normalized, elements, rels,
-                                    warnings, base=_head_snapshot(c, head), status="head")
+        base = _head_snapshot(c, head)
+        ambiguous = _ambiguous_deletions(c, source, project, base if kind == "delta" else None, elements, rels,
+                                         normalized["deletions"])
+        if ambiguous:
+            return done("quarantined_invalid", 422, ambiguous + warnings)
+        sid, del_warn = _store_model_snapshot(c, doc, import_id, raw_digest, norm_digest, normalized, elements,
+                                              rels, warnings, base=base, status="head")
     _advance_head(c, source, project, revision, sid, import_id)
-    return done("accepted_head", 201, warnings, sid)
+    return done("accepted_head", 201, warnings + del_warn, sid)
 
 
 def reconcile(c, actor, import_id, action, expected_head):
@@ -237,22 +375,24 @@ def reconcile(c, actor, import_id, action, expected_head):
     current = head["revision"] if head else None
     if expected_head != current:
         raise ApiError(412, "precondition_failed", "Source head changed.", {"current_head": current})
-    doc = json.loads(imp["raw_bytes"])
+    declared = doc = json.loads(imp["raw_bytes"])
     if action == "retry":
         pass  # re-evaluate with normal rules (e.g. the missing parent has since arrived)
     elif action == "accept_as_head":
-        if doc.get("kind") != "snapshot" or (doc.get("scope") or {}).get("kind") != "complete":
+        # A records export is always a complete snapshot (as import_export treats it).
+        if doc.get("format") != RECORDS_FORMAT and (
+                doc.get("kind") != "snapshot" or (doc.get("scope") or {}).get("kind") != "complete"):
             raise ApiError(409, "not_reconcilable", "Only complete snapshots can be accepted as head explicitly.")
         doc = dict(doc, parent_revision=current)  # removals computed against the current head
     else:
         raise ApiError(400, "invalid_input", "action must be 'retry' or 'accept_as_head'.")
-    status, body, affected = import_export(c, actor, imp["raw_bytes"], doc)
+    status, body, affected = import_export(c, actor, imp["raw_bytes"], doc, declared=declared)
     new_id_ = body["import_id"]
     c.execute("UPDATE source_import SET reconciled_by=? WHERE import_id=?", (new_id_, import_id))
     c.execute("UPDATE source_import SET diagnostics_json=? WHERE import_id=?", (json.dumps(
         json.loads(c.execute("SELECT diagnostics_json FROM source_import WHERE import_id=?", (new_id_,))
                    .fetchone()[0]) + [{"code": "reconciliation", "action": action, "of_import": import_id,
-                                       "declared_parent": json.loads(imp["raw_bytes"]).get("parent_revision")}]),
+                                       "declared_parent": declared.get("parent_revision")}]),
         new_id_))
     return status, _receipt(c, new_id_), affected
 
@@ -263,9 +403,10 @@ def _record_import(c, import_id, doc, raw, raw_digest, adapter, outcome, snapsho
     c.execute("INSERT INTO source_import (import_id, source, project, revision, parent_revision, kind, scope_json, "
               "format, raw_digest, raw_bytes, adapter_version, outcome, snapshot_id, diagnostics_json, actor, "
               "received_at, duplicate_of) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-              (import_id, doc.get("source") or "?", doc.get("project"), doc.get("revision"),
-               doc.get("parent_revision"), doc.get("kind") or ("records" if doc.get("records") is not None else None),
-               json.dumps(doc.get("scope") or {}), doc.get("format"), raw_digest, raw, adapter, outcome,
+              (import_id, _text(doc.get("source")) or "?", doc.get("project"), _text(doc.get("revision")),
+               _text(doc.get("parent_revision")),
+               _text(doc.get("kind")) or ("records" if doc.get("records") is not None else None),
+               json.dumps(doc.get("scope") or {}), _text(doc.get("format")), raw_digest, raw, adapter, outcome,
                snapshot_id, json.dumps(diags), actor, now(), duplicate_of))
 
 
@@ -306,6 +447,41 @@ def _head_snapshot(c, head):
     return c.execute("SELECT * FROM source_snapshot WHERE snapshot_id=?", (head["snapshot_id"],)).fetchone()
 
 
+def _snapshot_at(c, source, project, revision):
+    """The snapshot of a revision, preferring the head-eligible one over a staged partial view of it."""
+    return c.execute("SELECT * FROM source_snapshot WHERE source=? AND project=? AND revision=? "
+                     "ORDER BY completeness='partial' LIMIT 1", (source, project, revision)).fetchone()
+
+
+def _base_definitions(c, doc):
+    """A delta or partial export may omit definitions; it is then read against its parent's definitions."""
+    scope = doc.get("scope") if isinstance(doc.get("scope"), dict) else {}
+    if doc.get("definitions") or not (doc.get("kind") == "delta" or scope.get("kind") == "partial"):
+        return None
+    source, project, parent = doc.get("source"), doc.get("project"), doc.get("parent_revision")
+    if not (isinstance(source, str) and isinstance(parent, str)):
+        return None
+    snap = _snapshot_at(c, source, project, parent)
+    return json.loads(snap["definitions_json"]) if snap else None
+
+
+def _ambiguous_deletions(c, source, project, base, elements, rels, deletions):
+    """Element and relationship IDs are separate namespaces, but deletions are one flat list. A deletion ID
+    that names both a present element and a present relationship is refused rather than applied to both."""
+    def in_base(table, column, uid):
+        return base is not None and c.execute(
+            f"SELECT 1 FROM {table} WHERE snapshot_id=? AND {column}=? AND state='present'",
+            (base["snapshot_id"], uid)).fetchone() is not None
+    el_ids, rel_ids = {e["id"] for e in elements}, {r["id"] for r in rels}
+    out = []
+    for native in deletions:
+        if ((native in el_ids or in_base("snapshot_element", "entity_uid", entity_uid(source, project, native)))
+                and (native in rel_ids or in_base("snapshot_relationship", "rel_uid", rel_uid(source, project, native)))):
+            out.append({"code": "ambiguous_deletion_id", "id": native,
+                        "message": "ID names both an element and a relationship; deletion not applied."})
+    return out
+
+
 def _advance_head(c, source, project, revision, sid, import_id):
     row = c.execute("SELECT head_seq FROM source_head WHERE source=? AND project=?", (source, project)).fetchone()
     seq = (row["head_seq"] if row else 0) + 1
@@ -323,13 +499,15 @@ def _store_record_snapshot(c, doc, import_id, raw_digest, norm_digest, records, 
     sid = new_id("snap")
     c.execute("INSERT INTO source_snapshot (snapshot_id, source, project, revision, parent_revision, kind, completeness, "
               "scope_json, raw_digest, normalized_digest, adapter_version, status, definitions_json, import_id, "
-              "created_at, warnings_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+              "created_at, warnings_json, unrecognized_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
               (sid, doc["source"], doc["project"], doc["revision"], doc.get("parent_revision"), "records", "complete",
                json.dumps({"kind": "complete"}), raw_digest, norm_digest, RECORDS_ADAPTER_VERSION, "head", "{}",
-               import_id, now(), json.dumps(warnings)))
+               import_id, now(), json.dumps(warnings),
+               json.dumps({k: v for k, v in doc.items() if k not in KNOWN_RECORDS_TOP}, sort_keys=True)))
     for r in records:
-        c.execute("INSERT INTO external_record VALUES (?,?,?,?,?,?)",
-                  (sid, r["id"], "rv_" + digest(r)[:16], r["kind"], r["asset_ref"], r["text"]))
+        c.execute("INSERT INTO external_record VALUES (?,?,?,?,?,?,?)",
+                  (sid, r["id"], "rv_" + digest(r)[:16], r["kind"], r["asset_ref"], r["text"],
+                   json.dumps(r.get("unrecognized") or {}, sort_keys=True)))
     return sid
 
 
@@ -341,14 +519,15 @@ def _store_model_snapshot(c, doc, import_id, raw_digest, norm_digest, normalized
     completeness = "partial" if (doc.get("scope") or {}).get("kind") == "partial" else (
         "delta" if kind == "delta" else "complete")
     defs = doc.get("definitions") or {}
-    if kind == "delta" and base is not None and not defs:
-        defs = json.loads(base["definitions_json"])
+    if (kind == "delta" or completeness == "partial") and base is not None and not defs:
+        defs = json.loads(base["definitions_json"])  # same definitions normalize_model read it against
     c.execute("INSERT INTO source_snapshot (snapshot_id, source, project, revision, parent_revision, kind, completeness, "
               "scope_json, raw_digest, normalized_digest, adapter_version, status, definitions_json, import_id, "
-              "created_at, warnings_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+              "created_at, warnings_json, unrecognized_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
               (sid, source, project, doc["revision"], doc.get("parent_revision"), kind, completeness,
                json.dumps(doc.get("scope") or {}), raw_digest, norm_digest, ADAPTER_VERSION, status,
-               json.dumps(defs, sort_keys=True), import_id, now(), json.dumps(warnings)))
+               json.dumps(defs, sort_keys=True), import_id, now(), json.dumps(warnings),
+               json.dumps({k: v for k, v in doc.items() if k not in KNOWN_TOP}, sort_keys=True)))
 
     base_members = {}
     base_rels = {}
@@ -370,7 +549,8 @@ def _store_model_snapshot(c, doc, import_id, raw_digest, norm_digest, normalized
         content = {k: e[k] for k in ("type", "name", "owner", "properties", "unrecognized")}
         cdig = digest(content)
         vid = "ev_" + sha256(uid + cdig)[:20]
-        c.execute("INSERT OR IGNORE INTO element_version VALUES (?,?,?,?,?,?,?,?,?)",
+        # Content-addressed: an identical version may exist. Any other constraint failure must raise.
+        c.execute("INSERT INTO element_version VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(version_id) DO NOTHING",
                   (vid, uid, e["type"], e["name"], e["owner"], json.dumps(e["properties"], sort_keys=True),
                    json.dumps(e["unrecognized"], sort_keys=True), cdig, f"{import_id}#{e['pointer']}"))
         members[uid] = (vid, "present", 1)
@@ -398,11 +578,17 @@ def _store_model_snapshot(c, doc, import_id, raw_digest, norm_digest, normalized
         ruid = rel_uid(source, project, r["id"])
         s_uid, t_uid = uid_of(r["source"]), uid_of(r["target"])
         content = {"predicate": r["type"], "source": s_uid, "target": t_uid, "multiplicity": r["multiplicity"]}
+        if r.get("unrecognized"):
+            content["unrecognized"] = r["unrecognized"]
         cdig = digest(content)
         vid = "rv_" + sha256(ruid + cdig)[:20]
-        c.execute("INSERT OR IGNORE INTO relationship_version VALUES (?,?,?,?,?,?,?,?,?,?)",
-                  (vid, ruid, r["id"], r["type"], s_uid or "", t_uid or "", r["multiplicity"], "source",
-                   json.dumps({"import_id": import_id, "pointer": r["pointer"]}), cdig))
+        mult = r["multiplicity"]
+        if isinstance(mult, (dict, list)):
+            mult = json.dumps(mult, sort_keys=True)  # structured multiplicity is stored JSON-encoded
+        c.execute("INSERT INTO relationship_version VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(version_id) DO NOTHING",
+                  (vid, ruid, r["id"], r["type"], s_uid or "", t_uid or "", mult, "source",
+                   json.dumps({"import_id": import_id, "pointer": r["pointer"]}), cdig,
+                   json.dumps(r.get("unrecognized") or {}, sort_keys=True)))
         rmembers[ruid] = (vid, "present")
     if completeness == "complete":
         for u, (v, s) in base_rels.items():
@@ -427,10 +613,19 @@ def _store_model_snapshot(c, doc, import_id, raw_digest, norm_digest, normalized
     if del_warn:
         w = json.loads(c.execute("SELECT warnings_json FROM source_snapshot WHERE snapshot_id=?", (sid,)).fetchone()[0])
         c.execute("UPDATE source_snapshot SET warnings_json=? WHERE snapshot_id=?", (json.dumps(w + del_warn), sid))
-    return sid
+    return sid, del_warn
 
 
 # ---------------------------------------------------------------- change detection
+def _obj(v):
+    return v if isinstance(v, dict) else {}
+
+
+def _json_differs(a, b, k):
+    # Compared as JSON, not with Python ==, so 0 -> false or 1 -> 1.0 is still a change.
+    return (k in a) != (k in b) or canonical_json(a.get(k)) != canonical_json(b.get(k))
+
+
 def diff_snapshots(c, old_sid, new_sid):
     """Classify changes between two model snapshots: data, structural (definitions) and semantic."""
     def members(sid):
@@ -466,11 +661,20 @@ def diff_snapshots(c, old_sid, new_sid):
         if o["name"] != n["name"]:
             out["data"].append({"change": "renamed_identity_preserved", "entity_uid": uid,
                                 "source_id": n["native_id"], "from": o["name"], "to": n["name"]})
+        for col in ("type", "owner"):  # a reclassified element can leave a projected resource
+            if o[col] != n[col]:
+                out["data"].append({"change": f"{col}_changed", "entity_uid": uid, "source_id": n["native_id"],
+                                    "from": o[col], "to": n[col]})
         op, np_ = json.loads(o["properties_json"]), json.loads(n["properties_json"])
         for k in sorted(set(op) | set(np_)):
-            if op.get(k, "<missing>") != np_.get(k, "<missing>") or (k in op) != (k in np_):
+            if _json_differs(op, np_, k):
                 out["data"].append({"change": "property_value", "entity_uid": uid, "source_id": n["native_id"],
                                     "property": k, "from": op.get(k, "<missing>"), "to": np_.get(k, "<missing>")})
+        ou, nu = json.loads(o["unrecognized_json"]), json.loads(n["unrecognized_json"])
+        changed = sorted(k for k in set(ou) | set(nu) if _json_differs(ou, nu, k))
+        if changed:
+            out["data"].append({"change": "unrecognized_content_changed", "entity_uid": uid,
+                                "source_id": n["native_id"], "keys": changed})
     for uid, o in old.items():
         if uid not in new and o["state"] == "present":
             out["data"].append({"change": "not_observed", "entity_uid": uid, "source_id": o["native_id"]})
@@ -487,7 +691,7 @@ def diff_snapshots(c, old_sid, new_sid):
 
     od = json.loads(c.execute("SELECT definitions_json FROM source_snapshot WHERE snapshot_id=?", (old_sid,)).fetchone()[0])
     nd = json.loads(c.execute("SELECT definitions_json FROM source_snapshot WHERE snapshot_id=?", (new_sid,)).fetchone()[0])
-    ot, nt = od.get("types", {}), nd.get("types", {})
+    ot, nt = _obj(od.get("types")), _obj(nd.get("types"))
     for tname in sorted(set(ot) | set(nt)):
         if tname not in nt:
             out["structural"].append({"change": "type_removed", "type": tname})
@@ -495,14 +699,15 @@ def diff_snapshots(c, old_sid, new_sid):
         if tname not in ot:
             out["structural"].append({"change": "type_added", "type": tname})
             continue
-        op, np_ = ot[tname].get("properties", {}), nt[tname].get("properties", {})
+        op, np_ = _obj(_obj(ot[tname]).get("properties")), _obj(_obj(nt[tname]).get("properties"))
         for p in sorted(set(op) | set(np_)):
-            a, b = op.get(p), np_.get(p)
-            if a and not b:
+            # Presence is tested with `in`: a definition without attributes ({}) is still a definition.
+            if p not in np_:
                 out["structural"].append({"change": "property_definition_removed", "type": tname, "property": p})
-            elif b and not a:
+            elif p not in op:
                 out["structural"].append({"change": "property_definition_added", "type": tname, "property": p})
             else:
+                a, b = _obj(op[p]), _obj(np_[p])
                 if a.get("type") != b.get("type"):
                     out["structural"].append({"change": "property_type_changed", "type": tname, "property": p,
                                               "from": a.get("type"), "to": b.get("type")})
@@ -514,16 +719,16 @@ def diff_snapshots(c, old_sid, new_sid):
                     out["semantic"].append({"change": "enum_changed", "type": tname, "property": p,
                                             "added": sorted(set(b.get("enum") or []) - set(a.get("enum") or [])),
                                             "removed": sorted(set(a.get("enum") or []) - set(b.get("enum") or []))})
-    orl, nrl = od.get("relationshipTypes", {}), nd.get("relationshipTypes", {})
+    orl, nrl = _obj(od.get("relationshipTypes")), _obj(nd.get("relationshipTypes"))
     for rname in sorted(set(orl) | set(nrl)):
-        a, b = orl.get(rname), nrl.get(rname)
-        if a and b and (a.get("from"), a.get("to")) != (b.get("from"), b.get("to")):
+        a, b = _obj(orl.get(rname)), _obj(nrl.get(rname))
+        if rname not in nrl:
+            out["structural"].append({"change": "relationship_type_removed", "predicate": rname})
+        elif rname not in orl:
+            out["structural"].append({"change": "relationship_type_added", "predicate": rname})
+        elif (a.get("from"), a.get("to")) != (b.get("from"), b.get("to")):
             out["semantic"].append({"change": "relationship_direction_changed", "predicate": rname,
                                     "from": f"{a.get('from')}->{a.get('to')}", "to": f"{b.get('from')}->{b.get('to')}"})
-        elif a and not b:
-            out["structural"].append({"change": "relationship_type_removed", "predicate": rname})
-        elif b and not a:
-            out["structural"].append({"change": "relationship_type_added", "predicate": rname})
     orr, nrr = rels(old_sid), rels(new_sid)
     for ruid, n in nrr.items():
         o = orr.get(ruid)
