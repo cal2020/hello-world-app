@@ -28,8 +28,12 @@ build/web/
 
 Only one tab can run the workbench at a time. Each tab keeps its own in-memory copy of the saved state, so two tabs
 writing back would overwrite each other. The worker holds an exclusive Web Lock, and a second tab offers to move
-the workbench to itself; the first tab then stops. If the browser blocks site storage, the workbench still runs but
-does not save, and says so.
+the workbench to itself. Moving is a handshake: the second tab asks over a BroadcastChannel, the first tab finishes
+whatever it is doing, saves, closes its storage and releases the lock, and only then does the second tab load the
+saved state. The second tab takes the lock by force only if the first tab does not answer within 15 seconds (for
+example because it is frozen). Deleting local data works only in the tab that holds the workbench, or in a tab that
+failed to start. If another tab keeps the data open, the page says the deletion is pending and stops saving.
+If the browser blocks site storage, the workbench still runs but does not save, and says so.
 
 ## What is live and what was fixed at build time
 
@@ -40,8 +44,9 @@ does not save, and says so.
 | The 15 independent Rego **test rules**, executed as Wasm entrypoints | **`opa check` verdicts** (compile errors included, such as the candidate that calls `http.send`). These are pinned-CLI results recorded in the registry, shown in the browser as recorded |
 
 If Python asks for a bundle whose content digest was not compiled at build time, the Wasm backend raises
-`OpaUnavailable` and the check becomes `ERROR`. It does not guess. Decisions and tests are never replayed from
-recorded results; only `opa check` verdicts are.
+`OpaUnavailable` and the check becomes `ERROR`. It does not guess. Decisions and executed test rules are always
+computed live in the browser. What comes from the build is recorded: `opa check` verdicts, and for a test bundle
+that failed to compile or has no test rules, that outcome (an error, or an empty suite).
 
 ## How the Wasm path is verified (scripts/build_web.py)
 
@@ -84,7 +89,7 @@ checkout, and gets a `+local-changes` suffix when the working tree differs from 
 
 ## Build and test
 
-Requires Python 3.11.4 or later, Node 18+, and Playwright with Chromium for `--e2e`.
+Requires Python 3.11.4 or later, Node 18+, git (only tracked files are packed), and Playwright with Chromium for `--e2e`.
 
 ```bash
 ./scripts/fetch_opa.sh && (cd web && npm ci)
