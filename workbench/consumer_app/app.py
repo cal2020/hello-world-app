@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS received_event (event_id TEXT PRIMARY KEY, project TE
 CREATE TABLE IF NOT EXISTS effect (effect_id INTEGER PRIMARY KEY AUTOINCREMENT, event_id TEXT UNIQUE, kind TEXT,
   detail TEXT, at TEXT);
 CREATE TABLE IF NOT EXISTS stream_state (project TEXT PRIMARY KEY, last_seq INTEGER, pinned_release TEXT,
-  pinned_revision TEXT, latest_known_head TEXT, gaps_detected INTEGER DEFAULT 0, resyncs INTEGER DEFAULT 0);
+  pinned_revision TEXT, latest_known_head TEXT, gaps_detected INTEGER DEFAULT 0, resyncs INTEGER DEFAULT 0,
+  pinned_source TEXT);
 CREATE TABLE IF NOT EXISTS sensor_view (id TEXT PRIMARY KEY, source_id TEXT, name TEXT, serial TEXT,
   interval_ms REAL, measurand TEXT, gateway TEXT);
 CREATE TABLE IF NOT EXISTS identity_map (source_id TEXT PRIMARY KEY, logical_id TEXT);
@@ -52,7 +53,10 @@ class Store:
         self.local = threading.local()
         self.lock = threading.Lock()  # one event at a time
         self.faults = {"drop_ack_after_commit": 0}
-        self.conn().executescript(SCHEMA)
+        c = self.conn()
+        c.executescript(SCHEMA)
+        if "pinned_source" not in {r["name"] for r in c.execute("PRAGMA table_info(stream_state)")}:
+            c.execute("ALTER TABLE stream_state ADD COLUMN pinned_source TEXT")  # database from an older version
 
     def conn(self):
         c = getattr(self.local, "c", None)
@@ -164,7 +168,13 @@ def verify(store, base_url):
 def _resync_payload(release_id):
     base = f"{WORKBENCH}/api/releases/{release_id}"
     sensors, page = fetch_all(base, "sensors")
-    return sensors, page
+    st, rel = http_get(base)
+    if st != 200:
+        raise RuntimeError(f"GET {base} -> {st}")
+    # The source the release pins, so that only that source's head events count as newer than the pin.
+    source = next((s["source"] for s in rel["manifest"]["source_snapshots"]
+                   if s["snapshot_id"] == page["source"]["snapshotId"]), None)
+    return sensors, page, source
 
 
 def handle_event(store, ev):
@@ -183,8 +193,13 @@ def handle_event(store, ev):
         elif ev["seq"] > last + 1:
             handling = "gap_resync"
             s, state = http_get(f"/api/projects/{ev['project']}/stream-state")
-            prefetch = ("resync", state, _resync_payload(state["active_release_id"]) if state.get("active_release_id")
-                        else None)
+            payload = _resync_payload(state["active_release_id"]) if state.get("active_release_id") else None
+            # Full link rows (revoked ones too), read after stream-state: the skipped link events will be
+            # ignored as stale, so the view must not depend on them. Newer events re-apply idempotently.
+            s, body = http_get(f"/api/projects/{ev['project']}/links")
+            if s != 200:
+                raise RuntimeError(f"GET links -> {s}")
+            prefetch = ("resync", state, payload, body["links"])
         else:
             handling = "applied"
             if ev["type"] == "release.activated":
@@ -199,12 +214,13 @@ def handle_event(store, ev):
                 _apply(c, ev, prefetch)
                 c.execute("UPDATE stream_state SET last_seq=? WHERE project=?", (ev["seq"], ev["project"]))
             elif handling == "gap_resync":
-                _, state, payload = prefetch
+                _, state, payload, links = prefetch
                 if payload:
-                    _replace_sensors(c, payload[0], payload[1])
+                    _replace_sensors(c, *payload)
                 c.execute("DELETE FROM link_view")
-                for lid in state.get("active_links", []):
-                    c.execute("INSERT OR REPLACE INTO link_view VALUES (?,?,?,?)", (lid, None, None, "active"))
+                for l in links:
+                    c.execute("INSERT INTO link_view VALUES (?,?,?,?)",
+                              (l["link_id"], l["record_id"], l["target_uid"], l["status"]))
                 c.execute("UPDATE stream_state SET last_seq=?, gaps_detected=gaps_detected+1, resyncs=resyncs+1 "
                           "WHERE project=?", (max(state["latest_seq"], ev["seq"]), ev["project"]))
                 c.execute("INSERT INTO effect (event_id, kind, detail, at) VALUES (?,?,?,?)",
@@ -222,15 +238,16 @@ def handle_event(store, ev):
         return {"ack": ev["event_id"], "handling": handling}, drop
 
 
-def _replace_sensors(c, sensors, page):
+def _replace_sensors(c, sensors, page, source):
     c.execute("DELETE FROM sensor_view")
     for s in sensors:
         c.execute("INSERT INTO sensor_view VALUES (?,?,?,?,?,?,?)",
                   (s["id"], s["sourceId"], s.get("name"), s.get("serialNumber"), s.get("sampleIntervalMs"),
                    s.get("measurand"), (s.get("gateway") or {}).get("sourceId")))
         c.execute("INSERT OR IGNORE INTO identity_map VALUES (?,?)", (s["sourceId"], s["id"]))
-    c.execute("UPDATE stream_state SET pinned_release=?, pinned_revision=?, latest_known_head=? WHERE project=?",
-              (page["releaseId"], page["source"]["revision"], page["source"]["headRevision"], page["project"]))
+    c.execute("UPDATE stream_state SET pinned_release=?, pinned_revision=?, latest_known_head=?, pinned_source=? "
+              "WHERE project=?", (page["releaseId"], page["source"]["revision"], page["source"]["headRevision"],
+                                  source, page["project"]))
 
 
 def _apply(c, ev, prefetch):
@@ -246,8 +263,11 @@ def _apply(c, ev, prefetch):
         c.execute("UPDATE link_view SET status='revoked' WHERE link_id=?", (p["link_id"],))
         detail = {"link_id": p["link_id"]}
     elif t == "source.head_advanced":
-        c.execute("UPDATE stream_state SET latest_known_head=? WHERE project=?", (p["revision"], ev["project"]))
-        detail = {"revision": p["revision"]}
+        # Heads of other sources (e.g. a CMMS records import) are not newer versions of the pinned model.
+        pinned = c.execute("SELECT pinned_source FROM stream_state WHERE project=?", (ev["project"],)).fetchone()[0]
+        if p.get("source") == pinned:
+            c.execute("UPDATE stream_state SET latest_known_head=? WHERE project=?", (p["revision"], ev["project"]))
+        detail = {"source": p.get("source"), "revision": p["revision"], "pinned_source": pinned}
     else:
         detail = {"ignored_type": t}
     c.execute("INSERT INTO effect (event_id, kind, detail, at) VALUES (?,?,?,?)",
