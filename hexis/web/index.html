@@ -1,0 +1,346 @@
+<title>HEXIS Onboarding Machine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#F2F4F6; --surface:#FFFFFF; --ink:#15202B; --muted:#5A6772; --rule:#D6DDE3;
+  --accent:#1D5FA8; --accent-soft:#E3ECF7; --ok:#2F7A4B; --ok-soft:#E2F1E7; --warn:#9A620F; --warn-soft:#F7EDDC;
+  --bad:#B02A22; --bad-soft:#F8E4E2; --code:#EEF1F4;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --cond:"IBM Plex Sans Condensed","IBM Plex Sans","Arial Narrow",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1318; --surface:#151C23; --ink:#E3E8ED; --muted:#93A0AC; --rule:#28323C;
+    --accent:#86B4EE; --accent-soft:#1B2A3B; --ok:#6CC08D; --ok-soft:#16291E; --warn:#E0A84E; --warn-soft:#2B2213;
+    --bad:#EE7C73; --bad-soft:#321A18; --code:#1B232C; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1318; --surface:#151C23; --ink:#E3E8ED; --muted:#93A0AC; --rule:#28323C;
+  --accent:#86B4EE; --accent-soft:#1B2A3B; --ok:#6CC08D; --ok-soft:#16291E; --warn:#E0A84E; --warn-soft:#2B2213;
+  --bad:#EE7C73; --bad-soft:#321A18; --code:#1B232C; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);padding-inline:16px;padding-block:20px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--cond);font-weight:600;text-wrap:balance;margin:0;letter-spacing:.005em}
+h1{font-size:28px;line-height:1.15}
+h2{font-size:18px}
+h3{font-size:15px}
+p{margin:0}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono);font-size:12.5px}
+.eyebrow{font:600 11px/1 var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+header.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--rule);padding-bottom:14px}
+header.top .lead{max-width:62ch;display:flex;flex-direction:column;gap:6px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font:500 12px/1.6 var(--sans);border:1px solid var(--rule);background:var(--surface);white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.pill.ok{color:var(--ok);background:var(--ok-soft);border-color:transparent}
+.pill.warn{color:var(--warn);background:var(--warn-soft);border-color:transparent}
+.pill.bad{color:var(--bad);background:var(--bad-soft);border-color:transparent}
+.pill.info{color:var(--accent);background:var(--accent-soft);border-color:transparent}
+.controls{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:14px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+label{font:500 12px/1.2 var(--sans);color:var(--muted)}
+select,button{font:500 14px/1.2 var(--sans);color:var(--ink);border-radius:6px}
+select{background:var(--bg);border:1px solid var(--rule);padding:8px 10px;max-width:100%}
+button{cursor:pointer;padding:9px 14px;border:1px solid var(--rule);background:var(--surface)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,select:focus-visible,[role=tab]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.strip>div{background:var(--surface);padding:10px 14px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.strip .v{font:500 14px/1.3 var(--mono);overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:18px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.states{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.states li{display:grid;grid-template-columns:18px 1fr;gap:4px 8px;padding:9px 6px;border-top:1px solid var(--rule)}
+.states li:first-child{border-top:0}
+.states li.current{background:var(--accent-soft);border-radius:6px}
+.mark{font:600 12px/20px var(--mono);color:var(--muted);text-align:center}
+li.visited .mark{color:var(--ok)}
+li.current .mark{color:var(--accent)}
+.sname{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline}
+.sname b{font:600 13px/20px var(--mono)}
+.kind{font:500 11.5px/1.4 var(--mono);color:var(--muted)}
+.edges{grid-column:2;display:flex;flex-direction:column;gap:1px;font:400 11.5px/1.45 var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.edges .to{color:var(--ink)}
+[role=tablist]{display:flex;gap:4px;border-bottom:1px solid var(--rule);overflow-x:auto}
+[role=tab]{border:0;background:none;border-bottom:2px solid transparent;border-radius:0;padding:8px 10px;color:var(--muted);white-space:nowrap}
+[role=tab][aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent)}
+.ledger{display:flex;flex-direction:column;gap:0;font:400 12.5px/1.5 var(--mono)}
+.ledger .row{display:grid;grid-template-columns:44px 1fr;gap:8px;padding:5px 0;border-top:1px solid var(--rule)}
+.ledger .row:first-child{border-top:0}
+.ledger .rev{color:var(--muted);font-variant-numeric:tabular-nums}
+.ledger .g{color:var(--muted);overflow-wrap:anywhere}
+.approval{border:1px solid var(--warn);background:var(--warn-soft);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.approval dl{display:grid;grid-template-columns:max-content 1fr;gap:3px 12px;margin:0;font:400 12.5px/1.45 var(--mono)}
+.approval dt{color:var(--muted)}
+.approval dd{margin:0;overflow-wrap:anywhere}
+.row-btns{display:flex;flex-wrap:wrap;gap:8px}
+.note{border-radius:6px;padding:9px 12px;font-size:13.5px}
+.note.ok{background:var(--ok-soft);color:var(--ok)}
+.note.bad{background:var(--bad-soft);color:var(--bad)}
+.note.warn{background:var(--warn-soft);color:var(--warn)}
+.note.info{background:var(--accent-soft);color:var(--accent)}
+pre.out{margin:0;background:var(--code);border-radius:6px;padding:12px;font:400 12px/1.5 var(--mono);white-space:pre;overflow-x:auto;max-height:520px;overflow-y:auto}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;font:400 12.5px/1.45 var(--mono)}
+.kv span:nth-child(odd){color:var(--muted)}
+footer{color:var(--muted);font-size:13px;max-width:80ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="lead">
+      <span class="eyebrow">efsm-v1 &middot; supplier-onboarding-draft</span>
+      <h1>HEXIS Onboarding Machine</h1>
+      <p class="muted">A supplier-onboarding skill compiled into a state machine. The Python runtime runs in this page: every run below goes through the real kernel, broker, approvals and evidence checks against a fake ERP.</p>
+    </div>
+    <span id="rt" class="pill warn">Loading Python runtime</span>
+  </header>
+
+  <section class="controls" aria-label="Run controls">
+    <div class="field">
+      <label for="preset">Intake</label>
+      <select id="preset">
+        <option value="clean">Clean intake &middot; DOC-100 Northwind</option>
+        <option value="repair">Country needs repair &middot; DOC-200 Contoso</option>
+        <option value="injection">Instructions hidden in document &middot; DOC-666</option>
+        <option value="existing">Supplier already exists</option>
+        <option value="missing">Referenced document missing &middot; DOC-404</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="fault">ERP fault after approval</label>
+      <select id="fault">
+        <option value="none">None</option>
+        <option value="timeout_after_commit">Timeout after the ERP commits</option>
+        <option value="persist_wrong_value">ERP stores a different address</option>
+        <option value="read_unavailable">Read-back unavailable once</option>
+      </select>
+    </div>
+    <button id="start" class="primary" disabled>Start run</button>
+    <button id="restart" disabled title="Drop every in-memory object and rebuild from the SQLite checkpoint">Restart worker</button>
+    <button id="reset" disabled>Reset store</button>
+  </section>
+
+  <section class="strip" aria-label="Run summary">
+    <div><span class="eyebrow">Status</span><span class="v" id="s-status">no run yet</span></div>
+    <div><span class="eyebrow">State</span><span class="v" id="s-state">READ_INTAKE</span></div>
+    <div><span class="eyebrow">Revision</span><span class="v" id="s-rev">&ndash;</span></div>
+    <div><span class="eyebrow">ERP drafts stored</span><span class="v" id="s-erp">0</span></div>
+    <div><span class="eyebrow">Outcome</span><span class="v" id="s-out">&ndash;</span></div>
+  </section>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="m-h">
+      <div><h2 id="m-h">Machine</h2><p class="muted" style="font-size:13px">Guards are checked in order; the unguarded edge is the default and runs last.</p></div>
+      <ol class="states" id="states"></ol>
+      <p class="muted mono" id="m-hash"></p>
+    </section>
+
+    <section class="panel">
+      <div role="tablist" aria-label="Views">
+        <button role="tab" id="t-run" aria-selected="true" aria-controls="p-run">Run ledger</button>
+        <button role="tab" id="t-demo" aria-selected="false" aria-controls="p-demo">Full demo</button>
+        <button role="tab" id="t-tests" aria-selected="false" aria-controls="p-tests">Test suite</button>
+      </div>
+      <div id="p-run" role="tabpanel" aria-labelledby="t-run" style="display:flex;flex-direction:column;gap:12px">
+        <div id="note" class="note info">Choose an intake and press Start run. The run stops at the approval step and waits for a person.</div>
+        <div id="approval" hidden></div>
+        <div id="ledger" class="ledger"></div>
+        <div id="evidence"></div>
+      </div>
+      <div id="p-demo" role="tabpanel" aria-labelledby="t-demo" hidden style="display:flex;flex-direction:column;gap:12px">
+        <div class="row-btns"><button id="demo" disabled>Run the full demo</button><span id="demo-src" class="pill info">Recorded run</span></div>
+        <p class="muted" style="font-size:13px">Compile with a repair round, approval after a worker restart, a timeout after the ERP commits, a rejected validation shortcut, and a trace-driven refinement.</p>
+        <pre class="out" id="demo-out">Loading&hellip;</pre>
+      </div>
+      <div id="p-tests" role="tabpanel" aria-labelledby="t-tests" hidden style="display:flex;flex-direction:column;gap:12px">
+        <div class="row-btns"><button id="tests" disabled>Run the test suite here</button><span id="tests-state" class="pill">not run</span></div>
+        <p class="muted" style="font-size:13px">Runs the repository's unittest suite in this browser. The CLI test is skipped because it starts subprocesses, which the browser runtime cannot do. Takes a few seconds.</p>
+        <pre class="out" id="tests-out">Not run yet.</pre>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p>Fixture mode: a rule-based stand-in replaces the language model, and the ERP, document store and supplier master are simulated. Users are simulated host principals (u-requester starts runs, u-approver approves). This page shows control, approval, evidence and recovery behaviour; it does not measure model quality.</p>
+    <p class="mono" id="build"></p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  let machine = null, snap = null, live = false, busy = false;
+  const pending = new Map(); let seq = 0;
+
+  // ---- tabs
+  const tabs = ["run", "demo", "tests"];
+  tabs.forEach((t) => $("t-" + t).addEventListener("click", () => {
+    tabs.forEach((u) => { $("t-" + u).setAttribute("aria-selected", String(u === t)); $("p-" + u).hidden = u !== t; });
+  }));
+
+  // ---- machine view
+  function kindLabel(s) {
+    const a = s.action;
+    if (a.kind === "tool") return a.name;
+    if (a.kind === "end") { const t = machine.terminals.find((x) => x.id === a.terminal); return "end \u00b7 " + (t ? t.kind : ""); }
+    if (a.kind === "user") return (a.labels || []).includes("approval") ? "user \u00b7 approval" : "user \u00b7 input";
+    return a.kind;
+  }
+  function renderMachine() {
+    if (!machine) return;
+    const visited = new Set((snap && snap.visited) || []);
+    const cur = snap && snap.state_id;
+    $("states").innerHTML = Object.values(machine.states).map((s) => {
+      const cls = [s.id === cur ? "current" : "", visited.has(s.id) ? "visited" : ""].join(" ");
+      const mark = s.id === cur ? "\u25cf" : visited.has(s.id) ? "\u2713" : "\u00b7";
+      const edges = (s.transitions || []).map((e) =>
+        `<span>\u2192 <span class="to">${esc(e.to)}</span>${e.if ? "  if " + esc(e.if) : "  (default)"}${e.inc ? "  +" + esc(e.inc) : ""}</span>`).join("");
+      return `<li class="${cls}"${s.id === cur ? ' aria-current="step"' : ""}><span class="mark" aria-hidden="true">${mark}</span>
+        <div class="sname"><b>${esc(s.id)}</b><span class="kind">${esc(kindLabel(s))}</span></div>
+        ${edges ? `<div class="edges">${edges}</div>` : ""}</li>`;
+    }).join("");
+  }
+
+  // ---- run view
+  const statusPill = (st) => {
+    const cls = st === "COMPLETED" ? "ok" : st === "FAILED" || st === "CANCELLED" ? "bad" : st && st.startsWith("WAITING") ? "warn" : st === "RECONCILING" ? "warn" : "info";
+    return `<span class="pill ${cls}">${esc(st)}</span>`;
+  };
+  function render(s, noteOverride) {
+    snap = s && s.run_id ? s : snap;
+    const r = snap;
+    $("s-erp").textContent = String((s && s.erp_drafts) ?? 0);
+    if (r) {
+      $("s-status").innerHTML = statusPill(r.status);
+      $("s-state").textContent = r.state_id;
+      $("s-rev").textContent = "r" + r.revision;
+      $("s-out").textContent = r.outcome ? `${r.outcome.terminal} (${r.outcome.kind})` : r.diagnostic ? r.diagnostic.code : "\u2013";
+      $("ledger").innerHTML = r.events.map((e) => {
+        let body = "";
+        if (e.type === "transition") body = `${esc(e.from)} \u2192 ${esc(e.to)} <span class="g">${e.guard ? esc(e.guard) : "(default)"}</span>`;
+        else if (e.type === "terminal") body = `terminal ${esc(e.terminal)} <span class="g">evidence: ${esc((e.evidence || []).join(", ") || "none")}</span>`;
+        else if (e.type === "interaction_requested") body = `waiting for ${esc(e.interaction_type)} <span class="g">${esc(e.interaction_id)}</span>`;
+        else if (e.type === "reconciling") body = `outcome uncertain; reconciling <span class="g">${esc(e.action_id)}</span>`;
+        else if (e.type === "stopped" || e.type === "terminal_rejected") body = `stopped: ${esc(e.code || "")} <span class="g">${esc(e.message || (e.problems || []).join("; "))}</span>`;
+        else if (e.type === "fallback") body = `fallback: ${esc(e.code)} <span class="g">${esc(e.message)}</span>`;
+        else body = esc(e.type);
+        return `<div class="row"><span class="rev">r${esc(e.revision ?? 0)}</span><span>${body}</span></div>`;
+      }).join("");
+      const erp = r.actions.filter((a) => a.tool === "erp.create_draft");
+      const ev = r.evidence;
+      $("evidence").innerHTML = (erp.length || ev.length) ? `<div class="kv">
+        ${erp.map((a) => `<span>ERP write</span><span>${esc(a.status)} \u00b7 attempts ${esc(a.attempts)} \u00b7 ref ${esc(a.external_ref || "\u2013")}<br>${a.receipts.map((x) => esc(x.dispatch_state + " / " + x.certainty)).join("<br>")}</span>`).join("")}
+        ${ev.map((x) => `<span>Evidence</span><span>${esc(x.verifier)} on ${esc(x.subject.draft_ref)} v${esc(x.subject.version)}${x.invalidated_reason ? " \u00b7 invalidated: " + esc(x.invalidated_reason) : " \u00b7 current"}</span>`).join("")}
+        ${r.outcome && r.outcome.kind === "verified" ? `<span>Verified claim</span><span>${esc(r.assurance.verification_scope.claim)}</span>` : ""}
+      </div>` : "";
+      const ap = $("approval");
+      if (r.pending) {
+        ap.hidden = false;
+        ap.className = "approval";
+        if (r.pending.type === "approval") {
+          const d = r.pending.draft || {};
+          ap.innerHTML = `<h3>Approval requested</h3><p style="font-size:13.5px">${esc(r.pending.prompt)} The approval is bound to this exact argument digest; any change to the draft needs a new approval.</p>
+            <dl>${["legal_name", "registration_number", "country", "address", "contact_email"].map((k) => `<dt>${k}</dt><dd>${esc(d[k])}</dd>`).join("")}<dt>args digest</dt><dd>${esc(r.pending.args_digest)}</dd></dl>
+            <div class="row-btns"><button data-who="u-approver" data-d="approved" class="primary">Approve as u-approver</button>
+            <button data-who="u-requester" data-d="approved">Approve as u-requester</button>
+            <button data-who="u-other" data-d="approved">Approve as other-tenant user</button>
+            <button data-who="u-approver" data-d="rejected">Reject</button></div>`;
+        } else {
+          ap.innerHTML = `<h3>Input requested</h3><p style="font-size:13.5px">${esc(r.pending.prompt)} The machine asks once.</p>
+            <div class="row-btns"><button data-who="u-requester" data-d="input" class="primary">Supply DOC-100 as a supplemental document</button></div>`;
+        }
+        ap.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => act("respond", { who: b.dataset.who, decision: b.dataset.d })));
+      } else { ap.hidden = true; ap.innerHTML = ""; }
+    }
+    const note = noteOverride || (s && s.note ? s : null);
+    if (note && note.note) { $("note").className = "note " + (note.level || "info"); $("note").textContent = note.note; }
+    else if (r) {
+      const msg = r.status === "COMPLETED" ? `Finished at ${r.outcome.terminal}.` : r.status.startsWith("WAITING") ? "Waiting for a person. You can restart the worker first: nothing is kept in memory." : r.diagnostic ? `${r.diagnostic.code}: ${r.diagnostic.message}` : r.status;
+      $("note").className = "note " + (r.status === "COMPLETED" ? (r.outcome.kind === "verified" ? "ok" : "warn") : r.status.startsWith("WAITING") ? "info" : "bad");
+      $("note").textContent = msg;
+    }
+    renderMachine();
+  }
+
+  // ---- worker
+  let worker = null;
+  function call(cmd, args) {
+    return new Promise((resolve) => { const id = ++seq; pending.set(id, resolve); worker.postMessage({ id, cmd, args }); });
+  }
+  function setBusy(b) {
+    busy = b;
+    ["start", "restart", "reset", "demo", "tests"].forEach((id) => { $(id).disabled = b || !live || ((id === "restart") && !snap); });
+  }
+  async function act(cmd, args) {
+    if (busy) return; setBusy(true);
+    const r = await call(cmd, args);
+    setBusy(false);
+    if (!r.ok) { $("note").className = "note bad"; $("note").textContent = r.error; return null; }
+    if (cmd === "start" || cmd === "respond" || cmd === "restart") render(r.result);
+    return r.result;
+  }
+  $("start").addEventListener("click", () => act("start", { preset: $("preset").value, fault: $("fault").value }));
+  $("restart").addEventListener("click", () => act("restart"));
+  $("reset").addEventListener("click", async () => {
+    const r = await act("reset"); if (!r) return; snap = null; machine = r.machine;
+    ["s-status", "s-state", "s-rev", "s-out"].forEach((i) => $(i).textContent = "\u2013");
+    $("ledger").innerHTML = ""; $("evidence").innerHTML = ""; $("approval").hidden = true;
+    $("note").className = "note info"; $("note").textContent = "Store cleared and the skill recompiled."; renderMachine();
+  });
+  $("demo").addEventListener("click", async () => {
+    $("demo-out").textContent = "Running\u2026"; const r = await act("demo", { scenario: "full" });
+    if (r) { $("demo-out").textContent = r.lines.join("\n"); $("demo-src").className = "pill ok"; $("demo-src").textContent = "Live run in this browser"; }
+  });
+  $("tests").addEventListener("click", async () => {
+    $("tests-state").className = "pill warn"; $("tests-state").textContent = "running";
+    $("tests-out").textContent = "Running\u2026"; const r = await act("tests");
+    if (!r) { $("tests-state").className = "pill bad"; $("tests-state").textContent = "error"; return; }
+    $("tests-state").className = "pill " + (r.ok ? "ok" : "bad");
+    $("tests-state").textContent = `${r.ran - r.failures - r.errors}/${r.ran} passed`;
+    $("tests-out").textContent = `${r.output}\nSkipped in the browser: ${r.skipped_in_browser.join(", ")}`;
+  });
+
+  function startWorker() {
+    try { worker = new Worker("worker.js"); } catch (e) { return fail(String(e)); }
+    worker.onmessage = async (e) => {
+      const m = e.data;
+      if (m.type === "progress") { $("rt").textContent = m.text; }
+      else if (m.type === "failed") fail(m.error);
+      else if (m.type === "ready") {
+        const r = await call("reset");
+        if (!r.ok) return fail(r.error);
+        live = true; machine = r.result.machine;
+        $("rt").className = "pill ok"; $("rt").textContent = `Live \u00b7 Python ${m.python}`;
+        $("m-hash").textContent = "admitted " + r.result.compile.artifact_hash.slice(0, 23) + "\u2026 after " + r.result.compile.attempts.length + " compile attempts";
+        renderMachine(); setBusy(false);
+      } else if (m.type === "reply") { const f = pending.get(m.id); pending.delete(m.id); f && f(m.reply); }
+    };
+    worker.onerror = (e) => fail(e.message || "worker error");
+  }
+  function fail(msg) {
+    live = false; setBusy(false);
+    $("rt").className = "pill bad"; $("rt").textContent = "Python runtime unavailable";
+    $("note").className = "note bad";
+    $("note").textContent = "The Python runtime could not start in this viewer (" + msg + "). The Full demo tab still shows a recorded run of the same code.";
+  }
+
+  // ---- at rest: machine and a recorded transcript from a real run
+  fetch("machine.json").then((r) => r.json()).then((m) => { if (!machine) { machine = m; renderMachine(); } }).catch(() => {});
+  fetch("recorded.json").then((r) => r.json()).then((rec) => {
+    if ($("demo-src").textContent === "Recorded run") $("demo-out").textContent = rec.lines.join("\n");
+    $("build").textContent = `Recorded transcript from commit ${rec.commit}, Python ${rec.python}. Source: hexis/ in cal2020/hello-world-app.`;
+  }).catch(() => { $("demo-out").textContent = "Recorded transcript unavailable."; });
+  startWorker();
+})();
+</script>

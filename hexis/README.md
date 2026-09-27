@@ -107,3 +107,11 @@ docs/                 architecture, requirements ledger, sources, limitations, o
 * [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) — requirements ledger with status and tests (acceptance matrix A01–A32)
 * [docs/LIMITATIONS.md](docs/LIMITATIONS.md) — what this does **not** establish
 * [docs/TEST_REPORT.md](docs/TEST_REPORT.md) — exact commands, environment and results
+
+## Browser version
+
+`web/` runs the same package in the browser with Pyodide 0.26.4 (Python 3.12) in a Web Worker:
+interactive runs with approvals, fault injection and worker restarts, the full demo, and the test
+suite (92 tests; the CLI test needs subprocesses and is skipped there). Build it with
+`python3 web/build.py OUT_DIR PYODIDE_DIR`, where `PYODIDE_DIR` holds the npm `pyodide@0.26.4` files
+plus `sqlite3-1.0.0.zip` from the 0.26.4 GitHub release. The runtime files are not committed.
