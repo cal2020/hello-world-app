@@ -9,12 +9,17 @@ const busyText = document.getElementById("busy-text");
 const srStatus = document.getElementById("sr-status");
 const root = document.documentElement;
 const IDB_NAME = "/persist";
+const LOCK = "dmmc-workbench-state";
+const PENDING_DELETE = "Deletion is waiting for another tab of this site to close; it will complete then. " +
+  "This tab has stopped so that nothing new is saved and then deleted.";
 
 let seq = 0;
 const pending = new Map(); // id -> {resolve, reject, label}
 let started = false;
-let fatalShown = false; // once the runtime has stopped, its explanation stays on screen
+let runtimeStopped = false; // the runtime has stopped (or never started): its explanation stays on screen
+let heard = false; // the worker has sent at least one message, so it loaded
 let workerBroken = false; // the worker failed to load and cannot answer messages
+let carried = null; // a warning from an action whose result page a newer navigation replaced
 let navGen = 0;
 let shown = null;
 let renders = 0;
@@ -52,8 +57,19 @@ function call(msg, label) {
   });
 }
 
+function rejectAll(text) {
+  for (const [id, p] of pending) {
+    pending.delete(id);
+    const e = new Error(text);
+    e.stopped = true;
+    p.reject(e);
+  }
+  updateBusy();
+}
+
 worker.onmessage = (ev) => {
   const m = ev.data;
+  heard = true;
   switch (m.kind) {
     case "progress": {
       const list = document.getElementById("progress");
@@ -69,7 +85,9 @@ worker.onmessage = (ev) => {
       main.innerHTML = `<div class="card" role="alert"><h2 tabindex="-1">The workbench is open in another tab</h2>
         <p>Only one tab can use the saved state at a time, so that two tabs never overwrite each other's work.</p>
         <p><button type="button" id="takeover">Use it in this tab instead</button></p>
-        <p class="small">The other tab finishes what it is doing, saves, and stops.</p></div>`;
+        <p class="small">The other tab finishes what it is doing, saves, and stops. If it does not answer within
+        15 seconds (because it is frozen, or still busy with one long action), this tab takes over anyway, and
+        whatever the other tab was still doing is not saved.</p></div>`;
       main.querySelector("h2").focus();
       document.getElementById("takeover").addEventListener("click", () => {
         worker.postMessage({ kind: "takeover" });
@@ -83,10 +101,13 @@ worker.onmessage = (ev) => {
       navigate(currentPath(), { replace: true });
       return;
     case "startup-failed":
-      showFatal(`The workbench could not start: ${m.text}`, { offerWipe: true });
+      runtimeStopped = true;
+      showFatal(`The workbench could not start: ${m.text}`, { offerWipe: !!m.canWipe });
       return;
     case "fatal":
       started = false;
+      runtimeStopped = true;
+      rejectAll(m.text);
       showFatal(m.text, { offerWipe: false });
       return;
     default: {
@@ -94,15 +115,21 @@ worker.onmessage = (ev) => {
       if (!p) return;
       pending.delete(m.id);
       updateBusy();
-      m.ok ? p.resolve(m.result) : p.reject(new Error(m.error));
+      if (m.ok) { p.resolve(m.result); return; }
+      const e = new Error(m.error);
+      e.stopped = !!m.stopped;
+      p.reject(e);
     }
   }
 };
 worker.onerror = (e) => {
-  workerBroken = true;
-  for (const [id, p] of pending) { pending.delete(id); p.reject(new Error("the in-browser runtime did not load")); }
-  updateBusy();
-  showFatal(`The in-browser runtime stopped: ${e.message || "it failed to load"}`, { offerWipe: true });
+  // Only a worker that never sent a message failed to load; then nothing in this tab holds the data.
+  if (!heard) workerBroken = true;
+  const already = runtimeStopped;
+  runtimeStopped = true;
+  started = false;
+  rejectAll("the in-browser runtime stopped");
+  if (!already) showFatal(`The in-browser runtime stopped: ${e.message || "it failed to load"}`, { offerWipe: workerBroken });
 };
 
 function currentPath() {
@@ -110,11 +137,18 @@ function currentPath() {
   return h.startsWith("/") ? h : "/";
 }
 
+function takeCarried() {
+  const w = carried;
+  carried = null;
+  return w;
+}
+
 function render(res) {
   root.dataset.renders = String(++renders); // lets tests and tools wait for a completed navigation
   if (res.header_html != null) hdr.innerHTML = res.header_html;
   main.innerHTML = res.main_html != null ? res.main_html : `<pre>${escapeHtml(res.body || "")}</pre>`;
-  if (res.warning) main.insertAdjacentHTML("afterbegin", `<div class="msg err" role="alert">${escapeHtml(res.warning)}</div>`);
+  const warnings = [takeCarried(), res.warning].filter(Boolean);
+  for (const w of warnings.reverse()) main.insertAdjacentHTML("afterbegin", `<div class="msg err" role="alert">${escapeHtml(w)}</div>`);
   document.title = `${res.title || "Workbench"} · DMMC Evidence Workbench`;
   // Focus the first result message when there is one, so screen-reader users hear it; otherwise the heading.
   const msg = main.querySelector(".msg");
@@ -125,9 +159,10 @@ function render(res) {
 }
 
 function showFatal(text, { offerWipe }) {
-  fatalShown = true;
   root.dataset.renders = String(++renders);
-  main.innerHTML = `<div class="card" role="alert"><p class="bad" tabindex="-1">${escapeHtml(text)}</p>
+  const w = takeCarried();
+  main.innerHTML = `${w ? `<div class="msg err" role="alert">${escapeHtml(w)}</div>` : ""}
+    <div class="card" role="alert"><p class="bad" tabindex="-1">${escapeHtml(text)}</p>
     <p>Reload the page to try again. A recorded walkthrough is at <a href="../">the walkthrough page</a>.</p>
     ${offerWipe ? '<p><button type="button" id="wipe-retry">Delete this browser\'s saved workbench data and reload</button></p>' : ""}</div>`;
   main.querySelector("p.bad").focus();
@@ -137,7 +172,8 @@ function showFatal(text, { offerWipe }) {
 
 function failed(e, gen) {
   // A stopped runtime has already explained itself; keep that message instead of a raw error.
-  if (fatalShown || gen !== navGen) return;
+  // Ordinary request errors are always shown.
+  if (runtimeStopped || e.stopped || gen !== navGen) return;
   showFatal(e.message, { offerWipe: false });
 }
 
@@ -168,7 +204,10 @@ async function submit(form) {
     const res = await call({ kind: "post", path: action, form: data, actor: getActor(), referer: currentPath() }, label);
     if (res.set_actor) setActor(res.set_actor);
     if (res.warning) announce(res.warning);
-    if (gen !== navGen) return; // the user moved on while this ran; its effect is in the app's state
+    if (gen !== navGen) { // the user moved on while this ran; a warning is shown on the next page
+      if (res.warning) carried = res.warning;
+      return;
+    }
     // A save warning must survive the redirect to the result page.
     if (res.status === 303 && res.location) return navigate(res.location, { gen, warning: res.warning || null });
     render(res);
@@ -216,8 +255,11 @@ document.addEventListener("submit", (e) => {
 window.addEventListener("hashchange", () => { if (currentPath() !== shown) navigate(currentPath(), { replace: true }); });
 
 // --- deleting local data: a deliberate two-step action that a double click cannot trigger ---
-function deleteFromMainThread() {
-  // Used only when the worker never loaded (so nothing in this tab holds the data open).
+async function deleteFromMainThread() {
+  // Used only when the worker never loaded, so nothing in this tab holds the data open. Another tab may.
+  let held = false;
+  try { held = !!navigator.locks && (await navigator.locks.query()).held.some((l) => l.name === LOCK); } catch { /* no Web Locks */ }
+  if (held) throw new Error("The workbench is open in another tab. Delete from that tab, or close it first.");
   return new Promise((resolve, reject) => {
     const req = indexedDB.deleteDatabase(IDB_NAME);
     let t = null;
@@ -240,7 +282,12 @@ async function wipeAndReload(button) {
     return;
   }
   try { localStorage.removeItem("dmmc-actor"); } catch { /* ignore */ }
-  if (outcome === "pending") return; // the worker has stopped and shown why; nothing to reload into yet
+  if (outcome === "pending") { // nothing to reload into yet: say why, whichever path deleted
+    runtimeStopped = true;
+    showFatal(PENDING_DELETE, { offerWipe: false });
+    announce(PENDING_DELETE);
+    return;
+  }
   worker.terminate(); // releases the single-tab lock before the page starts a new runtime
   location.replace(location.pathname);
 }

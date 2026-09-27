@@ -197,8 +197,10 @@ class ReviewFindingRegressionTests(unittest.TestCase):
         from workbench import importer
         with self.assertRaises(importer.ImportError_):
             importer.parse_model(b"[" * 10000 + b"]" * 10000)
-        # Another encoding must not hide the nesting from the depth scan.
-        utf16 = ('["x",' + "[" * 20000 + "]" * 20000 + "]").encode("utf-16-le")
+        # Another encoding must not hide the nesting from the depth scan. U+2022 is 0x22 0x20 in UTF-16-LE:
+        # a scan of the raw bytes would read that 0x22 as a quote and treat the brackets as string content.
+        utf16 = ('["\u2022",' + "[" * 20000 + "]" * 20000 + "]").encode("utf-16-le")
+        self.assertIn(b'\x22\x20', utf16)
         with self.assertRaisesRegex(importer.ImportError_, "nests deeper"):
             importer.parse_model(utf16)
         with self.assertRaises(importer.ImportError_):
@@ -212,6 +214,9 @@ class ReviewFindingRegressionTests(unittest.TestCase):
             loc = self.post({"actor": "alice"}, path="/whoami", referer=ref).location
             self.assertTrue(loc.startswith("/") and not loc.startswith("//") and "\\" not in loc, (ref, loc))
         self.assertEqual(self.post({"actor": "alice"}, path="/whoami", referer="/ok?c=1").location, "/ok?c=1")
+        # The query is passed through undecoded, so encoded '&', '+' and '=' in a message stay part of it.
+        ref = "/model?msg=boundary%20%27R%26D%27%2Bx%3D1&err=1"
+        self.assertEqual(self.post({"actor": "alice"}, path="/whoami", referer=ref).location, ref)
 
     def test_missing_form_field_message(self):
         r = self.post({"action": "review"})
@@ -243,6 +248,22 @@ class ReviewFindingRegressionTests(unittest.TestCase):
         r = app.get("/package/pkg-001-A", "alice")
         self.assertEqual(r.status, 200)
         self.assertIn("/files/", r.body)
+
+    def test_exports_from_another_data_dir_are_still_listed(self):
+        from workbench import packages, review
+        self.post({"action": "import_model", "which": "A"})
+        self.post({"action": "import_evidence", "which": "A"})
+        self.post({"action": "build"})
+        pk = packages.get(self.app.conn, "pkg-001-A")
+        review.decide(self.app.conn, "alice", "pkg-001-A", "ACCEPT", "ok", seen_package_digest=pk["package_digest"],
+                      seen_head_decision_id=None)
+        self.post({"action": "export", "package_id": "pkg-001-A", "mode": "current"}, actor="alice")
+        with self.app.conn:
+            self.app.conn.execute("DROP TRIGGER IF EXISTS exports_no_update")
+            self.app.conn.execute("UPDATE exports SET path='/elsewhere/exports/x'")
+        body = self.app.get("/package/pkg-001-A", "alice").body
+        self.assertIn("files not under this data directory", body)
+        self.assertNotIn("/files/", body)
 
     def test_percent_encoded_paths_route(self):
         self.post({"action": "import_model", "which": "A"})

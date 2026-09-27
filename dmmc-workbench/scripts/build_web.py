@@ -28,12 +28,14 @@ Playwright with Chromium for --e2e.
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import functools
 import glob
 import hashlib
 import http.server
 import json
 import os
+import re
 import shutil
 import socketserver
 import subprocess
@@ -63,6 +65,8 @@ PYODIDE_CORE = {  # pinned per file; wheels are verified against the (pinned) lo
     "python_stdlib.zip": "fa1957e5777068fc4f7437f96d860ae2fbe9c19732ba06c84e004ec16dd7dd7a",
     "pyodide-lock.json": "5dc2fc119108bc148c7457dc86e7675b5c87e1cafd420b9c34c1eaef7b36c010",
 }
+# The browser build of @open-policy-agent/opa-wasm 1.10.0 as installed by `npm ci` from web/package-lock.json.
+OPA_WASM_ESM_SHA256 = "08bd50f2df51aedfacf693154544067767d62b3db79a9aac2b7219fa16c3c8ad"
 PY_PACKAGES = ["regex", "jsonschema"]  # jsonschema + regex: OSCAL schema validation (\p{..} patterns)
 CLOCK = "2026-09-23T15:00:00Z"
 ZIP_TIME = (2026, 1, 1, 0, 0, 0)
@@ -87,30 +91,60 @@ def run(cmd, env=None, cwd=ROOT):
 def verify_tools() -> dict:
     if not hasattr(tarfile, "data_filter"):
         raise SystemExit("Python 3.11.4 or later is required (tarfile extraction filters)")
-    b = Path(opa._bin()).resolve()
+    found, origin = config.opa_bin_with_origin()
+    if not found:
+        raise SystemExit("OPA not found: run scripts/fetch_opa.sh")
+    b = Path(found).resolve()
     digest = sh256(b)
     version = subprocess.run([str(b), "version"], capture_output=True, text=True).stdout
     version = next((l.split(":", 1)[1].strip() for l in version.splitlines() if l.startswith("Version")), "")
     if digest != config.OPA_SHA256 or version != config.OPA_VERSION:
         raise SystemExit(f"OPA at {b} is {version} sha256 {digest}; the build requires the pinned "
                          f"{config.OPA_VERSION} {config.OPA_SHA256} (scripts/fetch_opa.sh)")
-    source = str(b.relative_to(ROOT)) if ROOT in b.parents else ("OPA_BIN" if os.environ.get("OPA_BIN") else "PATH")
     os.environ["OPA_BIN"] = str(b)  # every later step, including subprocesses, uses this verified binary
-    print(f"  OPA {version} sha256 {digest[:16]}… verified")
-    return {"source": source, "version": version, "sha256": digest}  # no host paths in a published manifest
+    print(f"  OPA {version} sha256 {digest[:16]}… verified (found via {origin})")
+    return {"source": origin, "version": version, "sha256": digest}  # no host paths in a published manifest
 
 
+# Source files that ship. In a git checkout, what is on disk must be exactly what git tracks: steps 1-4
+# verify the files on disk and step 5 packs them, so an untracked, ignored or deleted file would
+# otherwise make the verified tree differ from the shipped one, or ship under a clean revision stamp.
 PACKED = ("workbench", "eval", "fixtures", "schemas")
+WEB_SOURCES = ("web/index.html", "web/main.js", "web/worker.js", "web/shell.css", "web/licenses")
+NOT_SOURCE = ("__pycache__",)
 
 
-def packed_files() -> tuple[list[Path], bool]:
-    """Files that go into app.zip. In a git checkout: only tracked files (so ignored or stray files can
-    never ship under a clean stamp). Outside git: everything, and the build is stamped unverified."""
-    r = subprocess.run(["git", "ls-files", "-z", "--", *PACKED], cwd=ROOT, capture_output=True, text=True)
-    if r.returncode == 0 and r.stdout:
-        return sorted(ROOT / f for f in r.stdout.split("\0") if f), True
-    files = [p for base in PACKED for p in (ROOT / base).rglob("*") if p.is_file() and "__pycache__" not in p.parts]
-    return sorted(files), False
+def _on_disk(paths) -> set[str]:
+    out = set()
+    for rel in paths:
+        p = ROOT / rel
+        for f in ([p] if p.is_file() else p.rglob("*")):
+            if f.is_file() and not any(part in NOT_SOURCE for part in f.parts) and f.suffix != ".pyc":
+                out.add(str(f.relative_to(ROOT)))
+    return out
+
+
+def check_source_tree() -> bool:
+    """True in a git checkout whose shipped files match the index; False outside git (stamped unverified).
+    Stops the build when files are tracked but missing, or present but untracked or ignored."""
+    inside = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], cwd=ROOT, capture_output=True, text=True)
+    if inside.returncode != 0 or inside.stdout.strip() != "true":
+        return False
+    paths = (*PACKED, *WEB_SOURCES)
+    r = subprocess.run(["git", "ls-files", "-z", "--", *paths], cwd=ROOT, capture_output=True, text=True, check=True)
+    tracked = {f for f in r.stdout.split("\0") if f}
+    disk = _on_disk(paths)
+    missing, extra = sorted(tracked - disk), sorted(disk - tracked)
+    if missing or extra:
+        raise SystemExit("the files to ship differ from what git tracks; commit, add or remove them first\n"
+                         + "".join(f"  tracked but missing on disk: {f}\n" for f in missing)
+                         + "".join(f"  on disk but not tracked (untracked or ignored): {f}\n" for f in extra))
+    return True
+
+
+def packed_files() -> list[Path]:
+    """Files that go into app.zip: those on disk, which check_source_tree() matched against git."""
+    return sorted(ROOT / f for f in _on_disk(PACKED))
 
 
 def git_provenance() -> tuple[str, bool | None]:
@@ -318,9 +352,8 @@ def app_zip(dest: Path, opa_out: Path, rev: str, dirty: bool | None):
         zi.external_attr = 0o644 << 16
         z.writestr(zi, data)
 
-    files, _ = packed_files()
     with zipfile.ZipFile(dest, "w") as z:
-        for p in files:
+        for p in packed_files():
             if p.name == "_build_info.py":
                 continue
             add(z, "dmmc-workbench/" + str(p.relative_to(ROOT)), p.read_bytes())
@@ -337,7 +370,7 @@ License texts are in [licenses/](licenses/) (sources and checksums: [licenses/SO
 |---|---|---|---|
 | Pyodide | {pyodide} | MPL-2.0 | pyodide/ |
 | CPython (inside Pyodide), with incorporated expat, libffi, zlib, libmpdec, mimalloc, zstd bindings | {python} | PSF-2.0 and notices in CPython-*-incorporated-software.rst | pyodide/pyodide.asm.wasm, python_stdlib.zip |
-| HACL* (CPython's hash implementations, inside Pyodide) | — | MIT (HACL-star-LICENSE.txt) | pyodide/pyodide.asm.wasm |
+| HACL* (CPython's hash implementations, inside Pyodide) | — | MIT (HACL-star-MIT-LICENSE.txt) | pyodide/pyodide.asm.wasm |
 | Emscripten runtime and system libraries: musl libc, libc++abi, compiler-rt (inside Pyodide) | emsdk 5.0.3 | MIT / University of Illinois NCSA; musl MIT; LLVM Apache-2.0 with LLVM exception | pyodide/pyodide.asm.mjs, pyodide.asm.wasm |
 | SQLite (inside Pyodide) | — | Public domain | pyodide/pyodide.asm.wasm |
 | bzip2, Zstandard (inside Pyodide) | — | bzip2 license; BSD-3-Clause | pyodide/pyodide.asm.wasm |
@@ -381,9 +414,12 @@ def main():
     a = ap.parse_args()
     if not (ROOT / "web" / "node_modules" / "@open-policy-agent" / "opa-wasm").exists():
         raise SystemExit("run `npm ci` in web/ first")
-    print("0. verify tools")
+    print("0. verify tools and source tree")
     opa_info = verify_tools()
-    rev, dirty = git_provenance()
+    esm = ROOT / "web" / "node_modules" / "@open-policy-agent" / "opa-wasm" / "dist" / "opa-wasm-browser.esm.js"
+    if sh256(esm) != OPA_WASM_ESM_SHA256:
+        raise SystemExit(f"{esm.relative_to(ROOT)} does not match its pinned SHA-256 (run `npm ci` in web/)")
+    rev, dirty = git_provenance() if check_source_tree() else ("unknown", None)
     for d in (OUT, WORK):
         if d.exists():
             shutil.rmtree(d)
@@ -407,8 +443,8 @@ def main():
     vend = OUT / "vendor"
     vend.mkdir()
     nm = ROOT / "web" / "node_modules"
-    shutil.copy2(nm / "@open-policy-agent" / "opa-wasm" / "dist" / "opa-wasm-browser.esm.js", vend / "opa-wasm-browser.esm.js")
-    shutil.copytree(ROOT / "web" / "licenses", OUT / "licenses")
+    shutil.copy2(esm, vend / "opa-wasm-browser.esm.js")
+    shutil.copytree(ROOT / "web" / "licenses", OUT / "licenses", ignore=shutil.ignore_patterns(*NOT_SOURCE, "*.pyc"))
     ver = lambda pkg: json.loads((nm / pkg / "package.json").read_text())["version"]
     for f in ("main.js", "worker.js"):
         shutil.copy2(ROOT / "web" / f, OUT / f)
@@ -419,9 +455,14 @@ def main():
     wheel_rows = "\n".join(f"| Python package `{w}` | {lock[w]['version']} | see the wheel's metadata | pyodide/{lock[w]['file_name']} |"
                            for w in wheels)
     py_version = json.loads((OUT / "pyodide" / "pyodide-lock.json").read_text())["info"]["python"]
-    (OUT / "THIRD_PARTY_NOTICES.md").write_text(NOTICES.format(
+    notices = NOTICES.format(
         pyodide=PYODIDE_VERSION, python=py_version, opa=opa_info["version"], opawasm=ver("@open-policy-agent/opa-wasm"),
-        sprintfjs=ver("sprintf-js"), yaml=ver("yaml"), wheels=wheel_rows))
+        sprintfjs=ver("sprintf-js"), yaml=ver("yaml"), wheels=wheel_rows)
+    named = set(re.findall(r"[\w.*+-]+\.(?:txt|rst|md)\b", notices)) - {"SOURCES.md"}
+    shipped = {p.name for p in (OUT / "licenses").iterdir()}
+    if any(not (n in shipped or ("*" in n and fnmatch.filter(shipped, n))) for n in named):
+        raise SystemExit(f"THIRD_PARTY_NOTICES names license files that are not shipped: {sorted(named)}")
+    (OUT / "THIRD_PARTY_NOTICES.md").write_text(notices)
     # index.html last: the loading screen states the real first-visit download size.
     first = sum(p.stat().st_size for p in OUT.rglob("*") if p.is_file()
                 and p.name not in FIRST_LOAD_EXCLUDE and "licenses" not in p.parts)

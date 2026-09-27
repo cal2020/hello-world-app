@@ -42,15 +42,20 @@ def exports_dir() -> Path:
     return data_dir() / "exports"
 
 
-def opa_bin() -> str | None:
-    """Locate the pinned OPA binary. None means policy checks report ERROR, never PASS."""
+def opa_bin_with_origin() -> tuple[str | None, str]:
+    """Locate the pinned OPA binary and say where it was found: 'OPA_BIN', '.tools/opa' or 'PATH'."""
     cand = os.environ.get("OPA_BIN")
     if cand and Path(cand).exists():
-        return cand
+        return cand, "OPA_BIN"
     local = ROOT / ".tools" / "opa"
     if local.exists():
-        return str(local)
-    return shutil.which("opa")
+        return str(local), ".tools/opa"
+    return shutil.which("opa"), "PATH"
+
+
+def opa_bin() -> str | None:
+    """Locate the pinned OPA binary. None means policy checks report ERROR, never PASS."""
+    return opa_bin_with_origin()[0]
 
 
 def code_digest() -> str:

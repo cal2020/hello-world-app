@@ -253,11 +253,54 @@ function check(name, cond, detail = "") {
   check("second tab takes over with the saved state", (await p2.locator("main").innerText()).includes("snap-003-C"));
   await p.waitForSelector("text=moved to another tab", { timeout: 30000 }).catch(() => {});
   check("first tab stops after handing over", (await p.locator("main").innerText()).includes("moved to another tab"));
+  // The stopped tab must not delete the data the new holder is using.
+  await p.locator("#wipe").click(); await p.waitForTimeout(700); await p.locator("#wipe").click();
+  await p.waitForSelector(".wipe-error", { timeout: 15000 }).catch(() => {});
+  check("a tab that handed over refuses to delete the data",
+    ((await p.locator(".wipe-error").innerText().catch(() => "")) || "").includes("no longer runs the workbench"));
+  await p2.locator("nav").getByRole("link", { name: "Audit", exact: true }).click();
+  await p2.waitForSelector("text=Hash chain: intact", { timeout: 30000 }).catch(() => {});
+  check("the new holder keeps working", (await p2.locator("main").innerText()).includes("Hash chain: intact"));
+  await p2.locator("nav").getByRole("link", { name: "Dashboard", exact: true }).click();
+  await p2.waitForSelector("h2:has-text('Dashboard')", { timeout: 30000 });
   await p.close();
   p = p2;
   await p2.reload();
   await p2.waitForSelector("h2:has-text('Dashboard')", { timeout: 120000 });
   check("handed-over state persists across reload", (await p2.locator("a[href^='/package/']").count()) === pkgsBefore + 1);
+
+  // A holder busy for longer than the 15 s handover wait: the new tab takes over by force, the busy
+  // tab's result is not saved over the new tab's state, and it says so (no uncaught storage error).
+  await nav("Model");
+  const big = JSON.parse(await p.inputValue("#model-json"));
+  big.revision = "BIG";
+  const bigApi = big.elements.find((e) => e.id === "cmp:api-service");
+  bigApi.revision = "big";
+  bigApi.attributes.permissions = Array.from({ length: 4000 }, (_, i) => ({ role: `role${i}`, action: i % 2 ? "read" : "write", resource: "telemetry" }));
+  await p.fill("#model-json", JSON.stringify(big));
+  await click("Validate and import");
+  check("large pasted model accepted", (await msg()).includes("Imported snap-") && (await msg()).includes("BIG"), await msg());
+  await nav("Dashboard");
+  const pkgsBig = await p.locator("a[href^='/package/']").count();
+  await p.getByRole("button", { name: "Build package (fixture drafter)", exact: true }).click(); // ~30 s; not awaited
+  await p.waitForTimeout(500);
+  const p3 = watch(await ctx.newPage());
+  await p3.goto(URL_);
+  await p3.waitForSelector("text=The workbench is open in another tab", { timeout: 120000 });
+  const tTake = Date.now();
+  await p3.getByRole("button", { name: "Use it in this tab instead" }).click();
+  await p3.waitForSelector("h2:has-text('Dashboard')", { timeout: 120000 });
+  check("an unanswered takeover proceeds after the 15 s wait", Date.now() - tTake >= 14000, `${Date.now() - tTake} ms`);
+  await p.waitForSelector("text=opened in another tab", { timeout: 180000 }).catch(() => {});
+  check("the busy tab stops and says its unfinished action was not saved",
+    /opened in another tab[\s\S]*not saved/.test(await p.locator("main").innerText()), (await p.locator("main").innerText()).slice(0, 200));
+  await p.waitForFunction(() => (document.documentElement.dataset.pending || "0") === "0", null, { timeout: 180000 });
+  await p3.reload();
+  await p3.waitForSelector("h2:has-text('Dashboard')", { timeout: 120000 });
+  check("the busy tab's late result did not overwrite the new holder's saved state",
+    (await p3.locator("a[href^='/package/']").count()) === pkgsBig, `${pkgsBig} -> ${await p3.locator("a[href^='/package/']").count()}`);
+  await p.close();
+  p = p3;
 
   // Delete local data: a double click is not a confirmation; a deliberate second click is.
   await p.locator("#wipe").dblclick();
@@ -267,6 +310,24 @@ function check(name, cond, detail = "") {
   await Promise.all([p.waitForNavigation({ timeout: 60000 }), p.locator("#wipe").click()]);
   await p.waitForSelector("h2:has-text('Dashboard')", { timeout: 120000 });
   check("confirmed delete starts from an empty state", (await p.locator("main").innerText()).includes("No model imported"));
+
+  // A delete blocked by a connection that does not give way (e.g. a page from an older build) is
+  // reported as pending, and the stopped tab gives up the lock at once.
+  await click("Import model A");
+  check("state to delete", (await msg()).includes("Imported snap-001-A"), await msg());
+  const blocker = await ctx.newPage();
+  await blocker.goto(new URL("licenses/SOURCES.md", URL_).href);
+  await blocker.evaluate(() => new Promise((res, rej) => { const r = indexedDB.open("/persist"); r.onsuccess = () => { window.__db = r.result; res(); }; r.onerror = () => rej(r.error); }));
+  await p.locator("#wipe").click(); await p.waitForTimeout(700); await p.locator("#wipe").click();
+  await p.waitForSelector("text=Deletion is waiting for another tab", { timeout: 30000 }).catch(() => {});
+  check("a blocked delete is reported as pending", (await p.locator("main").innerText()).includes("Deletion is waiting for another tab"));
+  await p.waitForTimeout(300);
+  const heldAfter = await blocker.evaluate(async () => (await navigator.locks.query()).held.map((l) => l.name));
+  check("a stopped tab gives up the single-tab lock", !heldAfter.includes("dmmc-workbench-state"), JSON.stringify(heldAfter));
+  await blocker.close(); // the queued delete completes now
+  await p.reload();
+  await p.waitForSelector("h2:has-text('Dashboard')", { timeout: 120000 });
+  check("the pending delete completed once the other page closed", (await p.locator("main").innerText()).includes("No model imported"));
 
   // Mobile layout (separate browser profile, so it has its own storage and lock)
   const mctx = await browser.newContext({ viewport: { width: 390, height: 844 } });

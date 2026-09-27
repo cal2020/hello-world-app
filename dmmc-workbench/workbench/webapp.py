@@ -288,9 +288,10 @@ class WebApp:
         for x in exps:
             try:
                 rel = Path(x["path"]).resolve().relative_to(config.exports_dir().resolve())
-            except ValueError:
-                continue  # an export from another data directory: nothing to link
-            links = " · ".join(f"<a href='/files/{E(quote(str(rel)))}/{E(quote(f))}'>{E(f)}</a>" for f in json.loads(x["files_json"]))
+                links = " · ".join(f"<a href='/files/{E(quote(str(rel)))}/{E(quote(f))}'>{E(f)}</a>"
+                                   for f in json.loads(x["files_json"]))
+            except ValueError:  # recorded under another data directory: list it, but there is nothing to link
+                links = f"files not under this data directory (recorded at <code>{E(x['path'])}</code>)"
             rv.append(f"<div class='small'>{E(x['id'])} ({E(x['mode'])}, status at export {E(x['status_at_export'])}): {links}</div>")
         rv.append("</div>")
         return head + "".join(mt) + "".join(rv) + "".join(dr)
@@ -552,7 +553,8 @@ def _local_path(target: str | None, keep_query: bool = False) -> str:
     if not path.startswith("/") or path.startswith("//"):
         return "/"
     if keep_query and u.query:
-        return f"{path}?{quote(unquote(u.query), safe='=&:/+,;@-._~')}"
+        # The query is passed through as it came (it is decoded once, by the GET that follows).
+        return f"{path}?{quote(u.query, safe='=&%:/+,;@-._~')}"
     return path
 
 

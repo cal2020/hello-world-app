@@ -5,7 +5,7 @@
 //   {kind:"progress", text, state}   startup steps
 //   {kind:"locked"}                  another tab holds the workbench; waiting for {kind:"takeover"}
 //   {kind:"ready", persistent}       ready for requests
-//   {kind:"startup-failed", text}    startup failed (the main thread offers to delete saved data)
+//   {kind:"startup-failed", text, canWipe}  startup failed (canWipe: this tab may delete the saved data)
 //   {kind:"fatal", text}             this runtime has stopped serving requests
 //   {id, ok, result | error}         reply to a request
 //
@@ -13,7 +13,9 @@
 // two tabs writing back would overwrite each other. The runtime holds an exclusive Web Lock. A second
 // tab asks the holder (over a BroadcastChannel) to hand over; the holder finishes its queued work,
 // saves, closes its storage and releases the lock, and only then does the new tab load the saved
-// state. Stealing the lock is only a fallback for a holder that does not answer (frozen or crashed).
+// state. Stealing the lock is only a fallback for a holder that does not answer within 15 s (frozen, or
+// busy with one long action). A holder whose lock was stolen never saves again, and a stopped runtime
+// gives the lock up, so the next tab does not have to wait.
 import { loadPyodide } from "./pyodide/pyodide.mjs";
 import opaWasm from "./vendor/opa-wasm-browser.esm.js"; // the ESM build has only a default export
 
@@ -29,8 +31,10 @@ let handle = null;
 let persistent = false;
 let lockState = "none"; // none | held | unsupported | lost
 let releaseHeld = null;
+let myClientId = null; // this runtime's id in navigator.locks.query(), to tell if the lock was stolen
 let waiting = false; // showing "open in another tab"
 let stopped = null; // text once this runtime has stopped serving requests
+let storageBusy = null; // settles when the FS.syncfs in flight (if any) has finished
 
 // Called synchronously from Python (workbench/opa.py, _JsBridge).
 self.dmmcOpa = {
@@ -45,11 +49,21 @@ const post = (m) => self.postMessage(m);
 const progress = (text, state = "step") => post({ kind: "progress", text, state });
 const errText = (e) => String((e && e.message) || e);
 
+const STOLEN = "The workbench was opened in another tab, so this tab has stopped. Anything this tab was " +
+  "still doing when that happened was not saved. Reload to use it here.";
+
+// Stop serving for good. Storage is closed and the lock given up only once no save is in flight:
+// closing an IDBFS connection in the middle of FS.syncfs throws inside IndexedDB callbacks.
 function stop(text) {
   if (stopped) return;
   stopped = text;
-  closeStorage();
   post({ kind: "fatal", text });
+  storageIdle().then(() => { closeStorage(); releaseLock(); });
+}
+
+function releaseLock() {
+  if (lockState === "held") lockState = "none";
+  if (releaseHeld) { const r = releaseHeld; releaseHeld = null; r(); }
 }
 
 function idbfsDbs() {
@@ -61,7 +75,8 @@ function closeStorage() {
   for (const k of Object.keys(dbs)) { try { dbs[k].close(); } catch { /* ignore */ } delete dbs[k]; }
 }
 
-// Make every IndexedDB connection this runtime opens give way to a delete from elsewhere.
+// Make every IndexedDB connection this runtime opens give way to a delete from elsewhere (after any
+// save in flight has finished).
 function guardStorage() {
   const dbs = idbfsDbs();
   for (const k of Object.keys(dbs)) {
@@ -69,18 +84,40 @@ function guardStorage() {
     if (db.__guarded) continue;
     db.__guarded = true;
     db.onversionchange = () => {
-      try { db.close(); } catch { /* ignore */ }
-      delete dbs[k];
-      if (lockState === "held" || lockState === "unsupported") {
+      if (!stopped && (lockState === "held" || lockState === "unsupported")) {
         stop("This browser's saved workbench data was deleted from another tab, so this tab has stopped. Reload to start again.");
       }
+      storageIdle().then(() => { try { db.close(); } catch { /* ignore */ } if (dbs[k] === db) delete dbs[k]; });
     };
   }
 }
 
 function syncfs(populate) {
-  return new Promise((resolve, reject) => py.FS.syncfs(populate, (err) => (err ? reject(err) : resolve())))
-    .then(() => guardStorage());
+  const p = new Promise((resolve, reject) => py.FS.syncfs(populate, (err) => (err ? reject(err) : resolve())));
+  const settled = p.then(() => {}, () => {});
+  storageBusy = settled;
+  settled.then(() => { if (storageBusy === settled) storageBusy = null; });
+  return p.then(() => guardStorage());
+}
+
+// Resolves once no save or load is in flight (or after a generous limit, should one never settle).
+function storageIdle() {
+  return storageBusy ? Promise.race([storageBusy, new Promise((r) => setTimeout(r, 30000))]) : Promise.resolve();
+}
+
+// Whether this runtime may still save: false once another tab has taken the lock, even if the
+// lock-lost notice has not been delivered yet (a long synchronous action delays it).
+async function stillHolding() {
+  if (stopped) return false;
+  if (lockState === "unsupported") return true;
+  if (lockState !== "held") return false;
+  if (!myClientId) return true;
+  try {
+    const held = (await navigator.locks.query()).held.find((l) => l.name === LOCK);
+    return !stopped && lockState === "held" && !!held && held.clientId === myClientId;
+  } catch {
+    return !stopped && lockState === "held";
+  }
 }
 
 async function fetchOk(path) {
@@ -99,17 +136,22 @@ function acquireLock(mode) { // "try" | "wait" | "steal" -> "held" | "busy" | "t
     else if (mode === "steal") opts = { steal: true };
     else opts = typeof AbortSignal.timeout === "function" ? { signal: AbortSignal.timeout(HANDOVER_TIMEOUT_MS) } : {};
     navigator.locks
-      .request(LOCK, opts, (lock) => {
+      .request(LOCK, opts, async (lock) => {
         if (!lock) { resolve("busy"); return undefined; }
         granted = true;
         lockState = "held";
+        const held = new Promise((r) => { releaseHeld = r; });
+        try { // while this runtime holds the lock exclusively, the held entry is its own
+          const mine = (await navigator.locks.query()).held.find((l) => l.name === LOCK);
+          myClientId = (mine && mine.clientId) || null;
+        } catch { myClientId = null; }
         resolve("held");
-        return new Promise((r) => { releaseHeld = r; });
+        return held;
       })
       .catch((e) => {
         if (granted) { // stolen by an unanswered takeover: never write again
           lockState = "lost";
-          stop("The workbench was opened in another tab, so this tab has stopped. Reload to use it here.");
+          stop(STOLEN);
         } else if (mode === "wait" && e && (e.name === "TimeoutError" || e.name === "AbortError")) {
           resolve("timeout");
         } else { // e.g. SecurityError when the browser blocks site storage: run without the lock
@@ -119,14 +161,22 @@ function acquireLock(mode) { // "try" | "wait" | "steal" -> "held" | "busy" | "t
   });
 }
 
+// Requests run one at a time, in order. A failing step never blocks the ones after it.
+let queue = Promise.resolve();
+function enqueue(fn) {
+  const next = queue.then(fn);
+  queue = next.then(() => {}, () => {});
+  return next;
+}
+
 if (channel) {
   channel.onmessage = (ev) => {
     if (!ev.data || ev.data.type !== "takeover-request" || lockState !== "held" || stopped) return;
-    // Queued behind any request in progress, so its result is saved before the other tab loads.
-    queue = queue.then(() => {
+    // Queued behind any request in progress, so its result is saved before the other tab loads, and
+    // behind this runtime's own startup, so storage is never closed while it is still loading.
+    enqueue(async () => {
+      await ready.catch(() => {});
       stop("The workbench was moved to another tab, so this tab has stopped. Reload to use it here.");
-      lockState = "none";
-      if (releaseHeld) releaseHeld();
     });
   };
 }
@@ -170,7 +220,7 @@ async function init() {
       lock = await acquireLock("wait");
     }
     if (!channel || lock === "timeout") {
-      progress("The other tab did not answer; taking over", "fail");
+      progress("The other tab did not answer within 15 seconds; taking over (anything it was still doing is not saved)", "fail");
       lock = await acquireLock("steal");
     }
     waiting = false;
@@ -215,27 +265,46 @@ def _handle(kind, path, form, actor, referer):
     return r.as_dict()
 `);
   handle = py.globals.get("_handle");
-  if (persistent) await syncfs(false);
+  if (mayWrite() && await stillHolding()) await syncfs(false);
+  if (stopped) return; // taken over (or deleted) during startup; the reason has been shown
   progress("Ready", "done");
   post({ kind: "ready", persistent });
 }
 
+// An uncaught error (none is expected) stops the runtime with an explanation instead of leaving it
+// half-working; the last saved state is untouched.
+self.addEventListener("error", (e) => {
+  e.preventDefault();
+  stop(`The in-browser runtime hit an internal error (${String(e.message || "unknown").slice(0, 200)}). ` +
+       "Reload the page; your last saved state is kept.");
+});
+
 let takeoverRequested = null;
-let queue = Promise.resolve();
 const ready = init();
 ready.catch((e) => {
   progress(`Startup failed: ${errText(e)}`, "fail");
-  post({ kind: "startup-failed", text: errText(e) });
+  post({ kind: "startup-failed", text: errText(e), canWipe: !stopped && (lockState === "held" || lockState === "unsupported") });
 });
 
 function mayWrite() {
   return persistent && !stopped && (lockState === "held" || lockState === "unsupported");
 }
 
-// Delete this browser's saved workbench data. Only the runtime that holds the workbench (or one that
-// failed to start) does this, so no other tab can be writing at the same time.
+// Deleting this browser's saved workbench data is allowed only in the runtime that holds the workbench
+// (whether or not it finished starting), so no other tab can be using the data at the same time.
+function wipeRefusal() {
+  if (waiting) return "The workbench is open in another tab. Use it in this tab first, then delete.";
+  if (stopped) return "This tab no longer runs the workbench. Delete from the tab that has it, or reload this tab first.";
+  if (lockState !== "held" && lockState !== "unsupported") {
+    return "This tab did not start far enough to delete the saved data safely. Close the other tabs of this site and reload.";
+  }
+  return null;
+}
+
 async function wipe() {
-  if (waiting) throw new Error("The workbench is open in another tab. Use it in this tab first, then delete.");
+  const refusal = wipeRefusal();
+  if (refusal) throw new Error(refusal);
+  await storageIdle();
   closeStorage();
   const outcome = await new Promise((resolve, reject) => {
     const req = indexedDB.deleteDatabase(IDB_NAME);
@@ -246,9 +315,6 @@ async function wipe() {
     // queued by the browser and completes when that tab closes: say so, and stop saving here.
     req.onblocked = () => { blockedTimer = setTimeout(() => resolve("pending"), 5000); };
   });
-  stop(outcome === "deleted"
-    ? "Local data deleted. Reload the page to start again."
-    : "Deletion is waiting for another tab of this site to close; it will complete then. This tab has stopped so that nothing new is saved and then deleted.");
   return outcome;
 }
 
@@ -256,18 +322,21 @@ self.onmessage = (ev) => {
   const msg = ev.data;
   if (msg.kind === "takeover") { if (takeoverRequested) takeoverRequested(); return; }
   if (msg.kind === "wipe") {
-    if (waiting) { // another tab holds the workbench; deleting underneath it would lose its work
-      post({ id: msg.id, ok: false, error: "The workbench is open in another tab. Use it in this tab first, then delete." });
-      return;
-    }
-    // Queued behind any request in progress, but not behind startup: this is also the way out of a
-    // saved state that makes startup fail.
-    const run = () => wipe().then((outcome) => post({ id: msg.id, ok: true, result: { outcome } }),
-                                  (e) => post({ id: msg.id, ok: false, error: errText(e) }));
-    ready.then(() => { queue = queue.then(run); }, run);
+    const refusal = waiting && wipeRefusal();
+    if (refusal) { post({ id: msg.id, ok: false, error: refusal }); return; }
+    // Queued behind any request in progress, and run even if startup failed: this is also the way out
+    // of a saved state that makes startup fail.
+    // The reply goes out before this runtime stops, so the page sees the outcome rather than the stop.
+    const run = () => wipe().then((outcome) => {
+      post({ id: msg.id, ok: true, result: { outcome } });
+      stop(outcome === "deleted"
+        ? "Local data deleted. Reload the page to start again."
+        : "Deletion is waiting for another tab of this site to close; it will complete then. This tab has stopped so that nothing new is saved and then deleted.");
+    }, (e) => post({ id: msg.id, ok: false, error: errText(e) }));
+    ready.then(() => enqueue(run), () => enqueue(run));
     return;
   }
-  queue = queue.then(async () => {
+  enqueue(async () => {
     try {
       await ready;
     } catch (e) {
@@ -290,11 +359,14 @@ self.onmessage = (ev) => {
       post({ id: msg.id, ok: false, error: text });
       return;
     }
-    if (msg.kind === "post" && mayWrite()) {
-      try { await syncfs(false); } catch (e) { out.warning = `This change could not be saved in the browser: ${errText(e)}`; }
-    } else if (msg.kind === "post" && persistent) {
-      out.warning = "This tab no longer holds the workbench, so this change was not saved.";
+    if (msg.kind === "post" && persistent) {
+      // A long action can outlast another tab's 15 s handover wait; that tab then owns the saved state.
+      if (mayWrite() && (await stillHolding()) && mayWrite()) {
+        try { await syncfs(false); } catch (e) { out.warning = `This change could not be saved in the browser: ${errText(e)}`; }
+      } else {
+        out.warning = "This tab no longer holds the workbench, so this change was not saved.";
+      }
     }
     post({ id: msg.id, ok: true, result: out });
-  });
+  }).catch((e) => post({ id: msg.id, ok: false, error: errText(e) }));
 };
