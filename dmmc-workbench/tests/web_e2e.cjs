@@ -329,6 +329,35 @@ function check(name, cond, detail = "") {
   await p.waitForSelector("h2:has-text('Dashboard')", { timeout: 120000 });
   check("the pending delete completed once the other page closed", (await p.locator("main").innerText()).includes("No model imported"));
 
+  // Saves that fail are reported, one warning per action, even when a second action overlaps the first.
+  {
+    const sctx = await browser.newContext();
+    await sctx.route("**/*", (r) => (r.request().url().startsWith(origin) ? r.continue() : (external.push(r.request().url()), r.abort())));
+    const sp = await sctx.newPage();
+    const idle = () => sp.waitForFunction(() => (document.documentElement.dataset.pending || "0") === "0", null, { timeout: 60000 });
+    await sp.goto(URL_);
+    await sp.waitForSelector("h2:has-text('Dashboard')", { timeout: 120000 });
+    await sp.getByRole("button", { name: "Import model A", exact: true }).first().click();
+    await sp.waitForSelector("text=Imported snap-001-A", { timeout: 60000 }); await idle();
+    await sp.getByRole("button", { name: "Import evidence set A", exact: true }).first().click();
+    await sp.waitForSelector("text=Imported evidence", { timeout: 60000 }); await idle();
+    await sp.locator("nav").getByRole("link", { name: "Dashboard", exact: true }).click();
+    await sp.waitForSelector("h2:has-text('Dashboard')", { timeout: 60000 }); await idle();
+    await sp.workers()[0].evaluate(() => { // test-only: every later save fails, and the next policy evaluation takes 2 s
+      IDBDatabase.prototype.transaction = function () { throw new DOMException("simulated quota", "QuotaExceededError"); };
+      const ev = self.dmmcOpa.evaluate;
+      let slow = true;
+      self.dmmcOpa.evaluate = (...a) => { if (slow) { slow = false; const t = Date.now(); while (Date.now() - t < 2000); } return ev(...a); };
+    });
+    await sp.getByRole("button", { name: "Build package (fixture drafter)", exact: true }).click(); // slow; still running
+    await sp.getByRole("button", { name: "Import model B", exact: true }).first().click();       // overlaps it
+    await idle();
+    await sp.waitForTimeout(300);
+    const warned = await sp.locator(".msg.err", { hasText: "could not be saved" }).count();
+    check("each unsaved action gets its own visible warning", warned === 2, `${warned} warnings`);
+    await sctx.close();
+  }
+
   // Uncaught errors during startup (separate profiles, so each has its own storage and lock).
   const isolated = async () => {
     const c = await browser.newContext();
