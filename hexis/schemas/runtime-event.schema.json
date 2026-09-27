@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hexis.local/schemas/runtime-event.schema.json",
+  "title": "RuntimeEvent",
+  "type": "object",
+  "required": [
+    "type",
+    "sequence"
+  ],
+  "properties": {
+    "type": {
+      "enum": [
+        "run_started",
+        "transition",
+        "fallback",
+        "stopped",
+        "reconciling",
+        "interaction_requested",
+        "terminal",
+        "terminal_rejected",
+        "cancelled"
+      ]
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "artifact_hash": {
+      "type": "string"
+    },
+    "from": {
+      "type": "string"
+    },
+    "to": {
+      "type": "string"
+    },
+    "edge_index": {
+      "type": "integer"
+    },
+    "guard": {
+      "type": "string"
+    },
+    "delta_digest": {
+      "type": "string"
+    },
+    "observed_at": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "code": {
+      "type": "string"
+    },
+    "terminal": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,407 @@
+{
+  "variables": {
+    "intake_refs": {
+      "owner": "task",
+      "selector": "/intake/document_refs",
+      "schema": {
+        "type": "array",
+        "maxItems": 10,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "doc_id",
+            "sha256"
+          ],
+          "properties": {
+            "doc_id": {
+              "type": "string",
+              "pattern": "^DOC-[0-9]+$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        }
+      }
+    },
+    "supplier_name": {
+      "owner": "task",
+      "selector": "/supplier/proposed_name",
+      "schema": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      }
+    },
+    "business_unit": {
+      "owner": "task",
+      "selector": "/supplier/business_unit",
+      "schema": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 40
+      }
+    },
+    "policy_version": {
+      "owner": "task",
+      "selector": "/policy_version",
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "supplemental_refs": {
+      "owner": "user",
+      "schema": {
+        "type": "array",
+        "maxItems": 10,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "doc_id",
+            "sha256"
+          ],
+          "properties": {
+            "doc_id": {
+              "type": "string",
+              "pattern": "^DOC-[0-9]+$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        }
+      }
+    },
+    "input_requests": {
+      "owner": "engine",
+      "schema": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "repair_count": {
+      "owner": "engine",
+      "schema": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "documents_status": {
+      "owner": "tool",
+      "enum": [
+        "available",
+        "missing"
+      ],
+      "schema": {
+        "type": "string",
+        "enum": [
+          "available",
+          "missing"
+        ]
+      }
+    },
+    "documents": {
+      "owner": "tool",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "doc_id",
+            "sha256",
+            "content"
+          ],
+          "properties": {
+            "doc_id": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "lookup_status": {
+      "owner": "tool",
+      "enum": [
+        "new",
+        "existing_in_scope",
+        "conflict"
+      ],
+      "schema": {
+        "type": "string",
+        "enum": [
+          "new",
+          "existing_in_scope",
+          "conflict"
+        ]
+      }
+    },
+    "existing_supplier": {
+      "owner": "tool",
+      "schema": {
+        "type": "object"
+      }
+    },
+    "draft": {
+      "owner": "model",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "legal_name",
+          "registration_number",
+          "country",
+          "address",
+          "contact_email",
+          "source_refs"
+        ],
+        "properties": {
+          "legal_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "registration_number": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "country": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "address": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "contact_email": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "source_refs": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "field",
+                "doc_id",
+                "quote"
+              ],
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "doc_id": {
+                  "type": "string"
+                },
+                "quote": {
+                  "type": "string",
+                  "maxLength": 300
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "validation_status": {
+      "owner": "tool",
+      "enum": [
+        "pass",
+        "repairable",
+        "fail"
+      ],
+      "schema": {
+        "type": "string",
+        "enum": [
+          "pass",
+          "repairable",
+          "fail"
+        ]
+      }
+    },
+    "validation_issues": {
+      "owner": "tool",
+      "schema": {
+        "type": "array"
+      }
+    },
+    "validated_digest": {
+      "owner": "tool",
+      "schema": {
+        "type": "string"
+      }
+    },
+    "approval_decision": {
+      "owner": "user",
+      "enum": [
+        "approved",
+        "rejected",
+        "expired"
+      ],
+      "schema": {
+        "type": "string",
+        "enum": [
+          "approved",
+          "rejected",
+          "expired"
+        ]
+      }
+    },
+    "erp_status": {
+      "owner": "tool",
+      "enum": [
+        "created",
+        "already_exists",
+        "rejected"
+      ],
+      "schema": {
+        "type": "string",
+        "enum": [
+          "created",
+          "already_exists",
+          "rejected"
+        ]
+      }
+    },
+    "draft_ref": {
+      "owner": "tool",
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "draft_version": {
+      "owner": "tool",
+      "schema": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "readback_status": {
+      "owner": "tool",
+      "enum": [
+        "available",
+        "unavailable"
+      ],
+      "schema": {
+        "type": "string",
+        "enum": [
+          "available",
+          "unavailable"
+        ]
+      }
+    },
+    "persisted": {
+      "owner": "tool",
+      "schema": {
+        "type": "object"
+      }
+    },
+    "verify_status": {
+      "owner": "tool",
+      "enum": [
+        "match",
+        "mismatch"
+      ],
+      "schema": {
+        "type": "string",
+        "enum": [
+          "match",
+          "mismatch"
+        ]
+      }
+    },
+    "mismatch_fields": {
+      "owner": "tool",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "loop_bounds": {
+    "input_requests": 1,
+    "repair_count": 2
+  },
+  "ordering": [
+    {
+      "id": "ORD-1",
+      "state": "EXTRACT_DRAFT",
+      "before": [
+        "LOOKUP_SUPPLIER"
+      ],
+      "clause": "supplier-identity.1"
+    },
+    {
+      "id": "ORD-2",
+      "state": "REQUEST_APPROVAL",
+      "before": [
+        "VALIDATE_DRAFT"
+      ],
+      "clause": "validation.1"
+    },
+    {
+      "id": "ORD-3",
+      "state": "PERSIST_DRAFT",
+      "before": [
+        "VALIDATE_DRAFT",
+        "REQUEST_APPROVAL"
+      ],
+      "clause": "approval.1"
+    },
+    {
+      "id": "ORD-4",
+      "state": "END_VERIFIED_DRAFT",
+      "before": [
+        "READ_BACK",
+        "VERIFY_PERSISTED"
+      ],
+      "clause": "persistence-and-verification.3"
+    }
+  ],
+  "approval_required_tools": [
+    "erp.create_draft"
+  ],
+  "approvals": {
+    "REQUEST_APPROVAL": {
+      "action_state": "PERSIST_DRAFT",
+      "required_role": "procurement_approver",
+      "evidence": [
+        "validated_digest"
+      ]
+    }
+  },
+  "terminals": {
+    "END_VERIFIED_DRAFT": {
+      "required_evidence": [
+        "draft.verify_persisted"
+      ],
+      "claim": "The persisted ERP draft (draft_ref, draft_version) matches the approved canonical payload. This does not establish that extracted commercial facts are true, nor that the supplier is activated."
+    },
+    "END_UNVERIFIED": {
+      "required_evidence": []
+    },
+    "FALLBACK": {
+      "required_evidence": []
+    }
+  }
+}

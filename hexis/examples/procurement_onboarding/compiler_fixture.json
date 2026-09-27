@@ -1,0 +1,101 @@
+{
+  "note": "Recorded compiler-model responses for fixture mode. Response 0 contains a deliberate guard overlap so the bounded repair loop is exercised; response 1 is the repaired draft.",
+  "coverage": {
+    "supplier-onboarding-draft.1": {
+      "classification": "external_precondition",
+      "critical": true,
+      "justification": "Scope limits are enforced by the trusted tool catalog and capability ceiling: no activation, bank-change, messaging or payment tool exists in the catalog."
+    },
+    "intake.1": {
+      "classification": "executable_control",
+      "critical": true,
+      "justification": "READ_INTAKE uses documents.read, which returns only referenced documents and checks their hashes."
+    },
+    "intake.2": {
+      "classification": "executable_control",
+      "critical": false,
+      "justification": "REQUEST_INPUT bounded by input_requests (bound 1); still missing -> END_UNVERIFIED."
+    },
+    "supplier-identity.1": {
+      "classification": "executable_control",
+      "critical": true,
+      "justification": "LOOKUP_SUPPLIER precedes EXTRACT_DRAFT (ordering rule ORD-1)."
+    },
+    "supplier-identity.2": {
+      "classification": "executable_control",
+      "critical": true,
+      "justification": "Any lookup_status other than new routes to FALLBACK (stop for review)."
+    },
+    "drafting.1": {
+      "classification": "state_local_knowledge",
+      "critical": false,
+      "justification": "Local instruction of EXTRACT_DRAFT; source_refs are checked deterministically by draft.validate."
+    },
+    "drafting.2": {
+      "classification": "state_local_knowledge",
+      "critical": true,
+      "justification": "Local instruction plus structural controls: models cannot select tools, write engine variables or grant approval."
+    },
+    "validation.1": {
+      "classification": "executable_control",
+      "critical": true,
+      "justification": "VALIDATE_DRAFT precedes REQUEST_APPROVAL (ORD-2)."
+    },
+    "validation.2": {
+      "classification": "executable_control",
+      "critical": true,
+      "justification": "REPAIR_DRAFT loop bounded by repair_count (bound 2)."
+    },
+    "validation.3": {
+      "classification": "executable_control",
+      "critical": false,
+      "justification": "Default edge of VALIDATE_DRAFT -> END_UNVERIFIED."
+    },
+    "approval.1": {
+      "classification": "executable_control",
+      "critical": true,
+      "justification": "REQUEST_APPROVAL precedes PERSIST_DRAFT (ORD-3); broker checks an authenticated approval bound to the argument digest; approver authority is a host precondition."
+    },
+    "approval.2": {
+      "classification": "external_precondition",
+      "critical": true,
+      "justification": "Enforced by the host broker, not by a machine state: approval binds the canonical argument digest, so any draft change invalidates it and the machine path back through VALIDATE_DRAFT and REQUEST_APPROVAL is required."
+    },
+    "persistence-and-verification.1": {
+      "classification": "executable_control",
+      "critical": true,
+      "justification": "erp.create_draft is dispatched by the broker with a stable idempotency key and business reference."
+    },
+    "persistence-and-verification.2": {
+      "classification": "executable_control",
+      "critical": true,
+      "justification": "READ_BACK after PERSIST_DRAFT."
+    },
+    "persistence-and-verification.3": {
+      "classification": "executable_control",
+      "critical": true,
+      "justification": "END_VERIFIED_DRAFT requires a current draft.verify_persisted receipt (ORD-4)."
+    },
+    "persistence-and-verification.4": {
+      "classification": "external_precondition",
+      "critical": true,
+      "justification": "Enforced by the host runtime: an uncertain effect puts the run in RECONCILING and the broker looks the record up by business reference before any retry."
+    }
+  },
+  "responses": [
+    {
+      "base": "machine.efsm.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/states/VALIDATE_DRAFT/transitions/1/if",
+          "value": "validation_status in [\"repairable\", \"pass\"] and repair_count < 2"
+        }
+      ]
+    },
+    {
+      "base": "machine.efsm.json",
+      "patch": []
+    }
+  ]
+}

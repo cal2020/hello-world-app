@@ -1,0 +1,451 @@
+{
+  "catalog_version": "procurement-catalog/2026-09-26",
+  "tools": {
+    "documents.read": {
+      "version": "1.0.0",
+      "effect": "read",
+      "capability": "documents:read",
+      "input_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "document_refs",
+          "supplemental_refs"
+        ],
+        "properties": {
+          "document_refs": {
+            "type": "array",
+            "maxItems": 10,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "doc_id",
+                "sha256"
+              ],
+              "properties": {
+                "doc_id": {
+                  "type": "string",
+                  "pattern": "^DOC-[0-9]+$"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            }
+          },
+          "supplemental_refs": {
+            "type": "array",
+            "maxItems": 10,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "doc_id",
+                "sha256"
+              ],
+              "properties": {
+                "doc_id": {
+                  "type": "string",
+                  "pattern": "^DOC-[0-9]+$"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            }
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "documents",
+          "missing"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "missing"
+            ]
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "doc_id",
+                "sha256",
+                "content"
+              ],
+              "properties": {
+                "doc_id": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "missing": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "supplier.lookup": {
+      "version": "1.0.0",
+      "effect": "read",
+      "capability": "supplier:read",
+      "input_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "supplier_name",
+          "business_unit"
+        ],
+        "properties": {
+          "supplier_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "business_unit": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "record"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "new",
+              "existing_in_scope",
+              "conflict"
+            ]
+          },
+          "record": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "draft.validate": {
+      "version": "1.0.0",
+      "effect": "pure",
+      "capability": "draft:validate",
+      "input_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "draft",
+          "documents",
+          "policy_version",
+          "business_unit"
+        ],
+        "properties": {
+          "draft": {
+            "type": "object"
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "doc_id",
+                "sha256",
+                "content"
+              ],
+              "properties": {
+                "doc_id": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "policy_version": {
+            "type": "string"
+          },
+          "business_unit": {
+            "type": "string"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "issues",
+          "draft_digest"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "repairable",
+              "fail"
+            ]
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "field",
+                "code",
+                "message"
+              ],
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "draft_digest": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "erp.create_draft": {
+      "version": "1.0.0",
+      "effect": "reconcilable_write",
+      "capability": "erp:draft:write",
+      "business_reference": "business_reference",
+      "input_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "draft",
+          "supplier_name",
+          "business_unit"
+        ],
+        "properties": {
+          "draft": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "legal_name",
+              "registration_number",
+              "country",
+              "address",
+              "contact_email",
+              "source_refs"
+            ],
+            "properties": {
+              "legal_name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "registration_number": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40
+              },
+              "country": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 60
+              },
+              "address": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "contact_email": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 200
+              },
+              "source_refs": {
+                "type": "array",
+                "maxItems": 20,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "field",
+                    "doc_id",
+                    "quote"
+                  ],
+                  "properties": {
+                    "field": {
+                      "type": "string"
+                    },
+                    "doc_id": {
+                      "type": "string"
+                    },
+                    "quote": {
+                      "type": "string",
+                      "maxLength": 300
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "supplier_name": {
+            "type": "string"
+          },
+          "business_unit": {
+            "type": "string"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "draft_ref",
+          "version"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "created",
+              "already_exists",
+              "rejected"
+            ]
+          },
+          "draft_ref": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "erp.read_draft": {
+      "version": "1.0.0",
+      "effect": "read",
+      "capability": "erp:draft:read",
+      "input_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "draft_ref"
+        ],
+        "properties": {
+          "draft_ref": {
+            "type": "string"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "record"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "unavailable"
+            ]
+          },
+          "record": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "draft.verify_persisted": {
+      "version": "1.0.0",
+      "effect": "pure",
+      "capability": "draft:verify",
+      "verifier": true,
+      "input_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "approved_draft",
+          "persisted",
+          "draft_ref",
+          "draft_version"
+        ],
+        "properties": {
+          "approved_draft": {
+            "type": "object"
+          },
+          "persisted": {
+            "type": "object"
+          },
+          "draft_ref": {
+            "type": "string"
+          },
+          "draft_version": {
+            "type": "integer"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "mismatch_fields"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "match",
+              "mismatch"
+            ]
+          },
+          "mismatch_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

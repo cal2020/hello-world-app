@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Offline wrapper: runs the extension CLI from this checkout (Python 3.11+, standard library only).
+HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+PYTHONPATH="$HERE/src${PYTHONPATH:+:$PYTHONPATH}" exec python3 -m hexis_service.cli "$@"

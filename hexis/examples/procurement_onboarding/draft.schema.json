@@ -1,0 +1,64 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "legal_name",
+    "registration_number",
+    "country",
+    "address",
+    "contact_email",
+    "source_refs"
+  ],
+  "properties": {
+    "legal_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "registration_number": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "country": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+    },
+    "address": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "contact_email": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 200
+    },
+    "source_refs": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "field",
+          "doc_id",
+          "quote"
+        ],
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "doc_id": {
+            "type": "string"
+          },
+          "quote": {
+            "type": "string",
+            "maxLength": 300
+          }
+        }
+      }
+    }
+  }
+}

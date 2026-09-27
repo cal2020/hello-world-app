@@ -1,0 +1,45 @@
+{
+  "policy_version": "onboarding-policy/2026-09",
+  "roles": {
+    "procurement_agent": [
+      "documents:read",
+      "supplier:read",
+      "draft:validate",
+      "draft:verify",
+      "erp:draft:write",
+      "erp:draft:read"
+    ],
+    "procurement_approver": [
+      "approve:erp.create_draft"
+    ],
+    "viewer": []
+  },
+  "tenants": {
+    "T-ACME": {
+      "business_units": [
+        "BU-EMEA",
+        "BU-NA"
+      ]
+    },
+    "T-OTHER": {
+      "business_units": [
+        "BU-ALL"
+      ]
+    }
+  },
+  "allowed_countries": [
+    "GB",
+    "DE",
+    "US",
+    "FR",
+    "NL"
+  ],
+  "approval": {
+    "ttl_seconds": 86400,
+    "approver_role": "procurement_approver",
+    "self_approval": false
+  },
+  "limits": {
+    "max_drafts_per_run": 1
+  }
+}

@@ -1,0 +1,7 @@
+SUPPLIER INTAKE FORM
+Legal name: Northwind Components Ltd
+Registration number: 09876543
+Country: GB
+Registered address: 12 Harbour Street, Bristol BS1 4QA
+Contact email: onboarding@northwind.example
+Requested by: Category Management, BU-EMEA

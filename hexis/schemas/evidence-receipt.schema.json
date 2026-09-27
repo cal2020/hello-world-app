@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hexis.local/schemas/evidence-receipt.schema.json",
+  "title": "EvidenceReceipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "receipt_id",
+    "tenant_id",
+    "run_id",
+    "verifier",
+    "verifier_version",
+    "subject",
+    "claim",
+    "result",
+    "source_ref",
+    "observed_at",
+    "invalidation"
+  ],
+  "properties": {
+    "receipt_id": {
+      "type": "string",
+      "pattern": "^ev-"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "verifier": {
+      "type": "string"
+    },
+    "verifier_version": {
+      "type": "string"
+    },
+    "subject": {
+      "type": "object",
+      "required": [
+        "draft_ref",
+        "version",
+        "payload_hash"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "draft_ref": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer"
+        },
+        "payload_hash": {
+          "type": "string"
+        }
+      }
+    },
+    "claim": {
+      "type": "string"
+    },
+    "result": {
+      "enum": [
+        "match"
+      ]
+    },
+    "source_ref": {
+      "type": "string"
+    },
+    "observed_at": {
+      "type": "number"
+    },
+    "invalidation": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "invalidated_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

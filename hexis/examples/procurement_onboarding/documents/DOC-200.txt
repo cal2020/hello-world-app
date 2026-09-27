@@ -1,0 +1,6 @@
+SUPPLIER INTAKE FORM
+Legal name: Contoso Fasteners GmbH
+Registration number: HRB 123456
+Country: Germany
+Registered address: Industriestrasse 4, 70565 Stuttgart
+Contact email: vendors@contoso.example

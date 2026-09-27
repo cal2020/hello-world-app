@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hexis.local/schemas/trace-header.schema.json",
+  "title": "hexis-trace/1 header",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "header",
+    "format",
+    "trace_id",
+    "skill_id",
+    "task_input",
+    "source",
+    "labels",
+    "records_sha256"
+  ],
+  "properties": {
+    "header": {
+      "const": true
+    },
+    "format": {
+      "const": "hexis-trace/1"
+    },
+    "trace_id": {
+      "type": "string"
+    },
+    "skill_id": {
+      "type": "string"
+    },
+    "task_input": {
+      "type": "object"
+    },
+    "source": {
+      "type": "string"
+    },
+    "labels": {
+      "type": "object"
+    },
+    "records_sha256": {
+      "type": "string",
+      "pattern": "^sha256:"
+    }
+  }
+}

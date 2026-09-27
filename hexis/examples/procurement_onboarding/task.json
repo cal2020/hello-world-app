@@ -1,0 +1,15 @@
+{
+  "intake": {
+    "document_refs": [
+      {
+        "doc_id": "DOC-100",
+        "sha256": "668f4fdd89e35b2e063f923e9495b5a4a1496aac088e7bfbcc2321e979bc8117"
+      }
+    ]
+  },
+  "supplier": {
+    "proposed_name": "Northwind Components Ltd",
+    "business_unit": "BU-EMEA"
+  },
+  "policy_version": "onboarding-policy/2026-09"
+}

@@ -1,0 +1,22 @@
+{
+  "profile": "production",
+  "capability_ceiling": [
+    "documents:read",
+    "supplier:read",
+    "draft:validate",
+    "draft:verify",
+    "erp:draft:write",
+    "erp:draft:read"
+  ],
+  "fallback_mode": "stop_for_review",
+  "max_loop_bound": 3,
+  "budgets": {
+    "steps": 40,
+    "tool_calls": 20,
+    "model_calls": 8,
+    "tokens": 40000
+  },
+  "structured_output_repairs": 1,
+  "transport_retries": 2,
+  "approval_ttl_seconds": 86400
+}

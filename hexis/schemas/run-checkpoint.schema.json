@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hexis.local/schemas/run-checkpoint.schema.json",
+  "title": "RunCheckpoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tenant_id",
+    "run_id",
+    "artifact_hash",
+    "state_id",
+    "revision",
+    "status",
+    "variables",
+    "visits",
+    "budget",
+    "evidence",
+    "pending",
+    "outcome",
+    "diagnostic",
+    "assurance"
+  ],
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "artifact_hash": {
+      "type": "string"
+    },
+    "state_id": {
+      "type": "string"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "status": {
+      "enum": [
+        "READY",
+        "RUNNING",
+        "WAITING_FOR_INPUT",
+        "WAITING_FOR_APPROVAL",
+        "RECONCILING",
+        "COMPLETED",
+        "FAILED",
+        "CANCELLED"
+      ]
+    },
+    "variables": {
+      "type": "object"
+    },
+    "visits": {
+      "type": "object"
+    },
+    "budget": {
+      "type": "object",
+      "required": [
+        "limits",
+        "used"
+      ]
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "pending": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "outcome": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "diagnostic": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "assurance": {
+      "type": "object",
+      "required": [
+        "entered_fallback",
+        "missing_evidence",
+        "policy_violations",
+        "unresolved_effects",
+        "verification_scope"
+      ]
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hexis.local/schemas/trace-record.schema.json",
+  "title": "hexis-trace/1 record",
+  "type": "object",
+  "required": [
+    "seq",
+    "kind"
+  ],
+  "properties": {
+    "seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "kind": {
+      "enum": [
+        "tool",
+        "model",
+        "judge",
+        "user",
+        "end",
+        "interaction",
+        "heartbeat"
+      ]
+    },
+    "tool": {
+      "type": "string"
+    },
+    "phase": {
+      "type": "string"
+    },
+    "outcome": {
+      "enum": [
+        "certain",
+        "unknown_effect",
+        "denied",
+        "failed"
+      ]
+    },
+    "output": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "terminal": {
+      "type": "string"
+    },
+    "state_hint": {
+      "type": "string"
+    },
+    "action_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "ref": {
+      "type": "object"
+    }
+  }
+}

@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hexis.local/schemas/machine-package.schema.json",
+  "title": "hexis-production-package/1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "package_schema",
+    "machine",
+    "artifact_hash",
+    "source_manifest",
+    "compiler_manifest",
+    "tool_catalog",
+    "contracts",
+    "execution_policy",
+    "lineage",
+    "validation_manifest",
+    "admission"
+  ],
+  "properties": {
+    "package_schema": {
+      "const": "hexis-production-package/1"
+    },
+    "machine": {
+      "type": "object",
+      "required": [
+        "format",
+        "skill_id",
+        "initial",
+        "states"
+      ],
+      "properties": {
+        "format": {
+          "const": "efsm-v1"
+        },
+        "skill_id": {
+          "type": "string"
+        },
+        "initial": {
+          "type": "string"
+        },
+        "fallback": {
+          "type": "string"
+        },
+        "states": {
+          "type": "object"
+        },
+        "variables": {
+          "type": "array"
+        },
+        "terminals": {
+          "type": "array"
+        }
+      }
+    },
+    "artifact_hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "source_manifest": {
+      "type": "object",
+      "required": [
+        "skill_sha256",
+        "tool_catalog_hash",
+        "clauses"
+      ],
+      "properties": {
+        "skill_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "tool_catalog_hash": {
+          "type": "string"
+        },
+        "clauses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "text",
+              "span",
+              "coverage",
+              "critical"
+            ]
+          }
+        }
+      }
+    },
+    "compiler_manifest": {
+      "type": "object",
+      "required": [
+        "compiler",
+        "normalizer",
+        "model_id",
+        "context_hash",
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixture",
+            "live"
+          ]
+        }
+      }
+    },
+    "tool_catalog": {
+      "type": "object",
+      "required": [
+        "tools"
+      ]
+    },
+    "contracts": {
+      "type": "object",
+      "required": [
+        "variables",
+        "loop_bounds",
+        "ordering",
+        "terminals"
+      ]
+    },
+    "execution_policy": {
+      "type": "object",
+      "required": [
+        "capability_ceiling",
+        "fallback_mode",
+        "budgets"
+      ],
+      "properties": {
+        "fallback_mode": {
+          "enum": [
+            "stop_for_review",
+            "sandbox_interpreted"
+          ]
+        }
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "required": [
+        "parent_hash",
+        "changes",
+        "trace_ids"
+      ]
+    },
+    "validation_manifest": {
+      "type": "object"
+    },
+    "admission": {
+      "type": [
+        "object",
+        "null"
+      ]
+    }
+  }
+}

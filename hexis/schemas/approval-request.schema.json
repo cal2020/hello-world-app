@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hexis.local/schemas/approval-request.schema.json",
+  "title": "ApprovalRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tenant_id",
+    "run_id",
+    "interaction_id",
+    "artifact_hash",
+    "logical_action_id",
+    "tool",
+    "tool_version",
+    "args_digest",
+    "target",
+    "evidence",
+    "policy_version",
+    "required_role",
+    "expires_at",
+    "approval_digest",
+    "requested_by"
+  ],
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "interaction_id": {
+      "type": "string"
+    },
+    "artifact_hash": {
+      "type": "string"
+    },
+    "logical_action_id": {
+      "type": "string"
+    },
+    "tool": {
+      "type": "string"
+    },
+    "tool_version": {
+      "type": "string"
+    },
+    "args_digest": {
+      "type": "string",
+      "pattern": "^sha256:"
+    },
+    "target": {
+      "type": "object"
+    },
+    "evidence": {
+      "type": "object"
+    },
+    "policy_version": {
+      "type": "string"
+    },
+    "required_role": {
+      "type": "string"
+    },
+    "expires_at": {
+      "type": "number"
+    },
+    "approval_digest": {
+      "type": "string",
+      "pattern": "^sha256:"
+    },
+    "requested_by": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hexis.local/schemas/tool-catalog.schema.json",
+  "title": "Trusted tool catalog",
+  "type": "object",
+  "required": [
+    "catalog_version",
+    "tools"
+  ],
+  "properties": {
+    "catalog_version": {
+      "type": "string"
+    },
+    "tools": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "effect",
+          "capability",
+          "input_schema",
+          "output_schema"
+        ],
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "effect": {
+            "enum": [
+              "read",
+              "pure",
+              "idempotent_write",
+              "reconcilable_write",
+              "non_idempotent_write"
+            ]
+          },
+          "capability": {
+            "type": "string"
+          },
+          "input_schema": {
+            "type": "object"
+          },
+          "output_schema": {
+            "type": "object"
+          },
+          "verifier": {
+            "type": "boolean"
+          },
+          "business_reference": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
