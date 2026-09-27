@@ -32,7 +32,7 @@ class OutboxWorker:
     def __init__(self, db, interval=0.5):
         self.db = db
         self.interval = interval
-        self.paused = threading.Event()
+        self.paused = set()  # projects whose automatic delivery is paused (a forced pass still delivers)
         self._stop = threading.Event()
         self._lock = threading.Lock()
         self.thread = None
@@ -46,26 +46,34 @@ class OutboxWorker:
 
     def _run(self):
         while not self._stop.is_set():
-            if not self.paused.is_set():
-                try:
-                    self.deliver_pass()
-                except Exception as e:  # keep the worker alive; failures are recorded per event
-                    print("outbox worker error:", e)
+            try:
+                self.deliver_pass()
+            except Exception as e:  # keep the worker alive; failures are recorded per event
+                print("outbox worker error:", e)
             self._stop.wait(self.interval)
 
-    def deliver_pass(self, force=False):
-        """Deliver the next ready event of each project. Returns a list of outcomes."""
+    def deliver_pass(self, force=False, projects=None):
+        """Deliver the next ready event of each project (only `projects`, when given). A forced pass ignores
+        backoff and pauses. Returns a list of outcomes."""
         with self._lock:
             c = self.db.read()
             outcomes = []
-            projects = [r["project"] for r in c.execute(
+            pending = [r["project"] for r in c.execute(
                 "SELECT DISTINCT project FROM outbox_event WHERE delivered_at IS NULL")]
-            for project in projects:
+            for project in pending:
+                if (projects is not None and project not in projects) or (not force and project in self.paused):
+                    continue
                 ev = c.execute("SELECT * FROM outbox_event WHERE project=? AND delivered_at IS NULL ORDER BY seq LIMIT 1",
                                (project,)).fetchone()
                 if not ev or (not force and ev["next_attempt_at"] > time.time()):
                     continue
-                outcomes.append(self._deliver(ev))
+                try:
+                    outcomes.append(self._deliver(ev))
+                except Exception as e:  # one project's failure must not hold up the other projects' events
+                    print("outbox worker error:", project, e)
+                    outcomes.append({"event_id": ev["event_id"], "seq": ev["seq"], "type": ev["type"],
+                                     "attempt": ev["attempts"] + 1, "outcome": "worker_error",
+                                     "detail": f"{type(e).__name__}: {e}"})
             return outcomes
 
     def _deliver(self, ev, redelivery=False):
@@ -89,14 +97,16 @@ class OutboxWorker:
                 c.execute("UPDATE outbox_event SET attempts=?, delivered_at=COALESCE(delivered_at, ?), last_error=NULL "
                           "WHERE event_id=?", (attempt, now(), ev["event_id"]))
             else:
-                backoff = min(10.0, 0.5 * (2 ** (attempt - 1)))
+                backoff = min(10.0, 0.5 * 2 ** min(attempt - 1, 5))  # bounded exponent: no float overflow
                 c.execute("UPDATE outbox_event SET attempts=?, last_error=?, next_attempt_at=? WHERE event_id=?",
                           (attempt, f"{outcome}: {detail}", time.time() + backoff, ev["event_id"]))
         return {"event_id": ev["event_id"], "seq": ev["seq"], "type": ev["type"], "attempt": attempt,
                 "outcome": outcome, "detail": detail}
 
     def redeliver(self, event_id):
-        """Fault-injection helper: send an already-delivered event again (duplicate delivery)."""
+        """Fault-injection helper: send an already-delivered event again (duplicate delivery). A pending event
+        is not sent: that would overtake earlier events of its project."""
         with self._lock:
-            ev = self.db.read().execute("SELECT * FROM outbox_event WHERE event_id=?", (event_id,)).fetchone()
+            ev = self.db.read().execute("SELECT * FROM outbox_event WHERE event_id=? AND delivered_at IS NOT NULL",
+                                        (event_id,)).fetchone()
             return self._deliver(ev, redelivery=True) if ev else None

@@ -70,7 +70,7 @@ def http_get(path_or_url, token=TOKEN):
     if token:
         req.add_header("Authorization", f"Bearer {token}")
     if os.environ.get("LWB_ACCESS_CODE"):  # deployment gate in front of the workbench
-        req.add_header("X-Access-Code", os.environ["LWB_ACCESS_CODE"])
+        req.add_header("X-Access-Code", os.environ["LWB_ACCESS_CODE"].encode())  # UTF-8 bytes: any code can be sent
     try:
         with urllib.request.urlopen(req, timeout=15) as r:
             return r.status, json.loads(r.read())
@@ -271,6 +271,7 @@ def state(store):
 class Handler(BaseHTTPRequestHandler):
     store: Store = None
     protocol_version = "HTTP/1.1"
+    timeout = 30  # a stalled or idle connection is closed instead of holding its thread forever
 
     def log_message(self, fmt, *args):
         if os.environ.get("LWB_QUIET") != "1":
@@ -316,9 +317,13 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, {"error": "not_found"})
 
 
+class Server(ThreadingHTTPServer):
+    request_queue_size = 128  # the default of 5 resets connections during bursts
+
+
 def serve(db_path, host="127.0.0.1", port=8781):
     Handler.store = Store(db_path)
-    srv = ThreadingHTTPServer((host, port), Handler)
+    srv = Server((host, port), Handler)
     srv.daemon_threads = True
     return srv
 

@@ -1,8 +1,12 @@
 import hashlib
 import json
+import os
+import pathlib
 import subprocess
 import time
 import uuid
+
+CODE_ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 
 def canonical_json(obj) -> bytes:
@@ -21,7 +25,8 @@ def digest(obj) -> str:
 
 
 def now() -> str:
-    return time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime()) + f".{int(time.time() * 1000) % 1000:03d}Z"
+    t = time.time()  # one clock read: seconds and milliseconds must come from the same instant
+    return time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(t)) + f".{int(t * 1000) % 1000:03d}Z"
 
 
 def new_id(prefix: str) -> str:
@@ -29,12 +34,18 @@ def new_id(prefix: str) -> str:
 
 
 def code_version() -> str:
-    """Git revision of the running code, with a dirty marker. Recorded in release manifests."""
+    """Revision of the running code, recorded in release manifests. A deployed image has no git, so the
+    revision set at build or deploy time wins: LWB_CODE_VERSION, then Railway's RAILWAY_GIT_COMMIT_SHA.
+    Otherwise the git revision of this checkout, with a dirty marker."""
+    if os.environ.get("LWB_CODE_VERSION"):
+        return os.environ["LWB_CODE_VERSION"]
+    if os.environ.get("RAILWAY_GIT_COMMIT_SHA"):
+        return os.environ["RAILWAY_GIT_COMMIT_SHA"][:12]
     try:
         rev = subprocess.run(["git", "rev-parse", "--short=12", "HEAD"], capture_output=True, text=True,
-                             timeout=5).stdout.strip()
+                             timeout=5, cwd=CODE_ROOT).stdout.strip()
         dirty = subprocess.run(["git", "status", "--porcelain", "--", "."], capture_output=True, text=True,
-                               timeout=5).stdout.strip()
+                               timeout=5, cwd=CODE_ROOT).stdout.strip()
         return f"{rev}{'+dirty' if dirty else ''}" if rev else "unknown"
     except Exception:
         return "unknown"

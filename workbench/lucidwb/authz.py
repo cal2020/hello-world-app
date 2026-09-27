@@ -6,6 +6,10 @@ server never trusts an actor name supplied in a request body.
 """
 from .util import ApiError, now
 
+# Every permission the server checks. A grant of anything else would never take effect.
+PERMISSIONS = ("read", "import", "release:manage", "projection:review", "link:review", "link:approve",
+               "grants:manage")
+
 DEMO_USERS = [
     # user_id, display, token, kind, [(project, permission), ...]
     ("alice", "Alice (engineer, reviewer/approver)", "demo-alice", "human",

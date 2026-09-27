@@ -163,9 +163,9 @@ def main():
     _, vd, _ = must(carol.post(f"/manage/releases/{rel_d['release_id']}/consumer-checks"), 200)
     say(f"  consumer checks: {vd['status']}")
     for _ in range(10):  # flush anything already queued so the fault hits the activation event
-        if not must(carol.post("/manage/outbox/deliver"), 200)[1]["outcomes"]:
+        if not must(carol.post("/manage/projects/ehm/outbox/deliver"), 200)[1]["outcomes"]:
             break
-    must(carol.post("/manage/outbox/pause"), 200)
+    must(carol.post("/manage/projects/ehm/outbox/pause"), 200)
     must(carol.post("/manage/consumer/faults", {"drop_ack_after_commit": 1}), 200)
     _, act, _ = must(carol.post(f"/manage/releases/{rel_d['release_id']}/activate",
                                 {"expected_active_release_id": rel_a["release_id"], "reason": "C with compatible projection"},
@@ -173,12 +173,12 @@ def main():
     eid = act["event"]["event_id"]
     say(f"  activated {rel_d['release_id']}; event {eid} seq={act['event']['seq']}")
     for i in range(6):
-        outs = must(carol.post("/manage/outbox/deliver"), 200)[1]["outcomes"]
+        outs = must(carol.post("/manage/projects/ehm/outbox/deliver"), 200)[1]["outcomes"]
         for o in outs:
             say(f"    delivery seq={o['seq']} {o['type']:22} attempt={o['attempt']} -> {o['outcome']}")
         if any(o["event_id"] == eid and o["outcome"] == "acknowledged" for o in outs):
             break
-    must(carol.post("/manage/outbox/resume"), 200)
+    must(carol.post("/manage/projects/ehm/outbox/resume"), 200)
     s = must(cons.get("/state"), 200)[1]
     rec = next(e for e in s["received_events"] if e["event_id"] == eid)
     say(f"  consumer: deliveries of {eid}={rec['deliveries']}  committed effects={s['effect_count_by_event'][eid]}  "

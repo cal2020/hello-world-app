@@ -14,7 +14,7 @@ Contract:
 import datetime
 import json
 
-from .authz import has
+from .authz import has, require
 from .util import ApiError, digest, now
 
 RETENTION_DAYS = 7
@@ -24,8 +24,9 @@ def fingerprint(operation, path, body, if_match=None):
     return digest({"op": operation, "path": path, "body": body, "if_match": if_match})
 
 
-def execute(db, caller, project, operation_id, operation, fp, fn):
-    """fn(c) -> (status, body, affected). Returns (status, body, replayed: bool)."""
+def execute(db, caller, project, operation_id, operation, fp, fn, perm=None):
+    """fn(c) -> (status, body, affected). Returns (status, body, replayed: bool).
+    perm is checked again under the write lock, so a grant revoked while the request waited is honored."""
     with db.tx() as c:
         if operation_id:
             row = c.execute("SELECT * FROM operation_receipt WHERE caller=? AND project=? AND operation_id=?",
@@ -38,6 +39,8 @@ def execute(db, caller, project, operation_id, operation, fp, fn):
                 if not has(c, caller, project, "read"):
                     raise ApiError(404, "not_found", "Resource not found.")
                 return row["status_code"], json.loads(row["response_json"]), True
+        if perm:
+            require(c, caller, project, perm)
         status, body, affected = fn(c)
         if operation_id:
             exp = (datetime.datetime.utcnow() + datetime.timedelta(days=RETENTION_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")

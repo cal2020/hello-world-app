@@ -52,11 +52,11 @@ def live_propose(record_source, context):
         import anthropic  # optional dependency: pip install -r requirements-live.txt
     except ImportError:
         raise AdapterError("Live mode requested but the 'anthropic' package is not installed.")
-    client = anthropic.Anthropic()
     user = "RECORDS:\n" + json.dumps(context["records"], indent=1) + "\n\nELEMENTS:\n" + json.dumps(
         context["elements"], indent=1)
     sampling = {"max_tokens": 16000, "thinking": {"type": "adaptive"}, "effort": "high"}
     try:
+        client = anthropic.Anthropic()
         resp = client.messages.create(
             model=DEFAULT_MODEL, max_tokens=16000, system=PROMPT,
             thinking={"type": "adaptive"},
@@ -70,6 +70,8 @@ def live_propose(record_source, context):
         raise AdapterError("Model API rate limited; retry later.")
     except anthropic.APIStatusError as e:
         raise AdapterError(f"Model API error {e.status_code}.")
+    except Exception as e:  # any other SDK or client-side failure (e.g. credentials not resolvable) is recorded too
+        raise AdapterError(f"Model call failed: {type(e).__name__}: {e}"[:300])
     if resp.stop_reason == "refusal":
         raise AdapterError("Model declined the request (stop_reason=refusal).")
     if resp.stop_reason == "max_tokens":

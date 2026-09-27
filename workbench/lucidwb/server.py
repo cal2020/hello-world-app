@@ -6,11 +6,14 @@ import hashlib
 import hmac
 import http.client
 import json
+import math
 import mimetypes
 import os
 import pathlib
 import re
 import sys
+import threading
+import time
 import traceback
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -24,6 +27,10 @@ WEB = pathlib.Path(__file__).resolve().parent.parent / "web"
 FIXTURES = pathlib.Path(__file__).resolve().parent.parent / "fixtures"  # synthetic, safe to serve for the demo UI
 ROUTES = []
 COOKIE = "lwb_access"
+MAX_BODY = 5_000_000  # bytes accepted in one request body
+LOGIN_MAX_BODY = 4096
+DRAIN_MAX = 65536  # an unread body up to this size is read and discarded; a larger one closes the connection
+GUESS_INTERVAL = 1.0  # seconds between answers to failed access-code checks, across all connections
 LOGIN_PAGE = b"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport"
 content="width=device-width,initial-scale=1"><title>Workbench access</title><style>
 body{font:16px system-ui,sans-serif;background:#f4f6f8;color:#1b1f24;display:grid;place-items:center;min-height:100vh;margin:0}
@@ -42,7 +49,50 @@ def access_code():
 
 
 def _cookie_value(code):
-    return hmac.new(code.encode(), b"lwb-access-v1", hashlib.sha256).hexdigest()
+    return hmac.new(code.encode("utf-8", "surrogateescape"), b"lwb-access-v1", hashlib.sha256).hexdigest()
+
+
+def _same(given, expected):
+    """Constant-time comparison as UTF-8 bytes (hmac.compare_digest refuses str with non-ASCII characters)."""
+    return hmac.compare_digest(given.encode("utf-8", "surrogateescape"), expected.encode("utf-8", "surrogateescape"))
+
+
+def _header_code_ok(value, code):
+    """Header values arrive latin-1 decoded. Accept the code sent as UTF-8 bytes (curl, this repo's clients)
+    or as latin-1 (Python's http.client encodes str header values that way)."""
+    return _same(value, code) | _same(value.encode("latin-1", "replace").decode("utf-8", "replace"), code)
+
+
+class _GuessThrottle:
+    """Failed access-code checks (header, cookie or login form) are answered GUESS_INTERVAL apart across all
+    connections, so parallel requests do not raise the guess rate. A correct code is never delayed, and a
+    request that presents no code is not a guess."""
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._next = 0.0
+
+    def wait(self):
+        with self._lock:
+            t = time.monotonic()
+            self._next = max(t, self._next) + GUESS_INTERVAL
+            delay = self._next - t
+        time.sleep(delay)
+
+
+GUESSES = _GuessThrottle()
+
+
+def _finite(text):
+    """parse_float for request bodies: NaN, Infinity and overflowing numbers are not JSON values."""
+    f = float(text)
+    if not math.isfinite(f):
+        raise ValueError(f"{text} is not a finite number")
+    return f
+
+
+def _not_json(token):
+    raise ValueError(f"{token} is not JSON")
 
 
 def route(method, pattern):
@@ -65,6 +115,8 @@ class App:
 class Handler(BaseHTTPRequestHandler):
     app: App = None
     protocol_version = "HTTP/1.1"
+    timeout = 30  # a stalled or idle connection is closed instead of holding its thread forever
+    _unread = 0  # declared request body bytes not read yet
 
     def log_message(self, fmt, *args):
         if os.environ.get("LWB_QUIET") != "1":
@@ -72,7 +124,16 @@ class Handler(BaseHTTPRequestHandler):
 
     # -------------------------------------------------------------- plumbing
     def _send(self, status, body, headers=None, raw=None, ctype="application/json"):
-        data = raw if raw is not None else json.dumps(body, indent=1, default=str).encode()
+        data = raw
+        if data is None:
+            try:
+                data = json.dumps(body, indent=1, default=str, allow_nan=False).encode()
+            except ValueError:  # NaN/Infinity have no JSON form: refuse rather than serve an invalid document
+                traceback.print_exc()
+                status, headers = 500, None
+                data = json.dumps({"error": {"code": "non_json_value", "message": "The response contains a value "
+                                             "JSON cannot represent (such as NaN or Infinity)."}}).encode()
+        self._discard_body()
         self.send_response(status)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(data)))
@@ -82,21 +143,57 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Referrer-Policy", "no-referrer")
         for k, v in (headers or {}).items():
             self.send_header(k, v)
+        if self.close_connection:
+            self.send_header("Connection", "close")
         self.end_headers()
         self.wfile.write(data)
 
-    def _body_bytes(self):
-        n = int(self.headers.get("Content-Length") or 0)
-        if n > 5_000_000:
+    def _content_length(self):
+        """Declared body length. A body that cannot be delimited (Transfer-Encoding, or an invalid or conflicting
+        Content-Length) is refused: its bytes would otherwise be read as the next request on this connection."""
+        if self.headers.get("Transfer-Encoding") is not None:
+            raise ApiError(411, "length_required", "Send the body with Content-Length; Transfer-Encoding is not "
+                                                   "supported.")
+        values = {v.strip() for v in self.headers.get_all("Content-Length") or []}
+        if len(values) > 1 or not all(re.fullmatch(r"[0-9]+", v) for v in values):
+            raise ApiError(400, "invalid_input", "Content-Length must be a single non-negative integer.")
+        v = values.pop() if values else "0"
+        return int(v) if len(v) <= 15 else MAX_BODY + 1  # a longer value is over any limit
+
+    def _body_bytes(self, limit=MAX_BODY):
+        n = self._unread
+        if n > limit:
             raise ApiError(413, "invalid_input", "Body too large.")
-        return self.rfile.read(n) if n else b""
+        self._unread = 0
+        try:
+            data = self.rfile.read(n) if n else b""
+        except OSError:  # includes the socket timeout
+            data = b""
+        if len(data) != n:
+            self.close_connection = True  # where the next request starts is unknown
+            raise ApiError(400, "invalid_input", "Request body is shorter than its Content-Length.")
+        return data
+
+    def _discard_body(self):
+        """Consume a request body the handler did not read, so its bytes are never parsed as the next request.
+        A large or stalled body closes the connection instead."""
+        n, self._unread = self._unread, 0
+        if not n:
+            return
+        if n <= DRAIN_MAX:
+            try:
+                if len(self.rfile.read(n)) == n:
+                    return
+            except OSError:
+                pass
+        self.close_connection = True
 
     def _json(self):
         raw = self._body_bytes()
         if not raw:
             return {}
         try:
-            v = json.loads(raw)
+            v = json.loads(raw, parse_constant=_not_json, parse_float=_finite)
         except ValueError:
             raise ApiError(400, "invalid_input", "Body must be JSON.")
         if not isinstance(v, dict):
@@ -104,6 +201,12 @@ class Handler(BaseHTTPRequestHandler):
         return v
 
     def _dispatch(self, method):
+        self._unread = 0
+        try:
+            self._unread = self._content_length()
+        except ApiError as e:
+            self.close_connection = True
+            return self._send(e.status, e.body())
         parsed = urllib.parse.urlparse(self.path)
         self.query = {k: v[0] for k, v in urllib.parse.parse_qs(parsed.query).items()}
         path = parsed.path
@@ -153,20 +256,27 @@ class Handler(BaseHTTPRequestHandler):
         if not code:
             return True
         hdr = self.headers.get("X-Access-Code") or ""
-        if hdr and hmac.compare_digest(hdr, code):
+        parts = (part.strip().partition("=") for part in (self.headers.get("Cookie") or "").split(";"))
+        cookies = [v for k, _, v in parts if k == COOKIE]
+        if (hdr and _header_code_ok(hdr, code)) or any(_same(v, _cookie_value(code)) for v in cookies):
             return True
-        for part in (self.headers.get("Cookie") or "").split(";"):
-            k, _, v = part.strip().partition("=")
-            if k == COOKIE and hmac.compare_digest(v, _cookie_value(code)):
-                return True
+        if hdr or cookies:
+            self._guess_failed("X-Access-Code" if hdr else "cookie")
         return False
 
+    def _guess_failed(self, via):
+        self.log_message("access code rejected (%s from %s)", via, self.client_address[0])
+        GUESSES.wait()
+
     def _redirect(self, where, cookie=None):
+        self._discard_body()
         self.send_response(303)
         self.send_header("Location", where)
         self.send_header("Content-Length", "0")
         if cookie:
             self.send_header("Set-Cookie", cookie)
+        if self.close_connection:
+            self.send_header("Connection", "close")
         self.end_headers()
 
     def _login(self, method):
@@ -174,15 +284,17 @@ class Handler(BaseHTTPRequestHandler):
         if not code:
             return self._redirect("/")
         if method == "POST":
-            n = int(self.headers.get("Content-Length") or 0)
-            form = urllib.parse.parse_qs(self.rfile.read(min(n, 4096)).decode(errors="replace"))
+            try:
+                raw = self._body_bytes(LOGIN_MAX_BODY)
+            except ApiError as e:
+                return self._send(e.status, e.body())
+            form = urllib.parse.parse_qs(raw.decode(errors="replace"))
             given = (form.get("code") or [""])[0]
-            if hmac.compare_digest(given, code):
+            if _same(given, code):
                 secure = "; Secure" if os.environ.get("LWB_COOKIE_SECURE", "1") == "1" else ""
                 return self._redirect("/", f"{COOKIE}={_cookie_value(code)}; HttpOnly; SameSite=Strict; Path=/; "
                                            f"Max-Age=43200{secure}")
-            import time as _t
-            _t.sleep(1.0)  # slow down guessing
+            self._guess_failed("login form")
             return self._send(401, None, raw=LOGIN_PAGE.replace(b"__MSG__", b"<p style='color:#b00020'>Wrong code.</p>"),
                               ctype="text/html; charset=utf-8")
         return self._send(200, None, raw=LOGIN_PAGE.replace(b"__MSG__", b""), ctype="text/html; charset=utf-8")
@@ -229,10 +341,11 @@ class Handler(BaseHTTPRequestHandler):
     def need(self, project, perm):
         authz.require(self.c, self.user, project, perm)
 
-    def mutate(self, project, operation, body, fn, if_match=None):
+    def mutate(self, project, operation, body, fn, if_match=None, perm=None):
+        """perm: checked again inside the write transaction (current authority at commit)."""
         key = self.headers.get("Idempotency-Key")
         fp = receipts.fingerprint(operation, urllib.parse.urlparse(self.path).path, body, if_match)
-        status, out, replayed = receipts.execute(self.app.db, self.user, project, key, operation, fp, fn)
+        status, out, replayed = receipts.execute(self.app.db, self.user, project, key, operation, fp, fn, perm)
         hdrs = {"Idempotent-Replay": "true"} if replayed else {}
         if key:
             hdrs["Idempotency-Key"] = key
@@ -490,7 +603,7 @@ def history(h, p):
         e["attempts_log"] = [dict(a) for a in h.c.execute(
             "SELECT attempt, at, outcome, detail FROM delivery_attempt WHERE event_id=? ORDER BY attempt", (e["event_id"],))]
     return {"audit": audit_rows, "receipts": rec, "outbox": events,
-            "outbox_worker": "paused" if h.app.worker.paused.is_set() else "running"}
+            "outbox_worker": "paused" if p in h.app.worker.paused else "running"}
 
 
 # ------------------------------------------------------------------ management API
@@ -502,7 +615,7 @@ def do_import(h, p):
         raise ApiError(400, "invalid_input", "Export project does not match the URL.")
     h.need(p, "import")
     return h.mutate(p, "source.import", {"raw_sha256": importer.sha256(raw)},
-                    lambda c: importer.import_export(c, h.user, raw, doc))
+                    lambda c: importer.import_export(c, h.user, raw, doc), perm="import")
 
 
 @route("POST", r"/manage/imports/([a-z0-9_]+)/reconcile")
@@ -513,7 +626,8 @@ def do_reconcile(h, iid):
         raise ApiError(404, "not_found", "Resource not found.")
     h.need(imp["project"], "import")
     return h.mutate(imp["project"], "source.reconcile", body,
-                    lambda c: importer.reconcile(c, h.user, iid, body.get("action"), body.get("expected_head")))
+                    lambda c: importer.reconcile(c, h.user, iid, body.get("action"), body.get("expected_head")),
+                    perm="import")
 
 
 @route("POST", r"/manage/projections")
@@ -521,6 +635,7 @@ def do_projection(h):
     body = h._json()
     h.need(str(body.get("project")), "release:manage")
     with h.app.db.tx() as c:
+        authz.require(c, h.user, str(body.get("project")), "release:manage")  # current authority at commit
         return release.register_projection(c, h.user, body)
 
 
@@ -529,6 +644,7 @@ def do_projection_review(h, p, pid, ver):
     body = h._json()
     h.need(p, "projection:review")
     with h.app.db.tx() as c:
+        authz.require(c, h.user, p, "projection:review")  # current authority at commit
         return release.review_projection(c, h.user, p, pid, ver, body.get("decision"), body.get("reason"))
 
 
@@ -537,6 +653,7 @@ def do_build(h, p):
     body = h._json()
     h.need(p, "release:manage")
     with h.app.db.tx() as c:
+        authz.require(c, h.user, p, "release:manage")  # current authority at commit
         return 201, release.build_candidate(c, h.user, p, body.get("projection_id"), body.get("version"),
                                             body.get("snapshot_id"))
 
@@ -558,7 +675,7 @@ def do_activate(h, rid):
         st, out = release.activate(c, h.user, r["project"], rid, body.get("expected_active_release_id"),
                                    body.get("reason"))
         return st, out, {"release_id": rid}
-    return h.mutate(r["project"], "release.activate", body, fn)
+    return h.mutate(r["project"], "release.activate", body, fn, perm="release:manage")
 
 
 @route("POST", r"/manage/projects/([a-z0-9-]+)/rollback")
@@ -569,7 +686,7 @@ def do_rollback(h, p):
     def fn(c):
         st, out = release.rollback(c, h.user, p, body.get("expected_active_release_id"), body.get("reason"))
         return st, out, {}
-    return h.mutate(p, "release.rollback", body, fn)
+    return h.mutate(p, "release.rollback", body, fn, perm="release:manage")
 
 
 @route("POST", r"/manage/projects/([a-z0-9-]+)/proposal-runs")
@@ -618,38 +735,59 @@ def do_grant(h):
     body = h._json()
     p = str(body.get("project"))
     h.need(p, "grants:manage")
+    action, user, perm = body.get("action"), body.get("user"), body.get("permission")
+    if action not in ("grant", "revoke"):
+        raise ApiError(400, "invalid_input", "action must be grant|revoke")
+    if perm not in authz.PERMISSIONS:
+        raise ApiError(400, "invalid_input", "permission must be one of: " + ", ".join(authz.PERMISSIONS))
     with h.app.db.tx() as c:
         from .util import now
-        if body.get("action") == "revoke":
+        authz.require(c, h.user, p, "grants:manage")  # current authority at commit
+        if not isinstance(user, str) or not c.execute("SELECT 1 FROM users WHERE user_id=?", (user,)).fetchone():
+            raise ApiError(400, "invalid_input", "user must be an existing user id.")
+        if action == "grant" and user == h.user:
+            raise ApiError(403, "forbidden", "A grant manager cannot grant permissions to itself.")
+        if action == "revoke":
             n = c.execute("UPDATE grants SET revoked_at=? WHERE user_id=? AND project=? AND permission=? AND revoked_at IS NULL",
-                          (now(), body.get("user"), p, body.get("permission"))).rowcount
-        elif body.get("action") == "grant":
-            c.execute("INSERT INTO grants (user_id, project, permission, granted_at) VALUES (?,?,?,?)",
-                      (body.get("user"), p, body.get("permission"), now()))
-            n = 1
+                          (now(), user, p, perm)).rowcount
+        elif authz.has(c, user, p, perm):
+            n = 0  # already granted
         else:
-            raise ApiError(400, "invalid_input", "action must be grant|revoke")
-        audit(c, h.user, p, f"grant.{body.get('action')}", "committed", detail=body)
+            n = c.execute("INSERT INTO grants (user_id, project, permission, granted_at) VALUES (?,?,?,?)",
+                          (user, p, perm, now())).rowcount
+        audit(c, h.user, p, f"grant.{action}", "committed", detail=body)
         return {"changed": n}
 
 
-@route("POST", r"/manage/outbox/deliver")
-def do_deliver(h):
-    return {"outcomes": h.app.worker.deliver_pass(force=True)}
+# The outbox worker is shared, but pausing and forced delivery act on one project, for its release managers.
+@route("POST", r"/manage/projects/([a-z0-9-]+)/outbox/deliver")
+def do_deliver(h, p):
+    h.need(p, "release:manage")
+    outcomes = h.app.worker.deliver_pass(force=True, projects=[p])
+    with h.app.db.tx() as c:
+        audit(c, h.user, p, "outbox.deliver", "committed", detail={"outcomes": [[o["seq"], o["outcome"]]
+                                                                              for o in outcomes]})
+    return {"outcomes": outcomes}
 
 
-@route("POST", r"/manage/outbox/(pause|resume)")
-def do_pause(h, which):
-    (h.app.worker.paused.set if which == "pause" else h.app.worker.paused.clear)()
-    return {"outbox_worker": "paused" if h.app.worker.paused.is_set() else "running"}
+@route("POST", r"/manage/projects/([a-z0-9-]+)/outbox/(pause|resume)")
+def do_pause(h, p, which):
+    h.need(p, "release:manage")
+    with h.app.db.tx() as c:
+        authz.require(c, h.user, p, "release:manage")  # current authority at commit
+        audit(c, h.user, p, f"outbox.{which}", "committed")
+    (h.app.worker.paused.add if which == "pause" else h.app.worker.paused.discard)(p)
+    return {"project": p, "outbox_worker": "paused" if p in h.app.worker.paused else "running"}
 
 
 @route("POST", r"/manage/outbox/([a-z0-9_]+)/redeliver")
 def do_redeliver(h, eid):
-    ev = h.c.execute("SELECT project FROM outbox_event WHERE event_id=?", (eid,)).fetchone()
+    ev = h.c.execute("SELECT project, delivered_at FROM outbox_event WHERE event_id=?", (eid,)).fetchone()
     if not ev:
         raise ApiError(404, "not_found", "Resource not found.")
     h.need(ev["project"], "release:manage")
+    if ev["delivered_at"] is None:  # sending it now would overtake earlier events; the worker sends it in order
+        raise ApiError(409, "not_yet_delivered", "Only a delivered event can be redelivered.")
     return {"outcome": h.app.worker.redeliver(eid)}
 
 
@@ -661,9 +799,36 @@ def do_faults(h):
     return st, out
 
 
+class Server(ThreadingHTTPServer):
+    """One thread per connection, with a listen backlog that absorbs bursts (the default of 5 resets
+    connections) and a cap on open connections, so stalled clients cannot use up threads and memory."""
+    request_queue_size = 128
+    max_connections = 256
+
+    def __init__(self, *args, **kwargs):
+        self._slots = threading.BoundedSemaphore(self.max_connections)
+        super().__init__(*args, **kwargs)
+
+    def process_request(self, request, client_address):
+        if not self._slots.acquire(blocking=False):
+            self.shutdown_request(request)  # at capacity: close instead of starting another thread
+            return
+        try:
+            super().process_request(request, client_address)
+        except BaseException:
+            self._slots.release()
+            raise
+
+    def process_request_thread(self, request, client_address):
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self._slots.release()
+
+
 def serve(db_path, host="127.0.0.1", port=8780, start_worker=True):
     Handler.app = App(db_path, start_worker=start_worker)
-    srv = ThreadingHTTPServer((host, port), Handler)
+    srv = Server((host, port), Handler)
     srv.daemon_threads = True
     return srv
 

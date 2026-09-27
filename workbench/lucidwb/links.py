@@ -6,12 +6,13 @@ Authority boundaries:
 * people: accept/reject/no-match; an accepted link is workbench metadata, not a model edit.
 """
 import json
+import math
 import pathlib
 import re
 import time
 
 from . import ai
-from .authz import has
+from .authz import has, require
 from .db import audit, enqueue_event
 from .util import ApiError, digest, new_id, now, sha256
 
@@ -22,6 +23,10 @@ MODEL_SOURCE = "synthmodeler"
 SERIAL_PROPS = ("serialNumber", "assetSerial")
 DECISIONS = {"accept": "link:approve", "reject": "link:review", "no_match": "link:review",
              "missing_evidence": "link:review", "change_predicate": "link:review"}
+CLOSING = ("reject", "no_match", "missing_evidence")  # may close a proposal whose inputs went stale
+# Notes written by _validate. A derived proposal (rebase, changed predicate) recomputes them.
+VALIDATION_NOTES = {"unknown_record", "target_not_in_permitted_elements", "predicate_needs_vocabulary_review",
+                    "record_kind_not_allowed", "citation_not_found_in_source_bytes", "missing_subject_evidence"}
 
 
 def _heads(c, project, record_source):
@@ -98,10 +103,15 @@ def run_proposals(db, actor, project, method, mode, record_source="cmms"):
             candidates = out.get("proposals", []) if isinstance(out, dict) else []
         except ai.AdapterError as e:
             candidates, status, error = [], "failed", str(e)
+        except ApiError:
+            raise
+        except Exception as e:  # an unexpected adapter failure is still recorded on the run, not lost in a 500
+            candidates, status, error = [], "failed", f"Adapter failed: {type(e).__name__}: {e}"[:300]
     else:
         raise ApiError(400, "invalid_input", "method must be deterministic|model")
 
     with db.tx() as w:
+        require(w, actor, project, "link:review")  # current authority at commit (a model call can take minutes)
         w.execute("INSERT INTO proposal_run VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                   (run_id, project, method, mode if method == "model" else "deterministic", meta.get("provider"),
                    meta.get("model"), json.dumps(meta.get("sampling", {})),
@@ -137,7 +147,9 @@ def _deterministic(records, elements):
             props = json.loads(e["properties_json"])
             for sp in SERIAL_PROPS:
                 serial = props.get(sp)
-                if serial and re.search(r"(?<![A-Za-z0-9-])" + re.escape(serial) + r"(?![A-Za-z0-9-])", r["text"]):
+                if not isinstance(serial, str) or not serial:  # the importer does not type-check property values
+                    continue
+                if re.search(r"(?<![A-Za-z0-9-])" + re.escape(serial) + r"(?![A-Za-z0-9-])", r["text"]):
                     hits.append({"record_id": rid, "element_id": nid, "method_detail": f"exact {sp}",
                                  "evidence": [{"record_id": rid, "quote": serial}]})
         alias = aliases.get("aliases", {}).get(r.get("asset_ref") or "")
@@ -149,8 +161,53 @@ def _deterministic(records, elements):
     return out
 
 
+def _validate(rid, rec, target_ref, el, pred, evidence):
+    """Validation status and the notes that explain it; the first failing check sets the status.
+    rec / el are None when the record / target is outside the permitted set; target_ref is None for 'no match'."""
+    status, notes = "valid", []
+
+    def fail(code, note=None):
+        nonlocal status
+        status = code if status == "valid" else status
+        if note:
+            notes.append(note)
+    if rec is None:
+        fail("reference_outside_permitted_set", {"code": "unknown_record", "record_id": str(rid)[:64]})
+    if target_ref and el is None:
+        fail("reference_outside_permitted_set", {"code": "target_not_in_permitted_elements",
+                                                 "element_ref": str(target_ref)[:64]})
+    spec = VOCAB["predicates"].get(pred) if isinstance(pred, str) else None
+    if spec is None:
+        fail("unsupported_predicate", {"code": "predicate_needs_vocabulary_review", "predicate": str(pred)[:80]})
+    elif rec is not None and rec.get("kind") not in spec["record_kinds"]:
+        fail("record_kind_not_allowed", {"code": "record_kind_not_allowed", "record_kind": rec.get("kind"),
+                                         "allowed": spec["record_kinds"]})
+    for ev in evidence:
+        if not ev["valid"]:
+            fail("invalid_citation", {"code": "citation_not_found_in_source_bytes", "record_id": ev.get("record_id")})
+    if not evidence:
+        fail("missing_evidence")
+    elif rec is not None and not any(ev["valid"] and ev["record_id"] == rec["id"] for ev in evidence):
+        # Other records may corroborate, but the link is about this record: it must be quoted itself.
+        fail("missing_subject_evidence", {"code": "missing_subject_evidence", "record_id": rec["id"],
+                                          "message": "No valid quote from the proposal's own record."})
+    if not target_ref:
+        fail("no_match_suggested")
+    return status, notes
+
+
+def _revalidated(p, rec, predicate, evidence):
+    """Validation columns for a proposal derived from p with the given inputs. Unresolved references cannot
+    become valid; notes that are not about validation are kept."""
+    if p["validation"] == "reference_outside_permitted_set":
+        return {}
+    status, notes = _validate(p["record_id"], rec, p["target_uid"], p["target_uid"], predicate, evidence)
+    kept = [n for n in json.loads(p["validation_notes_json"]) if n.get("code") not in VALIDATION_NOTES]
+    return {"validation": status, "validation_notes_json": json.dumps(kept + notes)}
+
+
 def _store_candidate(w, run_id, project, cand, records, elements, mhead, rhead, record_source, ambiguous):
-    notes, validation = [], "valid"
+    notes = []
     allowed_keys = {"record_id", "element_id", "predicate", "evidence", "contradictions", "confidence",
                     "method_detail", "rationale"}
     for k in sorted(set(cand) - allowed_keys):
@@ -158,19 +215,9 @@ def _store_candidate(w, run_id, project, cand, records, elements, mhead, rhead, 
                       "message": "Model output cannot set approval, permissions or destinations."})
     rid = cand.get("record_id")
     rec = records.get(rid)
-    if rec is None:
-        validation = "reference_outside_permitted_set"
-        notes.append({"code": "unknown_record", "record_id": str(rid)[:64]})
     target = cand.get("element_id")
     el = elements.get(target) if target else None
-    if target and el is None:
-        validation = "reference_outside_permitted_set"
-        notes.append({"code": "target_not_in_permitted_elements", "element_ref": str(target)[:64]})
     pred = cand.get("predicate")
-    if pred not in VOCAB["predicates"]:
-        if validation == "valid":
-            validation = "unsupported_predicate"
-        notes.append({"code": "predicate_needs_vocabulary_review", "predicate": str(pred)[:80]})
     evidence = []
     for ev in cand.get("evidence") or []:
         src = records.get(ev.get("record_id"))
@@ -180,17 +227,13 @@ def _store_candidate(w, run_id, project, cand, records, elements, mhead, rhead, 
         pos = text.find(quote) if (src and quote) else -1
         if pos < 0:
             evidence.append({"record_id": ev.get("record_id"), "field": field, "quote": quote, "valid": False})
-            if validation == "valid":
-                validation = "invalid_citation"
-            notes.append({"code": "citation_not_found_in_source_bytes", "record_id": ev.get("record_id")})
         else:
             evidence.append({"record_id": src["id"], "record_version": src["version"], "field": field,
                              "start": pos, "end": pos + len(quote), "quote": quote, "quote_sha256": sha256(quote),
                              "valid": True})
-    if not evidence and validation == "valid":
-        validation = "missing_evidence"
-    if target is None and validation == "valid":
-        validation = "no_match_suggested"
+    validation, vnotes = _validate(rid, rec, target, el, pred, evidence)
+    notes += vnotes
+    conf = cand.get("confidence")  # model JSON may carry NaN, which no response could serve
     if ambiguous:
         notes.append({"code": "competing_candidates_for_record", "record_id": rid,
                       "message": "More than one target proposed for this record; reviewer must resolve."})
@@ -208,7 +251,7 @@ def _store_candidate(w, run_id, project, cand, records, elements, mhead, rhead, 
                                          "record_version": rec["version"] if rec else None,
                                          "evidence_versions": sorted({e.get("record_version") for e in evidence
                                                                       if e.get("record_version")})}),
-        "confidence": cand.get("confidence") if isinstance(cand.get("confidence"), (int, float)) else None,
+        "confidence": conf if isinstance(conf, (int, float)) and math.isfinite(conf) else None,
         "validation": validation, "validation_notes_json": json.dumps(notes),
         "disposition": "unresolved", "created_at": now(), "updated_at": now(),
     }
@@ -296,7 +339,10 @@ def decide(c, actor, pid, decision, if_match, body, operation_id):
         raise ApiError(428, "precondition_required", "If-Match with the proposal's current ETag is required.")
     if if_match != p["etag"]:
         raise ApiError(412, "precondition_failed", "Proposal changed since it was read.", {"current_etag": p["etag"]})
-    if p["disposition"] != "unresolved":
+    # A reviewer may still close (reject, no match, missing evidence) a proposal whose inputs went stale; it
+    # cannot become a link, and a deleted target leaves no way to rebase it.
+    open_states = ("unresolved", "stale_needs_review") if decision in CLOSING else ("unresolved",)
+    if p["disposition"] not in open_states:
         raise ApiError(409, "already_decided", "Proposal is not open for review.", {"disposition": p["disposition"]})
     reason = (body.get("reason") or "").strip()
     if not reason:
@@ -309,7 +355,7 @@ def decide(c, actor, pid, decision, if_match, body, operation_id):
                            {"validation": p["validation"]})
         if exp_m is None or exp_r is None:
             raise ApiError(400, "invalid_input", "expected_model_revision and expected_record_revision are required.")
-    if fr["status"] == "stale":
+    if fr["status"] == "stale" and decision not in CLOSING:
         # Committed side effect: the proposal is marked stale so it cannot be approved by accident later.
         c.execute("UPDATE link_proposal SET disposition='stale_needs_review', updated_at=? WHERE proposal_id=?",
                   (now(), pid))
@@ -327,6 +373,13 @@ def decide(c, actor, pid, decision, if_match, body, operation_id):
     if exp_m is not None and (exp_m != fr["model_head"] or exp_r != fr["record_head"]):
         raise ApiError(409, "stale_dependency", "The caller's view of source revisions is out of date.",
                        {"current": {"model_revision": fr["model_head"], "record_revision": fr["record_head"]}})
+    if decision == "accept":
+        dup = c.execute("SELECT link_id FROM integration_link WHERE project=? AND record_source=? AND record_id=? "
+                        "AND target_uid=? AND predicate=? AND status='active'",
+                        (p["project"], p["record_source"], p["record_id"], p["target_uid"], p["predicate"])).fetchone()
+        if dup:
+            raise ApiError(409, "already_linked", "An active link with this record, target and predicate exists.",
+                           {"link_id": dup["link_id"]})
     iv = json.loads(p["input_vector_json"])
     did = new_id("dec")
     c.execute("INSERT INTO review_decision VALUES (?,?,?,?,?,?,?,?,?,?,?)",
@@ -337,6 +390,8 @@ def decide(c, actor, pid, decision, if_match, body, operation_id):
     np = c.execute("SELECT * FROM link_proposal WHERE proposal_id=?", (pid,)).fetchone()
     c.execute("UPDATE link_proposal SET etag=? WHERE proposal_id=?", (_etag(np), pid))
     result = {"proposal_id": pid, "decision_id": did, "disposition": new_disp}
+    if fr["status"] == "stale":
+        result["stale_inputs"] = fr["issues"]  # closed against the inputs recorded on the decision
     affected = {"proposal_id": pid, "decision_id": did}
     if decision == "accept":
         lid = new_id("lnk")
@@ -352,7 +407,9 @@ def decide(c, actor, pid, decision, if_match, body, operation_id):
         newp = body.get("new_predicate")
         if newp not in VOCAB["predicates"]:
             raise ApiError(400, "invalid_input", "new_predicate must be in the controlled vocabulary.")
-        child = _clone(c, p, predicate=newp, run_note="reviewer_predicate_change")
+        records, _ = _records_from_raw(c, p["record_snapshot_id"])
+        child = _clone(c, p, predicate=newp, run_note="reviewer_predicate_change",
+                       **_revalidated(p, records.get(p["record_id"]), newp, json.loads(p["evidence_json"])))
         result["replacement_proposal_id"] = child
     audit(c, actor, p["project"], f"proposal.{decision}", "committed", operation_id, result)
     return 200, result, affected
@@ -364,7 +421,7 @@ def _clone(c, p, run_note, **changes):
     row["proposal_id"] = new_id("prop")
     row["revision"] = p["revision"] + 1
     row["disposition"] = "unresolved"
-    notes = json.loads(p["validation_notes_json"]) + [{"code": run_note, "derived_from": p["proposal_id"]}]
+    notes = json.loads(row["validation_notes_json"]) + [{"code": run_note, "derived_from": p["proposal_id"]}]
     row["validation_notes_json"] = json.dumps(notes)
     row["created_at"] = row["updated_at"] = now()
     row["etag"] = _etag(row)
@@ -395,13 +452,12 @@ def rebase(c, actor, pid, if_match):
             raise ApiError(409, "target_deleted", "Target element is deleted in the current source; the proposal "
                                                   "cannot be rebased. Consider a new proposal for a replacement.")
         tv = cur["version_id"]
-    evidence, validation = [], p["validation"]
+    evidence = []
     for ev in json.loads(p["evidence_json"]):
         src = records.get(ev.get("record_id"))
         text = (src or {}).get(ev.get("field", "text")) or ""
         pos = text.find(ev.get("quote") or "\x00") if src else -1
         if pos < 0:
-            validation = "invalid_citation"
             evidence.append(dict(ev, valid=False))
         else:
             evidence.append(dict(ev, record_version=src["version"], start=pos, end=pos + len(ev["quote"]), valid=True))
@@ -412,7 +468,8 @@ def rebase(c, actor, pid, if_match):
           "evidence_versions": sorted({e.get("record_version") for e in evidence if e.get("record_version")})}
     child = _clone(c, p, run_note="rebased_to_current_heads", target_version=tv, model_snapshot_id=mhead["snapshot_id"],
                    record_snapshot_id=rhead["snapshot_id"], record_version=rec["version"] if rec else "n/a",
-                   evidence_json=json.dumps(evidence), input_vector_json=json.dumps(iv), validation=validation)
+                   evidence_json=json.dumps(evidence), input_vector_json=json.dumps(iv),
+                   **_revalidated(p, rec, p["predicate"], evidence))
     c.execute("UPDATE link_proposal SET disposition='superseded', updated_at=? WHERE proposal_id=?", (now(), pid))
     np = c.execute("SELECT * FROM link_proposal WHERE proposal_id=?", (pid,)).fetchone()
     c.execute("UPDATE link_proposal SET etag=? WHERE proposal_id=?", (_etag(np), pid))

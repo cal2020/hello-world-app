@@ -13,6 +13,7 @@ import urllib.request
 from jsonschema import Draft202012Validator
 
 from . import ADAPTER_VERSION, GENERATOR_VERSION
+from .authz import require
 from .db import audit, enqueue_event
 from .projection import (BLOCKING, check_against_snapshot, contract_diff, contract_shape_digest, generate_contract,
                          instance_diagnostics, projection_digest, schema_name, validate_openapi,
@@ -184,7 +185,7 @@ def _http_json(method, url, token=None, body=None, timeout=20):
     if token:
         req.add_header("Authorization", f"Bearer {token}")
     if os.environ.get("LWB_ACCESS_CODE"):
-        req.add_header("X-Access-Code", os.environ["LWB_ACCESS_CODE"])
+        req.add_header("X-Access-Code", os.environ["LWB_ACCESS_CODE"].encode())  # UTF-8 bytes: any code can be sent
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return resp.status, json.loads(resp.read() or b"null")
@@ -236,6 +237,7 @@ def run_consumer_checks(db, actor, rid):
                 "passed": False, "profiles": [], "error": f"consumer verify HTTP {st}"}
     passed = bool(cons.get("passed")) and sc["passed"]
     with db.tx() as w:
+        require(w, actor, r["project"], "release:manage")  # current authority at commit (the checks took a while)
         run_id = new_id("ctr")
         w.execute("INSERT INTO consumer_test_run VALUES (?,?,?,?,?,?,?,?,?,?)",
                   (run_id, rid, cons.get("consumer_id"), cons.get("consumer_version"),
@@ -258,8 +260,8 @@ def activate(c, actor, project, rid, expected_active, reason, action="activate")
         raise ApiError(412, "precondition_failed", "Active release changed.", {"active_release_id": current})
     if current == rid:
         raise ApiError(409, "already_active", "Release is already active.")
-    last = c.execute("SELECT passed, run_id FROM consumer_test_run WHERE release_id=? ORDER BY started_at DESC LIMIT 1",
-                     (rid,)).fetchone()
+    last = c.execute("SELECT passed, run_id FROM consumer_test_run WHERE release_id=? ORDER BY started_at DESC, "
+                     "rowid DESC LIMIT 1", (rid,)).fetchone()
     blocking = [d for d in json.loads(r["diagnostics_json"]) if d["code"] in BLOCKING]
     prow = c.execute("SELECT status FROM projection_definition WHERE project=? AND projection_id=? AND version=?",
                      (project, r["projection_id"], r["projection_version"])).fetchone()

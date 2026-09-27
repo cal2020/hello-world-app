@@ -587,9 +587,9 @@ async function renderReview() {
           p.decisions.map((d) => `${d.decision} by ${d.actor}${d.revoked_at ? " (revoked)" : ""}`).join("; ")) : null),
         h("td", null, h("div", { class: "btn-wrap" },
           btn("Accept", () => decide(p.proposal_id, "accept"), !unresolved),
-          btn("Reject", () => decide(p.proposal_id, "reject"), !unresolved),
-          btn("No match", () => decide(p.proposal_id, "no_match"), !unresolved),
-          btn("Missing evidence", () => decide(p.proposal_id, "missing_evidence"), !unresolved),
+          btn("Reject", () => decide(p.proposal_id, "reject"), !open),
+          btn("No match", () => decide(p.proposal_id, "no_match"), !open),
+          btn("Missing evidence", () => decide(p.proposal_id, "missing_evidence"), !open),
           btn("Rebase", () => rebase(p.proposal_id), !open)),
         h("div", { class: "muted small mono" }, p.proposal_id, " r", p.revision))));
       tbody.appendChild(h("tr", { class: "evrow" + (competing.has(rid) ? " competing" : "") }, h("td"),
@@ -779,7 +779,7 @@ function wireControls() {
     }
   }));
   document.querySelectorAll("[data-outbox]").forEach((b) => b.addEventListener("click",
-    () => action("POST", `/manage/outbox/${b.dataset.outbox}`, {})));
+    () => needProject() && action("POST", `/manage/projects/${P()}/outbox/${b.dataset.outbox}`, {})));
   $("btn-fault").addEventListener("click", () => action("POST", "/manage/consumer/faults", { json: { drop_ack_after_commit: 1 } }));
   $("btn-redeliver").addEventListener("click", () => {
     const e = $("event-select").value;

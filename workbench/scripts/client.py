@@ -23,7 +23,7 @@ class Client:
         if self.token:
             r.add_header("Authorization", f"Bearer {self.token}")
         if os.environ.get("LWB_ACCESS_CODE"):
-            r.add_header("X-Access-Code", os.environ["LWB_ACCESS_CODE"])
+            r.add_header("X-Access-Code", os.environ["LWB_ACCESS_CODE"].encode())  # UTF-8 bytes: any code can be sent
         for k, v in (headers or {}).items():
             r.add_header(k, v)
         try:
