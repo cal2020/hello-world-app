@@ -15,7 +15,7 @@ import urllib.parse
 from unittest import mock
 
 from lucidwb import server
-from lucidwb.importer import normalize_model
+from lucidwb.importer import normalize_model, normalize_records
 from lucidwb.util import digest
 from scripts.client import FIX, Client
 from tests import test_fix_ui as ui
@@ -345,6 +345,36 @@ class ImporterRepairs(StackCase):
                       ("lwb-synthetic-export-adapter/0.3.1",))
         st, body, _ = self.post(raw=json.dumps(exports[0], indent=2).encode())
         self.assertEqual((st, body["outcome"]), (409, "quarantined_conflict"))
+
+    def test_extension_keys_in_pre_upgrade_revisions_still_dedupe(self):
+        """Round 3 (101): adapters before model 0.3.1 / records 0.2.1 did not count unrecognized relationship or
+        record keys; a re-serialized re-send of such a stored revision is a duplicate, changed content is not."""
+        self.ok(self.imp("model/A_initial.json"))
+        snap = fixture("model/A_initial.json")
+        snap.update(revision="relx-snap", parent_revision="7c1e9a")
+        snap["relationships"][0]["note"] = "vendor extension"
+        recs = {"format": "lwb-external-records/1", "source": "cmms-x", "project": "ehm", "revision": "x1",
+                "parent_revision": None, "records": [{"id": "R-1", "kind": "maintenance", "asset_ref": "VS-4471",
+                                                      "text": "Checked.", "vendor_tag": "q7"}]}
+        old = [(snap, "lwb-synthetic-export-adapter/0.3.0", normalize_model),
+               (recs, "lwb-external-records-adapter/0.2.0", normalize_records)]
+        for doc, adapter, normalize in old:
+            self.ok(self.post(doc), 201)
+            norm = normalize(doc)[0]
+            for item in norm.get("relationships", []) + norm.get("records", []):
+                item.pop("unrecognized", None)
+            with self.stack.app.db.tx() as c:  # as the previous adapter stored it
+                c.execute("UPDATE source_snapshot SET normalized_digest=?, adapter_version=? WHERE revision=?",
+                          (digest(norm), adapter, doc["revision"]))
+        for doc, adapter, _ in old:
+            body = self.ok(self.post(raw=json.dumps(doc, indent=2).encode()), 200)
+            self.assertEqual(body["outcome"], "duplicate_no_change")
+            self.assertIn("stored_normalization_differs", [d["code"] for d in body["diagnostics"]])
+            changed = json.loads(json.dumps(doc))
+            # a counted field (an extension key alone was invisible to the old adapter, so it cannot be told apart)
+            (changed.get("relationships") or changed.get("records"))[0]["text" if "records" in doc else "multiplicity"] = "2"
+            st, body, _ = self.post(changed)
+            self.assertEqual((st, body["outcome"]), (409, "quarantined_conflict"))
 
 
 class WeakAccessCode(unittest.TestCase):

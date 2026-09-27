@@ -330,7 +330,7 @@ def import_export(c, actor, raw: bytes, doc: dict, declared=None):
         # content that normalizes to the stored digest the way that adapter read it.
         stored = existing["normalized_digest"]
         if stored == norm_digest or existing["raw_digest"] == raw_digest or (
-                fmt == MODEL_FORMAT and stored == _earlier_digest(existing["adapter_version"], declared)):
+                stored == _earlier_digest(existing["adapter_version"], declared)):
             first = existing["import_id"]
             diags = [{"code": "identical_revision_and_content", "original_import_id": first}]
             if stored != norm_digest:
@@ -493,17 +493,27 @@ def _snapshot_at(c, source, project, revision):
 
 
 def _earlier_digest(stored_adapter, declared):
-    """Normalized digest of a model export as adapters before 0.3.1 computed it: they read an export without
-    definitions on its own, not against its parent's definitions. None if the stored adapter read it as this
-    one does."""
+    """Normalized digest of an export as the adapter that stored it computed it, for adapters older than this one.
+
+    Model adapters before 0.3.1 read an export without definitions on its own (not against its parent's) and did
+    not count unrecognized relationship keys; records adapters before 0.2.1 did not count unrecognized record keys.
+    Returns None when the stored adapter normalizes the way the current one does (or is not recognized)."""
     name, _, version = (stored_adapter or "").rpartition("/")
     try:
-        older = tuple(int(x) for x in version.split(".")) < (0, 3, 1)
+        ver = tuple(int(x) for x in version.split("."))
     except ValueError:
         return None
-    if name != ADAPTER_VERSION.rpartition("/")[0] or not older or declared.get("definitions"):
-        return None
-    return digest(normalize_model(declared)[0])
+    if name == ADAPTER_VERSION.rpartition("/")[0] and ver < (0, 3, 1):
+        normalized = normalize_model(declared)[0]
+        for r in normalized["relationships"]:
+            r.pop("unrecognized", None)
+        return digest(normalized)
+    if name == RECORDS_ADAPTER_VERSION.rpartition("/")[0] and ver < (0, 2, 1):
+        normalized = normalize_records(declared)[0]
+        for r in normalized["records"]:
+            r.pop("unrecognized", None)
+        return digest(normalized)
+    return None
 
 
 def _base_definitions(c, doc):
