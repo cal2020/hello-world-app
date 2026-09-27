@@ -4,6 +4,8 @@ import assert from 'node:assert/strict'
 import { seededWorkbench, reviewToReady, opId, OBJECTIVE } from './helpers.js'
 import { loadInbox } from '../server/fixtures.js'
 import { getSnapshot } from '../server/sources.js'
+import { createWorkbench } from '../server/workbench.js'
+import { setupStage } from '../scripts/demo-steps.js'
 
 async function generate(wb, user, extra = {}) {
   return (await wb.startRun(user, { opId: opId(), objective: OBJECTIVE, provider: 'fixture', ...extra })).body
@@ -217,4 +219,34 @@ test('fixture and baseline runs are labeled in the version and the export', asyn
   assert.match(exp.body.markdown, /SIMULATED \(none \(deterministic fixture, not AI\)/)
   assert.equal(exp.body.evidenceRecord.generation.mode, 'SIMULATED')
   assert.notEqual(wb.getRun(f.runId).configHash, wb.getRun(b.runId).configHash)
+})
+
+test("the 'changed' demo stage leaves the accepted version STALE with three conclusions to reassess", async () => {
+  const wb = createWorkbench()
+  const author = wb.userForToken('demo-author-kim')
+  const reviewer = wb.userForToken('demo-reviewer-alvarez')
+  await setupStage(wb, author, reviewer, 'changed')
+  const cand = wb.getCandidate(wb.overview().candidates.at(-1).candidateId)
+  const latest = wb.getVersion(cand.latestVersionId)
+  assert.equal(latest.state, 'STALE')
+  const im = wb.impact(latest.versionId)
+  assert.equal(im.affectedClaims.length, 3)
+  assert.equal(im.affectedClaims.filter((c) => c.severity === 'REASSESS').length, 2)
+  assert.equal(im.affectedClaims.filter((c) => c.severity === 'RECONFIRM').length, 1)
+  assert.equal(im.computedChanges.length, 1)
+  assert.equal(im.computedChanges[0].before.result, 'PASS')
+  assert.equal(im.computedChanges[0].after.result, 'FAIL')
+  const acceptance = latest.decisions.find((d) => d.decision === 'ACCEPT_FOR_DEMO')
+  assert.ok(acceptance)
+  assert.equal(acceptance.status.valid, false)
+})
+
+test('a blocked acceptance is refused for its blocking reasons first; nothing is recorded without a rationale', async () => {
+  const { wb, author, reviewer } = seededWorkbench()
+  const blocked = wb.getVersion((await generate(wb, author)).versionId)
+  assert.throws(() => wb.decide(reviewer, blocked.versionId, { opId: opId(), decision: 'ACCEPT_FOR_DEMO', rationale: '', expectedDigest: blocked.digest, expectedManifestHash: blocked.manifestHash }), (e) => e.code === 'REVIEW_BLOCKED')
+  wb.importSource(author, { opId: opId(), source: loadInbox('insp-log-rev2') })
+  const ready = reviewToReady(wb, reviewer, (await generate(wb, author, { candidateId: blocked.candidateId })).versionId)
+  assert.throws(() => wb.decide(reviewer, ready.versionId, { opId: opId(), decision: 'ACCEPT_FOR_DEMO', rationale: '  ', expectedDigest: ready.digest, expectedManifestHash: ready.manifestHash }), (e) => e.code === 'RATIONALE_REQUIRED')
+  assert.equal(wb.db.prepare('SELECT COUNT(*) AS n FROM review_decisions').get().n, 0)
 })

@@ -508,7 +508,6 @@ export function createWorkbench({ dbPath = ':memory:', asOf = '2026-09-23', simu
         const v = parseVersion(versionRow(versionId))
         const current = currentManifest(db)
         if (!DECISIONS.includes(decision)) fail(422, 'INVALID_DECISION', `decision must be one of ${DECISIONS.join(', ')}.`, { ignoredFields: Object.keys(rest) })
-        if (!rationale || !rationale.trim()) fail(422, 'RATIONALE_REQUIRED', 'A rationale is required for every decision.')
         if (!expectedDigest || !expectedManifestHash) fail(422, 'BINDING_REQUIRED', 'Send the candidate digest and manifest hash you reviewed.')
         if (expectedDigest !== v.digest || hashOf(v.content) !== v.digest) fail(409, 'STALE_CONFLICT', 'The candidate you reviewed is not this exact version.', { expectedDigest, actualDigest: v.digest })
         if (expectedManifestHash !== current.hash || v.manifestHash !== current.hash) {
@@ -525,6 +524,9 @@ export function createWorkbench({ dbPath = ':memory:', asOf = '2026-09-23', simu
           newState = 'REVIEWED_FOR_DEMO'
         } else if (decision === 'REJECT') newState = 'REJECTED'
         else newState = 'DRAFT'
+        // Checked after the gates so a blocked or stale version is refused for
+        // that reason first; nothing is ever recorded without a rationale.
+        if (!rationale || !rationale.trim()) fail(422, 'RATIONALE_REQUIRED', 'A rationale is required for every decision.')
         const decisionId = newId('dec')
         db.prepare('INSERT INTO review_decisions (decision_id, version_id, candidate_digest, manifest_hash, reviewer_id, decision, rationale, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
           .run(decisionId, versionId, v.digest, current.hash, actor.userId, decision, rationale.trim(), nowIso())

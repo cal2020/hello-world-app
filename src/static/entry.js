@@ -2,27 +2,22 @@
 // table inside the page (SQLite via sql.js, in memory), and answers the UI's
 // /api requests without a network server. State resets on reload.
 //
-// Optional start stages via the URL fragment: #draft or #reviewed.
+// Optional start stages via the URL fragment: #draft, #reviewed or #changed
+// (reviewed + REQ-002 revision B imported). Flags combine: #reviewed,guide.
 import { ready } from './sqlite-shim.js'
-import { start } from '../workbench/main.js'
+import { start, parseHashFlags } from '../workbench/main.js'
 import { createWorkbench } from '../../server/workbench.js'
 import { createRouter } from '../../server/router.js'
-import { seedSources, generate, importInbox, removeUnresolved, judgeAll, accept } from '../../scripts/demo-steps.js'
+import { setupStage } from '../../scripts/demo-steps.js'
 
 await ready
 const wb = createWorkbench({ dbPath: ':memory:' })
 const author = wb.userForToken('demo-author-kim')
 const reviewer = wb.userForToken('demo-reviewer-alvarez')
-seedSources(wb, author)
-const stage = location.hash.replace('#', '')
-if (stage === 'draft' || stage === 'reviewed') {
-  const r = await generate(wb, author)
-  if (stage === 'reviewed') {
-    importInbox(wb, author, 'insp-log-rev2')
-    const r2 = await generate(wb, author, r.candidateId)
-    accept(wb, reviewer, judgeAll(wb, reviewer, removeUnresolved(wb, reviewer, r2.versionId).versionId))
-  }
-}
+const flags = parseHashFlags()
+const stage = ['draft', 'reviewed', 'changed'].find((s) => flags.includes(s)) || 'sources'
+await setupStage(wb, author, reviewer, stage)
+if (stage === 'changed') window.__WB_START_TAB__ = 'impact'
 
 const handle = createRouter(wb)
 const realFetch = window.fetch.bind(window)
