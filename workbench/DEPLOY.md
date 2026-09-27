@@ -6,7 +6,8 @@ The deployable unit is **one container** running one Python process. The workben
 
 * **Set `LWB_ACCESS_CODE`** as a platform secret, never in a file. Without it, anyone with the URL can use the demo tokens in this repo (`demo-carol`, `demo-admin`, …) to import data, activate releases and change grants.
   * With the code set, every page and API call needs the login cookie (from `/login`, valid for 12 hours) or an `X-Access-Code` header. Only `/healthz` and the login page are open.
-  * Wrong codes are answered at most once per second, across all connections. A correct code, or a request with no code, is not delayed.
+  * Wrong codes are answered at most once per second, across all connections, and at most 8 wait for their turn at once. A wrong code beyond that gets 429 at once, so wrong codes cannot tie up the server. A correct code, or a request with no code, is never delayed. The throttle slows a guesser who waits for answers, but a flood can still test codes faster than one per second, so the code's length is what protects it.
+  * The server keeps at most 256 connections open. When it is full, it closes the connection that has waited longest on its client (idle, or sending its request slowly) to make room, so idle or slow clients cannot lock others out. It refuses a new connection only when all 256 are busy serving requests that passed the gate (or wrong codes waiting their turn).
   * The gate is a shared code in front of a demo. It is not user authentication. The app does not check the code's strength, so choose a long random one.
 * **Run exactly one instance.** SQLite and the in-process outbox worker assume a single process. Do not enable horizontal scaling.
 * **Serve it over HTTPS.** The login cookie is `Secure` by default. The platforms below terminate TLS for you. For plain-HTTP local testing only, set `LWB_COOKIE_SECURE=0`.
@@ -64,7 +65,7 @@ None of this was run on Railway or any other platform. On a normal network, the 
 * **The full `scripts/demo.py` flow** ran against the container through the gate, including the lost-ack retry.
 * **State** survived `docker restart`. `LWB_RESET_ON_START=1` gave a clean, re-seeded start.
 
-**Tests.** `tests/test_deploy.py` covers the gate. `tests/test_fix_consumer_deploy.py` checks the Dockerfile (no `VOLUME`, the code-version build argument) and the consumer port. `tests/test_fix_server_links_outbox.py` covers HTTP framing, the guess throttle and connection limits.
+**Tests.** `tests/test_deploy.py` covers the gate. `tests/test_fix_consumer_deploy.py` checks the Dockerfile (no `VOLUME`, the code-version build argument) and the consumer port. `tests/test_fix_server_links_outbox.py` covers HTTP framing, the guess throttle and connection limits, and `tests/test_fix_repairs.py` checks that neither idle connections nor a flood of wrong codes locks out `/healthz` or users with the right code.
 
 **Not verified here:** any live deployment. The sandbox cannot reach Railway, Fly.io or Render, so the platform steps below have not been run from it, and `railway.json` could not be checked against Railway's schema. After deploying, check the result against step 8 below.
 

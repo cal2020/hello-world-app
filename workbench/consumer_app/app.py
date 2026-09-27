@@ -177,6 +177,14 @@ def _resync_payload(release_id):
     return sensors, page, source
 
 
+def _release_source(release_id, revision):
+    """The source of the snapshot a release pins at `revision`, from the release's manifest."""
+    st, rel = http_get(f"/api/releases/{release_id}")
+    if st != 200:
+        raise RuntimeError(f"GET /api/releases/{release_id} -> {st}")
+    return next((s["source"] for s in rel["manifest"]["source_snapshots"] if s["revision"] == revision), None)
+
+
 def handle_event(store, ev):
     """Returns (response_body, drop_ack). All effects for one event commit atomically."""
     with store.lock:
@@ -204,6 +212,9 @@ def handle_event(store, ev):
             handling = "applied"
             if ev["type"] == "release.activated":
                 prefetch = ("release", None, _resync_payload(ev["payload"]["release_id"]))
+            elif ev["type"] == "source.head_advanced" and st and st["pinned_release"] and st["pinned_source"] is None:
+                # A database from before the pinned source was recorded: look it up once from the pinned release.
+                prefetch = ("pinned_source", _release_source(st["pinned_release"], st["pinned_revision"]))
         c.execute("BEGIN IMMEDIATE")
         try:
             c.execute("INSERT INTO received_event (event_id, project, seq, type, handling, received_at) VALUES (?,?,?,?,?,?)",
@@ -265,6 +276,9 @@ def _apply(c, ev, prefetch):
     elif t == "source.head_advanced":
         # Heads of other sources (e.g. a CMMS records import) are not newer versions of the pinned model.
         pinned = c.execute("SELECT pinned_source FROM stream_state WHERE project=?", (ev["project"],)).fetchone()[0]
+        if pinned is None and prefetch and prefetch[0] == "pinned_source" and prefetch[1]:
+            pinned = prefetch[1]  # backfilled for a database from before the pinned source was recorded
+            c.execute("UPDATE stream_state SET pinned_source=? WHERE project=?", (pinned, ev["project"]))
         if p.get("source") == pinned:
             c.execute("UPDATE stream_state SET latest_known_head=? WHERE project=?", (p["revision"], ev["project"]))
         detail = {"source": p.get("source"), "revision": p["revision"], "pinned_source": pinned}

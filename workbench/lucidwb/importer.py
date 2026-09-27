@@ -11,9 +11,14 @@ Rules implemented here (see ARCHITECTURE.md for rationale):
   and snapshot), with warnings. Unknown element, relationship and record content is part of the normalized
   digest; unknown top-level (envelope) keys are not, so exporter metadata alone never makes a conflict.
 * Field shapes are validated before anything is stored, so malformed input is quarantined, not a 500.
+  A body that is not JSON text the store can hold (invalid JSON or UTF-8, an unpaired surrogate escape, or
+  nesting deeper than MAX_DEPTH) is refused with 400 before any import is recorded.
+* The same revision with byte-identical content is a duplicate even if this adapter normalizes it differently
+  from the adapter that stored it.
 """
 import json
 import math
+import re
 
 from . import ADAPTER_VERSION, RECORDS_ADAPTER_VERSION
 from .db import audit, enqueue_event
@@ -27,6 +32,8 @@ KNOWN_EL = {"id", "type", "name", "owner", "properties"}
 KNOWN_REL = {"id", "type", "source", "target", "multiplicity"}
 KNOWN_RECORDS_TOP = {"format", "source", "project", "revision", "parent_revision", "records"}
 KNOWN_RECORD = {"id", "kind", "asset_ref", "text"}
+MAX_DEPTH = 100  # nesting levels an export may use; exports need fewer than ten
+_SURROGATE = re.compile("[\ud800-\udfff]")  # json.loads keeps a lone surrogate escape such as \ud800 as is
 EXPECT = {"non-empty string": lambda v: isinstance(v, str) and v != "",
           "string or null": lambda v: v is None or isinstance(v, str),
           "object or null": lambda v: v is None or isinstance(v, dict),
@@ -44,11 +51,34 @@ def rel_uid(source, project, native_id):
 def peek_project(raw: bytes):
     try:
         doc = json.loads(raw)
-    except (ValueError, UnicodeDecodeError) as e:
+    except (ValueError, UnicodeDecodeError, RecursionError) as e:
         raise ApiError(400, "invalid_input", f"Import body is not valid JSON: {e}")
+    problem = _unstorable_text(doc)
+    if problem:
+        raise ApiError(400, "invalid_input", f"Import body cannot be stored: {problem}")
     if not isinstance(doc, dict) or not isinstance(doc.get("project"), str):
         raise ApiError(400, "invalid_input", "Import must be a JSON object with a string 'project'.")
     return doc
+
+
+def _unstorable_text(doc):
+    """JSON the parser accepts but storage cannot hold, refused like unparseable bytes: a string (or key) with an
+    unpaired UTF-16 surrogate escape has no UTF-8 form, and nesting beyond MAX_DEPTH would overflow the
+    recursion limit when the document is encoded for its digest."""
+    stack = [(doc, 1)]
+    while stack:  # iterative: nesting depth is bounded only by the parser
+        v, depth = stack.pop()
+        if depth > MAX_DEPTH:
+            return f"nested deeper than {MAX_DEPTH} levels"
+        if isinstance(v, dict):
+            if any(_SURROGATE.search(k) for k in v):
+                return "an object key contains an unpaired UTF-16 surrogate"
+            stack.extend((x, depth + 1) for x in v.values())
+        elif isinstance(v, list):
+            stack.extend((x, depth + 1) for x in v)
+        elif isinstance(v, str) and _SURROGATE.search(v):
+            return "a string contains an unpaired UTF-16 surrogate"
+    return None
 
 
 # ---------------------------------------------------------------- validation helpers
@@ -295,11 +325,16 @@ def import_export(c, actor, raw: bytes, doc: dict, declared=None):
     existing = c.execute("SELECT * FROM source_snapshot WHERE source=? AND project=? AND revision=? "
                          "AND (completeness='partial')=?", (source, project, revision, partial)).fetchone()
     if existing:
-        if existing["normalized_digest"] == norm_digest:
+        # Identical bytes are the same content even when an earlier adapter normalized them differently.
+        if existing["normalized_digest"] == norm_digest or existing["raw_digest"] == raw_digest:
             first = existing["import_id"]
-            return done("duplicate_no_change", 200,
-                        [{"code": "identical_revision_and_content", "original_import_id": first}],
-                        existing["snapshot_id"], duplicate_of=first)
+            diags = [{"code": "identical_revision_and_content", "original_import_id": first}]
+            if existing["normalized_digest"] != norm_digest:
+                diags.append({"code": "stored_normalization_differs",
+                              "stored_adapter_version": existing["adapter_version"], "adapter_version": adapter,
+                              "message": "Byte-identical to the stored revision, which was normalized differently "
+                                         "when it was imported. The stored snapshot is unchanged."})
+            return done("duplicate_no_change", 200, diags, existing["snapshot_id"], duplicate_of=first)
         return done("quarantined_conflict", 409,
                     [{"code": "source_revision_conflict", "revision": revision,
                       "existing_normalized_digest": existing["normalized_digest"],
@@ -583,8 +618,8 @@ def _store_model_snapshot(c, doc, import_id, raw_digest, norm_digest, normalized
         cdig = digest(content)
         vid = "rv_" + sha256(ruid + cdig)[:20]
         mult = r["multiplicity"]
-        if isinstance(mult, (dict, list)):
-            mult = json.dumps(mult, sort_keys=True)  # structured multiplicity is stored JSON-encoded
+        if mult is not None and not isinstance(mult, str):
+            mult = json.dumps(mult, sort_keys=True)  # a structured or numeric one (of any size) is stored as JSON text
         c.execute("INSERT INTO relationship_version VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(version_id) DO NOTHING",
                   (vid, ruid, r["id"], r["type"], s_uid or "", t_uid or "", mult, "source",
                    json.dumps({"import_id": import_id, "pointer": r["pointer"]}), cdig,

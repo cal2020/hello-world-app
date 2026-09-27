@@ -380,30 +380,19 @@ class ServerLinksOutboxFixes(StackCase, RawHttp):
         with mock.patch.object(server.Handler, "timeout", 0.3):
             data, closed = self.exchange(b"GET /api/whoami HTTP/1.1\r\nHost: x\r\n", wait=3)
         self.assertEqual((data, closed), (b"", True))
-        # At the connection cap a new connection is closed at once instead of getting another thread.
-        slots, held = self.stack.wb._slots, 0
-        for _ in range(2):  # the second round catches a slot released late by an earlier request
-            while slots.acquire(blocking=False):
-                held += 1
-            time.sleep(0.2)
-        idle = []
+        # Open connections are capped, so stalled clients cannot use up threads. (Repair round: past the cap the
+        # longest-waiting idle connection is closed to make room instead of refusing the new connection, which
+        # let idle sockets lock everyone out; tests/test_fix_repairs.py covers that.)
+        self.stack.wb.max_connections = 4
+        idle = [socket.create_connection(("127.0.0.1", self.port), timeout=3) for _ in range(8)]
         try:
-            for _ in range(2):
-                slots.release()
-                held -= 1
-            for _ in range(2):
-                idle.append(socket.create_connection(("127.0.0.1", self.port), timeout=3))  # holds its slot
-            data, closed = self.exchange(b"GET /healthz HTTP/1.1\r\nHost: x\r\n\r\n", wait=3)
-            self.assertEqual((data, closed), (b"", True))
+            self.assertEqual([s.recv(1) for s in idle[:4]], [b""] * 4)  # the four oldest were closed
+            self.assertLessEqual(len(self.stack.wb._open), 4)
+            self.assertEqual(self.statuses(self.exchange(
+                b"GET /healthz HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n")[0]), [200])
         finally:
             for s in idle:
                 s.close()
-            for _ in range(held):
-                slots.release()
-        deadline = time.monotonic() + 3
-        while time.monotonic() < deadline and self.statuses(self.exchange(
-                b"GET /healthz HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n")[0]) != [200]:
-            time.sleep(0.05)
         self.assertEqual(self.ok(self.carol.get("/api/whoami"))["user_id"], "carol")
 
     # ------------------------------------------------------------ 56

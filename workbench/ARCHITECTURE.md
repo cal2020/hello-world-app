@@ -39,7 +39,7 @@ The consumer is independent in code and data: it does not import `lucidwb`, keep
 
 Trust boundaries:
 
-* **Browser/HTTP caller → server.** When `LWB_ACCESS_CODE` is set, a shared access code (login cookie or `X-Access-Code` header) gates every page and API call except `/healthz` and the login page. Wrong codes are answered at most one per second across all connections. Behind the gate, a simulated bearer token is resolved to a user on the server. Actor names in request bodies are never trusted. Mutations such as imports, builds, activation, proposal runs and link decisions check the caller's current grant again inside the write transaction that commits them.
+* **Browser/HTTP caller → server.** When `LWB_ACCESS_CODE` is set, a shared access code (login cookie or `X-Access-Code` header) gates every page and API call except `/healthz` and the login page. Wrong codes are answered at most one per second across all connections, with at most 8 waiting; more are refused at once (429). At its 256-connection cap the server closes the connection that has waited longest on its client, so neither wrong codes nor idle connections lock out `/healthz` or callers with the right code. Behind the gate, a simulated bearer token is resolved to a user on the server. Actor names in request bodies are never trusted. Mutations such as imports, builds, activation, proposal runs and link decisions check the caller's current grant again inside the write transaction that commits them.
 * **Source bytes → importer.** Content is data. Unknown keys are preserved, not executed.
 * **Proposer output → validator.** Model output is untrusted. The validator keeps the record ID, element ID, predicate and quoted evidence. Each quote must resolve to the retained record bytes. It also keeps the model's contradiction strings (cut to 300 characters) and its confidence, if that is a finite number. Reviewers see both in the proposals table (the `conf.` column and a contradictions badge), but no check uses them. `method_detail` and `rationale` are accepted and not stored. Every other field, `approved` among them, is dropped with an `ignored_model_field` note.
 * **Workbench → consumer.** The consumer authenticates as its own service identity and only reads over HTTP.
@@ -62,7 +62,7 @@ Trust boundaries:
 | Dimension | Where | Example |
 |---|---|---|
 | Source snapshot | `source_snapshot` (revision, parent, raw + normalized digests) | `7c1e9a` → `f02b44` → `31d8e0` |
-| Canonical schema / adapter | `ADAPTER_VERSION`, recorded per snapshot. The database schema is upgraded in place at start (`db.migrate`) | `lwb-synthetic-export-adapter/0.3.0` |
+| Canonical schema / adapter | `ADAPTER_VERSION`, recorded per snapshot. Re-sending a stored revision's exact bytes is a duplicate even if a newer adapter normalizes them differently. The database schema is upgraded in place at start (`db.migrate`) | `lwb-synthetic-export-adapter/0.3.1` |
 | Projection definition | `projection_definition`, keyed by project, projection ID and version (reviewed status, digest) | `equipment-health@1.1.0` |
 | API contract | `contract_artifact` is a store keyed by digest. A contract version belongs to one project, through that project's releases. A build blocked at generation does not claim the version | `equipment-health-api v1`, digest `33abe253…` |
 | Release manifest | `release.manifest_json` (code version, generator, projection, contract, snapshots). The code version is `LWB_CODE_VERSION` if set, else Railway's `RAILWAY_GIT_COMMIT_SHA`, else the git revision | `examples/release_manifest_example.json` |
@@ -85,7 +85,7 @@ An accepted link is workbench metadata with `authority=reviewer_accepted`. It is
 
 ## Known semantic loss and limits
 
-* **Unknown content.** Element types, properties and keys, and relationship, record and top-level keys, that the adapter does not recognize are preserved in the raw bytes and in `unrecognized_json` columns, with warnings. They are not interpreted and never reach a generated contract or a served resource. The snapshot element API lists unrecognized key names, and the records API returns each record's stored `unrecognized_json` text. Multiplicity is stored (a structured one as JSON text) but not enforced.
+* **Unknown content.** Element types, properties and keys, and relationship, record and top-level keys, that the adapter does not recognize are preserved in the raw bytes and in `unrecognized_json` columns, with warnings. They are not interpreted and never reach a generated contract or a served resource. The snapshot element API lists unrecognized key names, and the records API returns each record's stored `unrecognized_json` text. Multiplicity is stored as text (a structured or numeric one JSON-encoded) but not enforced.
 * **Partial exports** are staged views only. They cannot advance the head, and they are not merged into it. A partial of revision R and the complete export of R do not conflict.
 * **Rebase** re-checks quotes by exact substring. A reworded record invalidates the citation instead of fuzzily matching.
 * **Conversions** are an allowlist (`s_to_ms`, `ms_to_s`). There is no general unit algebra.
@@ -94,7 +94,7 @@ An accepted link is workbench metadata with `authority=reviewer_accepted`. It is
 * **Receipts** carry a 7-day `expires_at`. Deleting them requires the explicit `scripts/purge_receipts.py`. After a purge, a reused key becomes a new request.
 * **Outbox** has no dead-letter state and no maximum attempt count. A consumer that keeps failing is retried with capped backoff until a release manager pauses that project's outbox.
 * **Schema upgrades** run forward only. An older database (for example on a persistent volume) is upgraded in place at start. There is no downgrade path.
-* **Access gate** is one shared code, with no per-user login and no lockout. Wrong codes are throttled, but the code's strength is not checked at start.
+* **Access gate** is one shared code, with no per-user login and no lockout. Wrong codes are throttled only as far as that cannot lock out callers with the right code: once 8 are waiting, more are refused at once, so a flood can still test codes quickly. The code's strength is not checked at start, so it must be long and random.
 
 ## Simulated integrations and deployment assumptions
 

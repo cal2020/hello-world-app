@@ -123,11 +123,13 @@ async function request(method, path, opts = {}) {
   try { parsed = text ? JSON.parse(text) : null; } catch (_) { parsed = null; }
   const res = { status: resp.status, ok: resp.ok, headers: resp.headers, body: parsed, text };
   if (opts.show) showLast(method, path, res, headers);
-  if (resp.status === 401 && parsed && parsed.error && parsed.error.code === "access_required") accessExpired();
+  const gate = parsed && parsed.error && parsed.error.code;
+  if ((resp.status === 401 && gate === "access_required") || (resp.status === 429 && gate === "too_many_guesses")) accessExpired();
   else if (!resp.ok && !opts.quiet) errorToast(method, path, res);
   return res;
 }
-// The deployment gate refused the request: its login cookie is missing or has expired (it lasts 12 h).
+// The deployment gate refused the request: its login cookie is missing, has expired (it lasts 12 h) or was
+// issued for an older access code (answered 401, or 429 while too many wrong codes are waiting).
 // Go to the login page instead of rendering every panel as an identity that can read no project.
 function accessExpired() {
   if (S.accessExpired) return;

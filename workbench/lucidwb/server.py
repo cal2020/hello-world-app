@@ -11,6 +11,7 @@ import mimetypes
 import os
 import pathlib
 import re
+import socket
 import sys
 import threading
 import time
@@ -31,6 +32,7 @@ MAX_BODY = 5_000_000  # bytes accepted in one request body
 LOGIN_MAX_BODY = 4096
 DRAIN_MAX = 65536  # an unread body up to this size is read and discarded; a larger one closes the connection
 GUESS_INTERVAL = 1.0  # seconds between answers to failed access-code checks, across all connections
+GUESS_QUEUE = 8  # failed checks that may wait for their turn at once; each holds a connection while it waits
 LOGIN_PAGE = b"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport"
 content="width=device-width,initial-scale=1"><title>Workbench access</title><style>
 body{font:16px system-ui,sans-serif;background:#f4f6f8;color:#1b1f24;display:grid;place-items:center;min-height:100vh;margin:0}
@@ -65,19 +67,26 @@ def _header_code_ok(value, code):
 
 class _GuessThrottle:
     """Failed access-code checks (header, cookie or login form) are answered GUESS_INTERVAL apart across all
-    connections, so parallel requests do not raise the guess rate. A correct code is never delayed, and a
-    request that presents no code is not a guess."""
+    connections, so parallel requests do not raise the guess rate. At most GUESS_QUEUE wait at once: a failed
+    check beyond that is refused at once (429) instead of queueing, so wrong guesses cannot tie up the server's
+    connections and lock out everyone else. A correct code is never delayed, and a request that presents no
+    code is not a guess."""
 
     def __init__(self):
         self._lock = threading.Lock()
         self._next = 0.0
 
     def wait(self):
+        """Sleep until this failed check's turn and return 0, or return at once the seconds until the queue
+        has room again when GUESS_QUEUE checks are already waiting."""
         with self._lock:
             t = time.monotonic()
-            self._next = max(t, self._next) + GUESS_INTERVAL
-            delay = self._next - t
-        time.sleep(delay)
+            turn = max(t, self._next) + GUESS_INTERVAL
+            if turn - t > GUESS_QUEUE * GUESS_INTERVAL:
+                return turn - t - GUESS_QUEUE * GUESS_INTERVAL
+            self._next = turn
+        time.sleep(turn - t)
+        return 0
 
 
 GUESSES = _GuessThrottle()
@@ -214,10 +223,21 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"ok": True})
         if path == "/login":
             return self._login(method)
-        if not self._gate_ok():
+        passed, refused = False, None
+        try:
+            passed = self._gate_ok()
+        except ApiError as e:  # a wrong code while too many failed guesses are already waiting
+            refused = e
+        if not passed:
             if method == "GET" and (path == "/" or path.startswith("/consumer")):
                 return self._redirect("/login")
+            if refused:
+                return self._send(refused.status, refused.body(),
+                                  {"Retry-After": str(refused.details["retry_after_s"])})
             return self._send(401, {"error": {"code": "access_required", "message": "Access code required."}})
+        if not self.server.busy(self.connection):  # closed to make room while it waited on its client
+            self.close_connection = True
+            return
         if method == "GET" and path.startswith("/consumer"):
             return self._consumer_proxy(path)
         if method == "GET" and (path == "/" or path.startswith("/web/")):
@@ -265,8 +285,16 @@ class Handler(BaseHTTPRequestHandler):
         return False
 
     def _guess_failed(self, via):
+        """Wait for this failed guess's turn, or raise 429 at once if too many are already waiting. A waiting
+        guess keeps its connection (closing it would not end the waiting thread); GUESS_QUEUE bounds them."""
         self.log_message("access code rejected (%s from %s)", via, self.client_address[0])
-        GUESSES.wait()
+        if not self.server.busy(self.connection):
+            return  # already closed to make room: there is no one to answer
+        retry = GUESSES.wait()
+        if retry:
+            self.close_connection = True
+            raise ApiError(429, "too_many_guesses", "Too many wrong access codes are waiting to be answered. "
+                                                    "Retry later.", {"retry_after_s": math.ceil(retry)})
 
     def _redirect(self, where, cookie=None):
         self._discard_body()
@@ -294,7 +322,13 @@ class Handler(BaseHTTPRequestHandler):
                 secure = "; Secure" if os.environ.get("LWB_COOKIE_SECURE", "1") == "1" else ""
                 return self._redirect("/", f"{COOKIE}={_cookie_value(code)}; HttpOnly; SameSite=Strict; Path=/; "
                                            f"Max-Age=43200{secure}")
-            self._guess_failed("login form")
+            try:
+                self._guess_failed("login form")
+            except ApiError as e:
+                return self._send(429, None, {"Retry-After": str(e.details["retry_after_s"])},
+                                  raw=LOGIN_PAGE.replace(b"__MSG__", b"<p style='color:#b00020'>Too many wrong codes "
+                                                         b"are being tried. Wait a few seconds and try again.</p>"),
+                                  ctype="text/html; charset=utf-8")
             return self._send(401, None, raw=LOGIN_PAGE.replace(b"__MSG__", b"<p style='color:#b00020'>Wrong code.</p>"),
                               ctype="text/html; charset=utf-8")
         return self._send(200, None, raw=LOGIN_PAGE.replace(b"__MSG__", b""), ctype="text/html; charset=utf-8")
@@ -326,6 +360,12 @@ class Handler(BaseHTTPRequestHandler):
         if not str(f).startswith(str(root.resolve()) + os.sep) or not f.is_file():
             return self._send(404, {"error": {"code": "not_found", "message": "Resource not found."}})
         self._send(200, None, raw=f.read_bytes(), ctype=mimetypes.guess_type(str(f))[0] or "application/octet-stream")
+
+    def handle_one_request(self):
+        try:
+            super().handle_one_request()
+        finally:
+            self.server.busy(self.connection, False)  # waiting on its client again, for the next request
 
     def do_GET(self):
         self._dispatch("GET")
@@ -801,29 +841,64 @@ def do_faults(h):
 
 class Server(ThreadingHTTPServer):
     """One thread per connection, with a listen backlog that absorbs bursts (the default of 5 resets
-    connections) and a cap on open connections, so stalled clients cannot use up threads and memory."""
+    connections) and a cap on open connections, so stalled clients cannot use up threads and memory.
+
+    At the cap, a new connection makes room by closing the connection that has waited longest on its client
+    (sending nothing, sending a request slowly, or idle between requests). A busy connection, one serving a
+    request that passed the access gate or a failed guess waiting its turn, is never closed this way. Idle, slow
+    or unauthenticated connections therefore cannot lock others out. Only when every connection is busy is a
+    new one refused."""
     request_queue_size = 128
     max_connections = 256
 
     def __init__(self, *args, **kwargs):
-        self._slots = threading.BoundedSemaphore(self.max_connections)
+        self._lock = threading.Lock()
+        self._open = {}  # connection -> True while it waits on its client (may be closed); least recently busy first
         super().__init__(*args, **kwargs)
 
     def process_request(self, request, client_address):
-        if not self._slots.acquire(blocking=False):
-            self.shutdown_request(request)  # at capacity: close instead of starting another thread
-            return
+        with self._lock:
+            if len(self._open) >= self.max_connections:
+                waiting = next((s for s, idle in self._open.items() if idle), None)
+                if waiting is None:  # every connection is busy
+                    self.shutdown_request(request)
+                    return
+                del self._open[waiting]
+                try:
+                    waiting.shutdown(socket.SHUT_RDWR)  # its thread's pending read returns, and the thread ends
+                except OSError:
+                    pass
+            self._open[request] = True
         try:
             super().process_request(request, client_address)
         except BaseException:
-            self._slots.release()
+            self._forget(request)
             raise
 
     def process_request_thread(self, request, client_address):
         try:
             super().process_request_thread(request, client_address)
         finally:
-            self._slots.release()
+            self._forget(request)
+
+    def _forget(self, request):
+        with self._lock:
+            self._open.pop(request, None)
+
+    def handle_error(self, request, client_address):
+        if isinstance(sys.exc_info()[1], ConnectionError):
+            return  # the client went away, or its connection was closed to make room: not a server error
+        super().handle_error(request, client_address)
+
+    def busy(self, request, busy=True):
+        """Mark a connection as busy (never closed to make room), or as waiting on its client again. Returns
+        False if it was already closed to make room."""
+        with self._lock:
+            if request not in self._open:
+                return False
+            del self._open[request]  # re-inserted last: the longest-waiting connection is closed first
+            self._open[request] = not busy
+            return True
 
 
 def serve(db_path, host="127.0.0.1", port=8780, start_worker=True):
