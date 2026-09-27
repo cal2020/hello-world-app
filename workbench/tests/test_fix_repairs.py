@@ -323,5 +323,17 @@ class Artifacts(unittest.TestCase):
         # The commit holds the workbench code that writes manifests (2a1db85, the old example's, predates it).
         self.assertEqual(self.git("cat-file", "-e", f"{version}:{prefix.stdout.strip()}lucidwb/release.py").returncode, 0)
 
+    # ------------------------------------------------------------ 29
+    def test_f29_committed_report_was_generated_by_the_fixed_generator(self):
+        report = (ROOT / "EVALUATION.md").read_text()
+        gold = json.loads((ROOT / "fixtures/eval/gold_links.json").read_text())
+        labels = [g for s in gold["splits"].values() for g in s["labels"].values()]
+        self.assertIn(f"{len(labels)} records: ", report)
+        self.assertIn(f"including {labels.count(None)} records where the correct answer is *no link*", report)
+        self.assertNotIn("no credentials configured", report)
+        self.assertRegex(report, r"`model:live` = a real Claude call\. (\*\*Not run\*\*: `LWB_EVAL_LIVE=1` was not set|"
+                                 r"Requested for this run\.)")
+        self.assertRegex(report, r"at code version `[0-9a-f]{12}`")  # generated at a clean, committed revision
+
 if __name__ == "__main__":
     unittest.main()
