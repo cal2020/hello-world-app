@@ -1,9 +1,11 @@
 """Regression tests for the repair round: findings still open, and regressions introduced by the cluster fixes."""
 import json
 import os
+import pathlib
 import re
 import socket
 import sqlite3
+import subprocess
 import threading
 import time
 import unittest
@@ -18,6 +20,7 @@ from tests import test_fix_ui as ui
 from tests.helpers import StackCase
 
 CODE = "repair-test-code"
+ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 
 def fixture(rel):
@@ -298,6 +301,27 @@ class ImporterRepairs(StackCase):
         st, body, _ = self.post(delta)
         self.assertEqual((st, body["outcome"]), (409, "quarantined_conflict"))
 
+
+
+class Artifacts(unittest.TestCase):
+    def git(self, *args):
+        return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True)
+
+    # ------------------------------------------------------------ 26
+    def test_f26_example_manifests_name_a_committed_revision_of_this_code(self):
+        manifest = json.loads((ROOT / "examples/release_manifest_example.json").read_text())
+        blocked = json.loads((ROOT / "examples/blocked_release_C_view.json").read_text())["manifest"]
+        version = manifest["code_version"]
+        self.assertEqual(blocked["code_version"], version)
+        self.assertRegex(version, r"^[0-9a-f]{12}$")  # a commit, not "+dirty" or "unknown"
+        try:
+            prefix = self.git("rev-parse", "--show-prefix")
+        except FileNotFoundError:
+            self.skipTest("git is not installed")
+        if prefix.returncode or self.git("cat-file", "-e", version + "^{commit}").returncode:
+            self.skipTest("no git history here to check the commit against")
+        # The commit holds the workbench code that writes manifests (2a1db85, the old example's, predates it).
+        self.assertEqual(self.git("cat-file", "-e", f"{version}:{prefix.stdout.strip()}lucidwb/release.py").returncode, 0)
 
 if __name__ == "__main__":
     unittest.main()
