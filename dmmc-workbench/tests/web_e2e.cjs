@@ -24,10 +24,13 @@ function check(name, cond, detail = "") {
     if (!u.startsWith(origin)) { external.push(u); return r.abort(); }
     return r.continue();
   });
-  const p = await ctx.newPage();
   const errors = [];
-  p.on("pageerror", (e) => errors.push(e.message));
-  p.on("worker", (w) => w.on("console", (m) => { if (m.type() === "error") errors.push("worker: " + m.text()); }));
+  const watch = (pg) => {
+    pg.on("pageerror", (e) => errors.push(e.message));
+    pg.on("worker", (w) => w.on("console", (m) => { if (m.type() === "error") errors.push("worker: " + m.text()); }));
+    return pg;
+  };
+  let p = watch(await ctx.newPage());
 
   const msg = async () => (await p.locator(".msg").first().textContent({ timeout: 2000 }).catch(() => "")) || "";
   // The shell counts completed renders (html[data-renders]) and in-flight worker calls (html[data-pending]).
@@ -205,13 +208,61 @@ function check(name, cond, detail = "") {
   const about = await p.locator("main").innerText();
   check("about shows wasm backend and code digest", about.includes("wasm") && /Workbench code digest\s+[0-9a-f]{64}/.test(about));
 
-  // Mobile layout
-  const mp = await ctx.newPage();
-  await mp.setViewportSize({ width: 390, height: 844 });
+  // Deep links keep their percent-encoding: a citation with an encoded '#' survives a reload.
+  await nav("Model");
+  await act(() => p.locator("a.mono", { hasText: "model:" }).nth(4).click());
+  const citeBefore = await p.locator("main pre").innerText();
+  await p.reload();
+  await p.waitForFunction(() => Number(document.documentElement.dataset.renders || 0) > 0, null, { timeout: 120000 });
+  await waitIdle();
+  const citeAfter = await p.locator("main pre").innerText().catch(() => "");
+  check("citation deep link survives reload unchanged", citeBefore.length > 0 && citeAfter === citeBefore,
+    `${citeBefore.slice(0, 60)} | ${citeAfter.slice(0, 60)}`);
+
+  // A malformed hash does not hang startup.
+  await p.evaluate(() => { history.replaceState(null, "", "#/cite?c=100%"); });
+  await p.reload();
+  await p.waitForFunction(() => Number(document.documentElement.dataset.renders || 0) > 0, null, { timeout: 120000 });
+  check("malformed hash still renders a page", (await p.locator("h2").first().innerText()).length > 0);
+
+  // Deeply nested pasted JSON is rejected, not fatal.
+  await nav("Model");
+  await p.fill("#model-json", "[".repeat(20000) + "]".repeat(20000));
+  await click("Validate and import");
+  check("deeply nested model rejected cleanly", (await msg()).includes("nests deeper"), await msg());
+  await nav("Dashboard");
+  check("runtime still healthy after rejected paste", (await p.locator("main").innerText()).includes("snap-003-C"));
+
+  // Two tabs: the second waits, then takes over; the first stops.
+  const p2 = watch(await ctx.newPage());
+  await p2.goto(URL_);
+  await p2.waitForSelector("text=The workbench is open in another tab", { timeout: 120000 });
+  check("second tab is told the workbench is open elsewhere", true);
+  await p2.getByRole("button", { name: "Use it in this tab instead" }).click();
+  await p2.waitForSelector("h2:has-text('Dashboard')", { timeout: 120000 });
+  check("second tab takes over with the saved state", (await p2.locator("main").innerText()).includes("snap-003-C"));
+  await p.waitForSelector("text=opened in another tab", { timeout: 30000 }).catch(() => {});
+  check("first tab stops after takeover", (await p.locator("main").innerText()).includes("opened in another tab"));
+  await p.close();
+  p = p2;
+
+  // Delete local data: a double click is not a confirmation; a deliberate second click is.
+  await p.locator("#wipe").dblclick();
+  await p.waitForTimeout(300);
+  check("double click does not delete local data", (await p.locator("#wipe").innerText()).includes("Click again"));
+  await p.waitForTimeout(700);
+  await Promise.all([p.waitForNavigation({ timeout: 60000 }), p.locator("#wipe").click()]);
+  await p.waitForSelector("h2:has-text('Dashboard')", { timeout: 120000 });
+  check("confirmed delete starts from an empty state", (await p.locator("main").innerText()).includes("No model imported"));
+
+  // Mobile layout (separate browser profile, so it has its own storage and lock)
+  const mctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await mctx.route("**/*", (r) => (r.request().url().startsWith(origin) ? r.continue() : (external.push(r.request().url()), r.abort())));
+  const mp = watch(await mctx.newPage());
   await mp.goto(URL_);
   await mp.waitForSelector("h2:has-text('Dashboard')", { timeout: 120000 });
   check("no horizontal page scroll at phone width", !(await mp.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)));
-  await mp.close();
+  await mctx.close();
 
   check("no requests left the site's origin", external.length === 0, external.slice(0, 3).join(", "));
   check("no uncaught page or worker errors", errors.length === 0, errors.slice(0, 3).join(" | "));

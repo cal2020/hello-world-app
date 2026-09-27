@@ -127,6 +127,10 @@ def _cli_check(path, restricted):
 def _parse_test_output(returncode, stdout, stderr):
     out = {"exit_code": returncode, "passed": 0, "failed": 0, "errored": 0, "skipped": 0,
            "failed_names": [], "errored_names": [], "stderr": stderr.strip()[:2000]}
+    if returncode != 0 and not stdout.strip():
+        # No JSON at all: the bundle failed to load or compile. That is an error, not an empty suite.
+        out["errored"] = 1
+        return out
     try:
         results = json.loads(stdout or "[]")
     except json.JSONDecodeError:
@@ -157,7 +161,8 @@ def _cli_test(path, restricted):
 
 
 def _cli_eval_decisions(policy_files, query_pkg, inputs):
-    q = f"[d | some c in input.cases; d := {query_pkg}.decision with input as c]"
+    # One inner list per input, so an undefined decision cannot shift later results onto the wrong case.
+    q = f"[[d | d := {query_pkg}.decision with input as c] | some c in input.cases]"
     args = ["eval", "--format", "json", "--stdin-input"]
     for f in policy_files:
         args += ["-d", str(f)]
@@ -165,7 +170,10 @@ def _cli_eval_decisions(policy_files, query_pkg, inputs):
     p = _run(args, stdin=json.dumps({"cases": inputs}))
     if p.returncode != 0:
         raise RuntimeError(f"opa eval failed: {p.stderr.strip()[:500]}")
-    return json.loads(p.stdout)["result"][0]["expressions"][0]["value"]
+    per_input = json.loads(p.stdout)["result"][0]["expressions"][0]["value"]
+    if len(per_input) != len(inputs) or any(len(x) != 1 for x in per_input):
+        raise RuntimeError("decision undefined")  # same error as the Wasm backend
+    return [x[0] for x in per_input]
 
 
 # --- Wasm backend -------------------------------------------------------------------
@@ -234,18 +242,20 @@ def _bridge():
 
 def _wasm_check(path, restricted):
     _, e = _entry(rego_files(path), restricted, "policy")
-    # Compilation happened at build time with the pinned CLI; its verdict is part of the build.
-    return dict(e["check"], compiled_at_build=True)
+    # `opa check` cannot run in the browser: this is the pinned CLI's verdict, recorded at build time.
+    return dict(e["check"], recorded_at_build=True)
 
 
 def _wasm_test(path, restricted):
     _, e = _entry(rego_files(path), restricted, "policy test bundle")
     out = {"exit_code": 0, "passed": 0, "failed": 0, "errored": 0, "skipped": 0,
            "failed_names": [], "errored_names": [], "stderr": ""}
+    compiled = e.get("tests_compile") or {"ok": True, "stderr": ""}
+    if not compiled["ok"]:
+        # The test bundle did not load at build time: an error, as `opa test` reports it.
+        out.update(exit_code=1, errored=1, stderr=compiled["stderr"], recorded_at_build=True)
+        return out
     if not e.get("tests_module"):
-        if not e["check"]["ok"]:
-            out.update(exit_code=1, errored=1, stderr=e["check"]["stderr"])
-            return out
         out.update(exit_code=1, empty=True, stderr="no tests were run")  # same as `opa test --fail-on-empty`
         return out
     for name in e["test_entrypoints"]:

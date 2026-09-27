@@ -30,7 +30,7 @@ export DMMC_NOW=2026-09-23T15:00:00Z         # optional: pin the clock for a det
 .venv/bin/python -m workbench serve          # UI at http://127.0.0.1:8765 (simulated identities)
 .venv/bin/python -m workbench eval           # 22 acceptance cases + baseline comparison -> reports/
 .venv/bin/python -m unittest tests.test_workbench
-.venv/bin/python scripts/build_web.py          # static in-browser build -> build/web (see docs/WEB_BUILD.md)
+.venv/bin/python scripts/build_web.py --e2e    # static in-browser build -> build/web (Python 3.11.4+; docs/WEB_BUILD.md)
 ```
 
 The core runs on the Python 3.11 standard library. Without `jsonschema`/`regex`, the OSCAL export

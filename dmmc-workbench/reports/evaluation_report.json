@@ -5,8 +5,8 @@
     "python": "3.11.15",
     "platform": "linux",
     "clock": "2026-09-23T15:00:00Z",
-    "code_digest": "9a41d46110d3c580d478cf01736f12a6fbf428aad7ce32b43c6cc5091095d9d8",
-    "git": "d69ad21"
+    "code_digest": "275b6884be74ebffb63bccab150b80620685c7525c0e8d588046d076b58cc860",
+    "git": "fe49851"
   },
   "cases": [
     {
@@ -15,7 +15,7 @@
       "held_out": false,
       "passed": true,
       "failures": [],
-      "ms": 160,
+      "ms": 157,
       "detail": {
         "validation": {
           "CITATIONS_RESOLVE": 42,
@@ -29,7 +29,7 @@
       "held_out": false,
       "passed": true,
       "failures": [],
-      "ms": 167,
+      "ms": 157,
       "detail": {
         "gaps": [
           "No current applicable observation. Existing evidence is inapplicable: ev-tls-portal-api-a1: status is withdrawn"
@@ -42,7 +42,7 @@
       "held_out": false,
       "passed": true,
       "failures": [],
-      "ms": 182,
+      "ms": 156,
       "detail": {
         "reasons": [
           "environment 'other-lab' is not 'demo-synthetic'"
@@ -55,7 +55,7 @@
       "held_out": false,
       "passed": true,
       "failures": [],
-      "ms": 180,
+      "ms": 149,
       "detail": {
         "reason": "collected against cmp:api-service revision a1; current revision is a2"
       }
@@ -66,7 +66,7 @@
       "held_out": false,
       "passed": true,
       "failures": [],
-      "ms": 171,
+      "ms": 145,
       "detail": {
         "reasons": [
           "expired at 2026-01-01T00:00:00Z"
@@ -79,7 +79,7 @@
       "held_out": true,
       "passed": true,
       "failures": [],
-      "ms": 183,
+      "ms": 145,
       "detail": {
         "applicable_results": [
           "FAIL",
@@ -93,7 +93,7 @@
       "held_out": false,
       "passed": true,
       "failures": [],
-      "ms": 168,
+      "ms": 149,
       "detail": {
         "rejection": "OBL-AC3-API: unknown control id 'ac-99' in pinned catalog",
         "unresolved_params": [
@@ -109,7 +109,7 @@
       "held_out": false,
       "passed": true,
       "failures": [],
-      "ms": 169,
+      "ms": 161,
       "detail": {
         "gaps": [
           "inheritance claimed in the model; no provider/scope evidence. Left unresolved.",
@@ -123,7 +123,7 @@
       "held_out": false,
       "passed": true,
       "failures": [],
-      "ms": 316,
+      "ms": 312,
       "detail": {
         "impact_false_negatives": 0,
         "impact_false_positives": 0,
@@ -141,7 +141,7 @@
       "held_out": false,
       "passed": true,
       "failures": [],
-      "ms": 179,
+      "ms": 167,
       "detail": {
         "new_package": "pkg-002-A-edit"
       }
@@ -152,7 +152,7 @@
       "held_out": true,
       "passed": true,
       "failures": [],
-      "ms": 340,
+      "ms": 284,
       "detail": {
         "ac3_failed_tests": [
           "test_operator_write_denied"
@@ -165,7 +165,7 @@
       "held_out": false,
       "passed": true,
       "failures": [],
-      "ms": 162,
+      "ms": 171,
       "detail": {
         "reasons": [
           "reviewer carol's authority was revoked after the decision"
@@ -178,7 +178,7 @@
       "held_out": true,
       "passed": true,
       "failures": [],
-      "ms": 376,
+      "ms": 368,
       "detail": {
         "conflict": "concurrent update: decision head is dec-001, you saw None"
       }
@@ -189,7 +189,7 @@
       "held_out": false,
       "passed": true,
       "failures": [],
-      "ms": 189,
+      "ms": 167,
       "detail": {
         "denied": 7,
         "unauthorized_effects": 0
@@ -201,7 +201,7 @@
       "held_out": false,
       "passed": true,
       "failures": [],
-      "ms": 314,
+      "ms": 315,
       "detail": {
         "flag": [
           "PROHIBITED_ASSERTION: control satisfaction/effectiveness claim",
@@ -215,15 +215,15 @@
       "held_out": false,
       "passed": true,
       "failures": [],
-      "ms": 201,
+      "ms": 185,
       "detail": {
         "missing_project_check": {
           "failed": [
+            "test_revoked_subject_denied",
             "test_locked_write_denied_for_maintainer",
-            "test_missing_revoked_flag_denied",
             "test_missing_resource_project_denied",
-            "test_cross_project_denied",
-            "test_revoked_subject_denied"
+            "test_missing_revoked_flag_denied",
+            "test_cross_project_denied"
           ]
         },
         "http_send": "REJECTED_AT_COMPILE"
@@ -248,7 +248,7 @@
       "held_out": false,
       "passed": true,
       "failures": [],
-      "ms": 181,
+      "ms": 154,
       "detail": {
         "decision": "dec-001",
         "decision_rows": 1
@@ -260,7 +260,7 @@
       "held_out": true,
       "passed": true,
       "failures": [],
-      "ms": 289,
+      "ms": 245,
       "detail": {
         "clean_export_valid": true,
         "schema_errors": [
@@ -279,7 +279,7 @@
       "held_out": false,
       "passed": true,
       "failures": [],
-      "ms": 159,
+      "ms": 182,
       "detail": {
         "events": 10,
         "tamper_detected_at_seq": 3
@@ -291,7 +291,7 @@
       "held_out": true,
       "passed": true,
       "failures": [],
-      "ms": 167,
+      "ms": 171,
       "detail": {
         "gaps": [
           "ev-audit-missing-outcome: telemetry.write record 0 missing ['outcome']"
@@ -304,7 +304,7 @@
       "held_out": false,
       "passed": true,
       "failures": [],
-      "ms": 335,
+      "ms": 328,
       "detail": {
         "seeded": 6,
         "flagged": 6,
@@ -332,7 +332,7 @@
       "baseline_overclaims": 1,
       "workbench_citations": 39,
       "workbench_citations_resolved": 39,
-      "build_ms": 139
+      "build_ms": 130
     },
     {
       "scenario": "A_transport_withdrawn",
@@ -345,7 +345,7 @@
       "baseline_overclaims": 2,
       "workbench_citations": 38,
       "workbench_citations_resolved": 38,
-      "build_ms": 127
+      "build_ms": 124
     },
     {
       "scenario": "B_with_A_evidence_only",
@@ -358,7 +358,7 @@
       "baseline_overclaims": 5,
       "workbench_citations": 55,
       "workbench_citations_resolved": 55,
-      "build_ms": 140
+      "build_ms": 130
     },
     {
       "scenario": "B_with_B_evidence",

@@ -4,7 +4,7 @@
 Identity is chosen from a SIMULATED identity menu (no authentication). All permission,
 freshness and review checks happen in the service layer; this module only calls services
 and renders HTML, so the same rules hold for the CLI, tests, the server and the browser.
-Everything interpolated into HTML goes through html.escape.
+Every value interpolated into HTML goes through html.escape (E), including code-generated enums and numbers.
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ import sys
 import traceback
 from dataclasses import dataclass, field
 from pathlib import Path
-from urllib.parse import parse_qs, quote, urlparse
+from urllib.parse import parse_qs, quote, unquote, urlparse
 
 from . import config, db, demo, drafting, export, importer, impact, opa, packages, reference, review
 from . import model as M
@@ -55,7 +55,7 @@ form.inline{display:inline}
 """
 
 ERRORS = (Denied, review.ReviewConflict, export.ExportRefused, drafting.DraftingError, importer.ImportError_,
-          opa.OpaUnavailable, db.OperationConflict, ValueError, LookupError)
+          opa.OpaUnavailable, db.OperationConflict, ValueError, LookupError, RecursionError)
 
 
 @dataclass
@@ -98,10 +98,10 @@ class WebApp:
 
     @staticmethod
     def cite_link(c):
-        return f'<a class="mono" href="/cite?c={quote(c)}">{E(c.split(":")[0])}:{E(short(c.split(":", 1)[1], 18))}</a>'
+        return f'<a class="mono" href="/cite?c={E(quote(c, safe=""))}">{E(c.split(":")[0])}:{E(short(c.split(":", 1)[1], 18))}</a>'
 
     def header(self, actor):
-        ids = "".join(f'<option value="{u}"{" selected" if u == actor else ""}>{u}</option>' for u in USERS)
+        ids = "".join(f'<option value="{E(u)}"{" selected" if u == actor else ""}>{E(u)}</option>' for u in USERS)
         return (f'<b>DMMC evidence workbench</b><nav aria-label="Sections"><a href="/">Dashboard</a><a href="/model">Model</a>'
                 f'<a href="/evidence">Evidence</a><a href="/impact">Impact</a><a href="/audit">Audit</a>'
                 f'<a href="/eval">Acceptance suite</a><a href="/about">About</a></nav>'
@@ -125,6 +125,7 @@ class WebApp:
 
     @staticmethod
     def redirect(to, msg=None, err=False) -> Response:
+        to = _local_path(to, keep_query=True)
         if msg:
             to += ("&" if "?" in to else "?") + f"msg={quote(msg)}" + ("&err=1" if err else "")
         return Response(status=303, location=to)
@@ -133,6 +134,7 @@ class WebApp:
 
     def get(self, path_qs: str, actor: str) -> Response:
         u = urlparse(path_qs)
+        u = u._replace(path=unquote(u.path))  # decoded exactly once; queries are decoded by parse_qs
         q = {k: v[0] for k, v in parse_qs(u.query).items()}
         msg, err = q.get("msg"), bool(q.get("err"))
         actor = actor if actor in USERS else "bob"
@@ -178,10 +180,10 @@ class WebApp:
             st = packages.status(c, p["id"])
             cov = json.loads(p["rows_json"])
             n = sum(1 for r in cov if r["evidence_state"] == "CURRENT")
-            rows.append(f"<tr><td><a href='/package/{E(p['id'])}'>{E(p['id'])}</a></td><td>{E(p['snapshot_id'])}</td>"
-                        f"<td>{E(p['drafter_mode'])}</td><td>{n} of {len(cov)}</td>"
-                        f"<td class='{st['freshness']}'>{st['freshness']}</td><td class='{st['review_state']}'>{st['review_state']}</td>"
-                        f"<td class='{st['effective_state']}'>{st['effective_state']}</td></tr>")
+            rows.append(f"<tr><td><a href='/package/{E(quote(p['id']))}'>{E(p['id'])}</a></td><td>{E(p['snapshot_id'])}</td>"
+                        f"<td>{E(p['drafter_mode'])}</td><td>{E(str(n))} of {E(str(len(cov)))}</td>"
+                        f"<td class='{E(str(st['freshness']))}'>{E(str(st['freshness']))}</td><td class='{E(str(st['review_state']))}'>{E(str(st['review_state']))}</td>"
+                        f"<td class='{E(str(st['effective_state']))}'>{E(str(st['effective_state']))}</td></tr>")
         b = self.btn
         steps = (f"<div class='card'><b>Demo controls</b><p>"
                  f"{b('reset', 'Reset demo state')} {b('import_model', 'Import model A', which='A')} "
@@ -211,13 +213,13 @@ class WebApp:
         val = json.loads(p["validation_json"])
         man = json.loads(p["manifest_json"])
         n = sum(1 for r in rows if r["evidence_state"] == "CURRENT")
-        head = (f"<div class='card'>Freshness <span class='{st['freshness']}'>{st['freshness']}</span> · review "
-                f"<span class='{st['review_state']}'>{st['review_state']}</span> · effective "
-                f"<span class='{st['effective_state']}'>{st['effective_state']}</span><br>"
+        head = (f"<div class='card'>Freshness <span class='{E(str(st['freshness']))}'>{E(str(st['freshness']))}</span> · review "
+                f"<span class='{E(str(st['review_state']))}'>{E(str(st['review_state']))}</span> · effective "
+                f"<span class='{E(str(st['effective_state']))}'>{E(str(st['effective_state']))}</span><br>"
                 f"<span class='small'>{E('; '.join(st['reasons']))}</span><br>"
                 f"package digest <code>{short(p['package_digest'], 20)}</code> · drafter <b>{E(p['drafter_mode'])}</b>"
                 f" · OPA {E(man['tools']['opa'])} · code <code>{short(man['code']['workbench_digest'])}</code><br>"
-                f"<b>{n} of {len(rows)}</b> selected demo obligation rows have current applicable evidence (not a compliance %).<br>"
+                f"<b>{E(str(n))} of {E(str(len(rows)))}</b> selected demo obligation rows have current applicable evidence (not a compliance %).<br>"
                 f"Draft validation: {E(json.dumps(val['counts']))}</div>")
         mt = ["<div class='card'><h3>Control and evidence matrix</h3><table><tr><th>Row</th><th>Control stmt / params</th>"
               "<th>Object (rev)</th><th>Design</th><th>Evidence</th><th>Check</th><th>Gaps</th></tr>"]
@@ -226,22 +228,22 @@ class WebApp:
             design = ""
             if isinstance(d.get("design"), dict):
                 ds = d["design"]
-                design = f"<span class='{'ok' if ds['state'] == 'PRESENT' else 'UNKNOWN'}'>{ds['state']}</span> {E(str(ds['value']))}"
-            evs = "".join(f"<div class='small'>{'✔' if e['applicable'] else '✘'} <a href='/evidence/{E(e['evidence_id'])}'>"
+                design = f"<span class='{'ok' if ds['state'] == 'PRESENT' else 'UNKNOWN'}'>{E(str(ds['state']))}</span> {E(str(ds['value']))}"
+            evs = "".join(f"<div class='small'>{'✔' if e['applicable'] else '✘'} <a href='/evidence/{E(quote(e['evidence_id']))}'>"
                           f"{E(e['evidence_id'])}</a> {E(e['kind'])} {E(str(e.get('result', '')))} "
                           f"{E('; '.join(e['reasons']))}</div>" for e in d.get("evidence", []))
             if r["check"] == "ac3_policy_matches_model" and d.get("tests"):
                 t = d["tests"]
-                evs += (f"<div class='small'>policy <code>{short(d['policy_digest'])}</code> tests {t['passed']} pass / "
-                        f"{t['failed']} fail / {t['errored']} error</div>")
+                evs += (f"<div class='small'>policy <code>{short(d['policy_digest'])}</code> tests {E(str(t['passed']))} pass / "
+                        f"{E(str(t['failed']))} fail / {E(str(t['errored']))} error</div>")
                 evs += "".join(f"<div class='small bad'>mismatch: {E(m['role'])} {E(m['action'])} model="
-                               f"{m['model_declares']} policy={m['policy_allows']}</div>" for m in d.get("mismatches", []))
-            params = "".join(f"<div class='small'>{E(k)}: <span class='UNKNOWN'>{v['state']}</span></div>"
+                               f"{E(str(m['model_declares']))} policy={E(str(m['policy_allows']))}</div>" for m in d.get("mismatches", []))
+            params = "".join(f"<div class='small'>{E(k)}: <span class='UNKNOWN'>{E(str(v['state']))}</span></div>"
                              for k, v in r["params"].items())
             mt.append(f"<tr><td class='mono'>{E(r['row_id'])}</td><td><code>{E(r['statement_id'])}</code>{params}</td>"
                       f"<td>{E(r['object_id'])} ({E(r['object_revision'])})</td><td>{design}</td>"
-                      f"<td><span class='{r['evidence_state']}'>{r['evidence_state']}</span>{evs}</td>"
-                      f"<td><span class='{r['result']}'>{r['result']}</span>"
+                      f"<td><span class='{E(str(r['evidence_state']))}'>{E(str(r['evidence_state']))}</span>{evs}</td>"
+                      f"<td><span class='{E(str(r['result']))}'>{E(str(r['result']))}</span>"
                       f"<div class='small'>{self.cite_link('check:' + r['check_run_id'])}</div></td>"
                       f"<td class='small'>{'<br>'.join(E(g) for g in r['gaps'])}</td></tr>")
         mt.append("</table></div>")
@@ -270,7 +272,7 @@ class WebApp:
         for d in decs:
             rv.append(f"<li><b>{E(d['id'])}</b> {E(d['decision'])} by {E(d['actor'])} — {E(d['reason'])} "
                       f"<span class='small'>bound to <code>{short(d['package_digest'])}</code>; gap rows acknowledged: "
-                      f"{len(d['limitations'])}</span>"
+                      f"{E(str(len(d['limitations'])))}</span>"
                       + (f" <span class='bad'>REVOKED ({E(d['revoked']['reason'])})</span>" if d["revoked"]
                          else " " + self.btn("revoke_decision", "Revoke", decision_id=d["id"], back=pid)) + "</li>")
         rv.append("</ul>")
@@ -284,7 +286,7 @@ class WebApp:
         exps = c.execute("SELECT * FROM exports WHERE package_id=? ORDER BY created_at", (pid,)).fetchall()
         for x in exps:
             rel = Path(x["path"]).relative_to(config.exports_dir())
-            links = " · ".join(f"<a href='/files/{quote(str(rel))}/{quote(f)}'>{E(f)}</a>" for f in json.loads(x["files_json"]))
+            links = " · ".join(f"<a href='/files/{E(quote(str(rel)))}/{E(quote(f))}'>{E(f)}</a>" for f in json.loads(x["files_json"]))
             rv.append(f"<div class='small'>{E(x['id'])} ({E(x['mode'])}, status at export {E(x['status_at_export'])}): {links}</div>")
         rv.append("</div>")
         return head + "".join(mt) + "".join(rv) + "".join(dr)
@@ -300,12 +302,12 @@ class WebApp:
         sn = M.snapshot(c, sid)
         if sn is None:
             raise LookupError(f"unknown snapshot {sid}")
-        pick = " ".join(f"<a href='/model?snap={quote(s['id'])}'>{E(s['id'])}</a>" for s in snaps)
+        pick = " ".join(f"<a href='/model?snap={E(quote(s['id']))}'>{E(s['id'])}</a>" for s in snaps)
         els, fls, bnds = M.elements(c, sid), M.flows(c, sid), M.boundaries(c, sid)
         cite = lambda ptr: self.cite_link(f"model:{sn['digest']}#{ptr}")
         out = [f"<p>Snapshots: {pick}</p><div class='card'>Snapshot <b>{E(sid)}</b> · source {E(sn['source_id'])} rev "
                f"{E(sn['revision'])} · digest <code>{short(sn['digest'], 20)}</code> · adapter {E(sn['adapter_version'])}"
-               f" · synthetic={bool(sn['synthetic'])}</div>"]
+               f" · synthetic={E(str(bool(sn['synthetic'])))}</div>"]
         out.append("<div class='card'><h3>Boundaries</h3><ul>" + "".join(
             f"<li>{E(b['id'])} — {E(b['name'] or '')} ({E(b['kind'] or '')}) {cite(b['pointer'])}</li>" for b in bnds.values()) + "</ul>")
         out.append("<h3>Components</h3><table><tr><th>Id</th><th>Rev</th><th>Boundary</th><th>Attributes (null = UNKNOWN)</th><th>Source</th></tr>")
@@ -354,7 +356,7 @@ class WebApp:
             ok, why = M.applicability(ev, els, fls) if snap else (False, ["no model"])
             act = (self.btn("evidence_status", "Withdraw", evidence_id=ev["id"], status="withdrawn") if ev["status"] == "active"
                    else self.btn("evidence_status", "Restore", evidence_id=ev["id"], status="active"))
-            rows.append(f"<tr><td><a href='/evidence/{E(ev['id'])}'>{E(ev['id'])}</a></td><td>{E(ev['kind'])} / {E(ev['type'])}"
+            rows.append(f"<tr><td><a href='/evidence/{E(quote(ev['id']))}'>{E(ev['id'])}</a></td><td>{E(ev['kind'])} / {E(ev['type'])}"
                         f"{' (synthetic)' if ev['synthetic'] else ''}</td><td class='small'>{E(json.dumps(ev['meta']['target']))}</td>"
                         f"<td>{E(ev['status'])}</td><td class='{'ok' if ok else 'UNKNOWN'}'>{'yes' if ok else 'no'}"
                         f"<div class='small'>{E('; '.join(why))}</div></td><td><code>{short(ev['digest'])}</code></td><td>{act}</td></tr>")
@@ -393,12 +395,12 @@ class WebApp:
     def audit(self):
         c = self.conn
         ch = db.verify_audit_chain(c)
-        rows = "".join(f"<tr><td>{r['seq']}</td><td class='small'>{E(r['at'])}</td><td>{E(r['actor'])}</td><td>{E(r['operation'])}</td>"
+        rows = "".join(f"<tr><td>{E(str(r['seq']))}</td><td class='small'>{E(r['at'])}</td><td>{E(r['actor'])}</td><td>{E(r['operation'])}</td>"
                        f"<td class='{'ok' if r['outcome'] == 'ok' else 'bad'}'>{E(r['outcome'])}</td><td class='mono'>{E(r['target'] or '')}</td>"
                        f"<td class='small'>{E(r['detail_json'][:200])}</td></tr>"
                        for r in c.execute("SELECT * FROM audit_events ORDER BY seq DESC LIMIT 200"))
         return (f"<div class='card'>Hash chain: <span class='{'ok' if ch['ok'] else 'bad'}'>{'intact' if ch['ok'] else 'BROKEN'}</span> "
-                f"({ch['events']} events). <span class='small'>Application-level tamper evidence; a database administrator can "
+                f"({E(str(ch['events']))} events). <span class='small'>Application-level tamper evidence; a database administrator can "
                 f"rewrite the whole chain.</span><table><tr><th>#</th><th>At</th><th>Actor</th><th>Operation</th><th>Outcome</th>"
                 f"<th>Target</th><th>Detail</th></tr>{rows}</table></div>")
 
@@ -414,15 +416,15 @@ class WebApp:
         rep = json.loads(p.read_text())
         env, s = rep["environment"], rep["summary"]
         rows = "".join(f"<tr><td>{E(r['id'])}</td><td class='{'PASS' if r['passed'] else 'FAIL'}'>{'PASS' if r['passed'] else 'FAIL'}</td>"
-                       f"<td>{r['ms']}</td><td>{E(r['title'])}{('<div class=small>' + E('; '.join(r['failures'])) + '</div>') if r['failures'] else ''}"
+                       f"<td>{E(str(r['ms']))}</td><td>{E(r['title'])}{('<div class=small>' + E('; '.join(r['failures'])) + '</div>') if r['failures'] else ''}"
                        f"{('<div class=small>' + E(str(r['detail'].get('note'))) + '</div>') if isinstance(r['detail'], dict) and r['detail'].get('note') else ''}</td></tr>"
                        for r in rep["cases"])
-        base = "".join(f"<tr><td>{E(c['scenario'])}</td><td>{c['rows']}</td><td>{c['workbench_gap_rows_found']} / {c['baseline_gap_rows_found']}"
-                       f" of {c['expected_gap_rows']}</td><td>{c['workbench_overclaims']} / {c['baseline_overclaims']}</td>"
-                       f"<td>{c['workbench_citations_resolved']} / {c['workbench_citations']}</td></tr>"
+        base = "".join(f"<tr><td>{E(c['scenario'])}</td><td>{E(str(c['rows']))}</td><td>{E(str(c['workbench_gap_rows_found']))} / {E(str(c['baseline_gap_rows_found']))}"
+                       f" of {E(str(c['expected_gap_rows']))}</td><td>{E(str(c['workbench_overclaims']))} / {E(str(c['baseline_overclaims']))}</td>"
+                       f"<td>{E(str(c['workbench_citations_resolved']))} / {E(str(c['workbench_citations']))}</td></tr>"
                        for c in rep["baseline_comparison"])
-        return (intro + f"<div class='card'><p><b class='{'PASS' if s['passed'] == s['cases'] else 'FAIL'}'>{s['passed']} of "
-                f"{s['cases']} cases passed</b> · run at {E(str(rep.get('ran_at', '')))} · Python {E(env['python'])} · OPA "
+        return (intro + f"<div class='card'><p><b class='{'PASS' if s['passed'] == s['cases'] else 'FAIL'}'>{E(str(s['passed']))} of "
+                f"{E(str(s['cases']))} cases passed</b> · run at {E(str(rep.get('ran_at', '')))} · Python {E(env['python'])} · OPA "
                 f"{E(env['opa'])} · code <code>{E(env['code_digest'][:12])}</code> · git <code>{E(env['git'])}</code></p>"
                 f"<table><tr><th>Case</th><th>Result</th><th>ms</th><th>Scenario</th></tr>{rows}</table></div>"
                 f"<div class='card'><h3>Template baseline vs. workbench</h3><table><tr><th>Scenario</th><th>Rows</th>"
@@ -461,7 +463,8 @@ class WebApp:
             return Response(status=403, body="bad csrf token", ctype="text/plain")
         if path == "/whoami":
             new = form.get("actor", "bob")
-            return Response(status=303, location=referer or "/", set_actor=new if new in USERS else "bob")
+            return Response(status=303, location=_local_path(referer, keep_query=True),
+                            set_actor=new if new in USERS else "bob")
         if path != "/act":
             return Response(status=404, body="not found", ctype="text/plain")
         a, c = form.get("action"), self.conn
@@ -520,23 +523,29 @@ class WebApp:
                 p.parent.mkdir(parents=True, exist_ok=True)
                 p.write_text(json.dumps(rep, default=str))
                 s = rep["summary"]
-                msg, back = f"Acceptance suite: {s['passed']} of {s['cases']} cases passed.", "/eval"
+                msg, back = f"Acceptance suite: {E(str(s['passed']))} of {E(str(s['cases']))} cases passed.", "/eval"
             else:
                 return self.redirect("/", f"unknown action {a}", True)
             return self.redirect(back, msg)
+        except KeyError as e:  # before ERRORS, which includes LookupError
+            return self.redirect(_local_path(referer), f"Missing form field {e}", True)
         except ERRORS as e:
             return self.redirect(_local_path(referer), f"{type(e).__name__}: {e}", True)
-        except KeyError as e:
-            return self.redirect(_local_path(referer), f"Missing form field {e}", True)
 
 
-def _local_path(referer: str | None) -> str:
-    """Only ever redirect within the app."""
-    if not referer:
+def _local_path(target: str | None, keep_query: bool = False) -> str:
+    """Only ever redirect within the app: a single leading slash, no scheme or host, no CR/LF."""
+    if not target:
         return "/"
-    u = urlparse(referer)
+    u = urlparse(target)
     path = u.path or "/"
-    return path if path.startswith("/") and not path.startswith("//") else "/"
+    if u.scheme or u.netloc or not path.startswith("/") or path.startswith("//") or path.startswith("/\\") \
+            or any(c in target for c in "\r\n\\"):
+        return "/"
+    path = quote(unquote(path), safe="/:@!$&'()*+,;=-._~")
+    if keep_query and u.query:
+        return f"{path}?{quote(u.query, safe='=&%:/+,;@-._~')}"
+    return path
 
 
 def run_acceptance_suite() -> dict:

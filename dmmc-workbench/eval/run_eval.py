@@ -46,13 +46,20 @@ class Fresh:
         self.prev = os.environ.get("DMMC_DATA_DIR")
         self.dir = tempfile.mkdtemp(prefix="dmmc-eval-")
         os.environ["DMMC_DATA_DIR"] = self.dir
-        self.conn, _ = demo.reset()
+        try:
+            self.conn, _ = demo.reset()
+        except BaseException:
+            self._restore()
+            raise
         return self.conn
 
     def __exit__(self, *a):
         self.conn.close()
-        shutil.rmtree(self.dir, ignore_errors=True)
+        self._restore()
+
+    def _restore(self):
         # Restore, so running the suite inside the web app never redirects the app's own database.
+        shutil.rmtree(self.dir, ignore_errors=True)
         if self.prev is None:
             os.environ.pop("DMMC_DATA_DIR", None)
         else:
@@ -586,13 +593,16 @@ def baseline_comparison():
 
 def run_all(verbose: bool = False) -> dict:
     """Run every case and the baseline comparison; returns the report (nothing written)."""
-    prev_now = os.environ.get("DMMC_NOW")
+    prev_now, prev_dir = os.environ.get("DMMC_NOW"), os.environ.get("DMMC_DATA_DIR")
     os.environ["DMMC_NOW"] = prev_now or "2026-09-23T15:00:00Z"
     try:
         return _run_all(verbose)
-    finally:
-        if prev_now is None:
-            os.environ.pop("DMMC_NOW", None)
+    finally:  # backstop: whatever a case did, the caller's clock and data directory come back
+        for k, v in (("DMMC_NOW", prev_now), ("DMMC_DATA_DIR", prev_dir)):
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
 
 
 def _run_all(verbose):

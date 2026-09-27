@@ -42,7 +42,7 @@ and export transitions are decided only by the review/export services under a wr
 
 The same code also runs in a browser: `workbench/webapp.py` holds every page and action, and a Pyodide Web Worker
 calls it directly instead of over HTTP. OPA's CLI is replaced by WebAssembly modules compiled from the same Rego at
-site build, cross-checked against the CLI before publishing. Each visitor has private state in IndexedDB. See
+site build; recorded CLI decisions and test runs are recomputed through them and must match before publishing. Each visitor has private state in IndexedDB. See
 [WEB_BUILD.md](WEB_BUILD.md).
 
 ## Key decisions and trade-offs

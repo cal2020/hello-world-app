@@ -1,10 +1,12 @@
 """Unit tests. The scenario-level acceptance cases live in eval/run_eval.py and are run here too."""
 import json
 import os
+import sys
 import unittest
 from pathlib import Path
 
 os.environ.setdefault("DMMC_NOW", "2026-09-23T15:00:00Z")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # also runnable as `python tests/test_workbench.py`
 
 from workbench import importer, util  # noqa: E402
 from workbench.drafting import PROHIBITED, _sentences_with  # noqa: E402
@@ -71,8 +73,6 @@ def _make(cid, fn):
 for _cid, _title, _fn in run_eval.CASES:
     setattr(AcceptanceCases, f"test_{_cid}", _make(_cid, _fn))
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class WebAppTests(unittest.TestCase):
@@ -152,3 +152,81 @@ class WebAppTests(unittest.TestCase):
         body = self.app.get("/model", "bob").body
         self.assertNotIn("<script>alert(1)</script>", body)
         self.assertNotIn("<img src=x", body)
+
+
+class ReviewFindingRegressionTests(unittest.TestCase):
+    """Regression tests for defects found by the multi-agent review of the browser build."""
+
+    def setUp(self):
+        import tempfile
+        from workbench import demo
+        from workbench.webapp import WebApp
+        self._prev = os.environ.get("DMMC_DATA_DIR")
+        self.dir = tempfile.mkdtemp(prefix="dmmc-reg-")
+        os.environ["DMMC_DATA_DIR"] = self.dir
+        conn, _ = demo.reset()
+        self.app = WebApp(conn)
+
+    def tearDown(self):
+        import shutil
+        self.app.conn.close()
+        shutil.rmtree(self.dir, ignore_errors=True)
+        if self._prev is None:
+            os.environ.pop("DMMC_DATA_DIR", None)
+        else:
+            os.environ["DMMC_DATA_DIR"] = self._prev
+
+    def post(self, form, actor="bob", path="/act", referer="/"):
+        return self.app.post(path, {"csrf": self.app.csrf, **form}, actor, referer)
+
+    def _model(self, **changes):
+        from workbench import demo
+        doc = json.loads(demo.MODEL_A.read_text())
+        doc.update(changes)
+        return json.dumps(doc)
+
+    def test_revision_cannot_escape_or_inject(self):
+        for rev in ("../../../../tmp/x", "a\r\nSet-Cookie: y", "v2 draft", "a/b", "x" * 65):
+            r = self.post({"action": "import_model_json", "model_json": self._model(revision=rev)})
+            self.assertIn("ImportError_", r.location, rev)
+            self.assertNotIn("\n", r.location)
+
+    def test_nesting_and_size_limits(self):
+        from workbench import importer
+        with self.assertRaises(importer.ImportError_):
+            importer.parse_model(b"[" * 10000 + b"]" * 10000)
+        with self.assertRaises(importer.ImportError_):
+            importer.parse_model(b" " * (importer.MAX_MODEL_BYTES + 1))
+        r = self.post({"action": "import_model_json", "model_json": "[" * 5000 + "]" * 5000})
+        self.assertIn("nests", r.location)
+
+    def test_whoami_redirect_stays_local(self):
+        for ref in ("//evil.example/x", "/\\evil.example", "https://evil.example/", "/ok?c=1"):
+            loc = self.post({"actor": "alice"}, path="/whoami", referer=ref).location
+            self.assertTrue(loc.startswith("/") and not loc.startswith("//") and "\\" not in loc, (ref, loc))
+        self.assertEqual(self.post({"actor": "alice"}, path="/whoami", referer="/ok?c=1").location, "/ok?c=1")
+
+    def test_missing_form_field_message(self):
+        r = self.post({"action": "review"})
+        self.assertIn("Missing%20form%20field", r.location)
+
+    def test_percent_encoded_paths_route(self):
+        self.post({"action": "import_model", "which": "A"})
+        self.post({"action": "import_evidence", "which": "A"})
+        self.assertEqual(self.app.get("/evidence/ev%2Dtls%2Dportal%2Dapi%2Da1", "bob").status, 200)
+
+    def test_undefined_decision_is_an_error_not_a_shifted_pass(self):
+        import tempfile
+        from workbench import opa
+        d = Path(tempfile.mkdtemp())
+        (d / "authz.rego").write_text(
+            'package mtel.authz\n'
+            'decision := {"allow": true, "reasons": ["r"]} if input.action == "read"\n')
+        cases = [{"action": "read"}, {"action": "write"}, {"action": "read"}]
+        if opa.backend() == "cli":
+            with self.assertRaisesRegex(RuntimeError, "decision undefined"):
+                opa.eval_decisions([str(d / "authz.rego")], "data.mtel.authz", cases)
+
+
+if __name__ == "__main__":
+    unittest.main()

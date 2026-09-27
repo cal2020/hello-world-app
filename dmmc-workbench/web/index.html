@@ -13,12 +13,13 @@
   <div id="loading" class="card" role="status" aria-live="polite">
     <h2>Starting the workbench in your browser</h2>
     <p>This page runs the workbench's Python code with Pyodide and evaluates OPA policies compiled to WebAssembly. Nothing is sent to a server; your actions are stored only in this browser.</p>
-    <p class="small">First load downloads about 20 MB and takes a few seconds; later loads use the browser cache.</p>
+    <p class="small">The first visit downloads about {{FIRST_LOAD_MB}} MB (less when the host compresses it) and takes a few seconds; later visits use the browser cache. Only one tab at a time can use the workbench.</p>
     <ol id="progress" class="small"></ol>
   </div>
   <noscript><div class="card"><p>This live demo needs JavaScript and WebAssembly. A recorded walkthrough with screenshots is at <a href="../">the walkthrough page</a>.</p></div></noscript>
 </main>
-<div id="busy" hidden role="status" aria-live="polite"><span id="busy-text">Working…</span></div>
+<div id="busy" hidden><span id="busy-text">Working…</span></div>
+<div id="sr-status" class="visually-hidden" role="status" aria-live="polite"></div>
 <footer class="shell-footer small">
   Synthetic prototype. <a href="../">Recorded walkthrough</a> · <a href="build-manifest.json">Build manifest</a> · <a href="THIRD_PARTY_NOTICES.md">Third-party notices</a> · <button type="button" id="wipe">Delete this browser's workbench data</button>
 </footer>

@@ -334,7 +334,7 @@ PROHIBITED = [
     (re.compile(r"\b(is|are|been) (satisfied|effective)\b", re.I), "control satisfaction/effectiveness claim"),
     (re.compile(r"\b(authori[sz]ed to operate|ATO (is )?granted|authori[sz]ation granted)\b", re.I), "authorization claim"),
     (re.compile(r"\b(been|is|was) (reviewed and )?approved\b", re.I), "approval/review-state claim by drafter"),
-    (re.compile(r"\d+(\.\d+)?\s?%"), "percentage metric"),
+    (re.compile(r"(?<![\d.])\d+(?:\.\d+)?\s?%"), "percentage metric"),  # anchored: linear on long digit runs
 ]
 IMPLEMENTATION = re.compile(r"\b(is|are) (implemented|protected|enforced|encrypted|generated)\b|\benforces\b", re.I)
 

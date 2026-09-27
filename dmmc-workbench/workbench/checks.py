@@ -109,13 +109,13 @@ def check_ac3(row, els, fls, evs, ctx):
                  for r in roles for a in ACTIONS]
         decisions = opa.eval_decisions(policy_files, "data.mtel.authz", cases)
         mismatches = []
-        for c, d in zip(cases, decisions):
+        for c, d in zip(cases, decisions, strict=True):
             key = (c["subject"]["role"], c["action"], "telemetry")
             if bool(d["allow"]) != (key in declared):
                 mismatches.append({"role": key[0], "action": key[1],
                                    "model_declares": key in declared, "policy_allows": bool(d["allow"])})
         detail["decision_table"] = [{"role": c["subject"]["role"], "action": c["action"], "allow": d["allow"]}
-                                    for c, d in zip(cases, decisions)]
+                                    for c, d in zip(cases, decisions, strict=True)]
         detail["mismatches"] = mismatches
         if t["failed"]:
             return "FAIL", detail, inputs, None

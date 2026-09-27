@@ -230,7 +230,10 @@ def export_package(conn, actor: str, package_id: str, *, mode: str = "current", 
             if mode == "historical":
                 header["notice"] = "HISTORICAL EXPORT. " + header["notice"]
             decs = packages.decisions(conn, package_id)
-            out = (out_root or config.exports_dir()) / package_id / export_id
+            root = (out_root or config.exports_dir()).resolve()
+            out = (root / package_id / export_id).resolve()
+            if root not in out.parents:
+                raise ExportRefused("package id would place the export outside the exports directory")
             out.mkdir(parents=True, exist_ok=True)
             files = {}
             (out / "ssp-excerpt.md").write_text(render_markdown(conn, p, st, header, decs))

@@ -1,19 +1,24 @@
 #!/usr/bin/env node
 // Line-oriented bridge used by the Python "wasm" OPA backend outside the browser.
-// Same library (@open-policy-agent/opa-wasm) and the same compiled modules as the browser build.
+// Same file (opa-wasm-browser.esm.js) and the same compiled modules as the browser build.
 // stdin: {"module": "<file>", "entrypoint": "<pkg/rule>", "input": {...}} per line
 // stdout: {"result": <opa-wasm result set>} or {"error": "..."} per line
 "use strict";
 const fs = require("fs");
 const path = require("path");
 const readline = require("readline");
-const { loadPolicy } = require(path.join(__dirname, "..", "web", "node_modules", "@open-policy-agent", "opa-wasm"));
+const { pathToFileURL } = require("url");
+
+// Load the exact browser build that scripts/build_web.py ships as vendor/opa-wasm-browser.esm.js.
+const ESM = path.join(__dirname, "..", "web", "node_modules", "@open-policy-agent", "opa-wasm", "dist", "opa-wasm-browser.esm.js");
+const lib = import(pathToFileURL(ESM).href).then((m) => m.default);
 
 const dir = process.argv[2];
 const cache = new Map();
 
 async function policy(module) {
   if (!cache.has(module)) {
+    const { loadPolicy } = await lib;
     const p = await loadPolicy(fs.readFileSync(path.join(dir, module)));
     p.setData({});
     cache.set(module, p);

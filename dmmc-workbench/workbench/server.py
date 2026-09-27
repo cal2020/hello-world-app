@@ -25,6 +25,10 @@ class H(BaseHTTPRequestHandler):
         return a if a in USERS else "bob"
 
     def _write(self, r):
+        for v in (r.location, r.set_actor, *r.headers.values()):
+            if v and any(c in str(v) for c in "\r\n"):
+                r = type(r)(status=500, body="refused to send a header containing CR/LF", ctype="text/plain")
+                break
         b = r.body.encode() if isinstance(r.body, str) else r.body
         self.send_response(r.status)
         if r.location:

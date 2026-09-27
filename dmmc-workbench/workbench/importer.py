@@ -7,6 +7,7 @@ a JSON Pointer for every element so citations resolve against the immutable snap
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from . import config, db
@@ -16,6 +17,50 @@ from .util import digest_obj, now, pointer, sha256
 
 class ImportError_(ValueError):
     pass
+
+
+# Identifiers end up in package ids, URLs and export paths: keep them to a safe alphabet.
+SAFE_TOKEN = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
+SAFE_ID = {"bnd:": re.compile(r"^bnd:[A-Za-z0-9._-]{1,64}$"), "cmp:": re.compile(r"^cmp:[A-Za-z0-9._-]{1,64}$"),
+           "flow:": re.compile(r"^flow:[A-Za-z0-9._-]{1,64}$")}
+MAX_MODEL_BYTES = 1_000_000
+MAX_NESTING = 64
+MAX_STRING = 2000
+
+
+def _nesting_depth(raw: bytes) -> int:
+    """Max [/{ depth outside JSON strings, in one linear pass (json.loads would recurse first)."""
+    depth = best = 0
+    in_str = esc = False
+    for ch in raw.decode("utf-8", errors="replace"):
+        if in_str:
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_str = False
+        elif ch == '"':
+            in_str = True
+        elif ch in "[{":
+            depth += 1
+            best = max(best, depth)
+        elif ch in "]}":
+            depth -= 1
+    return best
+
+
+def _long_strings(obj, path="", out=None):
+    out = [] if out is None else out
+    if isinstance(obj, str) and len(obj) > MAX_STRING:
+        out.append(path or "/")
+    elif isinstance(obj, dict):
+        for k, v in obj.items():
+            _long_strings(v, f"{path}/{k}", out)
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            _long_strings(v, f"{path}/{i}", out)
+    return out
 
 
 def _require(cond, msg, errors):
@@ -30,7 +75,10 @@ def validate_model(doc) -> list[str]:
     _require(doc.get("contract") == config.MODEL_CONTRACT, "contract must be dmmc-workbench/model-export", e)
     _require(doc.get("contract_version") in config.MODEL_CONTRACT_VERSIONS, "unsupported contract_version", e)
     for k in ("project", "source_id", "revision"):
-        _require(isinstance(doc.get(k), str) and doc.get(k), f"missing string field {k}", e)
+        v = doc.get(k)
+        _require(isinstance(v, str) and v, f"missing string field {k}", e)
+        if isinstance(v, str) and v and not SAFE_TOKEN.match(v.replace(":", "-") if k == "source_id" else v):
+            e.append(f"{k} must be 1-64 characters from A-Z a-z 0-9 . _ -" + (" :" if k == "source_id" else ""))
     _require(isinstance(doc.get("synthetic"), bool), "synthetic flag must be an explicit boolean", e)
     ids = set()
     for kind, prefix in (("boundaries", "bnd:"), ("elements", "cmp:"), ("flows", "flow:")):
@@ -40,14 +88,16 @@ def validate_model(doc) -> list[str]:
             continue
         for i, it in enumerate(items):
             iid = it.get("id") if isinstance(it, dict) else None
-            if not (isinstance(iid, str) and iid.startswith(prefix)):
-                e.append(f"{kind}[{i}]: id must be a string starting with {prefix!r}")
+            if not (isinstance(iid, str) and SAFE_ID[prefix].match(iid)):
+                e.append(f"{kind}[{i}]: id must be {prefix!r} followed by 1-64 characters from A-Z a-z 0-9 . _ -")
                 continue
             if iid in ids:
                 e.append(f"duplicate id {iid}")
             ids.add(iid)
-            if kind in ("elements", "flows") and not isinstance(it.get("revision"), str):
-                e.append(f"{iid}: revision required")
+            if kind in ("elements", "flows"):
+                rev = it.get("revision")
+                if not (isinstance(rev, str) and SAFE_TOKEN.match(rev)):
+                    e.append(f"{iid}: revision required (1-64 characters from A-Z a-z 0-9 . _ -)")
     bnds = {b.get("id") for b in doc.get("boundaries", []) if isinstance(b, dict)}
     els = {x.get("id") for x in doc.get("elements", []) if isinstance(x, dict)}
     for x in doc.get("elements", []) or []:
@@ -58,14 +108,27 @@ def validate_model(doc) -> list[str]:
             for end in ("source", "target"):
                 if f.get(end) not in els:
                     e.append(f"{f.get('id')}: {end} {f.get(end)!r} is not a defined element")
+    for path in _long_strings(doc)[:5]:
+        e.append(f"string at {path} is longer than {MAX_STRING} characters")
     return e
 
 
-def import_model(conn, actor: str, raw: bytes, *, op_id: str | None = None) -> dict:
+def parse_model(raw: bytes):
+    """Bounded parse: size and nesting are checked before json.loads can recurse."""
+    if len(raw) > MAX_MODEL_BYTES:
+        raise ImportError_(f"model export is larger than {MAX_MODEL_BYTES} bytes")
+    if _nesting_depth(raw) > MAX_NESTING:
+        raise ImportError_(f"model export nests deeper than {MAX_NESTING} levels")
     try:
-        doc = json.loads(raw)
+        return json.loads(raw)
     except json.JSONDecodeError as ex:
         raise ImportError_(f"not valid JSON: {ex}") from ex
+    except RecursionError as ex:
+        raise ImportError_("model export nests too deeply") from ex
+
+
+def import_model(conn, actor: str, raw: bytes, *, op_id: str | None = None) -> dict:
+    doc = parse_model(raw)
     errors = validate_model(doc)
     if errors:
         raise ImportError_("; ".join(errors))
