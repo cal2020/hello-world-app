@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Live, in-browser DMMC model-to-evidence workbench: a synthetic prototype that traces a system-model element through NIST control checks and evidence to draft SSP text.">
+<title>DMMC Evidence Workbench</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header id="hdr"><b>DMMC evidence workbench</b></header>
+<main id="main" tabindex="-1">
+  <div id="loading" class="card" role="status" aria-live="polite">
+    <h2>Starting the workbench in your browser</h2>
+    <p>This page runs the workbench's Python code with Pyodide and evaluates OPA policies compiled to WebAssembly. Nothing is sent to a server; your actions are stored only in this browser.</p>
+    <p class="small">The first visit downloads about 15 MB (less when the host compresses it) and takes a few seconds; later visits use the browser cache. Only one tab at a time can use the workbench.</p>
+    <ol id="progress" class="small"></ol>
+  </div>
+  <noscript><div class="card"><p>This live demo needs JavaScript and WebAssembly. A recorded walkthrough with screenshots is at <a href="../">the walkthrough page</a>.</p></div></noscript>
+</main>
+<div id="busy" hidden><span id="busy-text">Working…</span></div>
+<div id="sr-status" class="visually-hidden" role="status" aria-live="polite"></div>
+<footer class="shell-footer small">
+  Synthetic prototype. <a href="../">Recorded walkthrough</a> · <a href="build-manifest.json">Build manifest</a> · <a href="THIRD_PARTY_NOTICES.md">Third-party notices</a> · <button type="button" id="wipe">Delete this browser's workbench data</button>
+</footer>
+<script type="module" src="main.js"></script>
+</body>
+</html>

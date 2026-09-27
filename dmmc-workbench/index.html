@@ -54,6 +54,10 @@ section{display:grid;gap:18px}
 header{display:grid;gap:16px}
 .lede{font-size:19px;color:var(--ink)}
 .scope{display:flex;flex-wrap:wrap;gap:8px}
+.live{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;background:var(--accent-soft);border:1px solid var(--line);border-radius:10px;padding:14px 18px}
+.live a.go{display:inline-block;background:var(--accent);color:var(--paper);font-weight:600;text-decoration:none;padding:9px 16px;border-radius:6px}
+.live a.go:hover,.live a.go:focus-visible{filter:brightness(1.1)}
+.live p{font-size:14.5px;color:var(--ink)}
 .scope span{font-size:13px;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:4px 12px;color:var(--muted)}
 
 /* the trace row */
@@ -110,6 +114,10 @@ footer{font-size:13.5px;color:var(--muted);border-top:1px solid var(--line);padd
   <div class="eyebrow">Synthetic prototype · recorded run, 23 September 2026</div>
   <h1>Model-to-Evidence Workbench</h1>
   <p class="lede">A security plan generated from a system model is only useful if each statement can be traced to a current source, and if people can see when a model change makes a statement, or a review of it, out of date. This prototype follows one element from the model to a draft SSP paragraph, then changes the model.</p>
+  <div class="live">
+    <a class="go" href="app/">Open the live workbench</a>
+    <p>The same Python code runs in your browser (Pyodide), with the OPA policies and their tests executing as WebAssembly. Your actions stay in your browser. First load is about 15&nbsp;MB.</p>
+  </div>
   <div class="scope">
     <span>Fictional maintenance-telemetry system</span>
     <span>3 NIST SP 800-53 Rev 5 statements: AC-3, AU-12, SC-8</span>
