@@ -1,4 +1,8 @@
-"""Start the workbench and the mock consumer together (one local startup path)."""
+"""Start the workbench and the mock consumer together (the one startup path, locally and in the container).
+
+Both HTTP servers run as threads of this process. The consumer keeps its own code and database and talks
+to the workbench only over HTTP, but it shares this process's environment and lifetime.
+"""
 import pathlib
 import threading
 
@@ -17,7 +21,7 @@ class Stack:
         self.cons = consumer.serve(str(var / "consumer.db"), port=consumer_port)
         self.wb_url = f"http://127.0.0.1:{self.wb.server_address[1]}"  # loopback for internal calls
         self.consumer_url = f"http://127.0.0.1:{self.cons.server_address[1]}"
-        # Wire the two processes' addresses (module-level settings, read at call time).
+        # Wire the two servers' addresses (module-level settings, read at call time).
         release.PUBLIC_URL = self.wb_url
         release.CONSUMER_URL = self.consumer_url
         outbox.SUBSCRIBERS[0]["url"] = self.consumer_url + "/events"

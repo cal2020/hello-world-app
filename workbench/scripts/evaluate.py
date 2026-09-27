@@ -1,10 +1,12 @@
 """Run the evaluation and write eval/results.json + EVALUATION.md from ACTUAL results.
 
-  .venv/bin/python scripts/evaluate.py            # fixture + deterministic (no model API)
-  LWB_EVAL_LIVE=1 .venv/bin/python scripts/evaluate.py   # also a live-model run, if configured
+  .venv/bin/python scripts/evaluate.py                   # fixture + deterministic (no model API)
+  LWB_EVAL_LIVE=1 .venv/bin/python scripts/evaluate.py   # also a live-model run (billed API calls)
 
 Separates: integration correctness (unit/integration tests), relationship proposals
 (deterministic baseline vs scripted fixture vs optional live model), and local timings.
+The test suite never calls a model API (its live-mode test uses a stand-in SDK); the only live
+calls are the `model:live` runs below, made only when LWB_EVAL_LIVE=1.
 """
 import datetime
 import io
@@ -44,8 +46,9 @@ def run_tests():
     buf = io.StringIO()
     res = unittest.TextTestRunner(stream=buf, verbosity=2).run(suite)
     failed = {t.id() for t, _ in res.failures + res.errors}
+    skipped = {t.id() for t, _ in res.skipped}  # e.g. the UI tests without node + Playwright: not a pass
     return {"ran": res.testsRun, "failed": sorted(failed), "skipped": len(res.skipped),
-            "cases": [{"id": c, "passed": c not in failed} for c in sorted(cases)]}
+            "cases": [{"id": c, "passed": c not in failed | skipped, "skipped": c in skipped} for c in sorted(cases)]}
 
 
 def score(proposals, labels):
@@ -55,8 +58,11 @@ def score(proposals, labels):
     rows, ev_total, ev_valid = [], 0, 0
     agg = {"records": 0, "positives": 0, "correct_links": 0, "false_links": 0, "missed_links": 0,
            "no_match_correct": 0, "no_match_cases": 0, "flagged_ambiguous": 0, "rejected_by_validation": 0,
-           "predicate_correct": 0, "predicate_judged": 0, "needs_review": 0}
-    for rid, gold in labels.items():
+           "predicate_correct": 0, "predicate_judged": 0, "needs_review": 0, "unlabeled_records_with_proposals": 0}
+    # Proposals about records outside the gold set (notes, unknown IDs) are scored too: no target is correct
+    # for them, so every valid one is a false link a reviewer would have to catch.
+    unlabeled = sorted(set(by) - set(labels))
+    for rid, gold in list(labels.items()) + [(rid, None) for rid in unlabeled]:
         ps = by.get(rid, [])
         for p in ps:
             for e in p["evidence"]:
@@ -65,7 +71,7 @@ def score(proposals, labels):
         valid = [p for p in ps if p["validation"] == "valid" and p["target"]]
         invalid = [p for p in ps if p["validation"] not in ("valid", "no_match_suggested")]
         targets = [p["target"]["source_id"] for p in valid]
-        agg["records"] += 1
+        agg["records"] += int(rid in labels)
         agg["rejected_by_validation"] += len(invalid)
         agg["needs_review"] += len([p for p in ps if p["validation"] in ("valid", "no_match_suggested")])
         if len(valid) > 1:
@@ -76,7 +82,10 @@ def score(proposals, labels):
             if p["target"]["source_id"] == gold:
                 agg["predicate_judged"] += 1
                 agg["predicate_correct"] += int(p["predicate"] == GOLD["predicate"])
-        if gold is None:
+        if rid not in labels:
+            agg["unlabeled_records_with_proposals"] += 1
+            outcome = "unlabeled_false_link" if targets else "unlabeled_no_valid_link"
+        elif gold is None:
             agg["no_match_cases"] += 1
             agg["no_match_correct"] += int(not targets)
             outcome = "correct_no_link" if not targets else "false_link"
@@ -170,7 +179,15 @@ IC_TITLES = [
 ]
 
 
-def write_report(r):
+def result(cases):
+    if cases and all(c["passed"] for c in cases):
+        return "pass"
+    if any(not c["passed"] and not c.get("skipped") for c in cases):
+        return "FAIL"
+    return "skipped" if cases else "not executed"
+
+
+def write_report(r, path=None):
     L = []
     L.append("# Evaluation report (generated)\n")
     L.append(f"Generated {r['generated_at']} by `scripts/evaluate.py` at code version `{r['code_version']}` "
@@ -179,31 +196,44 @@ def write_report(r):
              "not about production reliability, standards conformance, Cameo compatibility or real-model quality.\n")
     t = r["tests"]
     L.append("## 1. Integration correctness (independent negative tests)\n")
-    L.append(f"Test suite: **{t['ran'] - len(t['failed'])}/{t['ran']} passed**, {t['skipped']} skipped. "
-             "Each test drives the real HTTP API of a fresh local stack (workbench server and consumer server "
-             "on loopback ports inside the test process, separate SQLite files).\n")
+    L.append(f"Test suite: **{t['ran'] - len(t['failed']) - t['skipped']}/{t['ran']} passed**, {t['skipped']} skipped. "
+             "Most tests drive the real HTTP API of a fresh local stack (workbench server and consumer server "
+             "on loopback ports inside the test process, separate SQLite files); the others check files such as the "
+             "Dockerfile and the docs, or upgrade an old database file directly. No test calls a model API.\n")
     L.append("| Case | Required outcome (from brief) | Test(s) | Result |\n|---|---|---|---|")
+    not_passed = []
     for cid, title, frag in IC_TITLES:
         ms = [c for c in t["cases"] if frag in c["id"]]
-        ok = ms and all(c["passed"] for c in ms)
+        outcome = result(ms)
+        not_passed += [cid] if outcome != "pass" else []
         L.append(f"| {cid} | {title} | {', '.join(c['id'].split('.')[-1] for c in ms) or '—'} | "
-                 f"{'pass' if ok else ('**FAIL**' if ms else 'not executed')} |")
+                 f"{'**FAIL**' if outcome == 'FAIL' else outcome} |")
     extra = [c for c in t["cases"] if not any(f in c["id"] for _, _, f in IC_TITLES)]
     L.append(f"\nAdditional tests ({len(extra)}): " + ", ".join(
-        f"{c['id'].split('.')[-1]} ({'pass' if c['passed'] else 'FAIL'})" for c in extra) + "\n")
+        f"{c['id'].split('.')[-1]} ({result([c])})" for c in extra) + "\n")
     if t["failed"]:
         L.append("**Failures:** " + ", ".join(t["failed"]) + "\n")
 
     L.append("## 2. Relationship proposals\n")
+    splits = GOLD["splits"]
+    gold = [g for s in splits.values() for g in s["labels"].values()]
     L.append("Gold labels: `fixtures/eval/gold_links.json` (authored from the record texts; proposers never read it). "
-             "12 records: 6 dev (`cmms`), 6 held-out (`cmms-heldout`), including 4 records where the correct answer "
-             "is *no link*. **This is an MVP engineering set, not a statistically meaningful sample.**\n")
+             f"{len(gold)} records: " + ", ".join(f"{len(s['labels'])} {name} (`{s['record_source']}`)"
+                                                 for name, s in splits.items()) +
+             f", including {gold.count(None)} records where the correct answer is *no link*. "
+             "**This is an MVP engineering set, not a statistically meaningful sample.**\n")
+    if not r["live_requested"]:
+        live = "**Not run**: `LWB_EVAL_LIVE=1` was not set, so no model API was called and no live-model quality claim is made."
+    else:
+        errors = sorted({str(m["model:live"].get("error")) for m in r["relationships"].values()
+                         if m.get("model:live", {}).get("status") == "failed"})
+        live = ("Requested for this run. " + (f"**The live run failed** ({'; '.join(errors)}); no live-model quality "
+                                               "claim is made." if errors else "Results below."))
     L.append("* `deterministic` = exact serial-number match + a curated alias table (the practical baseline).\n"
              "* `model:fixture` = hand-authored scripted outputs with deliberate faults. It tests the validation and "
              "review mechanics. **It says nothing about real model quality** (the author of the script also wrote "
              "the gold labels).\n"
-             "* `model:live` = a real Claude call. " + ("Included below." if r["live_requested"] else
-                                                       "**Not executed in this run** (no credentials configured); no live-model quality claim is made.") + "\n")
+             "* `model:live` = a real Claude call. " + live + "\n")
     L.append("| Split | Method | Recall (gold links found) | False links among valid candidates | Correct no-link | "
              "Records flagged ambiguous | Proposals rejected by validation | Citation validity | Predicate correct |\n"
              "|---|---|---|---|---|---|---|---|---|")
@@ -216,7 +246,9 @@ def write_report(r):
             L.append(f"| {split} | {m} | {s['recall']} | {s['false_links']} | {s['no_match_correct']}/{s['no_match_cases']} | "
                      f"{s['flagged_ambiguous']} | {s['rejected_by_validation']} | {s['citation_validity']} | "
                      f"{s['predicate_correct']}/{s['predicate_judged']} |")
-    L.append("\nPer-record outcomes:\n")
+    L.append("\nFalse links also count valid proposals about records outside the gold set (such as notes); those "
+             "records appear below as `unlabeled_false_link` or `unlabeled_no_valid_link`.\n")
+    L.append("Per-record outcomes:\n")
     for split, methods in r["relationships"].items():
         for m, res in methods.items():
             if res.get("status") == "failed":
@@ -237,13 +269,15 @@ def write_report(r):
     blockers = []
     if t["failed"]:
         blockers.append("test failures")
+    if not_passed:
+        blockers.append("cases not passed: " + ", ".join(not_passed))
     L.append("Readiness requires: working consumer, persisted restart/recovery, versioned traceable contracts, visible "
              "ambiguity, independent negative tests, rejected stale/unauthorized mutations, reliable local "
              "activation/rollback; and zero seeded unauthorized effects, duplicate consumer effects or undetected "
              "incompatible activations.\n")
     L.append(f"**Gate result for this run: {'PASS' if not blockers else 'BLOCKED: ' + ', '.join(blockers)}** "
              "(covers exactly the cases above).\n")
-    (ROOT / "EVALUATION.md").write_text("\n".join(L) + "\n")
+    (path or ROOT / "EVALUATION.md").write_text("\n".join(L) + "\n")
 
 
 def main():
@@ -251,13 +285,15 @@ def main():
     r = {"generated_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
          "code_version": code_version(), "python": platform.python_version(), "platform": platform.system(),
          "live_requested": live}
+    print("live model:", "requested (billed API calls)" if live else "not requested (set LWB_EVAL_LIVE=1)")
     print("running tests…"); r["tests"] = run_tests()
     print("relationship eval…"); r["relationships"] = relationship_eval(live)
     print("timings…"); r["timings"] = timings()
     (ROOT / "eval").mkdir(exist_ok=True)
     (ROOT / "eval" / "results.json").write_text(json.dumps(r, indent=1))
     write_report(r)
-    print(f"tests {r['tests']['ran'] - len(r['tests']['failed'])}/{r['tests']['ran']} passed; wrote EVALUATION.md")
+    t = r["tests"]
+    print(f"tests {t['ran'] - len(t['failed']) - t['skipped']}/{t['ran']} passed, {t['skipped']} skipped; wrote EVALUATION.md")
 
 
 if __name__ == "__main__":

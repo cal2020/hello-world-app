@@ -153,8 +153,9 @@ def validate_projection_shape(p):
 def generate_contract(p):
     """OpenAPI 3.1.1 document derived only from the projection's exposed shape.
 
-    Deliberately excludes the projection's source mappings (`from`, `convert`) so that
-    a remapping that preserves the consumer-visible shape does not change the contract.
+    Deliberately excludes the field mappings (`from`, `convert`) so that a field remapping that
+    preserves the consumer-visible shape does not change the contract. A relation's source
+    `predicate` and `direction` are included (as `x-relation`), so remapping a relation does.
     """
     cid, cver = p["contract"]["id"], str(p["contract"]["version"])
     schemas = {

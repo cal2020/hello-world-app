@@ -3,9 +3,14 @@
 Case IDs match EVALUATION.md. Semantic link quality is evaluated separately (scripts/evaluate.py).
 """
 import json
+import sys
 import threading
+import time
+import types
 import uuid
+from unittest import mock
 
+from lucidwb import importer, links
 from tests.helpers import StackCase, Client
 
 
@@ -312,29 +317,69 @@ class Links(StackCase):
         st, body, _ = self.alice.post(f"/manage/proposals/{p['proposal_id']}/rebase", headers={"If-Match": cur["etag"]})
         self.assertEqual((st, body["error"]["code"]), (409, "target_deleted"))
 
+    def accept_during_import(self, hold=None, accept_first=True):
+        """Accept a proposal made against model A while model B is being imported; returns the ordering.
+
+        hold ('accept' or 'import') keeps that request's write transaction open briefly once it has the lock
+        and only then sends the other one, which queues behind it: that ordering is forced. Without hold both
+        requests race. Either way the audit order must agree with the response."""
+        run = self._setup()
+        p = self.find_prop(run, "MR-1001", "el-VS101DE")
+        res, entered = {}, threading.Event()
+        send = {"accept": lambda: res.__setitem__("accept", self.accept(p)),
+                "import": lambda: res.__setitem__("import", self.imp("model/B_rename_gateway.json"))}
+        if hold:
+            owner, name = (links, "decide") if hold == "accept" else (importer, "import_export")
+            real = getattr(owner, name)
+
+            def held(*a, **kw):  # runs inside the write transaction
+                entered.set()
+                time.sleep(0.3)
+                return real(*a, **kw)
+            with mock.patch.object(owner, name, held):
+                first = threading.Thread(target=send[hold])
+                first.start()
+                self.assertTrue(entered.wait(10))
+                second = threading.Thread(target=send["import" if hold == "accept" else "accept"])
+                second.start()
+                first.join(); second.join()
+        else:
+            ts = [threading.Thread(target=send[k]) for k in (("accept", "import") if accept_first else ("import", "accept"))]
+            [t.start() for t in ts]; [t.join() for t in ts]
+        self.assertEqual(res["import"][0], 201)
+        b_rev = res["import"][1]["revision"]
+        # The proposal was made against the head that B replaced.
+        heads = [h["revision"] for h in self.ok(self.alice.get("/api/projects/ehm/sources"))["head_history"]
+                 if h["source"] == "synthmodeler"]
+        self.assertEqual(heads[-2:], [p["input_vector"]["model_revision"], b_rev])
+        # Audit rows are written inside each write transaction, so audit_id order is commit order.
+        audit = self.ok(self.alice.get("/api/projects/ehm/history"))["audit"]
+        head_advance = next(a["audit_id"] for a in audit if a["action"] == "source.import"
+                            and a["outcome"] == "accepted_head" and a["detail"]["revision"] == b_rev)
+        decision = next(a for a in audit if a["action"] == "proposal.accept"
+                        and a["detail"].get("proposal_id") == p["proposal_id"])
+        found = self.ok(self.alice.get("/api/projects/ehm/links"))["links"]
+        if res["accept"][0] == 200:
+            # The link committed while A was still head, bound to the target version the proposal was made against.
+            self.assertEqual(decision["outcome"], "committed")
+            self.assertLess(decision["audit_id"], head_advance, "accept committed after the head advanced")
+            self.assertEqual([(l["link_id"], l["target_version"]) for l in found],
+                             [(res["accept"][1]["link_id"], p["target"]["version_id"])])
+            return "accept_then_import"
+        self.assertEqual(res["accept"][1]["error"]["code"], "stale_dependency")
+        self.assertEqual(decision["outcome"], "rejected_stale_dependency")
+        self.assertGreater(decision["audit_id"], head_advance)
+        self.assertEqual(found, [])
+        return "import_then_accept_rejected"
+
     def test_IC14_concurrent_head_update_during_acceptance(self):
-        outcomes = set()
-        for i in range(6):
-            self.tearDown(); self.setUp()
-            run = self._setup()
-            p = self.find_prop(run, "MR-1001", "el-VS101DE")
-            res = {}
-            t1 = threading.Thread(target=lambda: res.__setitem__("accept", self.accept(p)))
-            t2 = threading.Thread(target=lambda: res.__setitem__("import", self.imp("model/B_rename_gateway.json")))
-            for t in ((t1, t2) if i % 2 else (t2, t1)):
-                t.start()
-            t1.join(); t2.join()
-            self.assertEqual(res["import"][0], 201)
-            links = self.ok(self.alice.get("/api/projects/ehm/links"))["links"]
-            if res["accept"][0] == 200:
-                self.assertEqual(len(links), 1)
-                # committed while A was head: the audit shows accept before head advance
-                outcomes.add("accept_then_import")
-            else:
-                self.assertEqual(res["accept"][1]["error"]["code"], "stale_dependency")
-                self.assertEqual(links, [])
-                outcomes.add("import_then_accept_rejected")
-        self.assertTrue(outcomes)  # every run landed in exactly one valid ordering
+        outcomes = []
+        for i, hold in enumerate(["import", "accept", None, None, None, None]):
+            if i:
+                self.tearDown(); self.setUp()
+            outcomes.append(self.accept_during_import(hold, accept_first=bool(i % 2)))
+        # The forced runs cover both orderings; the free races may land in either.
+        self.assertEqual(outcomes[:2], ["import_then_accept_rejected", "accept_then_import"])
 
     def test_IC14b_two_concurrent_accepts_one_wins(self):
         run = self._setup()
@@ -410,9 +455,22 @@ class Links(StackCase):
 
     def test_live_mode_failure_is_visible_and_not_replaced_by_fixture(self):
         self.release_a()
-        run = self.proposals(mode="live")
+        # A stand-in SDK whose API is unreachable, so the suite never calls a real model, even with the live
+        # requirements installed and ANTHROPIC_API_KEY set. The live evaluation is scripts/evaluate.py's job.
+        sdk = types.ModuleType("anthropic")
+        for name in ("APIConnectionError", "AuthenticationError", "RateLimitError", "APIStatusError"):
+            setattr(sdk, name, type(name, (Exception,), {}))
+        calls = []
+
+        def unreachable(**kw):
+            calls.append(kw["model"])
+            raise sdk.APIConnectionError("connection refused (test stand-in)")
+        sdk.Anthropic = lambda: types.SimpleNamespace(messages=types.SimpleNamespace(create=unreachable))
+        with mock.patch.dict(sys.modules, {"anthropic": sdk}):
+            run = self.proposals(mode="live")
+        self.assertEqual(len(calls), 1)
         self.assertEqual(run["status"], "failed")
-        self.assertTrue(run["error"])
+        self.assertIn("unreachable", run["error"])
         self.assertEqual(run["proposals"], [])
 
 
