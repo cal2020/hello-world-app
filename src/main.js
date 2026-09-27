@@ -11,15 +11,15 @@ document.querySelector('#app').innerHTML = `
     <div class="main-content">
       <div class="form-section">
         <h2>Card Details</h2>
-        <form id="card-form">
+        <form id="card-form" onsubmit="return false">
           <div class="input-group">
             <label for="recipient">To:</label>
-            <input type="text" id="recipient" placeholder="Recipient's name" />
+            <input type="text" id="recipient" placeholder="Recipient's name" maxlength="40" />
           </div>
 
           <div class="input-group">
             <label for="sender">From:</label>
-            <input type="text" id="sender" placeholder="Your name" />
+            <input type="text" id="sender" placeholder="Your name" maxlength="40" />
           </div>
 
           <div class="input-group">
@@ -34,9 +34,15 @@ document.querySelector('#app').innerHTML = `
             </select>
           </div>
 
+          <div class="input-group" id="custom-title-group" hidden>
+            <label for="custom-title">Card Title:</label>
+            <input type="text" id="custom-title" placeholder="e.g. Welcome Home!" maxlength="30" />
+          </div>
+
           <div class="input-group">
             <label for="message">Message:</label>
-            <textarea id="message" placeholder="Write your personal message here..." rows="4"></textarea>
+            <textarea id="message" placeholder="Write your personal message here..." rows="4" maxlength="280"></textarea>
+            <small id="message-count" class="char-count" aria-live="polite"></small>
           </div>
 
           <div class="input-group">
@@ -53,20 +59,7 @@ document.querySelector('#app').innerHTML = `
 
       <div class="preview-section">
         <h2>Preview</h2>
-        <div id="card-preview" class="card-preview">
-          <div class="card-content">
-            <div class="card-header">
-              <span class="occasion-text">Happy Birthday!</span>
-            </div>
-            <div class="card-message">
-              <p>Your message will appear here...</p>
-            </div>
-            <div class="card-footer">
-              <span class="card-from">From: </span>
-              <span class="card-to">To: </span>
-            </div>
-          </div>
-        </div>
+        <div id="card-preview" class="card-preview" aria-live="polite"></div>
 
         <div class="actions">
           <button id="download-btn" class="btn btn-primary">Download Card</button>
