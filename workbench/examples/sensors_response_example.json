@@ -1,13 +1,13 @@
 {
   "project": "ehm",
-  "releaseId": "rel_1a8a8a1c5da0",
+  "releaseId": "rel_07fc1f0ba57f",
   "contract": {
     "id": "equipment-health-api",
     "version": "1",
     "digest": "33abe25392f2bb9ca789d4733fc9726d8d6d2759e40802486a49d6a4c3313dfd"
   },
   "source": {
-    "snapshotId": "snap_082404a2420a",
+    "snapshotId": "snap_6cbec154f0e6",
     "revision": "31d8e0",
     "headRevision": "31d8e0",
     "isCurrentHead": true,
@@ -28,10 +28,10 @@
         "sourceId": "el-GW1"
       },
       "_provenance": {
-        "snapshotId": "snap_082404a2420a",
+        "snapshotId": "snap_6cbec154f0e6",
         "sourceRevision": "31d8e0",
         "elementVersionId": "ev_2a4c96d5a028048a7d27",
-        "sourcePointer": "imp_1a8703ad260b#/elements/5",
+        "sourcePointer": "imp_ec380dc2be5a#/elements/5",
         "conversions": []
       }
     },
@@ -49,13 +49,13 @@
         "sourceId": "el-GW1"
       },
       "_provenance": {
-        "snapshotId": "snap_082404a2420a",
+        "snapshotId": "snap_6cbec154f0e6",
         "sourceRevision": "31d8e0",
         "elementVersionId": "ev_4bba097ddeaab0a23f63",
-        "sourcePointer": "imp_1a8703ad260b#/elements/2",
+        "sourcePointer": "imp_ec380dc2be5a#/elements/2",
         "conversions": []
       }
     }
   ],
-  "next": "/api/releases/rel_1a8a8a1c5da0/resources/sensors?limit=2&cursor=ZW50XzU1YmRkYmVlNjUyNTdjYzY="
+  "next": "/api/releases/rel_07fc1f0ba57f/resources/sensors?limit=2&cursor=ZW50XzU1YmRkYmVlNjUyNTdjYzY="
 }

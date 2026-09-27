@@ -1,11 +1,11 @@
 {
-  "release_id": "rel_e01cea7e6ae6",
+  "release_id": "rel_fa5cc151ba2a",
   "project": "ehm",
   "status": "blocked_generation",
   "is_active": false,
   "manifest": {
     "adapter_version": "lwb-synthetic-export-adapter/0.3.1",
-    "code_version": "a8af4b34acb7",
+    "code_version": "84e8fdb41a8f",
     "contract": {
       "digest": "33abe25392f2bb9ca789d4733fc9726d8d6d2759e40802486a49d6a4c3313dfd",
       "id": "equipment-health-api",
@@ -18,18 +18,18 @@
       "id": "equipment-health",
       "version": "1.0.0"
     },
-    "record_snapshot_id": "snap_3abc36d6e7fb",
-    "release_id": "rel_e01cea7e6ae6",
+    "record_snapshot_id": "snap_cb8539f8c606",
+    "release_id": "rel_fa5cc151ba2a",
     "source_snapshots": [
       {
         "normalized_digest": "d6f45c0793bc0a92ed879983fdaa3e38e2170ec37f8979887827709d5f02f9b3",
         "revision": "31d8e0",
-        "snapshot_id": "snap_082404a2420a",
+        "snapshot_id": "snap_6cbec154f0e6",
         "source": "synthmodeler"
       }
     ]
   },
-  "manifest_digest": "12ef8ba00bd1b7468ae99505821fe11056f14e916781c2aa469c8b5a1a5faae7",
+  "manifest_digest": "08b1166e189e2998bcf20dc7ffa1688fe4f9b80fe4291ade5f20e650af898648",
   "diagnostics": [
     {
       "code": "definition_missing",
@@ -45,17 +45,17 @@
     "changes": []
   },
   "source_diff_vs_active": null,
-  "active_release_id": "rel_1a8a8a1c5da0",
+  "active_release_id": "rel_07fc1f0ba57f",
   "consumer_test_runs": [
     {
-      "run_id": "ctr_bb64311ca6ab",
-      "release_id": "rel_e01cea7e6ae6",
+      "run_id": "ctr_3bc6921dd498",
+      "release_id": "rel_fa5cc151ba2a",
       "consumer_id": "dashboard-consumer",
       "consumer_version": "1.0.0",
       "expectations_digest": "5695b0a8659a129a70b12e5bc3613b5e834fc729182584f89b06db246d45513f",
       "passed": 0,
-      "started_at": "2026-09-27T08:09:36.759Z",
-      "finished_at": "2026-09-27T08:09:36.787Z",
+      "started_at": "2026-09-27T09:23:10.192Z",
+      "finished_at": "2026-09-27T09:23:10.220Z",
       "results": {
         "consumer_id": "dashboard-consumer",
         "consumer_version": "1.0.0",
@@ -69,7 +69,7 @@
               {
                 "check": "sensors: fetch",
                 "passed": true,
-                "detail": "4 items from release rel_e01cea7e6ae6 (revision 31d8e0)"
+                "detail": "4 items from release rel_fa5cc151ba2a (revision 31d8e0)"
               },
               {
                 "check": "sensors/el-VS102DE: required fields",
@@ -99,7 +99,7 @@
               {
                 "check": "gateways: fetch",
                 "passed": true,
-                "detail": "1 items from release rel_e01cea7e6ae6 (revision 31d8e0)"
+                "detail": "1 items from release rel_fa5cc151ba2a (revision 31d8e0)"
               },
               {
                 "check": "gateways: all item expectations",
@@ -125,7 +125,7 @@
               {
                 "check": "sensors: fetch",
                 "passed": true,
-                "detail": "4 items from release rel_e01cea7e6ae6 (revision 31d8e0)"
+                "detail": "4 items from release rel_fa5cc151ba2a (revision 31d8e0)"
               },
               {
                 "check": "sensors/el-VS102DE: required fields",
@@ -177,5 +177,5 @@
     }
   ],
   "created_by": "carol",
-  "created_at": "2026-09-27T08:09:36.753Z"
+  "created_at": "2026-09-27T09:23:10.185Z"
 }

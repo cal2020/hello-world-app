@@ -8,20 +8,20 @@ RECORDED run of scripts/demo.py --self-host (not a live run). Synthetic data.
 ==============================================================================
 1. Import model A -> build contract -> consumer checks -> activate -> consumer reads HTTP
 ==============================================================================
-  import imp_bf00d87a58d4: accepted_head  revision=7c1e9a  counts={'elements_present': 12, 'elements_deleted': 0, 'relationships_present': 11, 'records': 0, 'total_logical_entities_in_project': 12, 'total_snapshots_in_project': 2}
+  import imp_0215a3cac341: accepted_head  revision=7c1e9a  counts={'elements_present': 12, 'elements_deleted': 0, 'relationships_present': 11, 'records': 0, 'total_logical_entities_in_project': 12, 'total_snapshots_in_project': 2}
   warnings kept, not flattened: ['unknown_element_type', 'unrecognized_element_key', 'unrecognized_property', 'unrecognized_top_level_key']
-  candidate rel_8d6d170854d0 status=candidate contract=33abe25392f2
+  candidate rel_898a625fa3ec status=candidate contract=33abe25392f2
   consumer checks: tested_pass  profiles=[('dashboard', True), ('archive-export', True)]  schema=True
   activated pointer_seq=1  outbox event seq=3
-  GET /api/current/ehm/resources/sensors -> releaseId=rel_8d6d170854d0 source={'snapshotId': 'snap_34a8b21d9dac', 'revision': '7c1e9a', 'headRevision': '7c1e9a', 'isCurrentHead': True, 'headsBehind': 0}
-    next (pinned to the same release): /api/releases/rel_8d6d170854d0/resources/sensors?limit=2&cursor=ZW50XzU1YmRkYmVlNjUyNTdjYzY=
+  GET /api/current/ehm/resources/sensors -> releaseId=rel_898a625fa3ec source={'snapshotId': 'snap_d2fe0a6653a6', 'revision': '7c1e9a', 'headRevision': '7c1e9a', 'isCurrentHead': True, 'headsBehind': 0}
+    next (pinned to the same release): /api/releases/rel_898a625fa3ec/resources/sensors?limit=2&cursor=ZW50XzU1YmRkYmVlNjUyNTdjYzY=
     item: el-VS102DE id=ent_302abd8e0d16df20 sampleIntervalMs=500 provenance.revision=7c1e9a
-  consumer pinned_release=rel_8d6d170854d0 revision=7c1e9a sensors=4
+  consumer pinned_release=rel_898a625fa3ec revision=7c1e9a sensors=4
 
 ==============================================================================
 2. Import A again: identical revision and content
 ==============================================================================
-  outcome=duplicate_no_change duplicate_of=imp_bf00d87a58d4 (original receipt retained)
+  outcome=duplicate_no_change duplicate_of=imp_0215a3cac341 (original receipt retained)
   counts unchanged: True  -> {'elements_present': 12, 'elements_deleted': 0, 'relationships_present': 11, 'records': 0, 'total_logical_entities_in_project': 12, 'total_snapshots_in_project': 2}
 
 ==============================================================================
@@ -41,28 +41,28 @@ RECORDED run of scripts/demo.py --self-host (not a live run). Synthetic data.
     MR-1006  -> None           validation=reference_outside_permitted_set  conf=0.99
     MR-1003/NDE evidence MR-1003[0:42] "Vibration sensor on pump 101 recalibrated." valid=True
     MR-1003/NDE evidence N-2[42:87] "performed on the NDE unit, serial ending 4472" valid=True
-  accepted MR-1003 -> el-VS101NDE as reviewer_accepted link lnk_1f7e3064f2f1 (bound to model 7c1e9a / records m-20260901); DE candidate rejected and retained
-  MR-1004 -> el-GW1 left open for review (etag "eb04f0cd8e3707867470cca1227aaf8f")
+  accepted MR-1003 -> el-VS101NDE as reviewer_accepted link lnk_2ad9db20bd5b (bound to model 7c1e9a / records m-20260901); DE candidate rejected and retained
+  MR-1004 -> el-GW1 left open for review (etag "5c6598af39bbb5a9d8eea71b83bc2fbb")
 
 ==============================================================================
 4. Import B (rename) and C (field removed); stale write rejected; incompatible candidate blocked
 ==============================================================================
   B: 'Edge Gateway North' -> 'Plant Edge Gateway North-1'  same entity_uid: True (ent_a0db7982c56145f5); logical entities still 12
   accept MR-1004 approved against revision 7c1e9a: HTTP 409 stale_dependency issues=['model_revision_changed', 'target_version_changed']
-  C candidate rel_e01cea7e6ae6 status=blocked_generation diagnostics=[('definition_missing', 'structural', 'Sensor.serialNumber')]
+  C candidate rel_fa5cc151ba2a status=blocked_generation diagnostics=[('definition_missing', 'structural', 'Sensor.serialNumber')]
   source diff vs active: structural=['property_definition_added:assetSerial', 'property_definition_removed:serialNumber']
   consumer checks failed (8), e.g. sensors/el-VS102DE: required fields missing ['serialNumber']
   activate -> HTTP 409 activation_blocked problems=['blocking_diagnostics', 'consumer_checks_failed']
-  consumer still served rel_8d6d170854d0 revision=7c1e9a isCurrentHead=False headsBehind=2
+  consumer still served rel_898a625fa3ec revision=7c1e9a isCurrentHead=False headsBehind=2
 
 ==============================================================================
 5. Explicit compatible projection 1.1.0 -> retest -> activate; lost ack after consumer commit
 ==============================================================================
-  candidate rel_1a8a8a1c5da0 status=candidate contract digest unchanged: True  contract diff=[]
+  candidate rel_07fc1f0ba57f status=candidate contract digest unchanged: True  contract diff=[]
   consumer checks: tested_pass
-  activated rel_1a8a8a1c5da0; event evt_26ba2931aa30 seq=7
+  activated rel_07fc1f0ba57f; event evt_ce1767f99ba0 seq=7
     delivery seq=7 release.activated      attempt=1 -> no_acknowledgment
     delivery seq=7 release.activated      attempt=2 -> acknowledged
-  consumer: deliveries of evt_26ba2931aa30=2  committed effects=1  pinned_release=rel_1a8a8a1c5da0 revision=31d8e0
-  current -> rel_1a8a8a1c5da0 revision=31d8e0 isCurrentHead=True serialNumber=VS-5580
+  consumer: deliveries of evt_ce1767f99ba0=2  committed effects=1  pinned_release=rel_07fc1f0ba57f revision=31d8e0
+  current -> rel_07fc1f0ba57f revision=31d8e0 isCurrentHead=True serialNumber=VS-5580
   client retry of the activation with the same key -> HTTP 200 Idempotent-Replay=true pointer_seq=2
