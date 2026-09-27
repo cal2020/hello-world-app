@@ -264,6 +264,11 @@ class ReviewFindingRegressionTests(unittest.TestCase):
         body = self.app.get("/package/pkg-001-A", "alice").body
         self.assertIn("files not under this data directory", body)
         self.assertNotIn("/files/", body)
+        with self.app.conn:
+            self.app.conn.execute("UPDATE exports SET files_json='not json'")
+        body = self.app.get("/package/pkg-001-A", "alice").body
+        self.assertIn("file list unreadable", body)
+        self.assertNotIn("not under this data directory", body)
 
     def test_percent_encoded_paths_route(self):
         self.post({"action": "import_model", "which": "A"})

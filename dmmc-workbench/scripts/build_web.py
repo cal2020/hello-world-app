@@ -119,7 +119,7 @@ def _on_disk(paths) -> set[str]:
     for rel in paths:
         p = ROOT / rel
         for f in ([p] if p.is_file() else p.rglob("*")):
-            if f.is_file() and not any(part in NOT_SOURCE for part in f.parts) and f.suffix != ".pyc":
+            if f.is_file() and not any(part in NOT_SOURCE for part in f.parts):
                 out.add(str(f.relative_to(ROOT)))
     return out
 
@@ -140,6 +140,12 @@ def check_source_tree() -> bool:
                          + "".join(f"  tracked but missing on disk: {f}\n" for f in missing)
                          + "".join(f"  on disk but not tracked (untracked or ignored): {f}\n" for f in extra))
     return True
+
+
+def missing_license_files(notices: str, shipped: set[str]) -> list[str]:
+    """License files that the notices name but that are not shipped ('*' in a name is a wildcard)."""
+    named = set(re.findall(r"[\w.*+-]+\.(?:txt|rst|md)\b", notices)) - {"SOURCES.md"}
+    return sorted(n for n in named if not (n in shipped or ("*" in n and fnmatch.filter(shipped, n))))
 
 
 def packed_files() -> list[Path]:
@@ -420,6 +426,9 @@ def main():
     if sh256(esm) != OPA_WASM_ESM_SHA256:
         raise SystemExit(f"{esm.relative_to(ROOT)} does not match its pinned SHA-256 (run `npm ci` in web/)")
     rev, dirty = git_provenance() if check_source_tree() else ("unknown", None)
+    missing = missing_license_files(NOTICES, {p.name for p in (ROOT / "web" / "licenses").iterdir()})
+    if missing:  # checked again on the generated notices in step 5
+        raise SystemExit(f"THIRD_PARTY_NOTICES names license files that are not in web/licenses: {missing}")
     for d in (OUT, WORK):
         if d.exists():
             shutil.rmtree(d)
@@ -458,10 +467,9 @@ def main():
     notices = NOTICES.format(
         pyodide=PYODIDE_VERSION, python=py_version, opa=opa_info["version"], opawasm=ver("@open-policy-agent/opa-wasm"),
         sprintfjs=ver("sprintf-js"), yaml=ver("yaml"), wheels=wheel_rows)
-    named = set(re.findall(r"[\w.*+-]+\.(?:txt|rst|md)\b", notices)) - {"SOURCES.md"}
-    shipped = {p.name for p in (OUT / "licenses").iterdir()}
-    if any(not (n in shipped or ("*" in n and fnmatch.filter(shipped, n))) for n in named):
-        raise SystemExit(f"THIRD_PARTY_NOTICES names license files that are not shipped: {sorted(named)}")
+    missing = missing_license_files(notices, {p.name for p in (OUT / "licenses").iterdir()})
+    if missing:
+        raise SystemExit(f"THIRD_PARTY_NOTICES names license files that are not shipped: {missing}")
     (OUT / "THIRD_PARTY_NOTICES.md").write_text(notices)
     # index.html last: the loading screen states the real first-visit download size.
     first = sum(p.stat().st_size for p in OUT.rglob("*") if p.is_file()

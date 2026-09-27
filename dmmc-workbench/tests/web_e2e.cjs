@@ -329,6 +329,60 @@ function check(name, cond, detail = "") {
   await p.waitForSelector("h2:has-text('Dashboard')", { timeout: 120000 });
   check("the pending delete completed once the other page closed", (await p.locator("main").innerText()).includes("No model imported"));
 
+  // Uncaught errors during startup (separate profiles, so each has its own storage and lock).
+  const isolated = async () => {
+    const c = await browser.newContext();
+    await c.route("**/*", (r) => (r.request().url().startsWith(origin) ? r.continue() : (external.push(r.request().url()), r.abort())));
+    return c;
+  };
+  // (a) Before the lock: startup fails, deletion is not offered, and no lock is left behind.
+  const ectx = await isolated();
+  const ep = await ectx.newPage();
+  ep.on("worker", (w) => w.evaluate(() => { setTimeout(() => { throw new Error("injected early error"); }, 50); }).catch(() => {}));
+  await ep.goto(URL_);
+  await ep.waitForSelector("text=could not start", { timeout: 120000 }).catch(() => {});
+  check("an early uncaught error is reported as a startup failure",
+    (await ep.locator("main").innerText()).includes("injected early error"), (await ep.locator("main").innerText()).slice(0, 160));
+  await ep.waitForTimeout(3000);
+  check("an early startup failure offers no deletion and holds no lock",
+    (await ep.locator("#wipe-retry").count()) === 0 &&
+    !(await ep.evaluate(async () => (await navigator.locks.query()).held.map((l) => l.name))).includes("dmmc-workbench-state"));
+  await ectx.close();
+  // (b) A saved state that breaks startup: deletion is offered and gets the workbench going again.
+  const bctx = await isolated();
+  let bp = await bctx.newPage();
+  await bp.goto(URL_);
+  await bp.waitForSelector("h2:has-text('Dashboard')", { timeout: 120000 });
+  await bp.getByRole("button", { name: "Import model A", exact: true }).first().click();
+  await bp.waitForSelector("text=Imported snap-001-A", { timeout: 60000 });
+  await bp.waitForFunction(() => (document.documentElement.dataset.pending || "0") === "0", null, { timeout: 60000 });
+  await bp.close();
+  const tamper = await bctx.newPage();
+  await tamper.goto(new URL("licenses/SOURCES.md", URL_).href);
+  await tamper.evaluate(() => new Promise((res, rej) => {
+    const r = indexedDB.open("/persist");
+    r.onerror = () => rej(r.error);
+    r.onsuccess = () => {
+      const db = r.result;
+      const tx = db.transaction("FILE_DATA", "readwrite");
+      tx.objectStore("FILE_DATA").put({ timestamp: 5, mode: 33188, contents: new Uint8Array([1, 2, 3]) }, "/persist/zzz");
+      tx.oncomplete = () => { db.close(); res(); };
+      tx.onerror = () => rej(tx.error);
+    };
+  }));
+  await tamper.close();
+  bp = await bctx.newPage();
+  await bp.goto(URL_);
+  await bp.waitForSelector("#wipe-retry", { timeout: 120000 }).catch(() => {});
+  check("a saved state that breaks startup offers deletion", (await bp.locator("#wipe-retry").count()) === 1,
+    (await bp.locator("main").innerText()).slice(0, 200));
+  if (await bp.locator("#wipe-retry").count()) {
+    await Promise.all([bp.waitForNavigation({ timeout: 60000 }), bp.locator("#wipe-retry").click()]);
+    await bp.waitForSelector("h2:has-text('Dashboard')", { timeout: 120000 }).catch(() => {});
+  }
+  check("deleting it starts the workbench again", (await bp.locator("main").innerText()).includes("No model imported"));
+  await bctx.close();
+
   // Mobile layout (separate browser profile, so it has its own storage and lock)
   const mctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   await mctx.route("**/*", (r) => (r.request().url().startsWith(origin) ? r.continue() : (external.push(r.request().url()), r.abort())));

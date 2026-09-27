@@ -35,6 +35,12 @@ let myClientId = null; // this runtime's id in navigator.locks.query(), to tell 
 let waiting = false; // showing "open in another tab"
 let stopped = null; // text once this runtime has stopped serving requests
 let storageBusy = null; // settles when the FS.syncfs in flight (if any) has finished
+let serving = false; // startup finished and "ready" was posted
+let startupError = null; // an uncaught error during startup: startup is abandoned
+let failStartup = null;
+const startupAborted = new Promise((_, reject) => { failStartup = reject; });
+startupAborted.catch(() => {});
+function alive() { if (startupError) throw startupError; }
 
 // Called synchronously from Python (workbench/opa.py, _JsBridge).
 self.dmmcOpa = {
@@ -51,6 +57,9 @@ const errText = (e) => String((e && e.message) || e);
 
 const STOLEN = "The workbench was opened in another tab, so this tab has stopped. Anything this tab was " +
   "still doing when that happened was not saved. Reload to use it here.";
+
+const STOLEN_MID_SAVE = "The workbench was opened in another tab, so this tab has stopped. Its last change was " +
+  "being saved at that moment, so it may appear in the other tab. Reload to use it here.";
 
 // Stop serving for good. Storage is closed and the lock given up only once no save is in flight:
 // closing an IDBFS connection in the middle of FS.syncfs throws inside IndexedDB callbacks.
@@ -138,6 +147,7 @@ function acquireLock(mode) { // "try" | "wait" | "steal" -> "held" | "busy" | "t
     navigator.locks
       .request(LOCK, opts, async (lock) => {
         if (!lock) { resolve("busy"); return undefined; }
+        if (startupError) { resolve("abandoned"); return undefined; } // startup gave up: let go at once
         granted = true;
         lockState = "held";
         const held = new Promise((r) => { releaseHeld = r; });
@@ -151,7 +161,7 @@ function acquireLock(mode) { // "try" | "wait" | "steal" -> "held" | "busy" | "t
       .catch((e) => {
         if (granted) { // stolen by an unanswered takeover: never write again
           lockState = "lost";
-          stop(STOLEN);
+          stop(storageBusy ? STOLEN_MID_SAVE : STOLEN);
         } else if (mode === "wait" && e && (e.name === "TimeoutError" || e.name === "AbortError")) {
           resolve("timeout");
         } else { // e.g. SecurityError when the browser blocks site storage: run without the lock
@@ -184,6 +194,7 @@ if (channel) {
 async function init() {
   progress("Loading OPA policies compiled to WebAssembly");
   const reg = await (await fetchOk("opa/registry.json")).json();
+  alive();
   const modules = new Set();
   for (const b of Object.values(reg.bundles)) {
     if (b.tests_module) modules.add(b.tests_module);
@@ -191,6 +202,7 @@ async function init() {
   }
   for (const m of modules) {
     const p = await loadPolicy(await (await fetchOk(`opa/${m}`)).arrayBuffer());
+    alive();
     p.setData({});
     policies.set(m, p);
   }
@@ -199,29 +211,37 @@ async function init() {
   progress("Starting Python (Pyodide)");
   py = await loadPyodide({ indexURL: new URL("pyodide/", base).href });
   await py.loadPackage(["regex", "jsonschema"], { messageCallback: () => {} });
+  alive();
   progress(`Python ${py.runPython("import sys; sys.version.split()[0]")} ready`, "done");
 
   progress("Unpacking workbench code and fixtures");
-  py.unpackArchive(await (await fetchOk("app.zip")).arrayBuffer(), "zip", { extractDir: "/app" });
+  const zip = await (await fetchOk("app.zip")).arrayBuffer();
+  alive();
+  py.unpackArchive(zip, "zip", { extractDir: "/app" });
 
   let lock = await acquireLock("try");
+  alive();
   for (let i = 0; lock === "busy" && i < 6; i++) {
     // A tab that was just reloaded or closed may still be releasing the lock.
     await new Promise((r) => setTimeout(r, 250));
     lock = await acquireLock("try");
+    alive();
   }
   if (lock === "busy") {
     waiting = true;
     post({ kind: "locked" });
     await new Promise((r) => { takeoverRequested = r; });
+    alive();
     progress("Asking the other tab to save and hand over");
     if (channel) {
       channel.postMessage({ type: "takeover-request" });
       lock = await acquireLock("wait");
+      alive();
     }
     if (!channel || lock === "timeout") {
       progress("The other tab did not answer within 15 seconds; taking over (anything it was still doing is not saved)", "fail");
       lock = await acquireLock("steal");
+      alive();
     }
     waiting = false;
   }
@@ -234,6 +254,7 @@ async function init() {
     await syncfs(true);
     persistent = true;
   } catch (e) {
+    if (startupError) throw startupError;
     try { py.FS.unmount("/persist"); } catch { /* not mounted */ }
     py.FS.mkdirTree("/persist");
     progress("This browser does not allow this site to save data, so changes last only until the tab is closed", "fail");
@@ -265,22 +286,34 @@ def _handle(kind, path, form, actor, referer):
     return r.as_dict()
 `);
   handle = py.globals.get("_handle");
+  alive();
   if (mayWrite() && await stillHolding()) await syncfs(false);
+  alive();
   if (stopped) return; // taken over (or deleted) during startup; the reason has been shown
+  serving = true;
   progress("Ready", "done");
   post({ kind: "ready", persistent });
 }
 
-// An uncaught error (none is expected) stops the runtime with an explanation instead of leaving it
-// half-working; the last saved state is untouched.
+// An uncaught error (none is expected). During startup it makes startup fail; the runtime keeps the
+// lock it may hold, so that deleting a saved state that breaks startup stays possible. Afterwards it
+// stops the runtime with an explanation instead of leaving it half-working.
 self.addEventListener("error", (e) => {
   e.preventDefault();
-  stop(`The in-browser runtime hit an internal error (${String(e.message || "unknown").slice(0, 200)}). ` +
-       "Reload the page; your last saved state is kept.");
+  const text = String(e.message || "unknown error").slice(0, 200);
+  storageBusy = null; // most likely the storage operation in flight threw; it will not finish now
+  if (!serving) {
+    if (!startupError && !stopped) {
+      startupError = new Error(`internal error (${text})`);
+      failStartup(startupError);
+    }
+    return;
+  }
+  stop(`The in-browser runtime hit an internal error (${text}). Reload the page; what was last saved in this browser is kept.`);
 });
 
 let takeoverRequested = null;
-const ready = init();
+const ready = Promise.race([init(), startupAborted]);
 ready.catch((e) => {
   progress(`Startup failed: ${errText(e)}`, "fail");
   post({ kind: "startup-failed", text: errText(e), canWipe: !stopped && (lockState === "held" || lockState === "unsupported") });

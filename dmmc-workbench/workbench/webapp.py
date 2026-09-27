@@ -286,12 +286,21 @@ class WebApp:
                   f"{self.btn('export', 'Export historical copy', package_id=pid, mode='historical')}</p>")
         exps = c.execute("SELECT * FROM exports WHERE package_id=? ORDER BY created_at", (pid,)).fetchall()
         for x in exps:
+            try:  # {file name: description}, as written by export.py
+                files = json.loads(x["files_json"])
+            except ValueError:
+                files = None
+            files = list(files) if isinstance(files, (dict, list)) else None
             try:
                 rel = Path(x["path"]).resolve().relative_to(config.exports_dir().resolve())
-                links = " · ".join(f"<a href='/files/{E(quote(str(rel)))}/{E(quote(f))}'>{E(f)}</a>"
-                                   for f in json.loads(x["files_json"]))
-            except ValueError:  # recorded under another data directory: list it, but there is nothing to link
+            except ValueError:
+                rel = None
+            if files is None or not all(isinstance(f, str) for f in files):
+                links = "file list unreadable"
+            elif rel is None:  # recorded under another data directory: list it, but there is nothing to link
                 links = f"files not under this data directory (recorded at <code>{E(x['path'])}</code>)"
+            else:
+                links = " · ".join(f"<a href='/files/{E(quote(str(rel)))}/{E(quote(f))}'>{E(f)}</a>" for f in files)
             rv.append(f"<div class='small'>{E(x['id'])} ({E(x['mode'])}, status at export {E(x['status_at_export'])}): {links}</div>")
         rv.append("</div>")
         return head + "".join(mt) + "".join(rv) + "".join(dr)

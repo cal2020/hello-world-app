@@ -81,6 +81,7 @@ worker.onmessage = (ev) => {
       return;
     }
     case "locked":
+      if (runtimeStopped) return; // a stopped runtime's explanation stays on screen
       root.dataset.locked = "true";
       main.innerHTML = `<div class="card" role="alert"><h2 tabindex="-1">The workbench is open in another tab</h2>
         <p>Only one tab can use the saved state at a time, so that two tabs never overwrite each other's work.</p>
@@ -95,6 +96,7 @@ worker.onmessage = (ev) => {
       });
       return;
     case "ready":
+      if (runtimeStopped) return;
       started = true;
       root.dataset.locked = "false";
       root.dataset.persistent = String(m.persistent);
@@ -178,10 +180,12 @@ function failed(e, gen) {
 }
 
 async function navigate(path, { replace = false, gen = ++navGen, warning = null } = {}) {
-  if (!started) return;
+  // A save warning handed over from an action is never dropped: if this page is not shown, the
+  // next one shows it.
+  if (!started) { if (warning) carried = warning; return; }
   try {
     const res = await call({ kind: "get", path, actor: getActor() }, "Loading…");
-    if (gen !== navGen) return; // a newer navigation or action has started
+    if (gen !== navGen) { if (warning) carried = warning; return; } // a newer navigation or action has started
     if (res.status === 303 && res.location) return navigate(res.location, { replace, gen, warning });
     const target = "#" + path;
     if (replace) history.replaceState(null, "", target);
@@ -190,6 +194,7 @@ async function navigate(path, { replace = false, gen = ++navGen, warning = null 
     if (warning) res.warning = warning;
     render(res);
   } catch (e) {
+    if (warning) carried = warning;
     failed(e, gen);
   }
 }

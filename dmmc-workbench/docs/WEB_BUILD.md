@@ -34,9 +34,12 @@ saved state. The second tab takes the lock by force only if the first tab does n
 frozen, or busy with one long action (building a package for a very large pasted model can take that long). The first
 tab then stops, and what it was still doing is not saved, so it cannot overwrite the new tab's state. Before each save
 the worker asks the browser whether it still holds the lock, because a long action delays the lock-lost notice. It
-says so on screen. A tab that has stopped gives the lock up, so the next tab does not wait.
+says so on screen. The one exception is a save that had already started when the lock was taken: it completes, the
+new tab may load its result, and the first tab says that instead. A tab that has stopped gives the lock up, so the next tab does not wait.
 
-Deleting local data works only in the tab that holds the workbench (whether or not it finished starting). A tab
+Deleting local data works only in the tab that holds the workbench (whether or not it finished starting). An
+unexpected error during startup counts as a failed start: the tab keeps the lock and offers to delete the saved data,
+in case that data is the cause. After startup, such an error stops the tab and releases the lock. A tab
 that is waiting, has handed over, or has stopped refuses, and so does the main-thread fallback used when the worker
 never loaded, if another tab holds the lock. If another page keeps the data open, the page says the deletion is
 pending and stops saving. If the browser blocks site storage, the workbench still runs but does not save, and says
