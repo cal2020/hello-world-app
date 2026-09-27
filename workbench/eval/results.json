@@ -1,11 +1,11 @@
 {
- "generated_at": "2026-09-27 08:17 UTC",
- "code_version": "9bd2014ac610",
+ "generated_at": "2026-09-27 09:25 UTC",
+ "code_version": "6fe8bafaac38",
  "python": "3.11.15",
  "platform": "Linux",
  "live_requested": false,
  "tests": {
-  "ran": 121,
+  "ran": 126,
   "failed": [],
   "skipped": 0,
   "cases": [
@@ -305,7 +305,22 @@
     "skipped": false
    },
    {
+    "id": "tests.test_fix_repairs.GateAvailability.test_wrong_codes_with_an_unsent_body_do_not_lock_out_others",
+    "passed": true,
+    "skipped": false
+   },
+   {
     "id": "tests.test_fix_repairs.GateAvailability.test_wrong_guesses_do_not_hold_connections",
+    "passed": true,
+    "skipped": false
+   },
+   {
+    "id": "tests.test_fix_repairs.ImporterRepairs.test_extension_keys_in_pre_upgrade_revisions_still_dedupe",
+    "passed": true,
+    "skipped": false
+   },
+   {
+    "id": "tests.test_fix_repairs.ImporterRepairs.test_f12_reformatted_resend_after_an_upgrade_is_a_duplicate",
     "passed": true,
     "skipped": false
    },
@@ -321,6 +336,16 @@
    },
    {
     "id": "tests.test_fix_repairs.UiGate.test_a_refused_stale_login_cookie_opens_the_login_page",
+    "passed": true,
+    "skipped": false
+   },
+   {
+    "id": "tests.test_fix_repairs.WeakAccessCode.test_a_long_enough_code_starts",
+    "passed": true,
+    "skipped": false
+   },
+   {
+    "id": "tests.test_fix_repairs.WeakAccessCode.test_a_short_code_is_refused_at_start",
     "passed": true,
     "skipped": false
    },
@@ -690,7 +715,7 @@
      }
     ],
     "run": {
-     "run_id": "run_4174971359ce",
+     "run_id": "run_9ba53f81c8fc",
      "provider": "deterministic",
      "model": "exact-serial+curated-alias/1",
      "elapsed_ms": 1,
@@ -780,7 +805,7 @@
      }
     ],
     "run": {
-     "run_id": "run_414b99b70d2e",
+     "run_id": "run_b139852317d3",
      "provider": "fixture",
      "model": "fixture:cmms.json",
      "elapsed_ms": 1,
@@ -857,7 +882,7 @@
      }
     ],
     "run": {
-     "run_id": "run_b9b3c1241928",
+     "run_id": "run_396c21df0596",
      "provider": "deterministic",
      "model": "exact-serial+curated-alias/1",
      "elapsed_ms": 0,
@@ -940,7 +965,7 @@
      }
     ],
     "run": {
-     "run_id": "run_83fe1dae8042",
+     "run_id": "run_57191e692577",
      "provider": "fixture",
      "model": "fixture:cmms-heldout.json",
      "elapsed_ms": 1,
@@ -952,28 +977,28 @@
  "timings": {
   "import_A_ms": {
    "n": 5,
-   "median": 5.6,
-   "max": 59.9
+   "median": 6.3,
+   "max": 6.9
   },
   "build_ms": {
    "n": 5,
-   "median": 63.7,
-   "max": 72.3
+   "median": 61.5,
+   "max": 73.0
   },
   "consumer_checks_ms": {
    "n": 5,
-   "median": 28.7,
-   "max": 32.1
+   "median": 29.5,
+   "max": 36.9
   },
   "activate_ms": {
    "n": 5,
-   "median": 3.2,
-   "max": 3.4
+   "median": 3.4,
+   "max": 3.7
   },
   "delivery_ms": {
    "n": 5,
-   "median": 17.8,
-   "max": 27.2
+   "median": 16.3,
+   "max": 17.6
   }
  }
 }
