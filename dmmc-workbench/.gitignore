@@ -3,3 +3,5 @@
 var/
 __pycache__/
 *.pyc
+build/
+node_modules/

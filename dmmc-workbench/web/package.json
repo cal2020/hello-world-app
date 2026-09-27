@@ -1,0 +1,8 @@
+{
+  "name": "dmmc-workbench-web",
+  "private": true,
+  "description": "Browser build dependencies for the DMMC workbench (vendored into build/web by scripts/build_web.py)",
+  "dependencies": {
+    "@open-policy-agent/opa-wasm": "1.10.0"
+  }
+}

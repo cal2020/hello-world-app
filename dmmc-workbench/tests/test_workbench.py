@@ -2,6 +2,7 @@
 import json
 import os
 import unittest
+from pathlib import Path
 
 os.environ.setdefault("DMMC_NOW", "2026-09-23T15:00:00Z")
 
@@ -23,7 +24,7 @@ class PointerTests(unittest.TestCase):
 
 class ImportContractTests(unittest.TestCase):
     def test_rejects_dangling_flow_and_missing_synthetic_flag(self):
-        doc = json.loads(open(run_eval.demo.MODEL_A).read())
+        doc = json.loads(run_eval.demo.MODEL_A.read_text())
         doc["flows"][0]["target"] = "cmp:nope"
         del doc["synthetic"]
         errs = importer.validate_model(doc)
@@ -32,7 +33,7 @@ class ImportContractTests(unittest.TestCase):
 
     def test_fixture_models_are_valid(self):
         for m in (run_eval.demo.MODEL_A, run_eval.demo.MODEL_B):
-            self.assertEqual(importer.validate_model(json.loads(open(m).read())), [])
+            self.assertEqual(importer.validate_model(json.loads(Path(m).read_text())), [])
 
 
 class ValidatorRuleTests(unittest.TestCase):
@@ -72,3 +73,82 @@ for _cid, _title, _fn in run_eval.CASES:
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WebAppTests(unittest.TestCase):
+    """The transport-independent UI layer used by both the HTTP server and the browser build."""
+
+    def setUp(self):
+        import tempfile
+        from workbench import demo
+        from workbench.webapp import WebApp
+        self._prev = os.environ.get("DMMC_DATA_DIR")
+        self.dir = tempfile.mkdtemp(prefix="dmmc-webapp-")
+        os.environ["DMMC_DATA_DIR"] = self.dir
+        conn, _ = demo.reset()
+        self.app = WebApp(conn)
+
+    def tearDown(self):
+        import shutil
+        self.app.conn.close()
+        shutil.rmtree(self.dir, ignore_errors=True)
+        if self._prev is None:
+            os.environ.pop("DMMC_DATA_DIR", None)
+        else:
+            os.environ["DMMC_DATA_DIR"] = self._prev
+
+    def post(self, form, actor="bob", path="/act", referer="/"):
+        return self.app.post(path, {"csrf": self.app.csrf, **form}, actor, referer)
+
+    def test_csrf_required(self):
+        r = self.app.post("/act", {"action": "reset"}, "bob", "/")
+        self.assertEqual(r.status, 403)
+
+    def test_whoami_sets_only_known_identities(self):
+        self.assertEqual(self.post({"actor": "alice"}, path="/whoami").set_actor, "alice")
+        self.assertEqual(self.post({"actor": "<script>"}, path="/whoami").set_actor, "bob")
+
+    def test_demo_flow_and_pages(self):
+        self.assertIn("Imported snap-001-A", self.post({"action": "import_model", "which": "A"}).location.replace("%20", " "))
+        self.post({"action": "import_evidence", "which": "A"})
+        r = self.post({"action": "build", "mode": "fixture"})
+        self.assertTrue(r.location.startswith("/package/pkg-001-A"))
+        for path in ("/", "/package/pkg-001-A", "/model", "/evidence", "/evidence/ev-tls-portal-api-a1", "/impact",
+                     "/audit", "/eval", "/about"):
+            self.assertEqual(self.app.get(path, "bob").status, 200, path)
+        self.assertEqual(self.app.get("/package/nope", "bob").status, 404)
+        self.assertEqual(self.app.get("/nowhere", "bob").status, 404)
+
+    def test_denials_are_reported_not_raised(self):
+        r = self.post({"action": "import_model", "which": "A"}, actor="mallory")
+        self.assertIn("err=1", r.location)
+        self.assertIn("wrong%20project", r.location)
+
+    def test_file_route_cannot_escape_exports(self):
+        for bad in ("/files/../workbench.db", "/files/%2e%2e/workbench.db", "/files/../../fixtures/models/maint-telemetry.vA.json"):
+            self.assertEqual(self.app.get(bad, "bob").status, 404, bad)
+
+    def test_redirects_stay_inside_the_app(self):
+        r = self.post({"action": "nonsense"}, referer="https://evil.example/x")
+        self.assertTrue(r.location.startswith("/"))
+        r = self.post({"action": "build"}, actor="mallory", referer="//evil.example/x")
+        self.assertTrue(r.location.startswith("/?") or r.location.startswith("/"))
+        self.assertFalse(r.location.startswith("//"))
+
+    def test_paste_import_validates_contract(self):
+        r = self.post({"action": "import_model_json", "model_json": "{not json"})
+        self.assertIn("ImportError_", r.location)
+        from workbench import demo
+        r = self.post({"action": "import_model_json", "model_json": demo.MODEL_A.read_text()})
+        self.assertIn("Imported", r.location.replace("%20", " "))
+
+    def test_html_is_escaped(self):
+        import json as _json
+        from workbench import demo
+        doc = _json.loads(demo.MODEL_A.read_text())
+        doc["elements"][0]["description"] = "<img src=x onerror=alert(1)>"
+        doc["elements"][0]["attributes"]["note"] = "<script>alert(1)</script>"
+        self.post({"action": "import_model_json", "model_json": _json.dumps(doc)})
+        body = self.app.get("/model", "bob").body
+        self.assertNotIn("<script>alert(1)</script>", body)
+        self.assertNotIn("<img src=x", body)

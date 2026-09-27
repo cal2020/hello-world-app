@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import sys
 from contextlib import contextmanager
 
 from . import config
@@ -101,7 +102,8 @@ def connect(path=None) -> sqlite3.Connection:
     conn = sqlite3.connect(p, timeout=10, isolation_level=None, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys=ON")
-    conn.execute("PRAGMA journal_mode=WAL")
+    # WAL needs shared memory, which the browser build's Emscripten filesystem does not provide.
+    conn.execute("PRAGMA journal_mode=DELETE" if sys.platform == "emscripten" else "PRAGMA journal_mode=WAL")
     conn.executescript(SCHEMA)
     for t in APPEND_ONLY:
         conn.execute(f"""CREATE TRIGGER IF NOT EXISTS {t}_no_update BEFORE UPDATE ON {t}

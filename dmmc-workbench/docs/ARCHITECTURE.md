@@ -40,6 +40,11 @@ says otherwise; (2) the drafter is untrusted: no tools, no writes, output valida
 run in a temp directory with restricted capabilities and cannot touch the reviewed bundle; (4) review
 and export transitions are decided only by the review/export services under a write lock.
 
+The same code also runs in a browser: `workbench/webapp.py` holds every page and action, and a Pyodide Web Worker
+calls it directly instead of over HTTP. OPA's CLI is replaced by WebAssembly modules compiled from the same Rego at
+site build, cross-checked against the CLI before publishing. Each visitor has private state in IndexedDB. See
+[WEB_BUILD.md](WEB_BUILD.md).
+
 ## Key decisions and trade-offs
 
 | Decision | Alternatives considered | Why this one | Revisit when |
@@ -49,6 +54,7 @@ and export transitions are decided only by the review/export services under a wr
 | Evidence applicability is a separate function from check logic (environment, expiry, target revisions, status) | Let each check decide | One place to audit "why wasn't this report used"; the same rule applies to every control | More evidence types need type-specific applicability |
 | Relational tables + explicit dependency fields | Graph database | Graph-shaped queries here are 1–2 hops; SQLite keeps it a single process, offline, easy to reset | Multi-program traversal or cross-model reuse queries |
 | OPA via CLI subprocess | OPA server; embedded Go/WASM | No listening port, no API auth to configure, pinned binary with verified hash | Latency matters (≈90 ms/package build today, mostly subprocess spawn) |
+| Browser build runs the unchanged Python (Pyodide) and pre-compiled Wasm policies | Port the app to TypeScript; call OPA from a server | One implementation and one test suite for both runtimes; no server to secure; every visitor isolated. Cost: ~15 MB first load | A user-facing product would need a real backend, identity and shared state |
 | Validator is rules over structured claims | LLM-as-judge | Deterministic, testable, explainable; catches uncited, unresolvable, not-permitted, prohibited, overclaim | Need semantic support checking; then an LLM judge stays advisory next to human labels |
 | Review is *document* review for the demo | Model RMF dispositions | The prototype must not imply assessor or AO authority | A customer defines its real workflow and roles |
 
@@ -63,7 +69,9 @@ deterministic checks (step references, prerequisite roles, decision points prese
 
 ## Known limitations (true today)
 
-- Identities are simulated; no authentication. Server is for localhost demos only (CSRF token, no TLS).
+- Identities are simulated; no authentication. Server is for localhost demos only (CSRF token, no TLS). The public
+  browser build is safe only because all state is per-visitor and local.
+- The browser build cannot compile Rego; only bundles compiled at build time can be evaluated there.
 - A live model call happens inside the package transaction (holds the SQLite write lock while waiting).
 - Export files are written before the export row commits; a failed commit can leave orphan files.
 - The "overclaim" rule is a regex over implementation verbs; it will miss paraphrases.

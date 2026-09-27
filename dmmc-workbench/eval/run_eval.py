@@ -13,13 +13,13 @@ import json
 import os
 import shutil
 import sqlite3
+import sys
 import tempfile
 import time
 import traceback
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-os.environ.setdefault("DMMC_NOW", "2026-09-23T15:00:00Z")
 
 from workbench import (checks, config, db, demo, drafting, export, identity, importer, impact, opa,  # noqa: E402
                        packages, reference, review)
@@ -43,6 +43,7 @@ class Fresh:
     """Each case gets its own data directory and database."""
 
     def __enter__(self):
+        self.prev = os.environ.get("DMMC_DATA_DIR")
         self.dir = tempfile.mkdtemp(prefix="dmmc-eval-")
         os.environ["DMMC_DATA_DIR"] = self.dir
         self.conn, _ = demo.reset()
@@ -51,6 +52,11 @@ class Fresh:
     def __exit__(self, *a):
         self.conn.close()
         shutil.rmtree(self.dir, ignore_errors=True)
+        # Restore, so running the suite inside the web app never redirects the app's own database.
+        if self.prev is None:
+            os.environ.pop("DMMC_DATA_DIR", None)
+        else:
+            os.environ["DMMC_DATA_DIR"] = self.prev
 
 
 def load(conn, model="A", evidence=("A",)):
@@ -321,6 +327,10 @@ def e13(f):
         except review.ReviewConflict as e:
             msg = str(e)
         expect(count(c, "review_decisions") == 1, "extra decision row written", f)
+        if sys.platform == "emscripten":
+            # The browser build runs one thread and Emscripten's file locks are no-ops, so a second
+            # connection cannot hold a competing lock there. The optimistic head check above still applies.
+            return {"conflict": msg, "note": "cross-connection lock sub-check not applicable in the browser runtime"}
         # Second connection = second process; BEGIN IMMEDIATE serialises writers.
         c2 = db.connect()
         c2.execute("BEGIN IMMEDIATE")
@@ -574,7 +584,18 @@ def baseline_comparison():
     return out
 
 
-def main():
+def run_all(verbose: bool = False) -> dict:
+    """Run every case and the baseline comparison; returns the report (nothing written)."""
+    prev_now = os.environ.get("DMMC_NOW")
+    os.environ["DMMC_NOW"] = prev_now or "2026-09-23T15:00:00Z"
+    try:
+        return _run_all(verbose)
+    finally:
+        if prev_now is None:
+            os.environ.pop("DMMC_NOW", None)
+
+
+def _run_all(verbose):
     results = []
     for cid, title, fn in CASES:
         fails: list[str] = []
@@ -586,13 +607,19 @@ def main():
             fails.append("exception")
         results.append({"id": cid, "title": title, "held_out": cid in HELD_OUT, "passed": not fails,
                         "failures": fails, "ms": round((time.perf_counter() - t0) * 1000), "detail": detail})
-        print(f"{cid} {'PASS' if not fails else 'FAIL'} {title}" + (f"  -> {fails}" if fails else ""))
+        if verbose:
+            print(f"{cid} {'PASS' if not fails else 'FAIL'} {title}" + (f"  -> {fails}" if fails else ""))
     comp = baseline_comparison()
-    env = {"opa": opa.version(), "python": os.sys.version.split()[0], "clock": os.environ["DMMC_NOW"],
+    env = {"opa": opa.version(), "opa_backend": opa.backend(), "python": sys.version.split()[0],
+           "platform": sys.platform, "clock": os.environ["DMMC_NOW"],
            "code_digest": config.code_digest(), "git": config.git_revision()}
-    rep = {"environment": env, "cases": results, "baseline_comparison": comp,
-           "summary": {"cases": len(results), "passed": sum(r["passed"] for r in results),
-                       "held_out_cases": sorted(HELD_OUT)}}
+    return {"environment": env, "cases": results, "baseline_comparison": comp,
+            "summary": {"cases": len(results), "passed": sum(r["passed"] for r in results),
+                        "held_out_cases": sorted(HELD_OUT)}}
+
+
+def main():
+    rep = run_all(verbose=True)
     (ROOT / "reports").mkdir(exist_ok=True)
     (ROOT / "reports" / "evaluation_report.json").write_text(json.dumps(rep, indent=2, default=str))
     (ROOT / "reports" / "evaluation_report.md").write_text(render_md(rep))

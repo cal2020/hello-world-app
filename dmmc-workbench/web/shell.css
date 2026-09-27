@@ -1,0 +1,12 @@
+
+/* Shell-only additions (the app's own CSS comes from workbench/webapp.py). */
+#main:focus{outline:none}
+#busy{position:fixed;inset:auto 16px calc(16px + env(safe-area-inset-bottom, 0px)) auto;background:var(--card);color:var(--fg);
+  border:1px solid var(--line);border-radius:8px;padding:10px 14px;box-shadow:0 4px 16px rgba(0,0,0,.15);font-size:15px;z-index:10}
+.shell-footer{padding:16px 20px 28px;border-top:1px solid var(--line);margin-top:24px}
+.shell-footer a{color:var(--acc)}
+.shell-footer button{font-size:13px;padding:2px 8px;margin-left:6px}
+#progress li.done{color:var(--pass)}
+#progress li.fail{color:var(--fail);font-weight:700}
+@media (max-width:640px){header{padding:10px 16px}main{padding:12px 16px}td,th{padding:5px 6px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

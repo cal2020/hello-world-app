@@ -11,6 +11,14 @@ and refuses to export it as currently reviewed.
 > synthetic JSON contract, **not** a Cameo/SysML interchange format. No Cameo, Teamwork Cloud, OSLC or
 > KBR system is connected. See [docs/SIMULATED_INTEGRATIONS.md](docs/SIMULATED_INTEGRATIONS.md).
 
+## Live demo (runs in your browser)
+
+**https://cal2020.github.io/hello-world-app/dmmc-workbench/app/** is the same Python code running on Pyodide, with the
+OPA policies and their independent tests executing as WebAssembly. Every visitor gets their own state, stored only
+in their browser, so the simulated identities cannot affect anyone else. How it is built, and what is live versus
+fixed at build time: [docs/WEB_BUILD.md](docs/WEB_BUILD.md). A recorded walkthrough is at
+https://cal2020.github.io/hello-world-app/dmmc-workbench/.
+
 ## Quick start (offline after setup)
 
 ```bash
@@ -22,6 +30,7 @@ export DMMC_NOW=2026-09-23T15:00:00Z         # optional: pin the clock for a det
 .venv/bin/python -m workbench serve          # UI at http://127.0.0.1:8765 (simulated identities)
 .venv/bin/python -m workbench eval           # 22 acceptance cases + baseline comparison -> reports/
 .venv/bin/python -m unittest tests.test_workbench
+.venv/bin/python scripts/build_web.py          # static in-browser build -> build/web (see docs/WEB_BUILD.md)
 ```
 
 The core runs on the Python 3.11 standard library. Without `jsonschema`/`regex`, the OSCAL export
@@ -47,12 +56,14 @@ Screenshots: [docs/screenshots/](docs/screenshots/). Evaluation: [reports/evalua
 |---|---|
 | `workbench/importer.py` | Import adapter: contract validation, stable ids, raw bytes + digests, JSON Pointers |
 | `workbench/checks.py` | Check runner: AC-3 (OPA), AU-12 (record content), SC-8 (design vs observation), inheritance |
-| `workbench/opa.py` | Local OPA runner; quarantined candidate evaluation with restricted capabilities |
+| `workbench/opa.py` | OPA runner: pinned CLI or build-time-compiled Wasm; recording mode; quarantined candidate evaluation |
 | `workbench/drafting.py` | Fixture / seeded / live / baseline drafters; citation resolver; claim validator |
 | `workbench/packages.py` | Immutable packages, dependency manifest, freshness and review state |
 | `workbench/review.py` | Decisions bound to digests, optimistic concurrency, revocation |
 | `workbench/impact.py` | Stable-id diff, affected rows, scope expansion, evidence applicability changes |
 | `workbench/export.py` | Markdown SSP excerpt, evidence manifest, impact report, OSCAL component definition + validation |
+| `workbench/webapp.py` | All pages and actions, independent of transport (used by `server.py` and the browser worker) |
+| `web/`, `scripts/build_web.py` | Browser shell, Pyodide worker, and the static-site build with Wasm cross-checks |
 | `workbench/identity.py` | The workbench's own authorization (separate from the target policy) |
 | `workbench/db.py` | SQLite schema, append-only triggers, idempotent operations, hash-chained audit |
 | `fixtures/` | Synthetic models A/B, evidence sets, curated mappings, target Rego + independent tests, candidates |
