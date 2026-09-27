@@ -28,11 +28,11 @@ MAX_NESTING = 64
 MAX_STRING = 2000
 
 
-def _nesting_depth(raw: bytes) -> int:
+def _nesting_depth(text: str) -> int:
     """Max [/{ depth outside JSON strings, in one linear pass (json.loads would recurse first)."""
     depth = best = 0
     in_str = esc = False
-    for ch in raw.decode("utf-8", errors="replace"):
+    for ch in text:
         if in_str:
             if esc:
                 esc = False
@@ -94,6 +94,8 @@ def validate_model(doc) -> list[str]:
             if iid in ids:
                 e.append(f"duplicate id {iid}")
             ids.add(iid)
+            if kind in ("boundaries", "elements") and not (isinstance(it.get("name"), str) and it["name"].strip()):
+                e.append(f"{iid}: name required")
             if kind in ("elements", "flows"):
                 rev = it.get("revision")
                 if not (isinstance(rev, str) and SAFE_TOKEN.match(rev)):
@@ -117,10 +119,16 @@ def parse_model(raw: bytes):
     """Bounded parse: size and nesting are checked before json.loads can recurse."""
     if len(raw) > MAX_MODEL_BYTES:
         raise ImportError_(f"model export is larger than {MAX_MODEL_BYTES} bytes")
-    if _nesting_depth(raw) > MAX_NESTING:
+    try:
+        # Decode exactly as json.loads(bytes) would (it auto-detects UTF-8/16/32), then scan and parse
+        # that same text, so the depth check cannot be bypassed with another encoding.
+        text = raw.decode(json.detect_encoding(raw), errors="strict")
+    except (UnicodeDecodeError, LookupError) as ex:
+        raise ImportError_(f"model export is not valid UTF-8/16/32 text: {ex}") from ex
+    if _nesting_depth(text) > MAX_NESTING:
         raise ImportError_(f"model export nests deeper than {MAX_NESTING} levels")
     try:
-        return json.loads(raw)
+        return json.loads(text)
     except json.JSONDecodeError as ex:
         raise ImportError_(f"not valid JSON: {ex}") from ex
     except RecursionError as ex:

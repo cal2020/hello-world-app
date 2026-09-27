@@ -94,9 +94,23 @@ def verify_tools() -> dict:
     if digest != config.OPA_SHA256 or version != config.OPA_VERSION:
         raise SystemExit(f"OPA at {b} is {version} sha256 {digest}; the build requires the pinned "
                          f"{config.OPA_VERSION} {config.OPA_SHA256} (scripts/fetch_opa.sh)")
+    source = str(b.relative_to(ROOT)) if ROOT in b.parents else ("OPA_BIN" if os.environ.get("OPA_BIN") else "PATH")
     os.environ["OPA_BIN"] = str(b)  # every later step, including subprocesses, uses this verified binary
     print(f"  OPA {version} sha256 {digest[:16]}… verified")
-    return {"path": str(b.relative_to(ROOT)) if ROOT in b.parents else str(b), "version": version, "sha256": digest}
+    return {"source": source, "version": version, "sha256": digest}  # no host paths in a published manifest
+
+
+PACKED = ("workbench", "eval", "fixtures", "schemas")
+
+
+def packed_files() -> tuple[list[Path], bool]:
+    """Files that go into app.zip. In a git checkout: only tracked files (so ignored or stray files can
+    never ship under a clean stamp). Outside git: everything, and the build is stamped unverified."""
+    r = subprocess.run(["git", "ls-files", "-z", "--", *PACKED], cwd=ROOT, capture_output=True, text=True)
+    if r.returncode == 0 and r.stdout:
+        return sorted(ROOT / f for f in r.stdout.split("\0") if f), True
+    files = [p for base in PACKED for p in (ROOT / base).rglob("*") if p.is_file() and "__pycache__" not in p.parts]
+    return sorted(files), False
 
 
 def git_provenance() -> tuple[str, bool | None]:
@@ -179,8 +193,8 @@ def _build_wasm(d: Path, paths, entrypoints, caps, dest: Path):
     for e in entrypoints:
         args += ["-e", e]
     r = _cli_in(d, args + [p.name for p in paths] + ["-o", str(bundle)])
-    if r.returncode != 0:
-        return None, _relativize(r.stderr.strip()[:4000], d)
+    if r.returncode != 0:  # `opa build` reports compile errors on stdout, `opa check` on stderr
+        return None, _relativize((r.stderr.strip() or r.stdout.strip())[:4000], d)
     with tarfile.open(bundle) as t:
         m = next(x for x in t.getmembers() if x.name.lstrip("/") == "policy.wasm")
         dest.write_bytes(t.extractfile(m).read())
@@ -256,13 +270,19 @@ def pyodide_dist(tarball: Path | None) -> Path:
         raise SystemExit(f"Pyodide tarball checksum mismatch: {tb}")
     ex = CACHE / f"pyodide-{PYODIDE_VERSION}"
     if not (ex / ".complete").exists():
+        for stale in CACHE.glob("pyodide-extract-*"):  # left by an interrupted earlier run
+            shutil.rmtree(stale, ignore_errors=True)
         tmp = Path(tempfile.mkdtemp(prefix="pyodide-extract-", dir=CACHE))
-        with tarfile.open(tb) as t:
-            t.extractall(tmp, filter="data")
-        (tmp / ".complete").write_text(PYODIDE_SHA256)
-        if ex.exists():
-            shutil.rmtree(ex)
-        tmp.replace(ex)
+        try:
+            with tarfile.open(tb) as t:
+                t.extractall(tmp, filter="data")
+            (tmp / ".complete").write_text(PYODIDE_SHA256)
+            if ex.exists():
+                shutil.rmtree(ex)
+            tmp.replace(ex)
+        except BaseException:
+            shutil.rmtree(tmp, ignore_errors=True)
+            raise
     return ex / "pyodide"
 
 
@@ -298,12 +318,11 @@ def app_zip(dest: Path, opa_out: Path, rev: str, dirty: bool | None):
         zi.external_attr = 0o644 << 16
         z.writestr(zi, data)
 
+    files, _ = packed_files()
     with zipfile.ZipFile(dest, "w") as z:
-        files = [p for p in sorted((ROOT / "workbench").glob("*.py")) if p.name != "_build_info.py"]
-        files += [ROOT / p for p in ("eval/__init__.py", "eval/run_eval.py", "eval/expected.json")]
-        for base in ("fixtures", "schemas"):
-            files += [p for p in sorted((ROOT / base).rglob("*")) if p.is_file()]
         for p in files:
+            if p.name == "_build_info.py":
+                continue
             add(z, "dmmc-workbench/" + str(p.relative_to(ROOT)), p.read_bytes())
         add(z, "dmmc-workbench/workbench/_build_info.py", f'GIT_REVISION = "{stamp}"\n'.encode())
         add(z, "dmmc-workbench/web-opa/registry.json", (opa_out / "registry.json").read_bytes())
@@ -317,11 +336,13 @@ License texts are in [licenses/](licenses/) (sources and checksums: [licenses/SO
 | Component | Version | License | Where it is |
 |---|---|---|---|
 | Pyodide | {pyodide} | MPL-2.0 | pyodide/ |
-| CPython (inside Pyodide), with incorporated expat, libffi, zlib, libmpdec, HACL*, mimalloc, zstd bindings | {python} | PSF-2.0 and notices in CPython-*-incorporated-software.rst | pyodide/pyodide.asm.wasm, python_stdlib.zip |
+| CPython (inside Pyodide), with incorporated expat, libffi, zlib, libmpdec, mimalloc, zstd bindings | {python} | PSF-2.0 and notices in CPython-*-incorporated-software.rst | pyodide/pyodide.asm.wasm, python_stdlib.zip |
+| HACL* (CPython's hash implementations, inside Pyodide) | — | MIT (HACL-star-LICENSE.txt) | pyodide/pyodide.asm.wasm |
+| Emscripten runtime and system libraries: musl libc, libc++abi, compiler-rt (inside Pyodide) | emsdk 5.0.3 | MIT / University of Illinois NCSA; musl MIT; LLVM Apache-2.0 with LLVM exception | pyodide/pyodide.asm.mjs, pyodide.asm.wasm |
 | SQLite (inside Pyodide) | — | Public domain | pyodide/pyodide.asm.wasm |
 | bzip2, Zstandard (inside Pyodide) | — | bzip2 license; BSD-3-Clause | pyodide/pyodide.asm.wasm |
 | Open Policy Agent Wasm runtime (compiled into each policy module) | {opa} | Apache-2.0 | opa/*.wasm |
-| RE2, libmpdec, LLVM libc++ (inside OPA's Wasm runtime) | — | BSD-3-Clause; BSD-2-Clause (see CPython incorporated software); Apache-2.0 with LLVM exception | opa/*.wasm |
+| RE2, libmpdec, LLVM libc++ (inside OPA's Wasm runtime; libc++ also inside Pyodide) | — | BSD-3-Clause; BSD-2-Clause (see CPython incorporated software); Apache-2.0 with LLVM exception | opa/*.wasm, pyodide/pyodide.asm.wasm |
 | @open-policy-agent/opa-wasm | {opawasm} | Apache-2.0 | vendor/opa-wasm-browser.esm.js |
 | sprintf-js, yaml (bundled inside opa-wasm) | {sprintfjs}, {yaml} | BSD-3-Clause; ISC | vendor/opa-wasm-browser.esm.js |
 {wheels}

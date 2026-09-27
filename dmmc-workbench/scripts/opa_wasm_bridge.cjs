@@ -7,11 +7,11 @@
 const fs = require("fs");
 const path = require("path");
 const readline = require("readline");
-const { pathToFileURL } = require("url");
 
-// Load the exact browser build that scripts/build_web.py ships as vendor/opa-wasm-browser.esm.js.
+// Load the exact bytes that scripts/build_web.py ships as vendor/opa-wasm-browser.esm.js. A data: URL is
+// always parsed as an ES module, so this works on every Node 18+ (no reliance on module-syntax detection).
 const ESM = path.join(__dirname, "..", "web", "node_modules", "@open-policy-agent", "opa-wasm", "dist", "opa-wasm-browser.esm.js");
-const lib = import(pathToFileURL(ESM).href).then((m) => m.default);
+const lib = import("data:text/javascript;base64," + fs.readFileSync(ESM).toString("base64")).then((m) => m.default);
 
 const dir = process.argv[2];
 const cache = new Map();

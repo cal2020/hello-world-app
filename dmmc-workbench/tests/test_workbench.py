@@ -48,6 +48,8 @@ class ValidatorRuleTests(unittest.TestCase):
         self.assertTrue(self.flagged("SC-8 is satisfied."))
         self.assertTrue(self.flagged("The package has been approved."))
         self.assertTrue(self.flagged("67% of controls"))
+        self.assertTrue(self.flagged("error rate fell to .5% after"))
+        self.assertTrue(self.flagged("coverage rose 1.2.3 %"))
 
     def test_allowed(self):
         self.assertFalse(self.flagged("It is not a statement about control effectiveness."))
@@ -195,13 +197,18 @@ class ReviewFindingRegressionTests(unittest.TestCase):
         from workbench import importer
         with self.assertRaises(importer.ImportError_):
             importer.parse_model(b"[" * 10000 + b"]" * 10000)
+        # Another encoding must not hide the nesting from the depth scan.
+        utf16 = ('["x",' + "[" * 20000 + "]" * 20000 + "]").encode("utf-16-le")
+        with self.assertRaisesRegex(importer.ImportError_, "nests deeper"):
+            importer.parse_model(utf16)
         with self.assertRaises(importer.ImportError_):
             importer.parse_model(b" " * (importer.MAX_MODEL_BYTES + 1))
         r = self.post({"action": "import_model_json", "model_json": "[" * 5000 + "]" * 5000})
         self.assertIn("nests", r.location)
 
     def test_whoami_redirect_stays_local(self):
-        for ref in ("//evil.example/x", "/\\evil.example", "https://evil.example/", "/ok?c=1"):
+        for ref in ("//evil.example/x", "/\\evil.example", "https://evil.example/", "/ok?c=1", "/%2Fevil.example/x",
+                    "/%2F%2Fevil.example/x", "/%2f/x", "/%5Cevil.example", "/%0d%0aSet-Cookie:%20x"):
             loc = self.post({"actor": "alice"}, path="/whoami", referer=ref).location
             self.assertTrue(loc.startswith("/") and not loc.startswith("//") and "\\" not in loc, (ref, loc))
         self.assertEqual(self.post({"actor": "alice"}, path="/whoami", referer="/ok?c=1").location, "/ok?c=1")
@@ -209,6 +216,33 @@ class ReviewFindingRegressionTests(unittest.TestCase):
     def test_missing_form_field_message(self):
         r = self.post({"action": "review"})
         self.assertIn("Missing%20form%20field", r.location)
+
+    def test_model_without_names_is_rejected_not_a_misleading_form_error(self):
+        from workbench import demo
+        doc = json.loads(demo.MODEL_A.read_text())
+        del doc["elements"][0]["name"]
+        r = self.post({"action": "import_model_json", "model_json": json.dumps(doc)})
+        self.assertIn("name%20required", r.location)
+        self.assertNotIn("Missing%20form%20field", r.location)
+
+    def test_export_links_survive_a_symlinked_data_dir(self):
+        import tempfile
+        from workbench import demo, packages, review
+        from workbench.webapp import WebApp
+        link = Path(tempfile.mkdtemp()) / "link"
+        link.symlink_to(self.dir)
+        os.environ["DMMC_DATA_DIR"] = str(link)
+        app = WebApp(self.app.conn)
+        app.post("/act", {"csrf": app.csrf, "action": "import_model", "which": "A"}, "bob", "/")
+        app.post("/act", {"csrf": app.csrf, "action": "import_evidence", "which": "A"}, "bob", "/")
+        app.post("/act", {"csrf": app.csrf, "action": "build"}, "bob", "/")
+        pk = packages.get(app.conn, "pkg-001-A")
+        review.decide(app.conn, "alice", "pkg-001-A", "ACCEPT", "ok", seen_package_digest=pk["package_digest"],
+                      seen_head_decision_id=None)
+        app.post("/act", {"csrf": app.csrf, "action": "export", "package_id": "pkg-001-A", "mode": "current"}, "alice", "/")
+        r = app.get("/package/pkg-001-A", "alice")
+        self.assertEqual(r.status, 200)
+        self.assertIn("/files/", r.body)
 
     def test_percent_encoded_paths_route(self):
         self.post({"action": "import_model", "which": "A"})
@@ -218,14 +252,15 @@ class ReviewFindingRegressionTests(unittest.TestCase):
     def test_undefined_decision_is_an_error_not_a_shifted_pass(self):
         import tempfile
         from workbench import opa
+        if opa.backend() != "cli":
+            self.skipTest("needs the CLI: this ad-hoc policy is not compiled to Wasm")
         d = Path(tempfile.mkdtemp())
         (d / "authz.rego").write_text(
             'package mtel.authz\n'
             'decision := {"allow": true, "reasons": ["r"]} if input.action == "read"\n')
         cases = [{"action": "read"}, {"action": "write"}, {"action": "read"}]
-        if opa.backend() == "cli":
-            with self.assertRaisesRegex(RuntimeError, "decision undefined"):
-                opa.eval_decisions([str(d / "authz.rego")], "data.mtel.authz", cases)
+        with self.assertRaisesRegex(RuntimeError, "decision undefined"):
+            opa.eval_decisions([str(d / "authz.rego")], "data.mtel.authz", cases)
 
 
 if __name__ == "__main__":

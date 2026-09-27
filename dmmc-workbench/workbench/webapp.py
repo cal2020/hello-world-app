@@ -4,7 +4,8 @@
 Identity is chosen from a SIMULATED identity menu (no authentication). All permission,
 freshness and review checks happen in the service layer; this module only calls services
 and renders HTML, so the same rules hold for the CLI, tests, the server and the browser.
-Every value interpolated into HTML goes through html.escape (E), including code-generated enums and numbers.
+Every value interpolated into HTML goes through html.escape (E), including code-generated enums, numbers,
+digests and the CSRF token.
 """
 from __future__ import annotations
 
@@ -94,7 +95,7 @@ class WebApp:
     def btn(self, action, label, **fields):
         hidden = "".join(f'<input type="hidden" name="{E(k)}" value="{E(str(v))}">' for k, v in fields.items())
         return (f'<form method="post" action="/act" class="inline"><input type="hidden" name="action" value="{E(action)}">'
-                f'<input type="hidden" name="csrf" value="{self.csrf}">{hidden}<button>{E(label)}</button></form>')
+                f'<input type="hidden" name="csrf" value="{E(self.csrf)}">{hidden}<button>{E(label)}</button></form>')
 
     @staticmethod
     def cite_link(c):
@@ -107,7 +108,7 @@ class WebApp:
                 f'<a href="/eval">Acceptance suite</a><a href="/about">About</a></nav>'
                 f'<form method="post" action="/whoami" class="inline"><label for="actor-select">SIMULATED identity '
                 f'(no authentication):</label> <select id="actor-select" name="actor" onchange="this.form.requestSubmit()">{ids}'
-                f'</select><input type="hidden" name="csrf" value="{self.csrf}"><noscript><button>Switch</button></noscript></form>')
+                f'</select><input type="hidden" name="csrf" value="{E(self.csrf)}"><noscript><button>Switch</button></noscript></form>')
 
     def main(self, title, body, msg=None, err=False):
         m = f'<div class="msg{" err" if err else ""}" role="status">{E(msg)}</div>' if msg else ""
@@ -196,8 +197,8 @@ class WebApp:
                  f"{b('candidate', 'Evaluate candidate using http.send', which='uses_http_send')}</p>"
                  f"<p class='small'>Or paste your own model revision on the <a href='/model'>Model</a> page.</p></div>")
         cur = (f"<div class='card'>Current model: <b>{E(snap['id'])}</b> revision <b>{E(snap['revision'])}</b> "
-               f"digest <code>{short(snap['digest'])}</code> · imported by {E(snap['imported_by'])}<br>"
-               f"Dependency manifest digest: <code>{short(digest_obj(dep))}</code></div>"
+               f"digest <code>{E(short(snap['digest']))}</code> · imported by {E(snap['imported_by'])}<br>"
+               f"Dependency manifest digest: <code>{E(short(digest_obj(dep)))}</code></div>"
                if snap else "<div class='card'>No model imported. Start with <b>Import model A</b>, then <b>Import evidence set A</b> "
                             "and <b>Build package</b>.</div>")
         return (cur + steps + "<div class='card'><table><tr><th>Package</th><th>Snapshot</th><th>Drafter</th>"
@@ -217,8 +218,8 @@ class WebApp:
                 f"<span class='{E(str(st['review_state']))}'>{E(str(st['review_state']))}</span> · effective "
                 f"<span class='{E(str(st['effective_state']))}'>{E(str(st['effective_state']))}</span><br>"
                 f"<span class='small'>{E('; '.join(st['reasons']))}</span><br>"
-                f"package digest <code>{short(p['package_digest'], 20)}</code> · drafter <b>{E(p['drafter_mode'])}</b>"
-                f" · OPA {E(man['tools']['opa'])} · code <code>{short(man['code']['workbench_digest'])}</code><br>"
+                f"package digest <code>{E(short(p['package_digest'], 20))}</code> · drafter <b>{E(p['drafter_mode'])}</b>"
+                f" · OPA {E(man['tools']['opa'])} · code <code>{E(short(man['code']['workbench_digest']))}</code><br>"
                 f"<b>{E(str(n))} of {E(str(len(rows)))}</b> selected demo obligation rows have current applicable evidence (not a compliance %).<br>"
                 f"Draft validation: {E(json.dumps(val['counts']))}</div>")
         mt = ["<div class='card'><h3>Control and evidence matrix</h3><table><tr><th>Row</th><th>Control stmt / params</th>"
@@ -234,7 +235,7 @@ class WebApp:
                           f"{E('; '.join(e['reasons']))}</div>" for e in d.get("evidence", []))
             if r["check"] == "ac3_policy_matches_model" and d.get("tests"):
                 t = d["tests"]
-                evs += (f"<div class='small'>policy <code>{short(d['policy_digest'])}</code> tests {E(str(t['passed']))} pass / "
+                evs += (f"<div class='small'>policy <code>{E(short(d['policy_digest']))}</code> tests {E(str(t['passed']))} pass / "
                         f"{E(str(t['failed']))} fail / {E(str(t['errored']))} error</div>")
                 evs += "".join(f"<div class='small bad'>mismatch: {E(m['role'])} {E(m['action'])} model="
                                f"{E(str(m['model_declares']))} policy={E(str(m['policy_allows']))}</div>" for m in d.get("mismatches", []))
@@ -271,13 +272,13 @@ class WebApp:
         rv = ["<div class='card'><h3>Review (document review for the demo; not a control or authorization decision)</h3><ul>"]
         for d in decs:
             rv.append(f"<li><b>{E(d['id'])}</b> {E(d['decision'])} by {E(d['actor'])} — {E(d['reason'])} "
-                      f"<span class='small'>bound to <code>{short(d['package_digest'])}</code>; gap rows acknowledged: "
+                      f"<span class='small'>bound to <code>{E(short(d['package_digest']))}</code>; gap rows acknowledged: "
                       f"{E(str(len(d['limitations'])))}</span>"
                       + (f" <span class='bad'>REVOKED ({E(d['revoked']['reason'])})</span>" if d["revoked"]
                          else " " + self.btn("revoke_decision", "Revoke", decision_id=d["id"], back=pid)) + "</li>")
         rv.append("</ul>")
         rv.append(f"""<form method="post" action="/act"><input type="hidden" name="action" value="review">
-<input type="hidden" name="csrf" value="{self.csrf}"><input type="hidden" name="package_id" value="{E(pid)}">
+<input type="hidden" name="csrf" value="{E(self.csrf)}"><input type="hidden" name="package_id" value="{E(pid)}">
 <input type="hidden" name="seen_digest" value="{E(p['package_digest'])}"><input type="hidden" name="seen_head" value="{E(st['head_decision'] or '')}">
 <label for="decision-select">Decision</label> <select id="decision-select" name="decision"><option>ACCEPT</option><option>REQUEST_CHANGES</option><option>REJECT</option></select>
 <label for="reason-input">Reason</label> <input id="reason-input" name="reason" size="60" placeholder="required"> <button>Record decision as current identity</button></form>""")
@@ -285,7 +286,10 @@ class WebApp:
                   f"{self.btn('export', 'Export historical copy', package_id=pid, mode='historical')}</p>")
         exps = c.execute("SELECT * FROM exports WHERE package_id=? ORDER BY created_at", (pid,)).fetchall()
         for x in exps:
-            rel = Path(x["path"]).relative_to(config.exports_dir())
+            try:
+                rel = Path(x["path"]).resolve().relative_to(config.exports_dir().resolve())
+            except ValueError:
+                continue  # an export from another data directory: nothing to link
             links = " · ".join(f"<a href='/files/{E(quote(str(rel)))}/{E(quote(f))}'>{E(f)}</a>" for f in json.loads(x["files_json"]))
             rv.append(f"<div class='small'>{E(x['id'])} ({E(x['mode'])}, status at export {E(x['status_at_export'])}): {links}</div>")
         rv.append("</div>")
@@ -306,7 +310,7 @@ class WebApp:
         els, fls, bnds = M.elements(c, sid), M.flows(c, sid), M.boundaries(c, sid)
         cite = lambda ptr: self.cite_link(f"model:{sn['digest']}#{ptr}")
         out = [f"<p>Snapshots: {pick}</p><div class='card'>Snapshot <b>{E(sid)}</b> · source {E(sn['source_id'])} rev "
-               f"{E(sn['revision'])} · digest <code>{short(sn['digest'], 20)}</code> · adapter {E(sn['adapter_version'])}"
+               f"{E(sn['revision'])} · digest <code>{E(short(sn['digest'], 20))}</code> · adapter {E(sn['adapter_version'])}"
                f" · synthetic={E(str(bool(sn['synthetic'])))}</div>"]
         out.append("<div class='card'><h3>Boundaries</h3><ul>" + "".join(
             f"<li>{E(b['id'])} — {E(b['name'] or '')} ({E(b['kind'] or '')}) {cite(b['pointer'])}</li>" for b in bnds.values()) + "</ul>")
@@ -332,7 +336,7 @@ class WebApp:
                 f"synthetic contract (edit the sample: change a permission, add a flow, set a value to null). It is validated, "
                 f"hashed and imported as the current revision for <code>proj-mtel</code>; then build a package to see the checks. "
                 f"Requires an engineer identity.</p><form method='post' action='/act'><input type='hidden' name='action' "
-                f"value='import_model_json'><input type='hidden' name='csrf' value='{self.csrf}'>"
+                f"value='import_model_json'><input type='hidden' name='csrf' value='{E(self.csrf)}'>"
                 f"<label for='model-json'>Model export JSON</label><textarea id='model-json' name='model_json' rows='14' "
                 f"spellcheck='false'>{E(sample)}</textarea><p><button>Validate and import</button></p></form></div>")
 
@@ -359,7 +363,7 @@ class WebApp:
             rows.append(f"<tr><td><a href='/evidence/{E(quote(ev['id']))}'>{E(ev['id'])}</a></td><td>{E(ev['kind'])} / {E(ev['type'])}"
                         f"{' (synthetic)' if ev['synthetic'] else ''}</td><td class='small'>{E(json.dumps(ev['meta']['target']))}</td>"
                         f"<td>{E(ev['status'])}</td><td class='{'ok' if ok else 'UNKNOWN'}'>{'yes' if ok else 'no'}"
-                        f"<div class='small'>{E('; '.join(why))}</div></td><td><code>{short(ev['digest'])}</code></td><td>{act}</td></tr>")
+                        f"<div class='small'>{E('; '.join(why))}</div></td><td><code>{E(short(ev['digest']))}</code></td><td>{act}</td></tr>")
         rows.append("</table>")
         return "<div class='card'>" + "".join(rows) + "<p class='small'>Withdrawal never deletes bytes or history.</p></div>"
 
@@ -487,21 +491,21 @@ class WebApp:
                 msg = f"Imported evidence: {', '.join(x['evidence_id'] for x in r)}"
                 back = "/evidence"
             elif a == "evidence_status":
-                importer.set_evidence_status(c, actor, form["evidence_id"], form["status"], "via UI")
-                msg, back = f"{form['evidence_id']} is now {form['status']}", "/evidence"
+                importer.set_evidence_status(c, actor, need(form, "evidence_id"), need(form, "status"), "via UI")
+                msg, back = f"{need(form, 'evidence_id')} is now {need(form, 'status')}", "/evidence"
             elif a == "build":
                 r = packages.build_package(c, actor, demo.PROJECT, mode=form.get("mode", "fixture"))
                 msg, back = f"Built {r['package_id']}: {r['coverage']['statement']}", f"/package/{r['package_id']}"
             elif a == "review":
-                r = review.decide(c, actor, form["package_id"], form["decision"], form.get("reason", ""),
-                                  seen_package_digest=form["seen_digest"], seen_head_decision_id=form.get("seen_head") or None)
-                msg, back = f"Recorded {r['decision_id']} {r['decision']}", f"/package/{form['package_id']}"
+                r = review.decide(c, actor, need(form, "package_id"), need(form, "decision"), form.get("reason", ""),
+                                  seen_package_digest=need(form, "seen_digest"), seen_head_decision_id=form.get("seen_head") or None)
+                msg, back = f"Recorded {r['decision_id']} {r['decision']}", f"/package/{need(form, 'package_id')}"
             elif a == "revoke_decision":
-                review.revoke(c, actor, form["decision_id"], "revoked via UI")
-                msg, back = f"Revoked {form['decision_id']}", f"/package/{form['back']}"
+                review.revoke(c, actor, need(form, "decision_id"), "revoked via UI")
+                msg, back = f"Revoked {need(form, 'decision_id')}", f"/package/{need(form, 'back')}"
             elif a == "export":
-                r = export.export_package(c, actor, form["package_id"], mode=form["mode"])
-                msg, back = f"Exported {r['export_id']} (status at export {r['status_at_export']})", f"/package/{form['package_id']}"
+                r = export.export_package(c, actor, need(form, "package_id"), mode=need(form, "mode"))
+                msg, back = f"Exported {r['export_id']} (status at export {r['status_at_export']})", f"/package/{need(form, 'package_id')}"
             elif a == "candidate":
                 which = form.get("which")
                 if which not in ("missing_project_check", "uses_http_send"):
@@ -514,8 +518,8 @@ class WebApp:
                           f" ({r.get('compile', {}).get('stderr', '')[:200]})")
                        + f". Enforcement policy unchanged: {r['enforcement_policy_unchanged']}.")
             elif a == "revoke_user":
-                revoke_user(c, actor, form["user_id"], "via UI")
-                msg = f"Revoked {form['user_id']}"
+                revoke_user(c, actor, need(form, "user_id"), "via UI")
+                msg = f"Revoked {need(form, 'user_id')}"
             elif a == "run_eval":
                 rep = run_acceptance_suite()
                 rep["ran_at"] = now()
@@ -527,25 +531,40 @@ class WebApp:
             else:
                 return self.redirect("/", f"unknown action {a}", True)
             return self.redirect(back, msg)
-        except KeyError as e:  # before ERRORS, which includes LookupError
-            return self.redirect(_local_path(referer), f"Missing form field {e}", True)
+        except MissingField as e:
+            return self.redirect(_local_path(referer), str(e), True)
         except ERRORS as e:
             return self.redirect(_local_path(referer), f"{type(e).__name__}: {e}", True)
 
 
 def _local_path(target: str | None, keep_query: bool = False) -> str:
-    """Only ever redirect within the app: a single leading slash, no scheme or host, no CR/LF."""
-    if not target:
+    """Only ever redirect within the app. Checks run on the DECODED path and again on the final
+    string, so encoded forms such as '/%2Fhost' or '/%5Chost' cannot become '//host'."""
+    if not target or any(c in target for c in "\r\n\\"):
         return "/"
     u = urlparse(target)
-    path = u.path or "/"
-    if u.scheme or u.netloc or not path.startswith("/") or path.startswith("//") or path.startswith("/\\") \
-            or any(c in target for c in "\r\n\\"):
+    if u.scheme or u.netloc:
         return "/"
-    path = quote(unquote(path), safe="/:@!$&'()*+,;=-._~")
+    decoded = unquote(u.path or "/")
+    if not decoded.startswith("/") or decoded.startswith("//") or any(c in decoded for c in "\r\n\\"):
+        return "/"
+    path = quote(decoded, safe="/:@!$&'()*+,;=-._~")
+    if not path.startswith("/") or path.startswith("//"):
+        return "/"
     if keep_query and u.query:
-        return f"{path}?{quote(u.query, safe='=&%:/+,;@-._~')}"
+        return f"{path}?{quote(unquote(u.query), safe='=&:/+,;@-._~')}"
     return path
+
+
+class MissingField(ValueError):
+    pass
+
+
+def need(form: dict, key: str) -> str:
+    """Required form field; a missing one is reported as such (and only form lookups are)."""
+    if key not in form:
+        raise MissingField(f"Missing form field '{key}'")
+    return form[key]
 
 
 def run_acceptance_suite() -> dict:

@@ -71,7 +71,13 @@ def git_revision() -> str:
     except ImportError:
         pass
     try:
-        return subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True,
-                              text=True, timeout=5).stdout.strip() or "unknown"
+        rev = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True,
+                             text=True, timeout=5)
+        st = subprocess.run(["git", "status", "--porcelain", "--untracked-files=all", "--", "."], cwd=ROOT,
+                            capture_output=True, text=True, timeout=5)
+        if rev.returncode != 0 or st.returncode != 0 or not rev.stdout.strip():
+            return "unknown"
+        # A report generated before committing must not claim the parent commit's name for new code.
+        return rev.stdout.strip() + ("+local-changes" if st.stdout.strip() else "")
     except Exception:
         return "unknown"

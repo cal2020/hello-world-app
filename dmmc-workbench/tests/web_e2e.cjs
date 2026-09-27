@@ -233,18 +233,31 @@ function check(name, cond, detail = "") {
   await nav("Dashboard");
   check("runtime still healthy after rejected paste", (await p.locator("main").innerText()).includes("snap-003-C"));
 
-  // Two tabs: the second waits, then takes over; the first stops.
+  // Two tabs: the second waits; a takeover requested while the first is mid-action must not lose that action.
   const p2 = watch(await ctx.newPage());
   await p2.goto(URL_);
   await p2.waitForSelector("text=The workbench is open in another tab", { timeout: 120000 });
   check("second tab is told the workbench is open elsewhere", true);
+  await p2.locator("#wipe").click(); await p2.waitForTimeout(700); await p2.locator("#wipe").click();
+  await p2.waitForSelector(".wipe-error", { timeout: 15000 }).catch(() => {});
+  check("waiting tab refuses to delete data the other tab is using",
+    ((await p2.locator(".wipe-error").innerText().catch(() => "")) || "").includes("open in another tab"));
+  await nav("Dashboard");
+  const pkgsBefore = await p.locator("a[href^='/package/']").count();
+  await p.getByRole("button", { name: "Build package (fixture drafter)", exact: true }).click(); // not awaited
   await p2.getByRole("button", { name: "Use it in this tab instead" }).click();
   await p2.waitForSelector("h2:has-text('Dashboard')", { timeout: 120000 });
+  const pkgsAfter = await p2.locator("a[href^='/package/']").count();
+  check("takeover waits for the other tab's in-flight action and keeps its result", pkgsAfter === pkgsBefore + 1,
+    `${pkgsBefore} -> ${pkgsAfter}`);
   check("second tab takes over with the saved state", (await p2.locator("main").innerText()).includes("snap-003-C"));
-  await p.waitForSelector("text=opened in another tab", { timeout: 30000 }).catch(() => {});
-  check("first tab stops after takeover", (await p.locator("main").innerText()).includes("opened in another tab"));
+  await p.waitForSelector("text=moved to another tab", { timeout: 30000 }).catch(() => {});
+  check("first tab stops after handing over", (await p.locator("main").innerText()).includes("moved to another tab"));
   await p.close();
   p = p2;
+  await p2.reload();
+  await p2.waitForSelector("h2:has-text('Dashboard')", { timeout: 120000 });
+  check("handed-over state persists across reload", (await p2.locator("a[href^='/package/']").count()) === pkgsBefore + 1);
 
   // Delete local data: a double click is not a confirmation; a deliberate second click is.
   await p.locator("#wipe").dblclick();
