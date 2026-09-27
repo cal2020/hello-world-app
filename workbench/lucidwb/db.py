@@ -72,10 +72,11 @@ CREATE TABLE IF NOT EXISTS external_record (
   PRIMARY KEY (snapshot_id, record_id)
 );
 
+-- Projection ids and versions are named per project, like everything else a project owns.
 CREATE TABLE IF NOT EXISTS projection_definition (
   projection_id TEXT NOT NULL, version TEXT NOT NULL, project TEXT NOT NULL, body_json TEXT NOT NULL,
   digest TEXT NOT NULL, status TEXT NOT NULL, reviewed_by TEXT, review_reason TEXT, created_at TEXT NOT NULL,
-  PRIMARY KEY (projection_id, version)
+  PRIMARY KEY (project, projection_id, version)
 );
 CREATE TABLE IF NOT EXISTS contract_artifact (
   contract_digest TEXT PRIMARY KEY, contract_id TEXT NOT NULL, contract_version TEXT NOT NULL,
@@ -192,24 +193,33 @@ ADDED_COLUMNS = [("source_snapshot", "unrecognized_json", "TEXT NOT NULL DEFAULT
                  ("external_record", "unrecognized_json", "TEXT NOT NULL DEFAULT '{}'")]
 
 
+def _table_sql(c, table):
+    return c.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name=?", (table,)).fetchone()["sql"]
+
+
+def _rebuild(c, table, before=""):
+    """Recreate `table` from SCHEMA with its rows (SQLite cannot change a table constraint in place)."""
+    try:
+        c.executescript(f"BEGIN IMMEDIATE; ALTER TABLE {table} RENAME TO {table}_old; {before}" + SCHEMA +
+                        f"; INSERT INTO {table} SELECT * FROM {table}_old; DROP TABLE {table}_old; COMMIT;")
+    except BaseException:
+        if c.in_transaction:
+            c.execute("ROLLBACK")
+        raise
+
+
 def migrate(c):
     """Upgrade a database written by an earlier version in place (state may live on a mounted volume)."""
     for table, column, decl in ADDED_COLUMNS:
         if column not in {r["name"] for r in c.execute(f"PRAGMA table_info({table})")}:
             c.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
-    sql = c.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='source_snapshot'").fetchone()["sql"]
-    if "UNIQUE (source, project, revision)" in sql:
+    if "UNIQUE (source, project, revision)" in _table_sql(c, "source_snapshot"):
         # The old table constraint also covered staged partial views. Rebuild the table without it; the
         # replacement index (see SCHEMA) is created on the new table.
-        try:
-            c.executescript("BEGIN IMMEDIATE; ALTER TABLE source_snapshot RENAME TO source_snapshot_old; "
-                            "DROP INDEX IF EXISTS source_snapshot_revision; " + SCHEMA +
-                            "; INSERT INTO source_snapshot SELECT * FROM source_snapshot_old; "
-                            "DROP TABLE source_snapshot_old; COMMIT;")
-        except BaseException:
-            if c.in_transaction:
-                c.execute("ROLLBACK")
-            raise
+        _rebuild(c, "source_snapshot", "DROP INDEX IF EXISTS source_snapshot_revision; ")
+    if "PRIMARY KEY (projection_id, version)" in _table_sql(c, "projection_definition"):
+        # The old key made projection versions one namespace across all projects.
+        _rebuild(c, "projection_definition")
 
 
 def audit(c, actor, project, action, outcome, operation_id=None, detail=None):

@@ -14,8 +14,9 @@ from jsonschema import Draft202012Validator
 
 from . import ADAPTER_VERSION, GENERATOR_VERSION
 from .db import audit, enqueue_event
-from .projection import (BLOCKING, check_against_snapshot, contract_diff, generate_contract, instance_diagnostics,
-                         projection_digest, validate_openapi, validate_projection_shape)
+from .projection import (BLOCKING, check_against_snapshot, contract_diff, contract_shape_digest, generate_contract,
+                         instance_diagnostics, projection_digest, schema_name, validate_openapi,
+                         validate_projection_shape)
 from .util import ApiError, code_version, digest, new_id, now
 
 CONSUMER_URL = os.environ.get("LWB_CONSUMER_URL", "http://127.0.0.1:8781")
@@ -24,17 +25,20 @@ CHECK_TOKEN = "demo-svc-release-check"
 
 
 # ---------------------------------------------------------------- projections
+# Projection ids and versions are named within a project: another project's projections are never
+# looked up, so they can neither conflict with nor be discovered through these calls.
 def register_projection(c, actor, body):
     errs = validate_projection_shape(body)
     if errs:
         raise ApiError(422, "invalid_projection", "Projection definition rejected.", {"errors": errs})
     pd = projection_digest(body)
-    ex = c.execute("SELECT digest FROM projection_definition WHERE projection_id=? AND version=?",
-                   (body["projection_id"], body["version"])).fetchone()
+    ex = c.execute("SELECT digest FROM projection_definition WHERE project=? AND projection_id=? AND version=?",
+                   (body["project"], body["projection_id"], body["version"])).fetchone()
+    out = {"project": body["project"], "projection_id": body["projection_id"], "version": body["version"],
+           "digest": pd}
     if ex:
         if ex["digest"] == pd:
-            return 200, {"projection_id": body["projection_id"], "version": body["version"], "digest": pd,
-                         "status": "unchanged"}
+            return 200, dict(out, status="unchanged")
         raise ApiError(409, "projection_version_conflict",
                        "This projection version already exists with different content; use a new version.")
     c.execute("INSERT INTO projection_definition VALUES (?,?,?,?,?,?,?,?,?)",
@@ -42,12 +46,12 @@ def register_projection(c, actor, body):
                "draft", None, None, now()))
     audit(c, actor, body["project"], "projection.register", "draft",
           detail={"projection": f"{body['projection_id']}@{body['version']}", "digest": pd})
-    return 201, {"projection_id": body["projection_id"], "version": body["version"], "digest": pd, "status": "draft"}
+    return 201, dict(out, status="draft")
 
 
-def review_projection(c, actor, projection_id, version, decision, reason):
-    row = c.execute("SELECT * FROM projection_definition WHERE projection_id=? AND version=?",
-                    (projection_id, version)).fetchone()
+def review_projection(c, actor, project, projection_id, version, decision, reason):
+    row = c.execute("SELECT * FROM projection_definition WHERE project=? AND projection_id=? AND version=?",
+                    (project, projection_id, version)).fetchone()
     if not row:
         raise ApiError(404, "not_found", "Resource not found.")
     if decision not in ("approve", "reject"):
@@ -55,18 +59,20 @@ def review_projection(c, actor, projection_id, version, decision, reason):
     if not reason:
         raise ApiError(400, "invalid_input", "A review reason is required.")
     status = "approved" if decision == "approve" else "rejected"
-    c.execute("UPDATE projection_definition SET status=?, reviewed_by=?, review_reason=? WHERE projection_id=? AND version=?",
-              (status, actor, reason, projection_id, version))
-    audit(c, actor, row["project"], "projection.review", status,
+    c.execute("UPDATE projection_definition SET status=?, reviewed_by=?, review_reason=? "
+              "WHERE project=? AND projection_id=? AND version=?",
+              (status, actor, reason, project, projection_id, version))
+    audit(c, actor, project, "projection.review", status,
           detail={"projection": f"{projection_id}@{version}", "digest": row["digest"], "reason": reason})
-    return {"projection_id": projection_id, "version": version, "status": status, "digest": row["digest"]}
+    return {"project": project, "projection_id": projection_id, "version": version, "status": status,
+            "digest": row["digest"]}
 
 
 # ---------------------------------------------------------------- releases
 def load_release(c, release_id):
     r = c.execute("SELECT r.*, p.body_json AS projection_json FROM release r JOIN projection_definition p "
-                  "ON p.projection_id=r.projection_id AND p.version=r.projection_version WHERE r.release_id=?",
-                  (release_id,)).fetchone()
+                  "ON p.project=r.project AND p.projection_id=r.projection_id AND p.version=r.projection_version "
+                  "WHERE r.release_id=?", (release_id,)).fetchone()
     if not r:
         raise ApiError(404, "not_found", "Resource not found.")
     return r
@@ -102,9 +108,16 @@ def build_candidate(c, actor, project, projection_id, version, snapshot_id=None)
     cdig = digest(contract)
     for msg in validate_openapi(contract):
         diags.append({"code": "invalid_projection", "class": "structural", "message": f"OpenAPI validation: {msg}"})
-    same_ver = c.execute("SELECT contract_digest FROM contract_artifact WHERE contract_id=? AND contract_version=?",
-                         (p["contract"]["id"], str(p["contract"]["version"]))).fetchall()
-    if any(r["contract_digest"] != cdig for r in same_ver):
+    # A contract version is claimed by this project's builds that were not blocked (a blocked build can never
+    # be activated). Other projects' contracts are neither compared nor disclosed. Reordering a type array or
+    # an enum is not a new shape.
+    same_ver = c.execute("SELECT DISTINCT a.contract_digest, a.openapi_json FROM contract_artifact a JOIN release r "
+                         "ON r.contract_digest=a.contract_digest WHERE r.project=? AND r.status!='blocked_generation' "
+                         "AND a.contract_id=? AND a.contract_version=?",
+                         (project, p["contract"]["id"], str(p["contract"]["version"]))).fetchall()
+    shape = contract_shape_digest(contract)
+    if any(r["contract_digest"] != cdig and contract_shape_digest(json.loads(r["openapi_json"])) != shape
+           for r in same_ver):
         diags.append({"code": "contract_version_reused_with_different_shape", "class": "structural",
                       "message": "Consumer-visible shape changed without a new contract version."})
     c.execute("INSERT OR IGNORE INTO contract_artifact VALUES (?,?,?,?,?,?)",
@@ -125,9 +138,13 @@ def build_candidate(c, actor, project, projection_id, version, snapshot_id=None)
                rec["snapshot_id"] if rec else None, manifest["code_version"], GENERATOR_VERSION, "candidate", "[]",
                json.dumps(manifest, sort_keys=True), digest(manifest), actor, now()))
     rel = load_release(c, rid)
-    # A missing definition explains every missing value of that field; report the root cause once.
-    undefined = {(d.get("resource"), d.get("field")) for d in diags if d["code"] == "definition_missing"}
-    diags += [d for d in instance_diagnostics(c, rel) if (d.get("resource"), d.get("field")) not in undefined]
+    # A missing or invalid definition (or a reversed relationship type) explains every missing value of that
+    # field or relation; report the root cause once.
+    def member(d):
+        return d.get("resource"), d.get("field") or d.get("relation")
+    undefined = {member(d) for d in diags if d["code"] in ("definition_missing", "definition_invalid",
+                                                           "relation_direction_mismatch")}
+    diags += [d for d in instance_diagnostics(c, rel) if member(d) not in undefined]
     blocking = [d for d in diags if d["code"] in BLOCKING]
     status = "blocked_generation" if blocking else "candidate"
     c.execute("UPDATE release SET status=?, diagnostics_json=? WHERE release_id=?", (status, json.dumps(diags), rid))
@@ -182,7 +199,7 @@ def schema_check(rid, contract, resources):
     """Fetch the candidate's actual HTTP responses and validate them against the generated schemas."""
     results = []
     for rname in resources:
-        sname = "".join(w.capitalize() for w in rname.split("-"))
+        sname = schema_name(rname)
         root = {"$schema": "https://json-schema.org/draft/2020-12/schema",
                 "$ref": f"#/components/schemas/{sname}Page", "components": contract["components"]}
         v = Draft202012Validator(root)
@@ -244,8 +261,8 @@ def activate(c, actor, project, rid, expected_active, reason, action="activate")
     last = c.execute("SELECT passed, run_id FROM consumer_test_run WHERE release_id=? ORDER BY started_at DESC LIMIT 1",
                      (rid,)).fetchone()
     blocking = [d for d in json.loads(r["diagnostics_json"]) if d["code"] in BLOCKING]
-    prow = c.execute("SELECT status FROM projection_definition WHERE projection_id=? AND version=?",
-                     (r["projection_id"], r["projection_version"])).fetchone()
+    prow = c.execute("SELECT status FROM projection_definition WHERE project=? AND projection_id=? AND version=?",
+                     (project, r["projection_id"], r["projection_version"])).fetchone()
     problems = []
     if blocking:
         problems.append({"code": "blocking_diagnostics", "count": len(blocking)})

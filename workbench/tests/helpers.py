@@ -43,7 +43,7 @@ class StackCase(unittest.TestCase):
         return body
 
     def approve(self, version, reason="reviewed in test"):
-        self.ok(self.carol.post(f"/manage/projections/equipment-health/{version}/review",
+        self.ok(self.carol.post(f"/manage/projects/ehm/projections/equipment-health/{version}/review",
                                 {"decision": "approve", "reason": reason}))
 
     def build(self, version):

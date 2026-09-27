@@ -524,15 +524,12 @@ def do_projection(h):
         return release.register_projection(c, h.user, body)
 
 
-@route("POST", r"/manage/projections/([a-z0-9-]+)/([0-9.]+)/review")
-def do_projection_review(h, pid, ver):
+@route("POST", r"/manage/projects/([a-z0-9-]+)/projections/([a-z0-9-]+)/([0-9.]+)/review")
+def do_projection_review(h, p, pid, ver):
     body = h._json()
-    row = h.c.execute("SELECT project FROM projection_definition WHERE projection_id=? AND version=?", (pid, ver)).fetchone()
-    if not row:
-        raise ApiError(404, "not_found", "Resource not found.")
-    h.need(row["project"], "projection:review")
+    h.need(p, "projection:review")
     with h.app.db.tx() as c:
-        return release.review_projection(c, h.user, pid, ver, body.get("decision"), body.get("reason"))
+        return release.review_projection(c, h.user, p, pid, ver, body.get("decision"), body.get("reason"))
 
 
 @route("POST", r"/manage/projects/([a-z0-9-]+)/releases")

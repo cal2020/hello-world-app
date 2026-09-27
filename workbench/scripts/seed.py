@@ -12,7 +12,7 @@ def seed(base):
               "equipment-health_2.0.0.json"]:
         st, body, _ = carol.post("/manage/projections", carol.projection(f))
         assert st in (200, 201), body
-    st, body, _ = carol.post("/manage/projections/equipment-health/1.0.0/review",
+    st, body, _ = carol.post("/manage/projects/ehm/projections/equipment-health/1.0.0/review",
                              {"decision": "approve", "reason": "Baseline dashboard projection reviewed with consumer team."})
     assert st == 200, body
     st, body, _ = carol.import_fixture("records/cmms_main.json")

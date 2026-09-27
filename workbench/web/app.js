@@ -13,9 +13,10 @@ const PROJECTION_FIXTURES = [
   "equipment-health_1.3.0_bad_version.json", "equipment-health_2.0.0.json", "hostile_labels.json",
 ];
 // Mirrors lucidwb/projection.py BLOCKING (display only; the server decides).
-const BLOCKING = new Set(["definition_missing", "unit_mismatch", "relation_direction_mismatch",
+const BLOCKING = new Set(["definition_missing", "definition_invalid", "unit_mismatch", "relation_direction_mismatch",
   "unknown_element_type", "enum_value_outside_contract", "contract_version_reused_with_different_shape",
-  "invalid_projection", "instance_value_missing", "unresolved_relation_target"]);
+  "invalid_projection", "instance_value_missing", "unresolved_relation_target", "relation_target_type_mismatch",
+  "relation_cardinality_exceeded", "relation_missing"]);
 
 const S = {
   token: "demo-carol",
@@ -728,7 +729,9 @@ function wireControls() {
     if (!reg.ok) return;
     const reason = askReason(`approving projection ${body.projection_id}@${body.version}`);
     if (reason === null) { toast("Registered but not approved (no reason given).", "warn"); return; }
-    await action("POST", `/manage/projections/${encodeURIComponent(body.projection_id)}/${encodeURIComponent(body.version)}/review`,
+    // Projection versions are named per project: review the one just registered, in its own project.
+    await action("POST", `/manage/projects/${encodeURIComponent(body.project)}/projections/` +
+      `${encodeURIComponent(body.projection_id)}/${encodeURIComponent(body.version)}/review`,
       { json: { decision: "approve", reason } });
   });
   $("btn-build").addEventListener("click", async () => {

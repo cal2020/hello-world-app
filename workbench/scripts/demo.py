@@ -155,7 +155,7 @@ def main():
         f"isCurrentHead={page['source']['isCurrentHead']} headsBehind={page['source']['headsBehind']}")
 
     step("5. Explicit compatible projection 1.1.0 -> retest -> activate; lost ack after consumer commit", a.pause)
-    must(carol.post("/manage/projections/equipment-health/1.1.0/review",
+    must(carol.post("/manage/projects/ehm/projections/equipment-health/1.1.0/review",
                     {"decision": "approve", "reason": "Map serialNumber to renamed assetSerial; shape unchanged."}), 200)
     _, rel_d, _ = must(carol.post("/manage/projects/ehm/releases", {"projection_id": "equipment-health", "version": "1.1.0"}), 201)
     say(f"  candidate {rel_d['release_id']} status={rel_d['status']} contract digest unchanged: "
