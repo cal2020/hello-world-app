@@ -2,6 +2,8 @@
 
 **Live demo:** https://claude.ai/artifact/KgfLNw5us6t1U3ga1uixrA. It is a browser-only build: the same server code runs inside the page on an in-memory SQLite (sql.js), and state resets on reload. Add `#draft` or `#reviewed` to the URL to start at a later stage. The link is private until it is shared from the page's Share menu.
 
+**Demo playbook** (links, how to use it, 10-minute interview walkthrough with spoken transcript, practice Q&A, recorded execution run): https://claude.ai/artifact/GfY35c2FCZxRdEiQhyvLTB (private until shared; source in `docs/demo-guide/index.html`). Public copy of the demo: https://cal2020.github.io/hello-world-app/procedure-workbench/
+
 A small, working prototype of a system that helps experts **develop and evaluate candidate procedures**. Each step carries its assumptions, supporting evidence, open questions and review status. When a source requirement changes, the system identifies which conclusions need reassessment.
 
 The seed scenario is a **synthetic, non-combat maintenance inspection** of an invented "PSK-7 portable sensor kit". Every device, requirement, record and person is fictional. The prototype demonstrates an engineering workflow similar in shape to tactics, techniques and procedures (TTP) development. It is **not** an Air Force process, a TTP, or a validated procedure, and it approves nothing operationally.

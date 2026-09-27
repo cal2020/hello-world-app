@@ -1,0 +1,496 @@
+<title>Workbench Demo Playbook</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+:root {
+  --bg: #f3f5f8; --paper: #ffffff; --ink: #17212e; --muted: #566376; --line: #d7dde5; --soft: #eaeef4; --soft2: #f7f9fb;
+  --accent: #1d57a3; --accent-ink: #ffffff; --accent-soft: #e2ecfa;
+  --ok: #1d7543; --ok-soft: #e2f3e8; --bad: #b0271f; --bad-soft: #fbe5e3; --warn: #875800; --warn-soft: #fff1d3;
+  --say: #f4f7fc; --say-line: #b2c9ee;
+  --sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --serif: 'IBM Plex Serif', Georgia, 'Times New Roman', serif;
+  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0f1621; --paper: #172131; --ink: #e4eaf2; --muted: #9aa8ba; --line: #2c3a4d; --soft: #223047; --soft2: #1b2638;
+    --accent: #6f9fe8; --accent-ink: #0b1522; --accent-soft: #1b2d49;
+    --ok: #7fd3a0; --ok-soft: #173526; --bad: #f19a92; --bad-soft: #3b1d1c; --warn: #efc46b; --warn-soft: #3a2d10;
+    --say: #1a2740; --say-line: #35507a;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f1621; --paper: #172131; --ink: #e4eaf2; --muted: #9aa8ba; --line: #2c3a4d; --soft: #223047; --soft2: #1b2638;
+  --accent: #6f9fe8; --accent-ink: #0b1522; --accent-soft: #1b2d49;
+  --ok: #7fd3a0; --ok-soft: #173526; --bad: #f19a92; --bad-soft: #3b1d1c; --warn: #efc46b; --warn-soft: #3a2d10;
+  --say: #1a2740; --say-line: #35507a;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.55; padding-inline: 16px; padding-block: 0 64px; }
+.wrap { max-width: 1120px; margin: 0 auto; }
+header.masthead { padding-block: 32px 20px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+.eyebrow { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(1.8rem, 4vw, 2.5rem); line-height: 1.15; margin: 6px 0 10px; text-wrap: balance; }
+h2 { font-family: var(--serif); font-weight: 600; font-size: 1.5rem; margin: 0 0 12px; text-wrap: balance; }
+h3 { font-size: 1.05rem; margin: 20px 0 8px; text-wrap: balance; }
+p { margin: 0 0 12px; max-width: 70ch; }
+.lede { font-size: 1.1rem; color: var(--muted); max-width: 72ch; }
+a { color: var(--accent); }
+code, kbd { font-family: var(--mono); font-size: 0.88em; background: var(--soft); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+.layout > * { min-width: 0; }
+.layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 32px; align-items: start; }
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); font-size: 0.92rem; }
+nav.toc ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+nav.toc a { display: block; padding: 6px 10px; border-radius: 6px; color: var(--ink); text-decoration: none; }
+nav.toc a:hover, nav.toc a:focus-visible { background: var(--soft); }
+section { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 22px 24px; margin-bottom: 20px; scroll-margin-top: 16px; }
+.launch { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.launch-card { border: 1px solid var(--line); border-radius: 10px; padding: 16px; background: var(--soft2); display: grid; gap: 8px; align-content: start; }
+.launch-card.primary { border-color: var(--accent); background: var(--accent-soft); }
+.launch-card h3 { margin: 0; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font: inherit; font-weight: 600; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); text-decoration: none; cursor: pointer; width: fit-content; }
+.btn.ghost { background: transparent; color: var(--accent); }
+button.copy { font: inherit; font-size: 0.8rem; padding: 3px 9px; border-radius: 5px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; }
+button.copy:focus-visible, .btn:focus-visible, nav.toc a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pill { display: inline-block; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.03em; padding: 2px 9px; border-radius: 999px; background: var(--soft); color: var(--ink); white-space: nowrap; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+th { background: var(--soft2); font-weight: 600; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.url { white-space: nowrap; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.box { border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; background: var(--soft2); }
+.box h3 { margin-top: 0; }
+.box ul, section ul, section ol.steps { margin: 0; padding-left: 20px; }
+.box li, section li { margin-bottom: 4px; }
+.real { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.real div { border-left: 4px solid var(--ok); padding: 6px 12px; background: var(--soft2); border-radius: 0 6px 6px 0; }
+.real div.sim { border-left-color: var(--warn); }
+.real b { display: block; }
+.segment { border-top: 1px solid var(--line); padding-top: 18px; margin-top: 18px; display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 16px; }
+.segment:first-of-type { border-top: 0; margin-top: 0; padding-top: 4px; }
+.time { font-family: var(--mono); font-size: 0.9rem; color: var(--muted); font-variant-numeric: tabular-nums; padding-top: 2px; }
+.seg-title { font-weight: 600; font-size: 1.05rem; margin-bottom: 8px; }
+.cue { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 4px 12px; font-size: 0.93rem; margin-bottom: 10px; }
+.cue dt { color: var(--muted); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; padding-top: 3px; }
+.cue dd { margin: 0; }
+blockquote.say { margin: 0; background: var(--say); border-left: 4px solid var(--say-line); padding: 12px 16px; border-radius: 0 8px 8px 0; font-family: var(--serif); font-size: 1.02rem; line-height: 1.6; }
+blockquote.say p { max-width: 68ch; }
+blockquote.say p:last-child { margin-bottom: 0; }
+.recover { font-size: 0.88rem; color: var(--muted); margin-top: 8px; }
+.qa { display: grid; gap: 14px; }
+.qa .turn { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px; }
+.who { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding-top: 3px; }
+.who.you { color: var(--accent); }
+.qa .q { font-weight: 500; }
+.qa .a { font-family: var(--serif); background: var(--say); border-radius: 8px; padding: 10px 14px; }
+.qa .note { font-size: 0.85rem; color: var(--muted); margin-top: 6px; font-family: var(--sans); }
+pre.log { font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; background: var(--soft2); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; margin: 0; white-space: pre; }
+.callout { border: 1px solid var(--warn); background: var(--warn-soft); color: var(--ink); border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; }
+.callout strong { color: var(--warn); }
+footer { color: var(--muted); font-size: 0.85rem; margin-top: 24px; }
+@media (max-width: 860px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .pill { white-space: normal; }
+  .launch, .grid2, .real { grid-template-columns: minmax(0, 1fr); }
+  nav.toc { position: static; }
+  nav.toc ol { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  section { padding: 18px 16px; }
+  .segment { grid-template-columns: 1fr; gap: 6px; }
+  .cue { grid-template-columns: 1fr; }
+  .qa .turn { grid-template-columns: 1fr; gap: 4px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="eyebrow">Interview demo · Procedure Evidence Workbench · synthetic data</div>
+    <h1>Workbench demo playbook</h1>
+    <p class="lede">Links to the live demo, what it shows and how to drive it, and a timed walkthrough with a spoken transcript for the interview. Everything in the demo is synthetic. The drafting step is a deterministic stand-in, not a live AI model.</p>
+  </header>
+
+  <div class="layout">
+    <nav class="toc" aria-label="Contents">
+      <ol>
+        <li><a href="#links">Demo links</a></li>
+        <li><a href="#what">What the demo is</a></li>
+        <li><a href="#how">How to use it</a></li>
+        <li><a href="#before">Before the call</a></li>
+        <li><a href="#walkthrough">10-minute walkthrough</a></li>
+        <li><a href="#qa">Q&amp;A transcript</a></li>
+        <li><a href="#recover">If something breaks</a></li>
+        <li><a href="#log">Execution transcript</a></li>
+      </ol>
+    </nav>
+
+    <main>
+      <section id="links">
+        <h2>Demo links</h2>
+        <div class="launch">
+          <div class="launch-card primary">
+            <span class="pill ok">Public, anyone can open</span>
+            <h3>GitHub Pages</h3>
+            <p>Best link to send after the interview, or to open on the call. Runs entirely in the browser.</p>
+            <a class="btn" href="https://cal2020.github.io/hello-world-app/procedure-workbench/#guide" target="_blank" rel="noopener">Open with presenter guide</a>
+          </div>
+          <div class="launch-card">
+            <span class="pill warn">Private until shared</span>
+            <h3>claude.ai artifact</h3>
+            <p>Same build. Share it from the page's Share menu before sending it to anyone.</p>
+            <a class="btn ghost" href="https://claude.ai/artifact/KgfLNw5us6t1U3ga1uixrA" target="_blank" rel="noopener">Open artifact</a>
+          </div>
+          <div class="launch-card">
+            <span class="pill">Local, full server</span>
+            <h3>Node server on your laptop</h3>
+            <p>Persistent database, crash and restart behavior, optional live model with an API key.</p>
+            <p><code>npm run demo:reset &amp;&amp; npm start</code><br>then open <code>http://localhost:8787</code></p>
+          </div>
+        </div>
+
+        <h3>Start at any stage</h3>
+        <p>Add a fragment to either hosted URL. Combine a stage with <code>guide</code> using a comma. The page resets to that stage on every load.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fragment</th><th>Opens with</th><th>Use it when</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="url"><code>#guide</code></td><td>Sources loaded, presenter guide at step 1</td><td>Running the full demo</td><td><button class="copy" data-copy="https://cal2020.github.io/hello-world-app/procedure-workbench/#guide">Copy link</button></td></tr>
+              <tr><td class="url"><code>#draft,guide</code></td><td>First draft v1 already generated</td><td>You want to skip the Sources tour</td><td><button class="copy" data-copy="https://cal2020.github.io/hello-world-app/procedure-workbench/#draft,guide">Copy link</button></td></tr>
+              <tr><td class="url"><code>#reviewed,guide</code></td><td>v3 accepted for demo, ready for the requirement change</td><td>Short on time: go straight to the key moment</td><td><button class="copy" data-copy="https://cal2020.github.io/hello-world-app/procedure-workbench/#reviewed,guide">Copy link</button></td></tr>
+              <tr><td class="url"><code>#changed</code></td><td>Change impact, right after REQ-002 moved to 90 days</td><td>Backup if a click goes wrong mid-demo</td><td><button class="copy" data-copy="https://cal2020.github.io/hello-world-app/procedure-workbench/#changed">Copy link</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Source and documents</h3>
+        <ul>
+          <li><a href="https://github.com/cal2020/hello-world-app/tree/claude/ttp-workbench-prototype-3t5kob" target="_blank" rel="noopener">Repository branch</a> · <a href="https://github.com/cal2020/hello-world-app/blob/claude/ttp-workbench-prototype-3t5kob/README.md" target="_blank" rel="noopener">README</a> · <a href="https://github.com/cal2020/hello-world-app/blob/claude/ttp-workbench-prototype-3t5kob/docs/DEMO_SCRIPT.md" target="_blank" rel="noopener">5-minute script</a></li>
+          <li><a href="https://github.com/cal2020/hello-world-app/blob/claude/ttp-workbench-prototype-3t5kob/docs/INTERVIEW_PACKET.md" target="_blank" rel="noopener">Interview packet</a> · <a href="https://github.com/cal2020/hello-world-app/blob/claude/ttp-workbench-prototype-3t5kob/docs/EVALUATION_REPORT.md" target="_blank" rel="noopener">Evaluation report</a> · <a href="https://github.com/cal2020/hello-world-app/blob/claude/ttp-workbench-prototype-3t5kob/docs/ARCHITECTURE.md" target="_blank" rel="noopener">Architecture</a> · <a href="https://github.com/cal2020/hello-world-app/blob/claude/ttp-workbench-prototype-3t5kob/docs/GAPS.md" target="_blank" rel="noopener">Gaps</a></li>
+        </ul>
+      </section>
+
+      <section id="what">
+        <h2>What the demo is</h2>
+        <p>A small workbench for developing a candidate procedure from evidence. A drafting step proposes steps and claims, and every claim cites an exact passage in a versioned source. Code checks the citations, dates and records. A named reviewer judges whether each passage supports its claim and decides on one exact version. When a source requirement changes, the workbench marks the accepted version stale, shows which conclusions need reassessment, and refuses to reuse the old acceptance.</p>
+        <p>The scenario is an invented inspection of a portable sensor kit (PSK-7). It is shaped like tactics, techniques and procedures development, but it is not an Air Force process and approves nothing operationally.</p>
+        <h3>What is real and what is simulated</h3>
+        <div class="real">
+          <div><b>Real and tested</b>Versioned sources with hashes, citation and date checks, the review gate, stale detection, change impact, audit log, 20 automated tests, 18-case evaluation</div>
+          <div class="sim"><b>Simulated</b>The drafting step: a deterministic program with one planted error. It is not AI.</div>
+          <div class="sim"><b>Simulated</b>The system-model data: hand-written JSON. No Cameo connection.</div>
+          <div class="sim"><b>Not exercised</b>The live Claude adapter exists in the code but has never run (no API key). It is disabled in the hosted build.</div>
+        </div>
+      </section>
+
+      <section id="how">
+        <h2>How to use it</h2>
+        <div class="grid2">
+          <div class="box">
+            <h3>The five tabs</h3>
+            <ul>
+              <li><b>1 Sources:</b> the eight synthetic sources with revision and hash, an inbox of changes to import, and the Generate button</li>
+              <li><b>2 Candidate &amp; review:</b> the draft, the evidence panel, the automated checks, reviewer judgments and the accept, request-changes and reject decisions</li>
+              <li><b>3 Change impact:</b> the verdict after a change: what changed, what to reassess, which result flipped, and whether the acceptance still applies</li>
+              <li><b>4 Runs &amp; evaluation:</b> every generation run and its settings, plus the evaluation suite</li>
+              <li><b>5 History:</b> the append-only audit log</li>
+            </ul>
+          </div>
+          <div class="box">
+            <h3>Controls to know</h3>
+            <ul>
+              <li><b>Acting as</b> (top right) switches between demo identities. Keep it on <b>R. Alvarez (reviewer)</b>. <b>J. Kim (author)</b> shows that authors cannot accept.</li>
+              <li><b>Presenter guide</b> (<code>#guide</code>): seven steps that tick off as you really do them. <b>Go</b> opens the right tab and outlines the next button. The guide never clicks anything for you.</li>
+              <li><b>Reset to</b> in the guide, or <b>Reset demo</b> in the header, reloads a stage. Click twice to confirm.</li>
+              <li>Tab badges such as <span class="pill bad">STALE</span> and <span class="pill bad">sources changed</span> show where attention is needed.</li>
+            </ul>
+          </div>
+        </div>
+        <h3>The core path in seven steps</h3>
+        <ol class="steps">
+          <li><b>Sources:</b> click <code>REQ-002@A</code>. It says 180 days.</li>
+          <li><b>Generate candidate</b>, then click the red citation on step S7.</li>
+          <li>Click <b>Accept for demo</b> on v1. The server refuses with <code>409 REVIEW_BLOCKED</code>.</li>
+          <li>Import the corrected inspection log and regenerate. Mark C14 <i>does not support</i>, remove it and save as v3. Run the bulk judgment, <b>type a rationale</b>, then accept.</li>
+          <li>Import <b>REQ-002 revision B (180 → 90 days)</b>. The app opens Change impact.</li>
+          <li>Click <b>Try to reuse this acceptance</b>. The refusal, <code>409 EXPORT_BLOCKED</code>, appears under the button.</li>
+          <li>Show <b>4 Runs &amp; evaluation</b> and <b>5 History</b>.</li>
+        </ol>
+      </section>
+
+      <section id="before">
+        <h2>Before the call</h2>
+        <div class="grid2">
+          <div class="box">
+            <h3>Set up (10 minutes before)</h3>
+            <ul>
+              <li>Open the GitHub Pages link with <code>#guide</code> in its own browser window. Share only that window in Teams, not the whole screen.</li>
+              <li>Set browser zoom to 125%. Close other tabs and notifications.</li>
+              <li>Open a second tab with <code>#reviewed,guide</code> as a backup.</li>
+              <li>Have the repo open in an editor at <code>server/workbench.js</code>, function <code>decide</code>, for the code segment.</li>
+              <li>Optional: a terminal with <code>npm run demo:walkthrough</code> ready.</li>
+            </ul>
+          </div>
+          <div class="box">
+            <h3>Say these limits early</h3>
+            <ul>
+              <li>All data is synthetic. It is not a TTP and not an Air Force process.</li>
+              <li>The drafting step is a deterministic stand-in with one planted error, not AI.</li>
+              <li>No Cameo connection; the model data is hand-written.</li>
+              <li>How it was built: decide beforehand how you describe your part and the AI assistant's part (packet section H.4).</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="walkthrough">
+        <h2>10-minute walkthrough with transcript</h2>
+        <p>Each segment lists what to do, what appears on screen, and what to say. Speak in your own words; the transcript is a guide, not a script to read. About 850 spoken words, leaving time for clicks.</p>
+
+        <div class="segment">
+          <div class="time">0:00–1:00</div>
+          <div>
+            <div class="seg-title">Framing</div>
+            <dl class="cue"><dt>Do</dt><dd>Stay on <b>1 Sources</b> with the guide strip visible.</dd><dt>On screen</dt><dd>Eight sources, the badges <span class="pill warn">SYNTHETIC DATA</span> and <span class="pill warn">Simulated system-model export</span>.</dd></dl>
+            <blockquote class="say"><p>"Gus, you mentioned that AI-assisted development of tactics, techniques and procedures is a differentiator, so I built a small prototype around how I would approach it as an engineer. Everything here is synthetic: an invented sensor kit, three made-up requirements, some inspection records, and a hand-written stand-in for a system-model export. It is not a TTP, it doesn't connect to Cameo, and it approves nothing. What I want to show is the workflow around an AI draft, because that's where I think both the risk and the value are."</p></blockquote>
+          </div>
+        </div>
+
+        <div class="segment">
+          <div class="time">1:00–2:00</div>
+          <div>
+            <div class="seg-title">Sources and the first draft</div>
+            <dl class="cue"><dt>Do</dt><dd>Click <code>REQ-002@A</code>. Then click <b>Generate candidate</b>.</dd><dt>On screen</dt><dd>Passage p1 says 180 days; structured field <code>maxCalibrationAgeDays: 180</code>. Then v1 <span class="pill">DRAFT</span> with 5 blocking findings, run labeled <code>SIMULATED · not AI</code>.</dd></dl>
+            <blockquote class="say"><p>"Each source is an immutable snapshot with an id, a revision and a content hash. This requirement says calibration is current within 180 days, and that number is also stored as a field that code can use."</p><p>"Now I'll ask for a candidate procedure. The drafting step in this demo is a deterministic stand-in, not a model, so the demo is repeatable offline, and it has one error planted on purpose. The draft has steps, claims with citations, assumptions, a hypothesis clearly labeled as one, and two things it couldn't resolve: a missing battery observation and a serial-number conflict between two records."</p></blockquote>
+          </div>
+        </div>
+
+        <div class="segment">
+          <div class="time">2:00–3:00</div>
+          <div>
+            <div class="seg-title">The planted error and the server gate</div>
+            <dl class="cue"><dt>Do</dt><dd>Click the red citation on S7. Then click <b>Accept for demo</b>.</dd><dt>On screen</dt><dd>Evidence panel: <span class="pill bad">quote not in passage</span>. Then <code>409 REVIEW_BLOCKED</code> with the list of reasons.</dd></dl>
+            <blockquote class="say"><p>"Here's the planted error: a plausible cleaning step. The citation is red because the quoted text isn't in the cited passage. Code can check that a citation exists. It can't check that a quote actually supports a claim; that's the reviewer's job, and the screen keeps those two things separate."</p><p>"If I try to accept anyway, the server refuses and lists why. The browser can't send 'approved'. The server works it out again from stored state."</p></blockquote>
+          </div>
+        </div>
+
+        <div class="segment">
+          <div class="time">3:00–4:30</div>
+          <div>
+            <div class="seg-title">Evidence closes gaps; the reviewer closes claims</div>
+            <dl class="cue"><dt>Do</dt><dd>Import <b>Corrected inspection log</b>, regenerate, mark C14 <i>does not support</i>, <i>remove</i>, add an edit note, <b>Save as new version</b>. Click the demo-shortcut bulk judgment, type a rationale such as "C14 removed; remaining citations resolve", <b>Accept for demo</b>.</dd><dt>On screen</dt><dd>"1 candidate version marked STALE". v2 still has the fake step. The edit creates v3 <span class="pill">NEEDS_REVIEW</span>, then <span class="pill ok">REVIEWED_FOR_DEMO</span>.</dd></dl>
+            <blockquote class="say"><p>"The inspector corrects the log. Importing it doesn't overwrite anything; it becomes revision 2, and version 1 of the draft is now stale because it was built on different sources. I regenerate. The gaps are gone, but the fake step is back, which is realistic: models repeat their mistakes."</p><p>"As the reviewer I mark that claim as not supported and remove it. That creates version 3 with its own fingerprint. I judge the remaining claims. I'm using a shortcut here to save time, and it's recorded as a shortcut. Then I accept, with a rationale. The acceptance is tied to this exact version and this exact set of sources."</p></blockquote>
+          </div>
+        </div>
+
+        <div class="segment">
+          <div class="time">4:30–6:00</div>
+          <div>
+            <div class="seg-title">Change one requirement (the key moment)</div>
+            <dl class="cue"><dt>Do</dt><dd>Import <b>REQ-002 revision B (180 → 90 days)</b>. The app opens <b>3 Change impact</b>. Point at the verdict banner from top to bottom.</dd><dt>On screen</dt><dd><code>REQ-002@A → REQ-002@B · maxCalibrationAgeDays 180 → 90</code>. Tiles: 2 reassess, 1 re-confirm, 1 step affected of 7, 11 unaffected, 1 computed flip. <code>C6: PASS → FAIL</code> (114 days &gt; 90). A red panel: "R. Alvarez's acceptance for demo no longer applies".</dd></dl>
+            <blockquote class="say"><p>"This is the part I care about most. The requirement changes from 180 days to 90, and I import revision B."</p><p>"Top line: what changed. Then the scope. Two conclusions need to be reassessed: the claim quoting the changed sentence, and the computed calibration result, which flips from current to not current because the certificate is 114 days old. One claim needs a quick re-confirmation because its source was revised but its sentence didn't change. One step out of seven is affected, and eleven claims aren't touched."</p><p>"And the red panel: the earlier acceptance no longer applies, and it says why."</p></blockquote>
+            <p class="recover">If the import misfires: open the backup tab, or load <code>#changed</code>.</p>
+          </div>
+        </div>
+
+        <div class="segment">
+          <div class="time">6:00–6:30</div>
+          <div>
+            <div class="seg-title">The old acceptance is refused</div>
+            <dl class="cue"><dt>Do</dt><dd>Click <b>Try to reuse this acceptance (export as reviewed)</b>.</dd><dt>On screen</dt><dd><code>409 EXPORT_BLOCKED</code> under the button, then "Source change: REQ-002@A -&gt; REQ-002@B".</dd></dl>
+            <blockquote class="say"><p>"If someone tries to reuse that old acceptance, it's refused. The history keeps the decision; it just can't be used on sources it never saw."</p></blockquote>
+          </div>
+        </div>
+
+        <div class="segment">
+          <div class="time">6:30–7:30</div>
+          <div>
+            <div class="seg-title">Code: the acceptance gate</div>
+            <dl class="cue"><dt>Do</dt><dd>Switch to the editor: <code>server/workbench.js</code>, function <code>decide</code>, and <code>acceptReadiness</code>.</dd><dt>On screen</dt><dd>The single transaction that checks permission, digest, manifest, blocking findings and judgments.</dd></dl>
+            <blockquote class="say"><p>"Briefly in code. This is the acceptance function. In one transaction it checks the reviewer's permission, that the version fingerprint the reviewer saw is the stored one, that the sources haven't moved, that no blocking check is open, and that every factual claim has a reviewer judgment. Only then does it look at the rationale, so nothing is ever recorded without one. Every write carries an operation id, and there's a test that kills the server right after it commits and proves the retry returns the saved result instead of a duplicate."</p></blockquote>
+          </div>
+        </div>
+
+        <div class="segment">
+          <div class="time">7:30–8:15</div>
+          <div>
+            <div class="seg-title">Evaluation, including a case built to fail</div>
+            <dl class="cue"><dt>Do</dt><dd>Open <b>4 Runs &amp; evaluation</b>, click <b>Run evaluation suite</b>, point at H08. Then <b>5 History</b>.</dd><dt>On screen</dt><dd>Prototype gate PASS, 0 unsafe outcomes, H08 <code>FAIL_KNOWN_LIMITATION</code>, audit chain verified.</dd></dl>
+            <blockquote class="say"><p>"I evaluated the whole workflow, not just the output. There are eighteen fixed cases, split into development and held-out, run against the stand-in and a simple template, with pass criteria written down before the held-out run. Zero unsafe outcomes: nothing stale, revoked or unauthorized got accepted. The template never flags gaps; the drafting step does, but I wrote that stand-in myself, so that's a test of the harness, not a claim about any model. One case is designed to fail: a real quote attached to the wrong claim passes every automatic check, and only the reviewer catches it. I kept it because it marks the boundary."</p></blockquote>
+          </div>
+        </div>
+
+        <div class="segment">
+          <div class="time">8:15–9:15</div>
+          <div>
+            <div class="seg-title">The main tradeoff, and the link to Gus's work</div>
+            <dl class="cue"><dt>Do</dt><dd>Stay on History or return to Change impact.</dd><dt>On screen</dt><dd>Nothing new.</dd></dl>
+            <blockquote class="say"><p>"The main tradeoff: I invalidate conservatively. Any source change makes open reviews stale, and then the impact view keeps the re-review small. I'd rather ask an expert to re-confirm something than silently keep an acceptance built on an old requirement."</p><p>"The pattern of an authoritative source, generated artifacts and version-bound review seems related to what you described for DMM-C and Digital Forge. Before claiming a fit, though, I'd want to learn how your model data is versioned and who holds approval authority."</p></blockquote>
+          </div>
+        </div>
+
+        <div class="segment">
+          <div class="time">9:15–10:00</div>
+          <div>
+            <div class="seg-title">Limits and a question back</div>
+            <dl class="cue"><dt>Do</dt><dd>Stop sharing, or leave Change impact on screen.</dd></dl>
+            <blockquote class="say"><p>"What this doesn't show: real model quality, real users, or how the Air Force actually develops tactics. I haven't been able to read DAFMAN 11-260 directly. The next experiment I'd propose is running a live model on the held-out cases with two independent expert reviewers and comparing it against the template."</p><p>"A question for you: in your workflows, what is the authoritative source, and what event should force a re-review?"</p></blockquote>
+          </div>
+        </div>
+      </section>
+
+      <section id="qa">
+        <h2>Q&amp;A transcript (practice)</h2>
+        <p>Likely questions with answers in plain words. The notes mark where to be careful or to say you don't know.</p>
+        <div class="qa">
+          <div class="turn"><div class="who">Panel</div><div class="q">Who built this?</div></div>
+          <div class="turn"><div class="who you">You</div><div class="a">"I wrote the brief: the controls, the states, the test cases and what counts as passing. An AI coding assistant implemented it, and I verified the behavior with the tests, the evaluation suite and by driving the app myself."<div class="note">Adjust this to what is actually true before the interview. Read <code>decide</code> and <code>runOp</code> so you can explain them line by line.</div></div></div>
+
+          <div class="turn"><div class="who">Panel</div><div class="q">A prototype built quickly on synthetic data doesn't show you can lead software across programs.</div></div>
+          <div class="turn"><div class="who you">You</div><div class="a">"Agreed, it doesn't show scale. It shows how I frame the problem, where I put the controls, and how I test a claim before making it. My leadership evidence is Stimulus, Salesforce and Zillow, and I'm happy to go deep on any of those."</div></div>
+
+          <div class="turn"><div class="who">Panel</div><div class="q">Why use AI at all? A template would do.</div></div>
+          <div class="turn"><div class="who you">You</div><div class="a">"The template covers every requirement but never flags anything it wasn't told about: it missed the gap and the conflict. The plausible value of AI is connecting evidence across records. Numbers, dates and state transitions stay in code, which is why the calibration check is computed, not generated."</div></div>
+
+          <div class="turn"><div class="who">Panel</div><div class="q">How do you measure unsupported claims?</div></div>
+          <div class="turn"><div class="who you">You</div><div class="a">"Two layers. Code checks that each citation exists and the quote matches exactly. A reviewer judges whether the passage supports the claim, and that's stored separately. The human-judged rate isn't measured yet, and case H08 shows why the automatic layer isn't enough on its own."</div></div>
+
+          <div class="turn"><div class="who">Panel</div><div class="q">Won't marking everything stale overwhelm reviewers?</div></div>
+          <div class="turn"><div class="who you">You</div><div class="a">"It might, and that's the tradeoff I chose. Judgments carry forward for claims that are unchanged word for word, and the reassess and re-confirm split keeps the list short. Filtering staleness by relevance is next, once the dependencies are trustworthy."</div></div>
+
+          <div class="turn"><div class="who">Panel</div><div class="q">What about security and provenance?</div></div>
+          <div class="turn"><div class="who you">You</div><div class="a">"Roles are checked on the server and denials are logged. Decisions are tied to the version and source fingerprints, sources are immutable, and the audit log is hash-chained."<div class="note">Say plainly: the demo identities aren't real authentication, and a database administrator could still bypass the write protections.</div></div></div>
+
+          <div class="turn"><div class="who">Panel</div><div class="q">What if two things happen at once, or the server crashes?</div></div>
+          <div class="turn"><div class="who you">You</div><div class="a">"Every write has an operation id stored in the same transaction, so a retry returns the saved result. If a source changes while someone is reviewing, the acceptance is refused as stale. There's a test that kills the process right after commit."<div class="note">Limits: one process and one SQLite writer, no distributed transactions.</div></div></div>
+
+          <div class="turn"><div class="who">Panel</div><div class="q">What would it take to use real Cameo data?</div></div>
+          <div class="turn"><div class="who you">You</div><div class="a">"An export with stable element ids and a model revision, agreement on which repository is authoritative, element-level change detection, and a mapping of permissions. I haven't worked with Cameo's interfaces; I'd need to learn which ones you have installed."</div></div>
+
+          <div class="turn"><div class="who">Panel</div><div class="q">Could this run disconnected?</div></div>
+          <div class="turn"><div class="who you">You</div><div class="a">"The prototype runs fully offline in stand-in mode. A disconnected deployment would need an approved on-premises model endpoint behind the same provider interface."<div class="note">Don't claim any accreditation.</div></div></div>
+
+          <div class="turn"><div class="who">Panel</div><div class="q">How would you run a first pilot?</div></div>
+          <div class="turn"><div class="who you">You</div><div class="a">"Pick one real, low-risk procedure family with two subject-matter experts. Agree on stop and go criteria first. Pair a developer with an expert to build the test cases, review disagreements weekly, and focus code review on the gate and the state transitions. What would success look like to you?"</div></div>
+        </div>
+      </section>
+
+      <section id="recover">
+        <h2>If something breaks</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Problem</th><th>Recovery</th></tr></thead>
+            <tbody>
+              <tr><td>A click went wrong mid-path</td><td>Use <b>Reset to</b> in the guide strip (click twice), or load <code>#reviewed,guide</code> in the backup tab.</td></tr>
+              <tr><td>Accept on v3 says a rationale is required</td><td>Type one, for example "C14 removed; remaining citations resolve", and click again.</td></tr>
+              <tr><td>The page won't load</td><td>Switch to the claude.ai artifact (if shared) or run <code>npm start</code> locally.</td></tr>
+              <tr><td>Nothing works in the browser</td><td>Run <code>npm run demo:walkthrough</code> in a terminal. Say it's the command-line version, not the app.</td></tr>
+              <tr><td>No network at all</td><td>Show the screenshots in <code>docs/screenshots/</code> and say they are static captures.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="log">
+        <h2>Execution transcript</h2>
+        <div class="callout"><strong>Real output, command-line version.</strong> This is the recorded output of <code>npm run demo:walkthrough</code> on 2026-09-27 at commit 3005dd7. It runs the same path through the same code without the browser. Generated ids and timestamps differ on every run.</div>
+        <pre class="log">=== 1. Load synthetic sources (stable ids, revisions, hashes)
+  ASSET-REG@1        record        38c24b40f8fc  Asset register entry DEV-0193
+  CAL-0219@1         record        939b9249bd9a  Calibration certificate CAL-0219 (older)
+  CAL-0412@1         record        9c53c0af91d1  Calibration certificate CAL-0412 (most recent)
+  INSP-LOG-2291@1    record        089b96c77108  Inspection log 2291 (as first entered)
+  MODEL-PSK7@3       system_model  ef81635f1d07  PSK-7 portable sensor kit: simulated system-model export
+  REQ-001@A          requirement   1fe14e583821  Device identification
+  REQ-002@A          requirement   d8b491c11174  Calibration currency
+  REQ-003@A          requirement   e6a104c28955  Reviewer disposition
+
+=== 2. Generate a candidate (SIMULATED model: deterministic fixture with one seeded error)
+  v1 DRAFT; 8 steps, 15 claims
+  BLOCKING CITATION_QUOTE_MISMATCH (C14) Quoted text does not appear in the cited passage. (MODEL-PSK7@3 p3)
+  BLOCKING MISSING_OBSERVATION (IP-BATTERY) No observation for IP-BATTERY (Battery contact condition) in INSP-LOG-2291@1.
+  BLOCKING RECORD_CONFLICT (serial) ASSET-REG@1 lists PSK7-00193; INSP-LOG-2291@1 records PSK7-00198.
+  BLOCKING DECLARED_MISSING_EVIDENCE (M-IP-BATTERY) No observation for IP-BATTERY (Battery contact condition) was found in the permitted inspection records.
+  BLOCKING DECLARED_CONFLICT (X1) Asset register serial PSK7-00193 conflicts with inspection-log serial PSK7-00198.
+  WARNING  OPEN_QUESTION (Q1) Which serial is correct for DEV-0193: PSK7-00193 or PSK7-00198?
+  Accept v1: REVIEW_BLOCKED - Acceptance is blocked.
+    - CHECK_CITATION_QUOTE_MISMATCH: C14: Quoted text does not appear in the cited passage. (MODEL-PSK7@3 p3)
+    - CHECK_MISSING_OBSERVATION: IP-BATTERY: No observation for IP-BATTERY (Battery contact condition) in INSP-LOG-2291@1.
+    - CHECK_RECORD_CONFLICT: serial: ASSET-REG@1 lists PSK7-00193; INSP-LOG-2291@1 records PSK7-00198.
+    - CHECK_DECLARED_MISSING_EVIDENCE: M-IP-BATTERY: No observation for IP-BATTERY (Battery contact condition) was found in the permitted inspection records.
+    - CHECK_DECLARED_CONFLICT: X1: Asset register serial PSK7-00193 conflicts with inspection-log serial PSK7-00198.
+    - UNJUDGED_CLAIM: C1 has no reviewer support judgment.
+    - UNJUDGED_CLAIM: C2 has no reviewer support judgment.
+    - UNJUDGED_CLAIM: C3 has no reviewer support judgment.
+    - UNJUDGED_CLAIM: C5 has no reviewer support judgment.
+    - UNJUDGED_CLAIM: C6 has no reviewer support judgment.
+    - UNJUDGED_CLAIM: C8 has no reviewer support judgment.
+    - UNJUDGED_CLAIM: C9 has no reviewer support judgment.
+    - UNJUDGED_CLAIM: C10 has no reviewer support judgment.
+    - UNJUDGED_CLAIM: C11 has no reviewer support judgment.
+    - UNJUDGED_CLAIM: C12 has no reviewer support judgment.
+    - UNJUDGED_CLAIM: C13 has no reviewer support judgment.
+    - UNJUDGED_CLAIM: C14 has no reviewer support judgment.
+    - UNJUDGED_CLAIM: C15 has no reviewer support judgment.
+
+=== 3. Import the corrected inspection log: v1 becomes STALE; regenerate
+   [ { versionId: &#x27;ver_38d147ca29854ee4&#x27;, previousState: &#x27;DRAFT&#x27; } ]
+  v2 DRAFT
+  BLOCKING CITATION_QUOTE_MISMATCH (C14) Quoted text does not appear in the cited passage. (MODEL-PSK7@3 p3)
+
+=== 4. Reviewer rejects the unsupported step, edits (new version), judges claims, accepts
+  edit -&gt; v3 NEEDS_REVIEW (parent ver_42a10e2b8b984912)
+  Author tries to accept: FORBIDDEN - Role &#x27;author&#x27; may not perform &#x27;decide&#x27;.
+  Accepted: dec_09d7df1382ee4569 -&gt; REVIEWED_FOR_DEMO, bound to digest 59621a9f688c + manifest 1d08490235b8
+  Export: REVIEWED FOR DEMO by R. Alvarez (reviewer) at 2026-09-27T21:48:00.580Z. Prototype review status only: not an approval, publication or authorization.
+
+=== 5. Change REQ-002 (calibration window 180 -&gt; 90 days)
+   [
+  { versionId: &#x27;ver_42a10e2b8b984912&#x27;, previousState: &#x27;DRAFT&#x27; },
+  {
+    versionId: &#x27;ver_8f28dbcbd4fb4aca&#x27;,
+    previousState: &#x27;REVIEWED_FOR_DEMO&#x27;
+  }
+]
+  REQ-002@A -&gt; REQ-002@B: maxCalibrationAgeDays 180 -&gt; 90
+  REASSESS  C4: cited passage REQ-002@A p1 was changed in the new revision
+  REASSESS  C6: computed from REQ-002: PASS -&gt; FAIL
+  RECONFIRM C7: REQ-002@A was revised; cited passage p2 is textually unchanged (re-confirm)
+  Unaffected claims: C1, C2, C3, C5, C8, C9, C10, C11, C12, C13, C15
+  Computed: PASS -&gt; FAIL: CAL-0412 dated 2026-06-01 is 114 days old at 2026-09-23; REQ-002@B allows 90 days, so calibration is NOT CURRENT (device must be tagged HOLD).
+  Decision dec_09d7df1382ee4569 applies: false; Source manifest changed since the decision: REQ-002@A -&gt; REQ-002@B.
+  Export as reviewed: EXPORT_BLOCKED - No valid review decision applies to this exact version and the current sources.
+    - Source manifest changed since the decision: REQ-002@A -&gt; REQ-002@B.
+
+=== 6. Regenerate under REQ-002 rev B: judgments carry forward only for unchanged claims
+  v4 DRAFT; claims needing a new judgment: C4 (REQ-002@B), C7 (REQ-002@B)
+  Calibration now: CAL-0412 dated 2026-06-01 is 114 days old at 2026-09-23; REQ-002@B allows 90 days, so calibration is NOT CURRENT (device must be tagged HOLD).
+
+=== 7. Audit
+  30 events, chain verified</pre>
+      </section>
+
+      <footer>Built for interview preparation. All data synthetic. The drafting step is a deterministic stand-in, not a live AI model. Nothing here is an approval, publication or authorization.</footer>
+    </main>
+  </div>
+</div>
+
+<script>
+document.addEventListener('click', async (e) => {
+  const b = e.target.closest('button.copy')
+  if (!b) return
+  const text = b.dataset.copy
+  try {
+    await navigator.clipboard.writeText(text)
+    b.textContent = 'Copied'
+  } catch {
+    const cell = b.closest('tr')?.querySelector('code')
+    if (cell) { const r = document.createRange(); r.selectNodeContents(cell); const s = getSelection(); s.removeAllRanges(); s.addRange(r) }
+    b.textContent = 'Select and copy'
+  }
+  setTimeout(() => { b.textContent = 'Copy link' }, 1800)
+})
+</script>
