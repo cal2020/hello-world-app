@@ -14,7 +14,8 @@ Rules implemented here (see ARCHITECTURE.md for rationale):
   A body that is not JSON text the store can hold (invalid JSON or UTF-8, an unpaired surrogate escape, or
   nesting deeper than MAX_DEPTH) is refused with 400 before any import is recorded.
 * The same revision with byte-identical content is a duplicate even if this adapter normalizes it differently
-  from the adapter that stored it.
+  from the adapter that stored it. So is the same content re-serialized (whitespace, key order), compared the
+  way the adapter that stored it read it.
 """
 import json
 import math
@@ -325,14 +326,17 @@ def import_export(c, actor, raw: bytes, doc: dict, declared=None):
     existing = c.execute("SELECT * FROM source_snapshot WHERE source=? AND project=? AND revision=? "
                          "AND (completeness='partial')=?", (source, project, revision, partial)).fetchone()
     if existing:
-        # Identical bytes are the same content even when an earlier adapter normalized them differently.
-        if existing["normalized_digest"] == norm_digest or existing["raw_digest"] == raw_digest:
+        # Identical bytes are the same content even when an earlier adapter normalized them differently, and so is
+        # content that normalizes to the stored digest the way that adapter read it.
+        stored = existing["normalized_digest"]
+        if stored == norm_digest or existing["raw_digest"] == raw_digest or (
+                fmt == MODEL_FORMAT and stored == _earlier_digest(existing["adapter_version"], declared)):
             first = existing["import_id"]
             diags = [{"code": "identical_revision_and_content", "original_import_id": first}]
-            if existing["normalized_digest"] != norm_digest:
+            if stored != norm_digest:
                 diags.append({"code": "stored_normalization_differs",
                               "stored_adapter_version": existing["adapter_version"], "adapter_version": adapter,
-                              "message": "Byte-identical to the stored revision, which was normalized differently "
+                              "message": "Same content as the stored revision, which was normalized differently "
                                          "when it was imported. The stored snapshot is unchanged."})
             return done("duplicate_no_change", 200, diags, existing["snapshot_id"], duplicate_of=first)
         return done("quarantined_conflict", 409,
@@ -486,6 +490,20 @@ def _snapshot_at(c, source, project, revision):
     """The snapshot of a revision, preferring the head-eligible one over a staged partial view of it."""
     return c.execute("SELECT * FROM source_snapshot WHERE source=? AND project=? AND revision=? "
                      "ORDER BY completeness='partial' LIMIT 1", (source, project, revision)).fetchone()
+
+
+def _earlier_digest(stored_adapter, declared):
+    """Normalized digest of a model export as adapters before 0.3.1 computed it: they read an export without
+    definitions on its own, not against its parent's definitions. None if the stored adapter read it as this
+    one does."""
+    name, _, version = (stored_adapter or "").rpartition("/")
+    try:
+        older = tuple(int(x) for x in version.split(".")) < (0, 3, 1)
+    except ValueError:
+        return None
+    if name != ADAPTER_VERSION.rpartition("/")[0] or not older or declared.get("definitions"):
+        return None
+    return digest(normalize_model(declared)[0])
 
 
 def _base_definitions(c, doc):

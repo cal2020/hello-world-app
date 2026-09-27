@@ -6,6 +6,8 @@ import re
 import socket
 import sqlite3
 import subprocess
+import sys
+import tempfile
 import threading
 import time
 import unittest
@@ -137,6 +139,18 @@ class GateAvailability(StackCase):
         refused = next(a for a in answers if statuses(a) == [429])
         self.assertIn(b"Retry-After: ", refused)
         self.assertIn(b'"too_many_guesses"', refused)
+
+    def test_wrong_codes_with_an_unsent_body_do_not_lock_out_others(self):
+        """Round 2 (102): a wrong code declaring a body it never sends stayed busy while its answer discarded the
+        body, so a full cap of them refused every new connection until the socket timeout."""
+        with mock.patch.object(server, "GUESS_INTERVAL", 0.02):
+            for i in range(self.CAP + 4):
+                self.connect(b"GET /api/whoami HTTP/1.1\r\nHost: x\r\nX-Access-Code: wrong-%d\r\n"
+                             b"Content-Length: 65536\r\n\r\n" % i)
+            time.sleep(0.5)  # every guess has had its turn (or its 429) and waits for the body
+            self.assertEqual(self.quick(self.healthz), [200])
+            self.assertEqual(self.quick(lambda: self.carol.get("/api/whoami"))[0], 200)
+            self.assertLessEqual(len(self.stack.wb._open), self.CAP)
 
     def test_a_full_queue_refuses_the_login_form_and_redirects_page_loads(self):
         with mock.patch.object(server, "GUESS_QUEUE", 1, create=True), \
@@ -301,6 +315,73 @@ class ImporterRepairs(StackCase):
         st, body, _ = self.post(delta)
         self.assertEqual((st, body["outcome"]), (409, "quarantined_conflict"))
 
+    def test_f12_reformatted_resend_after_an_upgrade_is_a_duplicate(self):
+        """Round 2 (101): the same delta or partial without definitions, re-serialized, is compared the way the
+        adapter that stored it (before 0.3.1) normalized it."""
+        self.ok(self.imp("model/A_initial.json"))
+        el = next(e for e in fixture("model/A_initial.json")["elements"] if e["id"] == "el-VS101DE")
+        el["properties"]["sampleInterval"] = 250
+        base = {"format": "lwb-synthetic-export/1", "source": "synthmodeler", "project": "ehm",
+                "parent_revision": "7c1e9a", "elements": [el]}
+        exports = [dict(base, revision="d-nodefs", kind="delta", scope={"kind": "complete"}),
+                   dict(base, revision="p-nodefs", kind="snapshot", scope={"kind": "partial", "packages": ["x"]})]
+        for doc in exports:
+            self.ok(self.post(doc), 201, 202)
+            with self.stack.app.db.tx() as c:  # as the previous adapter stored it
+                c.execute("UPDATE source_snapshot SET normalized_digest=?, adapter_version=? WHERE revision=?",
+                          (digest(normalize_model(doc)[0]), "lwb-synthetic-export-adapter/0.3.0", doc["revision"]))
+        for doc in exports:
+            reformatted = json.dumps(dict(reversed(list(doc.items()))), indent=2).encode()
+            body = self.ok(self.post(raw=reformatted), 200)
+            self.assertEqual(body["outcome"], "duplicate_no_change")
+            self.assertIn("stored_normalization_differs", [d["code"] for d in body["diagnostics"]])
+            changed = json.loads(json.dumps(doc))
+            changed["elements"][0]["name"] += " changed"
+            st, body, _ = self.post(changed)
+            self.assertEqual((st, body["outcome"]), (409, "quarantined_conflict"))
+        # A snapshot stored by this adapter is compared only as this adapter reads it.
+        with self.stack.app.db.tx() as c:
+            c.execute("UPDATE source_snapshot SET adapter_version=? WHERE revision='d-nodefs'",
+                      ("lwb-synthetic-export-adapter/0.3.1",))
+        st, body, _ = self.post(raw=json.dumps(exports[0], indent=2).encode())
+        self.assertEqual((st, body["outcome"]), (409, "quarantined_conflict"))
+
+
+class WeakAccessCode(unittest.TestCase):
+    """Round 2 regression: the guess throttle cannot bound a client that guesses in parallel without locking out
+    callers with the right code, so the entrypoint refuses a code short enough to guess that way."""
+
+    def run_py(self, code):
+        env = {k: v for k, v in os.environ.items() if k not in ("LWB_RESET_ON_START", "LWB_SEED_ON_START", "LWB_PORT")}
+        env |= {"PORT": "0", "LWB_CONSUMER_PORT": "0", "LWB_HOST": "127.0.0.1", "LWB_QUIET": "1",
+                "PYTHONUNBUFFERED": "1", "LWB_ACCESS_CODE": code, "LWB_VAR": tempfile.mkdtemp(prefix="lwb-test-")}
+        return subprocess.Popen([sys.executable, "scripts/run.py"], cwd=ROOT, env=env, stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, text=True)
+
+    def test_a_short_code_is_refused_at_start(self):
+        proc = self.run_py("x" * (server.MIN_CODE_LENGTH - 1))
+        try:
+            out = proc.communicate(timeout=20)[0]
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            self.fail("run.py started with a short access code: " + proc.communicate()[0])
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn(f"at least {server.MIN_CODE_LENGTH}", out)
+        self.assertNotIn("Access gate", out)
+
+    def test_a_long_enough_code_starts(self):
+        proc = self.run_py("é" * server.MIN_CODE_LENGTH)  # characters, not bytes
+        try:
+            deadline, lines = time.monotonic() + 20, []
+            while time.monotonic() < deadline and proc.poll() is None:
+                lines.append(proc.stdout.readline())
+                if "Access gate" in lines[-1]:
+                    break
+            self.assertIn("Access gate: ON", "".join(lines))
+            self.assertIsNone(proc.poll())  # still serving
+        finally:
+            proc.kill()  # not SIGTERM: this only checks the start, and the stop handler may not be installed yet
+            proc.communicate(timeout=20)
 
 
 class Artifacts(unittest.TestCase):

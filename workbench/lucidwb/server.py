@@ -31,8 +31,9 @@ COOKIE = "lwb_access"
 MAX_BODY = 5_000_000  # bytes accepted in one request body
 LOGIN_MAX_BODY = 4096
 DRAIN_MAX = 65536  # an unread body up to this size is read and discarded; a larger one closes the connection
-GUESS_INTERVAL = 1.0  # seconds between answers to failed access-code checks, across all connections
+GUESS_INTERVAL = 1.0  # seconds between answers to waiting failed access-code checks, across all connections
 GUESS_QUEUE = 8  # failed checks that may wait for their turn at once; each holds a connection while it waits
+MIN_CODE_LENGTH = 16  # scripts/run.py refuses a shorter LWB_ACCESS_CODE: the throttle cannot stop a parallel guesser
 LOGIN_PAGE = b"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport"
 content="width=device-width,initial-scale=1"><title>Workbench access</title><style>
 body{font:16px system-ui,sans-serif;background:#f4f6f8;color:#1b1f24;display:grid;place-items:center;min-height:100vh;margin:0}
@@ -66,11 +67,16 @@ def _header_code_ok(value, code):
 
 
 class _GuessThrottle:
-    """Failed access-code checks (header, cookie or login form) are answered GUESS_INTERVAL apart across all
-    connections, so parallel requests do not raise the guess rate. At most GUESS_QUEUE wait at once: a failed
-    check beyond that is refused at once (429) instead of queueing, so wrong guesses cannot tie up the server's
-    connections and lock out everyone else. A correct code is never delayed, and a request that presents no
-    code is not a guess."""
+    """Failed access-code checks (header, cookie or login form) wait for their turn, GUESS_INTERVAL apart across
+    all connections, so a guesser that waits for each answer gets one per interval. At most GUESS_QUEUE wait at
+    once: a failed check beyond that is refused at once (429) instead of queueing, so wrong guesses cannot tie up
+    the server's connections and lock out everyone else. A correct code is never delayed, and a request that
+    presents no code is not a guess.
+
+    The 429 is still an answer (a correct code would have passed), so a client that sends guesses in parallel
+    tests codes as fast as the server responds. Bounding that would mean refusing codes without checking them,
+    which would let the same flood lock out callers with the right code. The code's length (MIN_CODE_LENGTH) is
+    what protects against a parallel guesser."""
 
     def __init__(self):
         self._lock = threading.Lock()
@@ -286,11 +292,15 @@ class Handler(BaseHTTPRequestHandler):
 
     def _guess_failed(self, via):
         """Wait for this failed guess's turn, or raise 429 at once if too many are already waiting. A waiting
-        guess keeps its connection (closing it would not end the waiting thread); GUESS_QUEUE bounds them."""
+        guess keeps its connection (closing it would not end the waiting thread); GUESS_QUEUE bounds them. Once
+        answered it waits on its client again, since discarding an unsent body can take until the socket timeout."""
         self.log_message("access code rejected (%s from %s)", via, self.client_address[0])
         if not self.server.busy(self.connection):
             return  # already closed to make room: there is no one to answer
-        retry = GUESSES.wait()
+        try:
+            retry = GUESSES.wait()
+        finally:
+            self.server.busy(self.connection, False)
         if retry:
             self.close_connection = True
             raise ApiError(429, "too_many_guesses", "Too many wrong access codes are waiting to be answered. "

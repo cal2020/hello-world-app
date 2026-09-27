@@ -7,7 +7,8 @@ Environment (all optional):
   LWB_HOST                 bind address (default 127.0.0.1; the container uses 0.0.0.0)
   LWB_CONSUMER_PORT        internal port of the mock consumer (default 8781; 0 = any free port)
   LWB_VAR                  data directory for the SQLite files (default workbench/var)
-  LWB_ACCESS_CODE          if set, every page and API call needs this code (login page / X-Access-Code)
+  LWB_ACCESS_CODE          if set, every page and API call needs this code (login page / X-Access-Code);
+                           a code shorter than 16 characters is refused at start
   LWB_RESET_ON_START=1     wipe the data directory at start (clean demo on every restart)
   LWB_SEED_ON_START=1      seed projections + CMMS records if the database is empty
 The consumer always binds to 127.0.0.1 (on a free port if its port equals the workbench's);
@@ -24,6 +25,7 @@ import threading
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from lucidwb.server import MIN_CODE_LENGTH  # noqa: E402
 from lucidwb.stack import Stack  # noqa: E402
 from scripts.seed import seed  # noqa: E402
 
@@ -39,6 +41,10 @@ ap.add_argument("--port", type=int, default=int(env("PORT") or env("LWB_PORT") o
 ap.add_argument("--consumer-port", type=int, default=int(env("LWB_CONSUMER_PORT") or 8781))
 a = ap.parse_args()
 
+code = env("LWB_ACCESS_CODE")
+if code and len(code) < MIN_CODE_LENGTH:  # the guess throttle cannot stop a client that guesses in parallel
+    sys.exit(f"LWB_ACCESS_CODE has {len(code)} characters; set a random code of at least {MIN_CODE_LENGTH}, for "
+             "example from: python3 -c \"import secrets; print(secrets.token_urlsafe(18))\"")
 if a.reset and pathlib.Path(a.var).exists():
     for child in pathlib.Path(a.var).iterdir():  # keep the dir itself (it may be a mounted volume)
         shutil.rmtree(child) if child.is_dir() else child.unlink()
