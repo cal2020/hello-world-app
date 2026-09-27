@@ -30,6 +30,7 @@ const S = {
   history: null,
   proposalsView: {},      // proposal_id -> proposal object as currently displayed
   histTimer: null,
+  accessExpired: false,   // the access gate refused a request; the login page is loading
 };
 
 // ------------------------------------------------------------------ DOM helpers
@@ -122,8 +123,17 @@ async function request(method, path, opts = {}) {
   try { parsed = text ? JSON.parse(text) : null; } catch (_) { parsed = null; }
   const res = { status: resp.status, ok: resp.ok, headers: resp.headers, body: parsed, text };
   if (opts.show) showLast(method, path, res, headers);
-  if (!resp.ok && !opts.quiet) errorToast(method, path, res);
+  if (resp.status === 401 && parsed && parsed.error && parsed.error.code === "access_required") accessExpired();
+  else if (!resp.ok && !opts.quiet) errorToast(method, path, res);
   return res;
+}
+// The deployment gate refused the request: its login cookie is missing or has expired (it lasts 12 h).
+// Go to the login page instead of rendering every panel as an identity that can read no project.
+function accessExpired() {
+  if (S.accessExpired) return;
+  S.accessExpired = true;
+  toast("Access expired: opening the login page.", "warn", 0);
+  window.location.assign("/login");
 }
 const GET = (path, opts) => request("GET", path, opts);
 
@@ -161,7 +171,7 @@ async function action(method, path, opts = {}) {
 async function fetchFixture(rel) {
   const res = await request("GET", "/web/fixtures/" + rel, { quiet: true });
   if (!res.ok) {
-    errorToast("GET", "/web/fixtures/" + rel, res);
+    if (!S.accessExpired) errorToast("GET", "/web/fixtures/" + rel, res);
     return null;
   }
   return res.text;
@@ -188,18 +198,23 @@ async function loadIdentity() {
 }
 
 // ------------------------------------------------------------------ refresh
-let refreshing = null;
+let refreshing = null, refreshAgain = false;
 async function refreshAll() {
-  if (refreshing) return refreshing;
+  // A call during a running refresh may follow a mutation whose effect that refresh's GETs missed:
+  // run one more refresh after it, and resolve only once that one has rendered.
+  if (refreshing) { refreshAgain = true; return refreshing; }
   refreshing = (async () => {
-    if (!S.project) {
-      for (const id of ["model-body", "release-body", "review-body", "history-body"]) {
-        $(id).replaceChildren(h("div", { class: "empty" },
-          "This identity cannot read any project. (demo-admin only manages grants.)"));
+    do {
+      refreshAgain = false;
+      if (!S.project) {
+        for (const id of ["model-body", "release-body", "review-body", "history-body"]) {
+          $(id).replaceChildren(h("div", { class: "empty" }, S.accessExpired ? "Access expired: opening the login page."
+            : "This identity cannot read any project. (demo-admin only manages grants.)"));
+        }
+        continue;
       }
-      return;
-    }
-    await Promise.all([renderModel(), renderReleases(), renderReview(), renderHistory()]);
+      await Promise.all([renderModel(), renderReleases(), renderReview(), renderHistory()]);
+    } while (refreshAgain);
   })();
   try { await refreshing; } finally { refreshing = null; }
 }
@@ -730,9 +745,14 @@ function wireControls() {
     const reason = askReason(`approving projection ${body.projection_id}@${body.version}`);
     if (reason === null) { toast("Registered but not approved (no reason given).", "warn"); return; }
     // Projection versions are named per project: review the one just registered, in its own project.
-    await action("POST", `/manage/projects/${encodeURIComponent(body.project)}/projections/` +
+    const rev = await action("POST", `/manage/projects/${encodeURIComponent(body.project)}/projections/` +
       `${encodeURIComponent(body.projection_id)}/${encodeURIComponent(body.version)}/review`,
       { json: { decision: "approve", reason } });
+    // Build what was just approved: the refresh keeps the previous selection otherwise.
+    const approved = `${body.projection_id}@${body.version}`;
+    if (rev.ok && body.project === S.project && [...$("proj-approved").options].some((o) => o.value === approved)) {
+      $("proj-approved").value = approved;
+    }
   });
   $("btn-build").addEventListener("click", async () => {
     if (!needProject()) return;
