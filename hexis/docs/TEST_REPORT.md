@@ -31,9 +31,8 @@ quality and are unrelated to the paper's reported gains.
 
 ## Independent review findings (all fixed, each with a regression test)
 
-An adversarial review of the first commit found eight defects; ten of the eleven regression tests in
-`test_review_regressions.py` fail against that commit and all pass now (the eleventh, the
-atomic-approval test, also failed before the fix).
+An adversarial review of the first commit (`aba06d6`) found eight defects. All eleven regression tests
+in `test_review_regressions.py` fail when run against that commit's source and pass now.
 
 | # | Defect | Fix |
 |---|---|---|
