@@ -19,7 +19,7 @@ let started = false;
 let runtimeStopped = false; // the runtime has stopped (or never started): its explanation stays on screen
 let heard = false; // the worker has sent at least one message, so it loaded
 let workerBroken = false; // the worker failed to load and cannot answer messages
-let carried = null; // an action's save warning, shown by whatever the page shows next (result page, newer page or stop)
+let carried = []; // actions' save warnings, one per action, shown by whatever the page shows next (result page, newer page or stop)
 let navGen = 0;
 let shown = null;
 let renders = 0;
@@ -141,16 +141,20 @@ function currentPath() {
 
 function takeCarried() {
   const w = carried;
-  carried = null;
+  carried = [];
   return w;
+}
+
+function warningsHtml(list) {
+  return list.map((w) => `<div class="msg err" role="alert">${escapeHtml(w)}</div>`).join("");
 }
 
 function render(res) {
   root.dataset.renders = String(++renders); // lets tests and tools wait for a completed navigation
   if (res.header_html != null) hdr.innerHTML = res.header_html;
   main.innerHTML = res.main_html != null ? res.main_html : `<pre>${escapeHtml(res.body || "")}</pre>`;
-  const warnings = [...new Set([takeCarried(), res.warning].filter(Boolean))];
-  for (const w of warnings.reverse()) main.insertAdjacentHTML("afterbegin", `<div class="msg err" role="alert">${escapeHtml(w)}</div>`);
+  // An action's own save warning is among the carried ones (submit() adds it), so it is not shown twice.
+  main.insertAdjacentHTML("afterbegin", warningsHtml(takeCarried()));
   document.title = `${res.title || "Workbench"} · DMMC Evidence Workbench`;
   // Focus the first result message when there is one, so screen-reader users hear it; otherwise the heading.
   const msg = main.querySelector(".msg");
@@ -162,8 +166,7 @@ function render(res) {
 
 function showFatal(text, { offerWipe }) {
   root.dataset.renders = String(++renders);
-  const w = takeCarried();
-  main.innerHTML = `${w ? `<div class="msg err" role="alert">${escapeHtml(w)}</div>` : ""}
+  main.innerHTML = `${warningsHtml(takeCarried())}
     <div class="card" role="alert"><p class="bad" tabindex="-1">${escapeHtml(text)}</p>
     <p>Reload the page to try again. A recorded walkthrough is at <a href="../">the walkthrough page</a>.</p>
     ${offerWipe ? '<p><button type="button" id="wipe-retry">Delete this browser\'s saved workbench data and reload</button></p>' : ""}</div>`;
@@ -206,7 +209,7 @@ async function submit(form) {
     if (res.set_actor) setActor(res.set_actor);
     if (res.warning) { // never dropped: the result page, a newer page or a stop message shows it
       announce(res.warning);
-      carried = res.warning;
+      carried.push(res.warning);
     }
     if (gen !== navGen) return; // the user moved on while this ran
     if (res.status === 303 && res.location) return navigate(res.location, { gen });
