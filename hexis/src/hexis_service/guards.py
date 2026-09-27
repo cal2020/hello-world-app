@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import ast
 import itertools
+import math
 from dataclasses import dataclass
 from typing import Any
 
@@ -265,8 +266,15 @@ def _domain(var: str, vtype: str, enums: dict[str, list], guards: list[ast.AST])
     if vtype == "integer":
         pts = {0}
         for c in consts:
-            if isinstance(c, int) and not isinstance(c, bool):
+            if isinstance(c, bool):
+                continue
+            if isinstance(c, int):
                 pts.update({c - 1, c, c + 1})
+            elif isinstance(c, float):
+                lo, hi = math.floor(c), math.ceil(c)
+                pts.update({lo - 1, lo, hi, hi + 1})
+            else:
+                return None  # e.g. a string literal: typecheck rejects it; stay conservative
         return sorted(pts)
     if vtype == "string":
         uses_empty = any(isinstance(n, ast.Call) and n.args[0].id == var for g in guards for n in ast.walk(g))

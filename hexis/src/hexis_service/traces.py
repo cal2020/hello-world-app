@@ -284,8 +284,18 @@ def structural_replay(pkg: LoadedPackage, trace: dict) -> ReplayReport:
                     env[var] = copy.deepcopy(ev["output"][k])
             else:
                 out = ev["output"] or {}
+                extra = set(out) - set(act.writes)
+                if extra:
+                    return diverge("declared outputs only", {"unexpected_outputs": sorted(extra)})
                 for w in act.writes:
                     if w in out:
+                        errs = JS.errors(out[w], pkg.var_schema(w), w)
+                        if act.kind == "judge" and out[w] not in act.labels:
+                            errs.append(f"label {out[w]!r} not in {list(act.labels)}")
+                        if pkg.owner(w) == "engine":
+                            errs.append(f"{w} is engine-owned")
+                        if errs:
+                            return diverge("outputs the machine can accept", {"errors": errs})
                         env[w] = copy.deepcopy(out[w])
                     else:
                         val = _placeholder(pkg.var_schema(w))

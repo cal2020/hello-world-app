@@ -109,14 +109,14 @@ class Runtime:
     # --------------------------------------------------------------- API ---
     def start_run(self, package_hash: str, task_input: dict, principal: Principal, request_id: str) -> dict:
         tenant = principal.tenant_id
+        if not principal.authenticated:
+            raise RunError("UNAUTHENTICATED", "start_run requires an authenticated principal")
         prior = self.s.store.dedupe_get(tenant, f"start:{request_id}")
         if prior:
             return prior
-        if not principal.authenticated:
-            raise RunError("UNAUTHENTICATED", "start_run requires an authenticated principal")
-        lifecycle = self.s.registry.lifecycle(package_hash)
+        lifecycle = self.s.registry.lifecycle(package_hash, tenant)
         if lifecycle != "active":
-            raise RunError("NOT_ACTIVE", f"artifact {package_hash} is {lifecycle}; new runs require an active version")
+            raise RunError("NOT_ACTIVE", f"artifact {package_hash} is {lifecycle}; new runs require the tenant's active version")
         pkg = self.pkg(package_hash)
         run_id = "run-" + canonical.digest({"tenant": tenant, "request": request_id})[7:19]
         try:
@@ -256,10 +256,12 @@ class Runtime:
     def resume_interaction(self, run_id: str, interaction_id: str, response: dict, principal: Principal,
                            request_id: str) -> dict:
         tenant = principal.tenant_id
+        if not principal.authenticated:
+            raise RunError("UNAUTHENTICATED", "responses require an authenticated principal")
+        run = self._run_for(run_id, principal)
         prior = self.s.store.dedupe_get(tenant, f"resume:{request_id}")
         if prior:
             return prior
-        run = self._run_for(run_id, principal)
         cp = self.s.store.latest_checkpoint(tenant, run_id)
         if not cp["status"].startswith("WAITING") or (cp["pending"] or {}).get("interaction_id") != interaction_id:
             raise RunError("NOT_WAITING", "run is not waiting for this interaction")
@@ -267,20 +269,20 @@ class Runtime:
         pkg = self.pkg(cp["artifact_hash"])
         state = pkg.machine.states[cp["state_id"]]
         token = self.s.store.acquire_lease(tenant, run_id, f"resume:{principal.principal_id}")
+        approval_resp = approval_req = None
         if req["type"] == "approval":
             approval_req, _ = self.s.approvals.get(tenant, interaction_id)
-            decision = response.get("decision")
-            with self.s.store.tx() as c:
-                effective = self.s.approvals.record_response(c, approval_req, principal, decision,
-                                                             self.s.clock(), run[3])
-            outputs = {state.action.writes[0]: effective}
+            approval_resp = self.s.approvals.decide(approval_req, principal, response.get("decision"),
+                                                    self.s.clock(), run[3])
+            outputs = {state.action.writes[0]: approval_resp["decision"]}
         else:
-            if not principal.authenticated:
-                raise RunError("UNAUTHENTICATED", "input responses require an authenticated principal")
             outputs = response
         obs = self._obs(cp, "user", outputs=outputs, actor=principal.principal_id, interaction_id=interaction_id)
 
         def extra(c):
+            # the approval response is persisted atomically with the checkpoint that consumes it
+            if approval_resp is not None:
+                self.s.approvals.store_response(c, approval_req, approval_resp)
             c.execute("UPDATE interactions SET status='answered' WHERE tenant_id=? AND interaction_id=?",
                       (tenant, interaction_id))
             self.s.store.dedupe_put(c, tenant, f"resume:{request_id}", {"run_id": run_id, "revision": cp["revision"] + 1})
@@ -359,6 +361,8 @@ class Runtime:
                 current = self.s.broker.read_current(pkg, cp["tenant_id"], rec["subject"]["draft_ref"], principal)
                 if current is None:
                     valid, why = False, "subject no longer readable"
+                elif rec.get("policy_version") != self.s.policy.version:
+                    valid, why = False, "policy version changed since verification"
                 elif current["version"] != rec["subject"]["version"] or \
                         current["payload_hash"] != rec["subject"]["payload_hash"]:
                     valid, why = False, (f"subject changed since verification (version {rec['subject']['version']} "

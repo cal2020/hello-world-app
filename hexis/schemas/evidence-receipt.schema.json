@@ -15,7 +15,8 @@
     "result",
     "source_ref",
     "observed_at",
-    "invalidation"
+    "invalidation",
+    "policy_version"
   ],
   "properties": {
     "receipt_id": {
@@ -79,6 +80,9 @@
         "string",
         "null"
       ]
+    },
+    "policy_version": {
+      "type": "string"
     }
   }
 }

@@ -125,7 +125,14 @@ class LoadedPackage:
         return {"type": mv.type} if mv else {}
 
     def enums(self) -> dict[str, list]:
-        return {k: v["enum"] for k, v in self.contracts.get("variables", {}).items() if "enum" in v}
+        """Finite domains used by guard analysis: only enums the runtime actually enforces
+        (the variable's validation schema), never an unenforced annotation."""
+        out = {}
+        for v in self.machine.variables:
+            schema = self.var_schema(v.name)
+            if isinstance(schema.get("enum"), list):
+                out[v.name] = list(schema["enum"])
+        return out
 
     def var_types(self) -> dict[str, str]:
         return {v.name: v.type for v in self.machine.variables}

@@ -49,7 +49,8 @@ required by the brief and not established by the paper.
   *old* counter; the chosen edge's `inc` applies after selection **[upstream]**. Undefined variables and
   type mismatches raise `GUARD_ERROR` and stop the run — never the default edge **[extension, A09]**.
 * Loop bounds are enforced by the engine (`LOOP_BOUND_EXCEEDED`) in addition to guard conditions.
-* Invalid model/judge/user output → the fallback state, recorded permanently in
+* Invalid model/judge/user output → the fallback state (the validator treats this as an implicit edge
+  from every model/judge/user state when checking reachability, dataflow and ordering), recorded permanently in
   `assurance.entered_fallback`. In the production profile the fallback is an end state (stop for
   review) and admission rejects any write reachable from it.
 * Tool `unknown_effect` → status `RECONCILING`, no transition; the runtime reconciles by business

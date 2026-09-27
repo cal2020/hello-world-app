@@ -55,10 +55,16 @@ class ValidationReport:
 
 # ---------------------------------------------------------------- graph ---
 def successors(m: Machine, sid: str, removed: set[str] | frozenset = frozenset()) -> list[str]:
+    """Declared targets plus the kernel's implicit edge to the fallback state, which any
+    model/judge/user state takes on invalid output."""
     s = m.states.get(sid)
     if not s:
         return []
-    return [t.to for t in s.transitions if t.to in m.states and t.to not in removed]
+    out = [t.to for t in s.transitions if t.to in m.states and t.to not in removed]
+    if s.action.kind in ("model", "judge", "user") and m.fallback in m.states and m.fallback not in removed \
+            and m.fallback not in out:
+        out.append(m.fallback)
+    return out
 
 
 def reachable(m: Machine, start: str, removed: set[str] | frozenset = frozenset()) -> set[str]:
@@ -252,6 +258,8 @@ def validate_package(pkg: LoadedPackage, profile: str = "production") -> Validat
             continue
         if vc.get("owner") not in OWNERS:
             add("BAD_OWNER", f"variable:{v.name}", f"owner {vc.get('owner')!r} is not one of {sorted(OWNERS)}")
+        if "enum" in vc and vc["enum"] != pkg.var_schema(v.name).get("enum"):
+            add("ENUM_NOT_ENFORCED", f"variable:{v.name}", "contract enum differs from the enforced schema enum")
         if v.init_from and vc.get("owner") != "task":
             add("BAD_OWNER", f"variable:{v.name}", "init_from variables must be task-owned")
     expected_owner = {"model": "model", "judge": "model", "tool": "tool", "user": "user"}
@@ -275,7 +283,7 @@ def validate_package(pkg: LoadedPackage, profile: str = "production") -> Validat
             if len(s.action.writes) != 1:
                 add("JUDGE_OUTPUT", f"state:{sid}", "a judge writes exactly one label variable")
             else:
-                enum = var_contracts.get(s.action.writes[0], {}).get("enum")
+                enum = pkg.enums().get(s.action.writes[0])
                 if enum is None or set(enum) != set(s.action.labels):
                     add("JUDGE_OUTPUT", f"state:{sid}", "judge output variable enum must equal its label set")
 
@@ -451,8 +459,10 @@ def validate_package(pkg: LoadedPackage, profile: str = "production") -> Validat
             continue
 
         def succ_unbounded(v: str) -> list[str]:
-            return [t.to for t in m.states[v].transitions
-                    if t.to in cs and not (t.inc and t.inc in loop_bounds)]
+            out = [t.to for t in m.states[v].transitions if t.to in cs and not (t.inc and t.inc in loop_bounds)]
+            if m.fallback in cs and m.fallback in successors(m, v) and m.fallback not in out:
+                out.append(m.fallback)  # implicit fallback edge carries no counter
+            return out
 
         for inner in sccs(comp, succ_unbounded):
             inner_self = len(inner) == 1 and inner[0] in succ_unbounded(inner[0])

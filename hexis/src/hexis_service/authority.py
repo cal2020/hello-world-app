@@ -101,9 +101,9 @@ class ApprovalService:
                             (tenant, interaction_id))
         return (json.loads(req[0][0]) if req else None, json.loads(resp[0][0]) if resp else None)
 
-    def record_response(self, c, request: dict, principal: Principal, decision: str, now: float,
-                        run_principal_id: str) -> str:
-        """Authenticate and authorize the approver, then persist the decision. Returns the effective decision."""
+    def decide(self, request: dict, principal: Principal, decision: str, now: float,
+               run_principal_id: str) -> dict:
+        """Authenticate and authorize the approver and compute the response record (not yet stored)."""
         if decision not in ("approved", "rejected"):
             raise ApprovalError(f"decision must be 'approved' or 'rejected', got {decision!r}")
         if not isinstance(principal, Principal) or not principal.authenticated:
@@ -117,9 +117,11 @@ class ApprovalService:
         resp = {"interaction_id": request["interaction_id"], "principal_id": principal.principal_id,
                 "roles": list(principal.roles), "decision": effective, "responded_at": now,
                 "policy_version": self.policy.version, "approval_digest": request["approval_digest"]}
+        return resp
+
+    def store_response(self, c, request: dict, resp: dict) -> None:
         c.execute("INSERT INTO approval_responses VALUES(?,?,?)",
                   (request["tenant_id"], request["interaction_id"], json.dumps(resp, sort_keys=True)))
-        return effective
 
     def check_for_dispatch(self, tenant: str, intent: dict, evidence: dict, now: float) -> tuple[bool, str]:
         """Find an approval bound to exactly this logical action and argument digest; re-check authority."""
@@ -159,10 +161,10 @@ class EvidenceService:
     issued: list[str] = field(default_factory=list)
 
     def issue(self, c, tenant: str, run_id: str, verifier: str, verifier_version: str, subject: dict,
-              claim: str, result: str, source_ref: str, observed_at: float) -> str:
+              claim: str, result: str, source_ref: str, observed_at: float, policy_version: str) -> str:
         body = {"tenant_id": tenant, "run_id": run_id, "verifier": verifier, "verifier_version": verifier_version,
                 "subject": subject, "claim": claim, "result": result, "source_ref": source_ref,
-                "observed_at": observed_at,
+                "observed_at": observed_at, "policy_version": policy_version,
                 "invalidation": ["subject version changes", "subject payload hash changes",
                                  "policy version changes", "receipt explicitly invalidated"]}
         rid = "ev-" + canonical.digest(body)[7:23]
@@ -179,6 +181,10 @@ class EvidenceService:
         with self.store.tx() as c:
             c.execute("UPDATE evidence_receipts SET invalidated_reason=? WHERE tenant_id=? AND receipt_id=?",
                       (reason, tenant, receipt_id))
+
+    def for_action(self, tenant: str, logical_action_id: str) -> list[str]:
+        rows = self.store.q("SELECT receipt_json FROM evidence_receipts WHERE tenant_id=? ORDER BY rowid", (tenant,))
+        return [json.loads(r)["receipt_id"] for (r,) in rows if json.loads(r)["source_ref"] == logical_action_id]
 
     def for_run(self, tenant: str, run_id: str) -> list[dict]:
         rows = self.store.q("SELECT receipt_json, invalidated_reason FROM evidence_receipts WHERE tenant_id=? AND "

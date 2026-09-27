@@ -23,8 +23,8 @@ the dependency set is the Python standard library.)
 
 ```sh
 cd hexis
-./hexisctl demo procurement-onboarding --data .hexis-data/demo      # the full narrative, ~1 s
-python3 -m unittest discover -s tests                               # 82 tests
+./hexisctl --data .hexis-data/demo demo procurement-onboarding      # the full narrative, ~1 s
+python3 -m unittest discover -s tests                               # 93 tests
 python3 evals/run_eval.py                                           # held-out fixture evaluation
 ```
 

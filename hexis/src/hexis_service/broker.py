@@ -112,7 +112,8 @@ class ToolBroker:
         if current["status"] == "committed":
             last = [r for r in self.store.receipts(tenant, intent["logical_action_id"]) if r["certainty"] == "certain"]
             return Outcome("certain", result=last[-1]["result"], receipt_id=last[-1]["receipt_id"],
-                           reason="deduplicated: logical action already committed")
+                           reason="deduplicated: logical action already committed",
+                           evidence_receipts=self.evidence.for_action(tenant, intent["logical_action_id"]))
         if spec.is_write and current["status"] in ("dispatching", "unknown_effect"):
             rec = self.reconcile(pkg, current)
             if rec is not None:
@@ -161,7 +162,7 @@ class ToolBroker:
                     {"draft_ref": args["draft_ref"], "version": args["draft_version"],
                      "payload_hash": args["persisted"].get("payload_hash")},
                     "persisted ERP draft matches the approved canonical payload", "match",
-                    intent["logical_action_id"], self.clock()))
+                    intent["logical_action_id"], self.clock(), self.policy.version))
         self._crash("after_receipt_before_commit")
         return Outcome("certain", result=result, receipt_id=rid, evidence_receipts=evidence_ids)
 

@@ -170,7 +170,7 @@ class TestApprovals(unittest.TestCase):
         with self.assertRaises(RunError):
             env.approve(run_id, cp, principal=app.OTHER_TENANT_APPROVER)
         unauth = app.Principal("u-approver", app.TENANT, ("procurement_approver",), authenticated=False)
-        with self.assertRaises(PermissionError):
+        with self.assertRaises(RunError):
             env.approve(run_id, cp, principal=unauth)
         with self.assertRaises(PermissionError):
             env.approve(run_id, cp, decision="true")

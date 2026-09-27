@@ -301,10 +301,20 @@ def admit_update(registry, tenant: str, proposal: UpdateProposal, expected_paren
                  approver: str) -> dict:
     """Admit and promote atomically (CAS on the active pointer). Raises ConflictError if the
     parent moved, in which case the proposal must be rebased and every gate rerun."""
+    from .registry import AdmissionRejected
     if proposal.status != "candidate_ready":
         raise ValueError(f"proposal status is {proposal.status}")
+    if proposal.parent_hash != expected_parent_hash:
+        raise AdmissionRejected(f"proposal was built on {proposal.parent_hash}, not the expected parent "
+                                f"{expected_parent_hash}; rebase and rerun every gate")
     cand = proposal.candidate
-    replay = {"ok": True, "mode": "structural", "protected": [t["header"]["trace_id"] for t in archive]}
+    loaded_cand = load_package(cand)
+    reports = [structural_replay(loaded_cand, t).to_dict() for t in archive]
+    replay = {"ok": all(r["result"] == "PASS" for r in reports), "mode": "structural",
+              "protected": [t["header"]["trace_id"] for t in archive],
+              "failures": [r for r in reports if r["result"] != "PASS"]}
+    if not replay["ok"]:
+        raise AdmissionRejected("candidate does not replay the archive being published", replay)
     registry.register_draft(cand)
     record = registry.admit(cand, approver=approver, environment="local-offline", replay_report=replay)
     manifest = archive_manifest(cand["machine"]["skill_id"], archive, cand["artifact_hash"])

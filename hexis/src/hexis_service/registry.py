@@ -1,7 +1,8 @@
 """Artifact registry: immutable versions, admission records, active pointers, revocation.
 
-Lifecycle ``draft -> validated -> admitted -> active``; ``revoked`` blocks new
-runs. Admitted packages are never edited in place. The active pointer moves
+Lifecycle ``draft -> validated -> admitted``; ``active`` is per tenant (the
+tenant's active pointer names an admitted version); ``revoked`` is terminal and
+blocks new runs and further promotion. Admitted packages are never edited in place. The active pointer moves
 only through ``promote`` with a compare-and-swap on the expected current
 hash, and the archive manifest pointer moves in the same transaction.
 Runs pin an artifact hash and are never migrated automatically.
@@ -61,8 +62,8 @@ class Registry:
                 archive_manifest: dict | None = None) -> int:
         """Atomically make an admitted version active if the pointer still equals ``expected_current``."""
         got = self.store.get_machine_version(artifact_hash)
-        if not got or got[1] not in ("admitted", "active"):
-            raise AdmissionRejected(f"{artifact_hash} is not admitted")
+        if not got or got[1] != "admitted":
+            raise AdmissionRejected(f"{artifact_hash} is {got[1] if got else 'unknown'}, not admitted")
         if not verify_admission(self.admission(artifact_hash)):
             raise AdmissionRejected("admission record signature is invalid")
         skill_id = got[0]["machine"]["skill_id"]
@@ -82,18 +83,23 @@ class Registry:
                       "UPDATE SET artifact_hash=excluded.artifact_hash, generation=excluded.generation, "
                       "archive_manifest_id=excluded.archive_manifest_id",
                       (tenant, skill_id, artifact_hash, gen, manifest_id))
-            if current and current != artifact_hash:
-                self.store.set_lifecycle(c, current, "admitted")
-            self.store.set_lifecycle(c, artifact_hash, "active")
         return gen
 
     def revoke(self, artifact_hash: str) -> None:
         with self.store.tx() as c:
             self.store.set_lifecycle(c, artifact_hash, "revoked")
 
-    def lifecycle(self, artifact_hash: str) -> str | None:
+    def lifecycle(self, artifact_hash: str, tenant: str | None = None) -> str | None:
+        """Stored lifecycle (draft/validated/admitted/revoked). With ``tenant``, an admitted version
+        that is that tenant's active pointer is reported as ``active``; activeness is per tenant."""
         got = self.store.get_machine_version(artifact_hash)
-        return got[1] if got else None
+        if not got:
+            return None
+        if tenant is not None and got[1] == "admitted":
+            row = self.store.get_active(tenant, got[0]["machine"]["skill_id"])
+            if row and row[0] == artifact_hash:
+                return "active"
+        return got[1]
 
     def load(self, artifact_hash: str) -> LoadedPackage:
         got = self.store.get_machine_version(artifact_hash)

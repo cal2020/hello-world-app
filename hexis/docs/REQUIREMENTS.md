@@ -26,7 +26,7 @@ Status labels: **verified** = implemented and exercised by a passing test or the
 | REQ-011 | Separate versioned `MachinePackage` (`hexis-production-package/1`) with the §6.2 fields | `package.py`, `schemas/machine-package.schema.json` | schema test | verified |
 | REQ-012 | Canonical hashing; reject duplicate keys, non-finite numbers, oversize, BOM; hash excludes self/signature/reports | `canonical.py`, `package.hash_payload` | strict-JSON test, tamper test | verified |
 | REQ-013 | Signed admission record binding hash to reports | `package.sign_admission`, `registry.admit` | demo, CLI | verified — **dev HMAC key, not production PKI** |
-| REQ-014 | Lifecycle draft→validated→admitted→active; revocation blocks new runs; runs pinned | `registry.py`, `runtime.start_run` | A32 | verified |
+| REQ-014 | Lifecycle draft→validated→admitted→active; revocation blocks new runs; runs pinned | `registry.py`, `runtime.start_run` | A32, `test_review_regressions.TestRegistry` | verified (active is per tenant; revoked is terminal) |
 | REQ-015 | Unset ≠ null ≠ "" ≠ false ≠ 0; no coercion | `jsonschema_lite.py`, `kernel._declared_outputs` | A07, no-coercion test | verified |
 | REQ-016 | Variable ownership model/tool/user/engine(/task); binds + write allowlist | contracts, `validator`, `kernel` | ownership test, A06 | verified |
 | REQ-017 | JSON-Pointer selectors for nested task input | `kernel.initial_checkpoint` | A05 | verified |
