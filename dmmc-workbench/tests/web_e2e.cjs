@@ -341,12 +341,17 @@ function check(name, cond, detail = "") {
   ep.on("worker", (w) => w.evaluate(() => { setTimeout(() => { throw new Error("injected early error"); }, 50); }).catch(() => {}));
   await ep.goto(URL_);
   await ep.waitForSelector("text=could not start", { timeout: 120000 }).catch(() => {});
+  const early = await ep.locator("main").innerText();
   check("an early uncaught error is reported as a startup failure",
-    (await ep.locator("main").innerText()).includes("injected early error"), (await ep.locator("main").innerText()).slice(0, 160));
-  await ep.waitForTimeout(3000);
-  check("an early startup failure offers no deletion and holds no lock",
-    (await ep.locator("#wipe-retry").count()) === 0 &&
-    !(await ep.evaluate(async () => (await navigator.locks.query()).held.map((l) => l.name))).includes("dmmc-workbench-state"));
+    early.includes("could not start") && early.includes("injected early error"), early.slice(0, 160));
+  check("an early startup failure offers no deletion", (await ep.locator("#wipe-retry").count()) === 0);
+  // The failed tab must not go on to take the lock: a second tab, started after it, starts normally.
+  const ep2 = await ectx.newPage();
+  await ep2.goto(URL_);
+  await Promise.race([ep2.waitForSelector("h2:has-text('Dashboard')", { timeout: 120000 }),
+    ep2.waitForSelector("text=The workbench is open in another tab", { timeout: 120000 })]).catch(() => {});
+  check("a tab whose start failed early leaves the lock free for the next tab",
+    (await ep2.locator("h2:has-text('Dashboard')").count()) === 1, (await ep2.locator("main").innerText()).slice(0, 120));
   await ectx.close();
   // (b) A saved state that breaks startup: deletion is offered and gets the workbench going again.
   const bctx = await isolated();

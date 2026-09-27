@@ -38,8 +38,10 @@ says so on screen. The one exception is a save that had already started when the
 new tab may load its result, and the first tab says that instead. A tab that has stopped gives the lock up, so the next tab does not wait.
 
 Deleting local data works only in the tab that holds the workbench (whether or not it finished starting). An
-unexpected error during startup counts as a failed start: the tab keeps the lock and offers to delete the saved data,
-in case that data is the cause. After startup, such an error stops the tab and releases the lock. A tab
+unexpected error during startup counts as a failed start. If it comes after the tab has taken the lock, the tab keeps
+the lock and offers to delete the saved data, in case that data is the cause. If it comes earlier, the tab never takes
+the lock, offers nothing, and the next tab starts normally. After startup, such an error stops the tab and releases
+the lock. A tab
 that is waiting, has handed over, or has stopped refuses, and so does the main-thread fallback used when the worker
 never loaded, if another tab holds the lock. If another page keeps the data open, the page says the deletion is
 pending and stops saving. If the browser blocks site storage, the workbench still runs but does not save, and says

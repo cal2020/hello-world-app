@@ -19,7 +19,7 @@ let started = false;
 let runtimeStopped = false; // the runtime has stopped (or never started): its explanation stays on screen
 let heard = false; // the worker has sent at least one message, so it loaded
 let workerBroken = false; // the worker failed to load and cannot answer messages
-let carried = null; // a warning from an action whose result page a newer navigation replaced
+let carried = null; // an action's save warning, shown by whatever the page shows next (result page, newer page or stop)
 let navGen = 0;
 let shown = null;
 let renders = 0;
@@ -88,7 +88,7 @@ worker.onmessage = (ev) => {
         <p><button type="button" id="takeover">Use it in this tab instead</button></p>
         <p class="small">The other tab finishes what it is doing, saves, and stops. If it does not answer within
         15 seconds (because it is frozen, or still busy with one long action), this tab takes over anyway, and
-        whatever the other tab was still doing is not saved.</p></div>`;
+        whatever the other tab was still doing is not saved, unless it was already saving it.</p></div>`;
       main.querySelector("h2").focus();
       document.getElementById("takeover").addEventListener("click", () => {
         worker.postMessage({ kind: "takeover" });
@@ -149,7 +149,7 @@ function render(res) {
   root.dataset.renders = String(++renders); // lets tests and tools wait for a completed navigation
   if (res.header_html != null) hdr.innerHTML = res.header_html;
   main.innerHTML = res.main_html != null ? res.main_html : `<pre>${escapeHtml(res.body || "")}</pre>`;
-  const warnings = [takeCarried(), res.warning].filter(Boolean);
+  const warnings = [...new Set([takeCarried(), res.warning].filter(Boolean))];
   for (const w of warnings.reverse()) main.insertAdjacentHTML("afterbegin", `<div class="msg err" role="alert">${escapeHtml(w)}</div>`);
   document.title = `${res.title || "Workbench"} · DMMC Evidence Workbench`;
   // Focus the first result message when there is one, so screen-reader users hear it; otherwise the heading.
@@ -179,22 +179,18 @@ function failed(e, gen) {
   showFatal(e.message, { offerWipe: false });
 }
 
-async function navigate(path, { replace = false, gen = ++navGen, warning = null } = {}) {
-  // A save warning handed over from an action is never dropped: if this page is not shown, the
-  // next one shows it.
-  if (!started) { if (warning) carried = warning; return; }
+async function navigate(path, { replace = false, gen = ++navGen } = {}) {
+  if (!started) return;
   try {
     const res = await call({ kind: "get", path, actor: getActor() }, "Loading…");
-    if (gen !== navGen) { if (warning) carried = warning; return; } // a newer navigation or action has started
-    if (res.status === 303 && res.location) return navigate(res.location, { replace, gen, warning });
+    if (gen !== navGen) return; // a newer navigation or action has started
+    if (res.status === 303 && res.location) return navigate(res.location, { replace, gen });
     const target = "#" + path;
     if (replace) history.replaceState(null, "", target);
     else if (location.hash !== target) history.pushState(null, "", target);
     shown = path;
-    if (warning) res.warning = warning;
     render(res);
   } catch (e) {
-    if (warning) carried = warning;
     failed(e, gen);
   }
 }
@@ -208,13 +204,12 @@ async function submit(form) {
   try {
     const res = await call({ kind: "post", path: action, form: data, actor: getActor(), referer: currentPath() }, label);
     if (res.set_actor) setActor(res.set_actor);
-    if (res.warning) announce(res.warning);
-    if (gen !== navGen) { // the user moved on while this ran; a warning is shown on the next page
-      if (res.warning) carried = res.warning;
-      return;
+    if (res.warning) { // never dropped: the result page, a newer page or a stop message shows it
+      announce(res.warning);
+      carried = res.warning;
     }
-    // A save warning must survive the redirect to the result page.
-    if (res.status === 303 && res.location) return navigate(res.location, { gen, warning: res.warning || null });
+    if (gen !== navGen) return; // the user moved on while this ran
+    if (res.status === 303 && res.location) return navigate(res.location, { gen });
     render(res);
   } catch (e) {
     failed(e, gen);

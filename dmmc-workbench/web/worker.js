@@ -35,6 +35,7 @@ let myClientId = null; // this runtime's id in navigator.locks.query(), to tell 
 let waiting = false; // showing "open in another tab"
 let stopped = null; // text once this runtime has stopped serving requests
 let storageBusy = null; // settles when the FS.syncfs in flight (if any) has finished
+let saveInFlight = false; // that FS.syncfs is a save of a served change (not a load, not startup)
 let serving = false; // startup finished and "ready" was posted
 let startupError = null; // an uncaught error during startup: startup is abandoned
 let failStartup = null;
@@ -58,6 +59,8 @@ const errText = (e) => String((e && e.message) || e);
 const STOLEN = "The workbench was opened in another tab, so this tab has stopped. Anything this tab was " +
   "still doing when that happened was not saved. Reload to use it here.";
 
+const STOLEN_AT_START = "The workbench was opened in another tab before this tab finished starting, so this tab " +
+  "has stopped. Reload to use it here.";
 const STOLEN_MID_SAVE = "The workbench was opened in another tab, so this tab has stopped. Its last change was " +
   "being saved at that moment, so it may appear in the other tab. Reload to use it here.";
 
@@ -105,7 +108,8 @@ function syncfs(populate) {
   const p = new Promise((resolve, reject) => py.FS.syncfs(populate, (err) => (err ? reject(err) : resolve())));
   const settled = p.then(() => {}, () => {});
   storageBusy = settled;
-  settled.then(() => { if (storageBusy === settled) storageBusy = null; });
+  saveInFlight = serving && !populate;
+  settled.then(() => { if (storageBusy === settled) { storageBusy = null; saveInFlight = false; } });
   return p.then(() => guardStorage());
 }
 
@@ -161,7 +165,7 @@ function acquireLock(mode) { // "try" | "wait" | "steal" -> "held" | "busy" | "t
       .catch((e) => {
         if (granted) { // stolen by an unanswered takeover: never write again
           lockState = "lost";
-          stop(storageBusy ? STOLEN_MID_SAVE : STOLEN);
+          stop(!serving ? STOLEN_AT_START : storageBusy && saveInFlight ? STOLEN_MID_SAVE : STOLEN);
         } else if (mode === "wait" && e && (e.name === "TimeoutError" || e.name === "AbortError")) {
           resolve("timeout");
         } else { // e.g. SecurityError when the browser blocks site storage: run without the lock
@@ -236,11 +240,13 @@ async function init() {
     if (channel) {
       channel.postMessage({ type: "takeover-request" });
       lock = await acquireLock("wait");
+      if (lock === "held") waiting = false; // holding the lock: no longer waiting, even if startup now fails
       alive();
     }
     if (!channel || lock === "timeout") {
-      progress("The other tab did not answer within 15 seconds; taking over (anything it was still doing is not saved)", "fail");
+      progress("The other tab did not answer within 15 seconds; taking over (what it was still doing is not saved, unless it was already saving it)", "fail");
       lock = await acquireLock("steal");
+      if (lock === "held") waiting = false;
       alive();
     }
     waiting = false;
@@ -302,6 +308,7 @@ self.addEventListener("error", (e) => {
   e.preventDefault();
   const text = String(e.message || "unknown error").slice(0, 200);
   storageBusy = null; // most likely the storage operation in flight threw; it will not finish now
+  saveInFlight = false;
   if (!serving) {
     if (!startupError && !stopped) {
       startupError = new Error(`internal error (${text})`);
@@ -316,7 +323,7 @@ let takeoverRequested = null;
 const ready = Promise.race([init(), startupAborted]);
 ready.catch((e) => {
   progress(`Startup failed: ${errText(e)}`, "fail");
-  post({ kind: "startup-failed", text: errText(e), canWipe: !stopped && (lockState === "held" || lockState === "unsupported") });
+  post({ kind: "startup-failed", text: errText(e), canWipe: wipeRefusal() === null }); // offered only if it would run
 });
 
 function mayWrite() {
