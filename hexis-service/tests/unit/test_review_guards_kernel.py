@@ -59,6 +59,22 @@ def test_integer_between_non_integral_bounds_overlap_found():
     assert an.status == "COUNTEREXAMPLE" and an.counterexample == {"n": 3}
 
 
+@pytest.mark.parametrize("guards,types", [
+    (["8.5 < x < 10", "x < 8.9"], {"x": "number"}),
+    (["1 < n < 10", "n == 2"], {"n": "integer"}),
+    (["0 <= x <= 5 < 100", "x > 4.5"], {"x": "number"}),
+])
+def test_chained_comparison_overlap_found(guards, types):
+    # Regression: constants of all but the last operand pair of a chained comparison were
+    # dropped, so overlapping guards were reported PROVEN.
+    res = G.analyze_disjoint(guards, types)
+    assert res.status == "COUNTEREXAMPLE"
+
+
+def test_chained_comparison_disjoint_still_proven():
+    assert G.analyze_disjoint(["0 <= x < 5", "5 <= x < 10"], {"x": "number"}).status == "PROVEN"
+
+
 def test_huge_integer_literal_does_not_crash_analysis():
     big = "9" * 400
     an = G.analyze_disjoint([f"n > {big}", "n < 3"], {"n": "integer"})

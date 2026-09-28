@@ -379,13 +379,14 @@ def _constants_by_var(tree: ast.AST) -> tuple[dict[str, set], bool]:
     for n in ast.walk(tree):
         if isinstance(n, ast.Compare):
             operands = [n.left, *n.comparators]
-            for a, b in zip(operands, operands[1:]):
-                names = [x for x in (a, b) if isinstance(x, ast.Name)]
-                if len(names) == 2:
-                    ok = False
             for op, right in zip(n.ops, n.comparators):
                 # ``x in array_var``: the array domain is not enumerable from the guard constants.
                 if isinstance(op, (ast.In, ast.NotIn)) and isinstance(right, ast.Name):
+                    ok = False
+            # Every adjacent operand pair of a (possibly chained) comparison contributes constants.
+            for a, b in zip(operands, operands[1:]):
+                names = [x for x in (a, b) if isinstance(x, ast.Name)]
+                if len(names) == 2:
                     ok = False
                 for x, y in ((a, b), (b, a)):
                     if isinstance(x, ast.Name):
