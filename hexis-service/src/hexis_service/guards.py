@@ -13,6 +13,7 @@ import ast
 import itertools
 import math
 from dataclasses import dataclass, field
+from fractions import Fraction
 from functools import lru_cache
 from typing import Any, Optional
 
@@ -378,6 +379,11 @@ def _constants_by_var(tree: ast.AST) -> tuple[dict[str, set], bool]:
     for n in ast.walk(tree):
         if isinstance(n, ast.Compare):
             operands = [n.left, *n.comparators]
+            for op, right in zip(n.ops, n.comparators):
+                # ``x in array_var``: the array domain is not enumerable from the guard constants.
+                if isinstance(op, (ast.In, ast.NotIn)) and isinstance(right, ast.Name):
+                    ok = False
+            # Every adjacent operand pair of a (possibly chained) comparison contributes constants.
             for a, b in zip(operands, operands[1:]):
                 names = [x for x in (a, b) if isinstance(x, ast.Name)]
                 if len(names) == 2:
@@ -393,6 +399,47 @@ def _constants_by_var(tree: ast.AST) -> tuple[dict[str, set], bool]:
     return consts, ok
 
 
+def _smallest_float_above(a: Fraction) -> Optional[float]:
+    """Smallest finite float strictly greater than ``a`` (``None`` if outside the float range)."""
+    try:
+        f = float(a)
+    except OverflowError:
+        return None
+    while math.isfinite(f) and Fraction(f) <= a:
+        f = math.nextafter(f, math.inf)
+    return f if math.isfinite(f) else None
+
+
+def _numeric_domain(integer: bool, cs: set) -> list:
+    """One representative per equivalence region of the constants, in exact arithmetic.
+
+    Regions are: each constant itself, the open interval between consecutive constants, and the
+    unbounded intervals below the smallest and above the largest constant. Representatives are
+    chosen as exact ints where possible (valid for both integer and number variables) and as floats
+    otherwise, so no precision is lost for large or non-representable constants."""
+    raw = [c for c in cs if isinstance(c, (int, float)) and not isinstance(c, bool)]
+    pts = sorted({Fraction(c) for c in raw})
+    vals: set = {0}
+    if not pts:
+        return [0]
+    for p in pts:
+        if p.denominator == 1:
+            vals.add(int(p))
+        elif not integer:
+            vals.add(float(p))  # non-integral points come from float literals: exact
+    vals.add(math.floor(pts[0]) - 1)
+    vals.add(math.floor(pts[-1]) + 1)
+    for a, b in zip(pts, pts[1:]):
+        n = math.floor(a) + 1
+        if n < b:
+            vals.add(n)
+        elif not integer:
+            f = _smallest_float_above(a)
+            if f is not None and Fraction(f) < b:
+                vals.add(f)
+    return sorted(vals, key=Fraction)
+
+
 def _domain(t: str, cs: set) -> list:
     if t == "boolean":
         return [True, False]
@@ -402,18 +449,7 @@ def _domain(t: str, cs: set) -> list:
         return [[], ["\u0000x"]]
     if t == "object":
         return [{}, {"\u0000k": 0}]
-    nums = sorted({float(c) for c in cs if isinstance(c, (int, float)) and not isinstance(c, bool)})
-    if t == "integer":
-        vals = {0}
-        for c in nums:
-            vals.update({math.floor(c) - 1, math.floor(c), math.ceil(c), math.ceil(c) + 1})
-        return sorted(vals)
-    vals_f = {0.0}
-    for i, c in enumerate(nums):
-        vals_f.update({c - 1, c, c + 1})
-        if i + 1 < len(nums):
-            vals_f.add((c + nums[i + 1]) / 2)
-    return sorted(vals_f)
+    return _numeric_domain(t == "integer", cs)
 
 
 def analyze_disjoint(guards: list[str], var_types: dict[str, str]) -> Analysis:
@@ -427,7 +463,8 @@ def analyze_disjoint(guards: list[str], var_types: dict[str, str]) -> Analysis:
         except GuardError as exc:
             return Analysis("UNKNOWN", f"unparseable guard: {exc}")
         if not ok:
-            return Analysis("UNKNOWN", f"guard {g!r} compares two variables; outside the enumerable fragment")
+            return Analysis("UNKNOWN", f"guard {g!r} compares two variables or tests membership in an array "
+                                       "variable; outside the enumerable fragment")
         for k, v in c.items():
             consts.setdefault(k, set()).update(v)
     names = sorted(consts)
@@ -435,7 +472,10 @@ def analyze_disjoint(guards: list[str], var_types: dict[str, str]) -> Analysis:
     for n in names:
         if n not in var_types:
             return Analysis("UNKNOWN", f"undeclared variable {n!r}")
-        domains.append(_domain(var_types[n], consts[n]))
+        try:
+            domains.append(_domain(var_types[n], consts[n]))
+        except (OverflowError, ValueError, ArithmeticError) as exc:
+            return Analysis("UNKNOWN", f"cannot build a representative domain for {n!r}: {exc}")
     total = 1
     for d in domains:
         total *= len(d)

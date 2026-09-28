@@ -8,7 +8,8 @@ Canonical form (documented contract, version ``hexis-canon/1``):
 * Integers are emitted as integers; floats via ``repr`` (shortest round-trip). ``bool`` is never
   coerced to a number.
 * Rejected before canonicalization: duplicate object keys, NaN/Infinity, non-string keys,
-  nesting beyond ``MAX_DEPTH``, strings longer than ``MAX_STRING``, documents larger than
+  nesting beyond ``MAX_DEPTH``, strings (values and keys) longer than ``MAX_STRING`` or containing
+  lone surrogates, integers wider than ``MAX_INT_BITS`` bits, documents larger than
   ``MAX_BYTES``, and byte input that is not valid UTF-8 (a UTF-8 BOM is also rejected).
 """
 
@@ -23,6 +24,8 @@ CANON_VERSION = "hexis-canon/1"
 MAX_BYTES = 8 * 1024 * 1024
 MAX_DEPTH = 64
 MAX_STRING = 1024 * 1024
+# Integers are bounded well below CPython's default int->str conversion limit (4300 digits).
+MAX_INT_BITS = 4096 * 3
 
 
 class CanonicalError(ValueError):
@@ -59,10 +62,25 @@ def strict_loads(data: str | bytes) -> Any:
             raise CanonicalError("document exceeds size limit")
     try:
         value = json.loads(text, object_pairs_hook=_no_duplicates, parse_constant=_reject_constant)
+    except CanonicalError:
+        raise
     except json.JSONDecodeError as exc:
+        raise CanonicalError(f"invalid JSON: {exc}") from exc
+    except RecursionError as exc:
+        raise CanonicalError("nesting too deep") from exc
+    except ValueError as exc:  # e.g. integer literal beyond the int/str conversion limit
         raise CanonicalError(f"invalid JSON: {exc}") from exc
     check_value(value)
     return value
+
+
+def _check_string(value: str) -> None:
+    if len(value) > MAX_STRING:
+        raise CanonicalError("string too long")
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError as exc:
+        raise CanonicalError("lone surrogate in string") from exc
 
 
 def check_value(value: Any, depth: int = 0) -> None:
@@ -72,18 +90,15 @@ def check_value(value: Any, depth: int = 0) -> None:
     if value is None or isinstance(value, bool):
         return
     if isinstance(value, int):
+        if value.bit_length() > MAX_INT_BITS:
+            raise CanonicalError("integer too large")
         return
     if isinstance(value, float):
         if not math.isfinite(value):
             raise CanonicalError("non-finite number")
         return
     if isinstance(value, str):
-        if len(value) > MAX_STRING:
-            raise CanonicalError("string too long")
-        try:
-            value.encode("utf-8")
-        except UnicodeEncodeError as exc:
-            raise CanonicalError("lone surrogate in string") from exc
+        _check_string(value)
         return
     if isinstance(value, (list, tuple)):
         for v in value:
@@ -93,6 +108,7 @@ def check_value(value: Any, depth: int = 0) -> None:
         for k, v in value.items():
             if not isinstance(k, str):
                 raise CanonicalError(f"non-string key {k!r}")
+            _check_string(k)
             check_value(v, depth + 1)
         return
     raise CanonicalError(f"unsupported type {type(value).__name__}")
