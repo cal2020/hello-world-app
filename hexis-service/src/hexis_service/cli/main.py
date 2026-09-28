@@ -16,6 +16,7 @@ from typing import Any
 
 EXIT_OK, EXIT_INVALID, EXIT_REJECTED, EXIT_RUNTIME, EXIT_WAITING = 0, 2, 3, 4, 5
 WAITING = ("WAITING_FOR_APPROVAL", "WAITING_FOR_INPUT", "RECONCILING")
+PROFILES = ["production", "sandbox"]  # anything else would silently downgrade provenance errors
 
 
 def _emit(args: argparse.Namespace, human: str, data: Any) -> None:
@@ -57,7 +58,7 @@ def _model(spec: str):
     if spec.startswith("anthropic:"):
         from ..models.anthropic_adapter import AnthropicModelAdapter
         return AnthropicModelAdapter(spec.split(":", 1)[1])
-    raise SystemExit(f"unknown model spec {spec!r} (use 'fixture' or 'anthropic:<model-id>')")
+    raise ValueError(f"unknown model spec {spec!r} (use 'fixture' or 'anthropic:<model-id>')")
 
 
 def _env(args: argparse.Namespace):
@@ -108,7 +109,12 @@ def cmd_update(args: argparse.Namespace) -> int:
     from ..demo.env import load_catalog, skill_source
     from ..traces.update import propose_update
     aligner = {"fixture": R.FixtureAligner(), "shortcut": R.ShortcutAligner()}[args.aligner]
-    trace = _traces(args.trace)[0]
+    traces = _traces(args.trace)
+    if len(traces) != 1:
+        _emit(args, f"error: --trace must resolve to exactly one trace (found {len(traces)} in {args.trace})",
+              {"error": "TRACE_COUNT", "found": len(traces), "trace": args.trace})
+        return EXIT_INVALID
+    trace = traces[0]
     prop = propose_update(_pkg(args.parent), trace, _traces(args.archive), _traces(args.negative), load_catalog(),
                           aligner, skill_source().text)
     out = Path(args.out)
@@ -176,8 +182,13 @@ def cmd_resume(args: argparse.Namespace) -> int:
 
 
 def cmd_inspect(args: argparse.Namespace) -> int:
+    from ..runtime.service import RunError
     env = _env(args)
-    rep = env.service.inspect_run(args.run, env.principal(args.as_))
+    try:
+        rep = env.service.inspect_run(args.run, env.principal(args.as_))
+    except RunError as exc:
+        _emit(args, f"error {exc.code}: {exc.message}", {"error": exc.code, "message": exc.message})
+        return EXIT_INVALID
     _emit(args, f"{rep['run']['run_id']} {rep['run']['status']}\n  path: {' -> '.join(rep['path'])}\n"
                 f"  outcome: {rep['outcome']}\n  assurance: {rep['assurance']}", rep)
     return EXIT_OK
@@ -188,8 +199,16 @@ def cmd_demo(args: argparse.Namespace) -> int:
     summary = run_demo(args.out, args.scenario, say=(lambda s: None) if args.json else print)
     if args.json:
         print(json.dumps(summary, indent=2, default=str))
-    ok = summary["steps"]["run"]["erp_drafts"] == 1 and summary["steps"]["shortcut"]["active_unchanged"]
-    return EXIT_OK if ok else EXIT_RUNTIME
+    return EXIT_OK if demo_ok(summary) else EXIT_RUNTIME
+
+
+def demo_ok(summary: dict) -> bool:
+    """The demo succeeds only if every property it narrates actually held. ``active_unchanged`` alone is trivially
+    true (the shortcut candidate is never submitted for admission), so the gates must have rejected it too."""
+    steps = summary["steps"]
+    sc = steps["shortcut"]
+    return bool(steps["run"]["erp_drafts"] == 1 and sc["active_unchanged"] and not sc["static_gate_passed"]
+                and not sc["negative_gate_passed"] and steps.get("self_approval", {}).get("refused", False))
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -208,9 +227,9 @@ def main(argv: list[str] | None = None) -> int:
     state = ("--state", {"default": "build/state"})
     who = (("--as",), {"dest": "as_", "default": "user:alice"})
     model = ("--model", {"default": "fixture"})
-    add("compile", cmd_compile, ("--skill", {"required": True}), ("--profile", {"default": "sandbox"}),
+    add("compile", cmd_compile, ("--skill", {"required": True}), ("--profile", {"choices": PROFILES, "default": "sandbox"}),
         ("--out", {"default": "build/package.json"}), ("--compiler", {"default": "fixture"}))
-    add("validate", cmd_validate, ("--package", {"required": True}), ("--profile", {"default": "production"}),
+    add("validate", cmd_validate, ("--package", {"required": True}), ("--profile", {"choices": PROFILES, "default": "production"}),
         ("--skill", {"default": None}))
     add("replay", cmd_replay, ("--package", {"required": True}), ("--archive", {"required": True}),
         ("--mode", {"choices": ["structural", "recorded"], "default": "structural"}))
@@ -232,8 +251,12 @@ def main(argv: list[str] | None = None) -> int:
     args = p.parse_args(argv)
     try:
         return args.fn(args)
-    except FileNotFoundError as exc:
-        print(f"error: {exc}", file=sys.stderr)
+    except (OSError, ValueError) as exc:
+        # Invalid input (missing/unreadable file, malformed or duplicate-key JSON, schema-invalid package,
+        # unknown principal, bad model spec) -> documented exit code 2, one-line message, no traceback.
+        # CanonicalError and pydantic ValidationError are ValueError subclasses; PermissionError is an OSError.
+        msg = str(exc).strip().splitlines()
+        print(f"error: {type(exc).__name__}: {msg[0] if msg else ''}", file=sys.stderr)
         return EXIT_INVALID
 
 

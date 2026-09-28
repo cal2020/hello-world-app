@@ -29,6 +29,23 @@ from hexis_service.traces.update import archive_manifest, propose_update
 HERE = Path(__file__).resolve().parent
 
 
+def dev_overlap(task, dev) -> list[str]:
+    """Reasons a 'held-out' task is NOT independent of the development trace given to the aligner.
+
+    A task that shares the development trace's supplier or the documents the requester supplied in it is the
+    training example in disguise; its result must not be reported as held-out generalization.
+    """
+    reasons = []
+    dev_ref = dev.task.get("input", {}).get("supplier_ref")
+    if dev_ref and task["input"].get("supplier_ref") == dev_ref:
+        reasons.append(f"same supplier_ref {dev_ref} as development trace {dev.trace_id}")
+    supplied = {d for r in dev.records if r.action.get("kind") == "user" for d in r.output.get("document_ids", [])}
+    shared = sorted(supplied & set(task.get("responses", {}).get("input", {}).get("document_ids", [])))
+    if shared:
+        reasons.append(f"supplies the same documents {shared} as development trace {dev.trace_id}")
+    return reasons
+
+
 def run_task(env, pkg, task):
     alice, bob = env.principal("user:alice"), env.principal("user:bob")
     inp = {**{k: TASK[k] for k in ("required_fields", "policy_version")}, **task["input"]}
@@ -65,6 +82,9 @@ def run_task(env, pkg, task):
         "terminal_honest": cat != "verified" or fields_ok,
         "duplicate_writes": max(0, len({r["external_ref"] for r in creates}) - 1),
         "entered_fallback": cp.assurance.entered_fallback,
+        # a run ending in a fallback-category terminal (e.g. END_REVIEW) is a fallback outcome too, even when it
+        # got there on a designed branch rather than via a runtime failure
+        "fallback_outcome": cp.assurance.entered_fallback or cat == "fallback",
         "human_interactions": interactions,
         "steps": cp.budget.steps, "tool_calls": cp.budget.tool_calls, "model_calls": cp.budget.model_calls,
         "tokens_fixture_estimate": cp.budget.tokens,
@@ -73,10 +93,13 @@ def run_task(env, pkg, task):
 
 def summarize(rows):
     n = len(rows)
+    if not n:
+        return {"tasks": 0}
     agg = lambda k: sum(1 for r in rows if r[k]) / n  # noqa: E731
     return {"tasks": n, "business_success": agg("business_success"), "procedural_conformance":
             agg("procedural_conformance"), "terminal_honesty": agg("terminal_honest"),
-            "duplicate_writes": sum(r["duplicate_writes"] for r in rows), "fallback_rate": agg("entered_fallback"),
+            "duplicate_writes": sum(r["duplicate_writes"] for r in rows), "fallback_rate": agg("fallback_outcome"),
+            "failure_fallback_rate": agg("entered_fallback"),
             "human_interactions": sum(r["human_interactions"] for r in rows),
             "mean_steps": sum(r["steps"] for r in rows) / n, "model_calls": sum(r["model_calls"] for r in rows)}
 
@@ -96,8 +119,12 @@ def main() -> None:
         admit(env.store, refined, env.catalog, expected_parent_hash=initial.artifact_hash,
               approver=env.principal("user:dana"), environment="sandbox",
               archive_manifest=archive_manifest([dev], []), now=env.clock(), skill_text=skill_source().text)
+        overlap = {t["id"]: dev_overlap(t, dev) for t in tasks}
         arms = {"initial_compiled": [run_task(env, initial, t) for t in tasks],
                 "trace_refined": [run_task(env, refined, t) for t in tasks]}
+        for rows in arms.values():
+            for r in rows:
+                r["dev_overlap"] = overlap[r["task"]]
     commit = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=HERE).stdout.strip()
     result = {
         "mode": "fixture (deterministic fake model + fake connectors; software behavior only)",
@@ -105,7 +132,10 @@ def main() -> None:
                         "command": "python evals/run_eval.py"},
         "artifacts": {"initial": initial.artifact_hash, "refined": refined.artifact_hash},
         "task_set_digest": digest(tasks),
-        "arms": {k: {"summary": summarize(v), "rows": v} for k, v in arms.items()},
+        "arms": {k: {"summary": summarize(v), "rows": v,
+                     "strictly_heldout_summary": summarize([r for r in v if not r["dev_overlap"]])}
+                 for k, v in arms.items()},
+        "dev_overlap": {k: v for k, v in overlap.items() if v},
         "not_run": {"direct_skill_prompting_react": "requires a live model adapter and credentials; not executed"},
         "repeats": 1, "note": "Deterministic fixtures: repeated runs are identical and are not independent samples.",
     }
@@ -117,12 +147,27 @@ def main() -> None:
              "| Metric | initial_compiled | trace_refined |", "|---|---|---|"]
     s0, s1 = result["arms"]["initial_compiled"]["summary"], result["arms"]["trace_refined"]["summary"]
     for k in ("business_success", "procedural_conformance", "terminal_honesty", "duplicate_writes", "fallback_rate",
-              "human_interactions", "mean_steps", "model_calls"):
+              "failure_fallback_rate", "human_interactions", "mean_steps", "model_calls"):
         fmt = (lambda v: f"{v:.2f}") if isinstance(s0[k], float) else str
         lines.append(f"| {k} | {fmt(s0[k])} | {fmt(s1[k])} |")
-    lines += ["", "| Task | expected | initial | refined |", "|---|---|---|---|"]
+    lines += ["", "`fallback_rate` counts runs that end in a fallback-category terminal (e.g. END_REVIEW) or enter the "
+              "failure fallback; `failure_fallback_rate` counts only the latter."]
+    if result["dev_overlap"]:
+        h0 = result["arms"]["initial_compiled"]["strictly_heldout_summary"]
+        h1 = result["arms"]["trace_refined"]["strictly_heldout_summary"]
+        lines += ["", "**Development-trace overlap.** These tasks share the supplier or the supplied documents with "
+                  "the development trace given to the aligner, so they are NOT held out:", ""]
+        lines += [f"- `{k}`: {'; '.join(v)}" for k, v in result["dev_overlap"].items()]
+        lines += ["", f"Strictly held-out tasks only ({h0['tasks']}):", "",
+                  "| Metric | initial_compiled | trace_refined |", "|---|---|---|"]
+        for k in ("business_success", "procedural_conformance", "terminal_honesty", "human_interactions"):
+            fmt = (lambda v: f"{v:.2f}") if isinstance(h0[k], float) else str
+            lines.append(f"| {k} | {fmt(h0[k])} | {fmt(h1[k])} |")
+    lines += ["", "| Task | expected | initial (interactions) | refined (interactions) | dev overlap |",
+              "|---|---|---|---|---|"]
     for a, b in zip(arms["initial_compiled"], arms["trace_refined"]):
-        lines.append(f"| {a['task']} | {a['expected']} | {a['terminal']} | {b['terminal']} |")
+        lines.append(f"| {a['task']} | {a['expected']} | {a['terminal']} ({a['human_interactions']}) | "
+                     f"{b['terminal']} ({b['human_interactions']}) | {'yes' if a['dev_overlap'] else ''} |")
     lines += ["", "Direct skill prompting + ReAct baseline: **not run** (needs a live model).",
               "These numbers describe deterministic fixture behavior, not model quality or production performance."]
     (out / "report.md").write_text("\n".join(lines) + "\n")

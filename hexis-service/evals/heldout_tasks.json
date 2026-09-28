@@ -1,5 +1,5 @@
 {
-  "note": "Held-out synthetic tasks. Never supplied to the compiler fixture or aligners. Oracle fields are written independently of the system under test, from the fixture documents.",
+  "note": "Synthetic evaluation tasks. The task files are never supplied to the compiler fixture or aligners, but H3-missing-then-supplied reproduces the development trace's case (same supplier SUP-40002 and supplied document DOC-LATE-40002), so it is NOT held out; run_eval.py detects this overlap and also reports metrics over the strictly held-out tasks only. Oracle fields are written independently of the system under test, from the fixture documents.",
   "tasks": [
     {"id": "H1-complete", "input": {"supplier_ref": "SUP-20077", "business_unit": "BU-EMEA", "document_ids": ["DOC-W9-20077"]},
      "oracle": {"expect": "verified", "fields": {"legal_name": "Fabrikam Metals Ltd", "tax_id": "GB987654321", "contact_email": "billing@fabrikam.example"}}},

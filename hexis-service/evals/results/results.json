@@ -5,10 +5,12 @@
         {
           "business_success": true,
           "category": "verified",
+          "dev_overlap": [],
           "duplicate_writes": 0,
           "entered_fallback": false,
           "expected": "verified",
           "extraction_correct": true,
+          "fallback_outcome": false,
           "human_interactions": 1,
           "model_calls": 1,
           "procedural_conformance": true,
@@ -23,10 +25,12 @@
         {
           "business_success": true,
           "category": "verified",
+          "dev_overlap": [],
           "duplicate_writes": 0,
           "entered_fallback": false,
           "expected": "verified",
           "extraction_correct": true,
+          "fallback_outcome": false,
           "human_interactions": 1,
           "model_calls": 2,
           "procedural_conformance": true,
@@ -41,10 +45,15 @@
         {
           "business_success": false,
           "category": "unverified",
+          "dev_overlap": [
+            "same supplier_ref SUP-40002 as development trace dev:missing-docs-then-supplied",
+            "supplies the same documents ['DOC-LATE-40002'] as development trace dev:missing-docs-then-supplied"
+          ],
           "duplicate_writes": 0,
           "entered_fallback": false,
           "expected": "verified",
           "extraction_correct": false,
+          "fallback_outcome": false,
           "human_interactions": 0,
           "model_calls": 0,
           "procedural_conformance": true,
@@ -59,10 +68,12 @@
         {
           "business_success": true,
           "category": "fallback",
+          "dev_overlap": [],
           "duplicate_writes": 0,
           "entered_fallback": false,
           "expected": "review",
           "extraction_correct": null,
+          "fallback_outcome": true,
           "human_interactions": 0,
           "model_calls": 0,
           "procedural_conformance": true,
@@ -77,10 +88,12 @@
         {
           "business_success": true,
           "category": "unverified",
+          "dev_overlap": [],
           "duplicate_writes": 0,
           "entered_fallback": false,
           "expected": "unverified",
           "extraction_correct": null,
+          "fallback_outcome": false,
           "human_interactions": 0,
           "model_calls": 3,
           "procedural_conformance": true,
@@ -95,10 +108,12 @@
         {
           "business_success": true,
           "category": "verified",
+          "dev_overlap": [],
           "duplicate_writes": 0,
           "entered_fallback": false,
           "expected": "verified",
           "extraction_correct": true,
+          "fallback_outcome": false,
           "human_interactions": 1,
           "model_calls": 1,
           "procedural_conformance": true,
@@ -113,10 +128,12 @@
         {
           "business_success": true,
           "category": "unverified",
+          "dev_overlap": [],
           "duplicate_writes": 0,
           "entered_fallback": false,
           "expected": "unverified",
           "extraction_correct": null,
+          "fallback_outcome": false,
           "human_interactions": 0,
           "model_calls": 0,
           "procedural_conformance": true,
@@ -129,10 +146,23 @@
           "tool_calls": 1
         }
       ],
+      "strictly_heldout_summary": {
+        "business_success": 1.0,
+        "duplicate_writes": 0,
+        "failure_fallback_rate": 0.0,
+        "fallback_rate": 0.16666666666666666,
+        "human_interactions": 3,
+        "mean_steps": 7.166666666666667,
+        "model_calls": 7,
+        "procedural_conformance": 1.0,
+        "tasks": 6,
+        "terminal_honesty": 1.0
+      },
       "summary": {
         "business_success": 0.8571428571428571,
         "duplicate_writes": 0,
-        "fallback_rate": 0.0,
+        "failure_fallback_rate": 0.0,
+        "fallback_rate": 0.14285714285714285,
         "human_interactions": 3,
         "mean_steps": 6.428571428571429,
         "model_calls": 7,
@@ -146,10 +176,12 @@
         {
           "business_success": true,
           "category": "verified",
+          "dev_overlap": [],
           "duplicate_writes": 0,
           "entered_fallback": false,
           "expected": "verified",
           "extraction_correct": true,
+          "fallback_outcome": false,
           "human_interactions": 1,
           "model_calls": 1,
           "procedural_conformance": true,
@@ -164,10 +196,12 @@
         {
           "business_success": true,
           "category": "verified",
+          "dev_overlap": [],
           "duplicate_writes": 0,
           "entered_fallback": false,
           "expected": "verified",
           "extraction_correct": true,
+          "fallback_outcome": false,
           "human_interactions": 1,
           "model_calls": 2,
           "procedural_conformance": true,
@@ -182,10 +216,15 @@
         {
           "business_success": true,
           "category": "verified",
+          "dev_overlap": [
+            "same supplier_ref SUP-40002 as development trace dev:missing-docs-then-supplied",
+            "supplies the same documents ['DOC-LATE-40002'] as development trace dev:missing-docs-then-supplied"
+          ],
           "duplicate_writes": 0,
           "entered_fallback": false,
           "expected": "verified",
           "extraction_correct": true,
+          "fallback_outcome": false,
           "human_interactions": 2,
           "model_calls": 1,
           "procedural_conformance": true,
@@ -200,10 +239,12 @@
         {
           "business_success": true,
           "category": "fallback",
+          "dev_overlap": [],
           "duplicate_writes": 0,
           "entered_fallback": false,
           "expected": "review",
           "extraction_correct": null,
+          "fallback_outcome": true,
           "human_interactions": 0,
           "model_calls": 0,
           "procedural_conformance": true,
@@ -218,10 +259,12 @@
         {
           "business_success": true,
           "category": "unverified",
+          "dev_overlap": [],
           "duplicate_writes": 0,
           "entered_fallback": false,
           "expected": "unverified",
           "extraction_correct": null,
+          "fallback_outcome": false,
           "human_interactions": 0,
           "model_calls": 3,
           "procedural_conformance": true,
@@ -236,10 +279,12 @@
         {
           "business_success": true,
           "category": "verified",
+          "dev_overlap": [],
           "duplicate_writes": 0,
           "entered_fallback": false,
           "expected": "verified",
           "extraction_correct": true,
+          "fallback_outcome": false,
           "human_interactions": 1,
           "model_calls": 1,
           "procedural_conformance": true,
@@ -254,10 +299,12 @@
         {
           "business_success": true,
           "category": "unverified",
+          "dev_overlap": [],
           "duplicate_writes": 0,
           "entered_fallback": false,
           "expected": "unverified",
           "extraction_correct": null,
+          "fallback_outcome": false,
           "human_interactions": 1,
           "model_calls": 0,
           "procedural_conformance": true,
@@ -270,10 +317,23 @@
           "tool_calls": 2
         }
       ],
+      "strictly_heldout_summary": {
+        "business_success": 1.0,
+        "duplicate_writes": 0,
+        "failure_fallback_rate": 0.0,
+        "fallback_rate": 0.16666666666666666,
+        "human_interactions": 4,
+        "mean_steps": 7.5,
+        "model_calls": 7,
+        "procedural_conformance": 1.0,
+        "tasks": 6,
+        "terminal_honesty": 1.0
+      },
       "summary": {
         "business_success": 1.0,
         "duplicate_writes": 0,
-        "fallback_rate": 0.0,
+        "failure_fallback_rate": 0.0,
+        "fallback_rate": 0.14285714285714285,
         "human_interactions": 6,
         "mean_steps": 8.0,
         "model_calls": 8,
@@ -287,9 +347,15 @@
     "initial": "sha256:4ba77a16db6a69184dc79cd804043aced412caac78f39b43eb86b8821d1871f9",
     "refined": "sha256:5b6503fd285322391f2afe9abff62a76e5ac24d5163d14334a918fba42694818"
   },
+  "dev_overlap": {
+    "H3-missing-then-supplied": [
+      "same supplier_ref SUP-40002 as development trace dev:missing-docs-then-supplied",
+      "supplies the same documents ['DOC-LATE-40002'] as development trace dev:missing-docs-then-supplied"
+    ]
+  },
   "environment": {
     "command": "python evals/run_eval.py",
-    "git_commit": "f23c6baa25031f5c1e477cb5d108a6a28f418ad3",
+    "git_commit": "3eea698db5b68a00da4bdc6711f34f5e257d72ac",
     "platform": "Linux-6.18.44-fc-v42-x86_64-with-glibc2.39",
     "python": "3.12.3"
   },
