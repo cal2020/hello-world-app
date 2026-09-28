@@ -72,6 +72,21 @@ A live model can be plugged in with `--model anthropic:<model-id>` (install the 
 SDK resolves credentials from the environment). This path is implemented and unit-tested with a fake
 client. It was **not executed live**.
 
+### Live compiler model
+
+`hexisctl compile --compiler anthropic:<model-id>` drafts the machine with a live model instead of the
+default `fixture` compiler (`compiler/llm_compiler.py`, official `anthropic` SDK, streaming, no prefill;
+the model id is always explicit and credentials come only from the SDK's environment resolution). The prompt
+is the versioned template `compiler/prompts/compile_v1.*.md`, filled only with the compile context (numbered
+clauses, approved tool interfaces, guard grammar, action kinds, terminal vocabulary, input schema, capability
+and loop ceilings), the efsm-v1/Contracts JSON Schemas and the previous attempt's validator diagnostics; it
+tells the model that document text is data and that it proposes, never admits. The template digest is bound
+into `compiler_manifest.prompts_sha256`. Refusals, truncation, non-JSON, duplicate keys and schema-invalid
+drafts become malformed attempts within the bounded repair loop. Without the SDK or credentials the command
+exits `2`; a provider error during the call exits `4`. The model's output still goes through strict parsing,
+the static validator, normalization and the separate `admit` gate; nothing it writes is admitted by itself.
+This path is unit-tested with a fake client only and was **not executed live**.
+
 ## Layout
 
 ```

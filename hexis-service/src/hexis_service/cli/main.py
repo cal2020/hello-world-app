@@ -69,16 +69,34 @@ def _env(args: argparse.Namespace):
                      store_url=getattr(args, "store", None) or None)
 
 
+def _compiler(spec: str):
+    """``fixture`` (default) or ``anthropic:<model-id>`` (live model; proposes only, never admits)."""
+    if spec == "fixture":
+        from ..demo.procurement_fixture import FixtureCompilerModel
+        return FixtureCompilerModel()
+    if spec.startswith("anthropic:"):
+        from ..compiler.llm_compiler import LLMCompilerModel
+        return LLMCompilerModel(spec.split(":", 1)[1])
+    raise ValueError(f"unknown compiler spec {spec!r} (use 'fixture' or 'anthropic:<model-id>')")
+
+
 def cmd_compile(args: argparse.Namespace) -> int:
     from ..compiler.compile import SkillSource, compile_skill, coverage_markdown
     from ..demo.env import load_catalog
-    from ..demo.procurement_fixture import FixtureCompilerModel, deployment_policy
-    if args.compiler != "fixture":
-        _emit(args, "only the fixture compiler model is wired in this build (see docs/LIMITATIONS.md)",
-              {"error": "compiler model not implemented", "compiler": args.compiler})
+    from ..demo.procurement_fixture import deployment_policy
+    from ..compiler.llm_compiler import CompilerModelUnavailable
+    try:
+        compiler = _compiler(args.compiler)
+    except (CompilerModelUnavailable, ValueError) as exc:
+        _emit(args, f"error: compiler {args.compiler!r} unavailable: {exc}",
+              {"error": "compiler model unavailable", "compiler": args.compiler, "detail": str(exc)})
         return EXIT_INVALID
     src = SkillSource(path=args.skill, text=Path(args.skill).read_text())
-    res = compile_skill(src, load_catalog(), deployment_policy(args.profile), FixtureCompilerModel())
+    try:
+        res = compile_skill(src, load_catalog(), deployment_policy(args.profile), compiler)
+    except CompilerModelUnavailable as exc:
+        _emit(args, f"error: {exc}", {"error": "compiler model call failed", "detail": str(exc)})
+        return EXIT_RUNTIME
     if res.package is not None:
         Path(args.out).parent.mkdir(parents=True, exist_ok=True)
         Path(args.out).write_text(json.dumps(res.package.to_json(), indent=2) + "\n")
