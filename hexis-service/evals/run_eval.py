@@ -21,6 +21,7 @@ from pathlib import Path
 from hexis_service.canonical import digest
 from hexis_service.demo import reference as R
 from hexis_service.demo.env import TASK, ManualClock, admit_initial, build_env, compile_procurement, skill_source
+from hexis_service.demo.procurement_fixture import deployment_policy
 from hexis_service.artifacts.registry import admit
 from hexis_service.traces.model import export_run_trace
 from hexis_service.traces.normalize import eligibility
@@ -95,7 +96,8 @@ def main() -> None:
         refined = prop.candidate
         admit(env.store, refined, env.catalog, expected_parent_hash=initial.artifact_hash,
               approver=env.principal("user:dana"), environment="sandbox",
-              archive_manifest=archive_manifest([dev], []), now=env.clock(), skill_text=skill_source().text)
+              archive_manifest=archive_manifest([dev], []), protected=[dev],
+              deployment_policy=deployment_policy(), now=env.clock(), skill_text=skill_source().text)
         arms = {"initial_compiled": [run_task(env, initial, t) for t in tasks],
                 "trace_refined": [run_task(env, refined, t) for t in tasks]}
     commit = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=HERE).stdout.strip()

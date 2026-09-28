@@ -13,9 +13,10 @@ from typing import Callable
 from ..artifacts.registry import admit
 from ..compiler.compile import coverage_markdown
 from ..traces.model import export_run_trace
-from ..traces.update import apply_ops, archive_manifest, evaluate_candidate, propose_update
+from ..traces.update import apply_ops, evaluate_candidate, propose_update
 from . import reference as R
 from .env import TASK, ManualClock, admit_initial, build_env, compile_procurement, skill_source
+from .procurement_fixture import deployment_policy
 
 
 def _w(path: Path, data) -> None:
@@ -115,9 +116,8 @@ def run_demo(out_dir: str = "build/demo", scenario: str = "full", say: Callable[
     _w(out / "update_proposal.missing_docs.json", prop.to_json())
     refined = prop.candidate
     adm2 = admit(env.store, refined, env.catalog, expected_parent_hash=pkg.artifact_hash,
-                 approver=env.principal("user:dana"), environment="sandbox",
-                 archive_manifest=archive_manifest(protected + [dev], negative), now=clock(),
-                 skill_text=skill_source().text)
+                 approver=env.principal("user:dana"), environment="sandbox", deployment_policy=deployment_policy(),
+                 protected=protected + [dev], negative=negative, now=clock(), skill_text=skill_source().text)
     say(f"   admission (CAS on parent {pkg.artifact_hash[7:19]}): {adm2.status}")
     _w(out / "refined_package.json", refined.to_json())
     _w(out / "machine.refined.json", refined.machine.to_json())

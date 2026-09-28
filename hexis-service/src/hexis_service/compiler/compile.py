@@ -119,6 +119,37 @@ def _coverage_regressions(prev: dict, cur: dict, critical_ids: set[str]) -> list
     return out
 
 
+def _requirements(contracts: Contracts) -> dict[str, dict]:
+    """The requirement set a repair must not shrink: ordering requirements, interaction contracts
+    and terminal evidence requirements, each keyed by a stable identity."""
+    out: dict[str, dict] = {}
+    for o in contracts.ordering:
+        out[f"ordering:{o.id}"] = o.model_dump()
+    for sid, ic in contracts.interactions.items():
+        out[f"interaction:{sid}"] = ic.model_dump()
+    for tid, tc in contracts.terminals.items():
+        for ev in tc.evidence:
+            out[f"evidence:{tid}:{ev.claim}"] = ev.model_dump()
+    return out
+
+
+def _requirement_regressions(prev: dict[str, dict], cur: dict[str, dict], named: set[str]) -> list[Finding]:
+    """Requirements are monotone across repair attempts: one present in an earlier attempt must be
+    present, unchanged, in every later attempt (REQ-025 "no requirement dropping")."""
+    out = []
+    for key in sorted(prev):
+        if key not in cur:
+            why = "removed"
+        elif cur[key] != prev[key]:
+            why = "changed"
+        else:
+            continue
+        note = " (named by a previous diagnostic)" if key.split(":", 1)[-1] in named or key in named else ""
+        out.append(Finding("REQUIREMENT_DROPPED", f"repair {why} requirement {key}{note}",
+                           detail={"requirement": key}))
+    return out
+
+
 def compile_skill(source: SkillSource, tool_catalog: ToolCatalog, deployment_policy: DeploymentPolicy,
                   model: CompilerModel, max_attempts: int = 3) -> CompileResult:
     clauses = index_clauses(source.text)
@@ -136,6 +167,7 @@ def compile_skill(source: SkillSource, tool_catalog: ToolCatalog, deployment_pol
     diagnostics: list[dict] = []
     prev_pkg: Optional[MachinePackage] = None
     prev_cov: dict = {}
+    prev_reqs: dict[str, dict] = {}
     report: Optional[ValidationReport] = None
     for attempt in range(1, max_attempts + 1):
         raw = model.draft(context, diagnostics, attempt)
@@ -150,9 +182,13 @@ def compile_skill(source: SkillSource, tool_catalog: ToolCatalog, deployment_pol
         pkg = MachinePackage(machine=machine, source_manifest=manifest, compiler_manifest=cmanifest,
                              contracts=contracts, execution_policy=deployment_policy.execution_policy,
                              lineage=Lineage()).sealed()
-        report = validate_package(pkg, tool_catalog, deployment_policy.profile, skill_text=source.text)
+        report = validate_package(pkg, tool_catalog, deployment_policy.profile, skill_text=source.text,
+                                  deployment_policy=deployment_policy)
         cov = {k: v.model_dump() for k, v in contracts.clause_coverage.items()}
         regress = _coverage_regressions(prev_cov, cov, critical_ids)
+        reqs = _requirements(contracts)
+        named = {str((d.get("detail") or {}).get("requirement", "")) for d in diagnostics}
+        regress += _requirement_regressions(prev_reqs, reqs, named)
         report.findings.extend(regress)
         entry = {"attempt": attempt, "draft_hash": pkg.artifact_hash, "status": "valid" if report.passed else "invalid",
                  "findings": [f.to_json() for f in report.findings if f.severity == "error"]}
@@ -160,11 +196,13 @@ def compile_skill(source: SkillSource, tool_catalog: ToolCatalog, deployment_pol
             entry["diff_from_previous"] = package_diff(prev_pkg, pkg, tool_catalog)
         attempts.append(entry)
         prev_pkg, prev_cov = pkg, (cov if not prev_cov else {**prev_cov, **cov})
+        prev_reqs = {**reqs, **prev_reqs}  # earliest version of each requirement is the baseline
         if report.passed:
             normalized = MachinePackage(machine=normalize_machine(machine), source_manifest=manifest,
                                         compiler_manifest=cmanifest, contracts=contracts,
                                         execution_policy=deployment_policy.execution_policy).sealed()
-            nreport = validate_package(normalized, tool_catalog, deployment_policy.profile, skill_text=source.text)
+            nreport = validate_package(normalized, tool_catalog, deployment_policy.profile, skill_text=source.text,
+                                       deployment_policy=deployment_policy)
             if not nreport.passed:
                 attempts.append({"attempt": attempt, "status": "normalization_broke_validity",
                                  "findings": [f.to_json() for f in nreport.errors]})
