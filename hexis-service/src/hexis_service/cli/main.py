@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -63,7 +64,9 @@ def _model(spec: str):
 
 def _env(args: argparse.Namespace):
     from ..demo.env import build_env
-    return build_env(args.state, model=_model(getattr(args, "model", "fixture")))
+    # --store / HEXIS_STORE_URL selects the backend (sqlite:///..., postgresql://...); default: SQLite in --state
+    return build_env(args.state, model=_model(getattr(args, "model", "fixture")),
+                     store_url=getattr(args, "store", None) or None)
 
 
 def cmd_compile(args: argparse.Namespace) -> int:
@@ -225,6 +228,8 @@ def demo_ok(summary: dict) -> bool:
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="hexisctl")
     p.add_argument("--json", action="store_true")
+    p.add_argument("--store", default=os.environ.get("HEXIS_STORE_URL") or None,
+                   help="store URL: sqlite:///path.db or postgresql://... (env HEXIS_STORE_URL; default: SQLite in --state)")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     def add(name: str, fn, *opts: tuple) -> argparse.ArgumentParser:
@@ -233,6 +238,7 @@ def main(argv: list[str] | None = None) -> int:
         for flag, kw in opts:
             sp.add_argument(*flag if isinstance(flag, tuple) else (flag,), **kw)
         sp.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
+        sp.add_argument("--store", default=argparse.SUPPRESS)
         return sp
 
     state = ("--state", {"default": "build/state"})

@@ -95,7 +95,8 @@ machines still round-trip byte-for-byte.
 - **No vendored upstream code.** The LICENSE (GPLv3) and pyproject (MIT) disagree. This is an
   independent implementation written *after reading* the upstream sources, so it is not a clean-room
   claim.
-- **SQLite only.** The kernel has no DB dependency, so a PostgreSQL store could implement the same
-  `Store` surface. It has not been written.
+- **Two stores, one surface.** SQLite for single-process development; `storage/postgres.py` implements the
+  same `Store` surface for multi-worker deployment (row locks for leases / revision / pointer CAS, plpgsql
+  append-only triggers, versioned migrations). Selected by `storage.open_store(url)`.
 - **HMAC admission signatures.** Development signer: `HEXIS_ADMISSION_KEY` from the environment,
   otherwise a labeled insecure demo key. A production deployment needs KMS/PKI.

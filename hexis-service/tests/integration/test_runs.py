@@ -36,6 +36,7 @@ def test_happy_path_verified_with_scoped_evidence(env, pkg):
     assert writes(env) == 1
 
 
+@pytest.mark.sqlite_only  # raw SQLite SQL on the store
 def test_A05_invalid_task_input_no_dispatch(env, pkg):
     with pytest.raises(RunError) as e:
         env.service.start_run(pkg.artifact_hash, dict(TASK, document_ids="DOC-W9-10042"), env.principal("user:alice"))
@@ -125,6 +126,7 @@ def test_A20_changed_arguments_invalidate_approval(env, pkg):
     assert not ok and "args_digest" in why
 
 
+@pytest.mark.sqlite_only  # raw SQLite SQL on the store
 def test_mutation_altered_stored_approval_digest_denied(env, pkg):
     run_id, res = run_to_approval(env, pkg)
     approve(env, run_id, res.interaction)
@@ -240,6 +242,7 @@ def test_approval_expiry_ends_unverified(env, pkg, clock):
     assert any(e["type"] == "APPROVAL_EXPIRED" for e in env.store.events("acme", run_id))
 
 
+@pytest.mark.sqlite_only  # raw SQLite SQL on the store
 def test_immutable_records_cannot_be_rewritten(env, pkg):
     import sqlite3
     run_id, _ = run_to_approval(env, pkg)

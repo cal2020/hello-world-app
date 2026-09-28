@@ -13,6 +13,7 @@ from ..artifacts.registry import admit
 from ..compiler.compile import CompileResult, SkillSource, compile_skill
 from ..models.base import ModelAdapter
 from ..runtime.service import RunService, erp_freshness
+from ..storage import open_store
 from ..storage.sqlite import Store
 from ..tools.broker import FaultInjector, ToolBroker
 from ..tools.catalog import ToolCatalog
@@ -66,9 +67,10 @@ class Env:
         return self.policy.authenticate(pid)
 
     def restart(self, model: Optional[ModelAdapter] = None) -> "Env":
-        """Simulate a process restart: new store connection, broker and service over the same files.
-        (For ':memory:' stores the connection object is reused, since memory DBs cannot be reopened.)"""
-        store = Store(self.store.path) if self.store.path != ":memory:" else self.store
+        """Simulate a process restart: new store connection (same backend), broker and service over the
+        same files / database. (For ':memory:' stores the connection object is reused, since memory DBs
+        cannot be reopened.)"""
+        store = self.store.reopen()
         erp = fakes.FakeERP(self.erp.path) if self.erp.path != ":memory:" else self.erp
         return build_env(store=store, erp=erp, policy=self.policy, clock=self.clock, model=model or self.model,
                          docs=self.docs, registry=self.registry)
@@ -77,9 +79,12 @@ class Env:
 def build_env(workdir: Optional[str] = None, *, store: Optional[Store] = None, erp: Optional[fakes.FakeERP] = None,
               policy: Optional[PolicyService] = None, clock: Optional[Callable[[], float]] = None,
               model: Optional[ModelAdapter] = None, docs: Optional[fakes.DocumentStore] = None,
-              registry: Optional[fakes.SupplierRegistry] = None) -> Env:
+              registry: Optional[fakes.SupplierRegistry] = None, store_url: Optional[str] = None) -> Env:
+    """``store_url`` selects the backend (see :func:`storage.open_store`); default: SQLite under ``workdir``."""
     if workdir:
         Path(workdir).mkdir(parents=True, exist_ok=True)
+    if store is None and store_url:
+        store = open_store(store_url)
     store = store or Store(str(Path(workdir) / "hexis.db") if workdir else ":memory:")
     erp = erp or fakes.FakeERP(str(Path(workdir) / "fake_erp.db") if workdir else ":memory:")
     catalog = load_catalog()

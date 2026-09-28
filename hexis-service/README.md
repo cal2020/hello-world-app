@@ -84,7 +84,7 @@ src/hexis_service/
   approvals/        approval scope binding;  evidence/  subject/version-bound receipts
   traces/           trace format with digests, normalization, eligibility, refinement (propose_update)
   replay/           structural and recorded replay with a no-network guard
-  storage/          SQLite store (tenant-scoped, append-only triggers, revision CAS, leases)
+  storage/          SQLite + PostgreSQL stores (tenant-scoped, append-only triggers, revision CAS, leases; open_store)
   models/           restricted model interface, Claude adapter (official SDK)
   demo/             procurement fixture compiler, fakes, reference traces, aligners, demo narrative
   cli/              hexisctl

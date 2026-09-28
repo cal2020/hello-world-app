@@ -17,6 +17,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest==9.1.1", "hypothesis==6.140.2", "ruff==0.13.2"]
 anthropic = ["anthropic==1.8.0"]
+postgres = ["psycopg[binary]==3.2.10"]
 
 [project.scripts]
 hexisctl = "hexis_service.cli.main:main"
@@ -27,6 +28,7 @@ packages = ["src/hexis_service"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+markers = ["sqlite_only: uses raw SQLite SQL / sqlite3 APIs on the store; runs on the SQLite backend only (backend parity: tests/integration/test_postgres_store.py)"]
 
 [tool.ruff]
 target-version = "py312"
