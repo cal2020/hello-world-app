@@ -82,6 +82,18 @@ def benv(raw_env, pkg):
 
 
 # ---- selection / schema ---------------------------------------------------------------------- #
+def test_postgres_store_has_exactly_the_sqlite_store_surface():
+    import inspect
+    pytest.importorskip("psycopg")
+    from hexis_service.storage.postgres import PostgresStore
+
+    def surface(cls):
+        return {n: list(inspect.signature(getattr(cls, n)).parameters) for n in dir(cls)
+                if not n.startswith("_") and callable(getattr(cls, n))}
+    assert surface(PostgresStore) == surface(Store)
+
+
+
 def test_open_store_selects_backend(tmp_path):
     assert isinstance(open_store(":memory:"), Store)
     assert isinstance(open_store("sqlite://"), Store) and open_store("sqlite:///:memory:").path == ":memory:"
@@ -111,6 +123,54 @@ def test_schema_version_recorded_and_migration_idempotent(raw_env):
     if type(st).__name__ == "PostgresStore":
         from hexis_service.storage.postgres import migrate
         assert migrate(again.db) == []
+
+
+def _store_script(st) -> list:
+    """A deterministic sequence of store operations; returns every observable result."""
+    out = []
+    cp0 = {"revision": 0, "status": "RUNNING", "x": [1, 2.5, None, "é"]}
+    out.append(st.create_run("t", "r1", "sha256:a", "p", "req", cp0, [{"type": "A", "v": 1}], 1.5))
+    out.append(st.create_run("t", "r2", "sha256:a", "p", "req", cp0, [], 1.5))
+    out.append(st.acquire_lease("t", "r1", "w", 2.0, 10))
+    out.append(st.create_intent("t", "r1", "lid1", "S", 0, "tool", "1", {"k": "v"}, "d", "idem", 1, 3.0))
+    out.append(st.create_intent("t", "r1", "lid-other", "S", 0, "tool", "1", {}, "d", "idem", 1, 3.0))
+    out.append(st.update_intent("t", "lid1", "DISPATCHING", 4.0, bump_attempt=True, require_token=1))
+    out.append(st.record_outcome("t", "lid1", "r1", "tool", "1", "d", "idem", "SUCCEEDED", "certain", "X-1",
+                                 {"ok": True}, "conn", 5.0, intent_status="SUCCEEDED",
+                                 evidence=lambda seq: [{"receipt_id": f"e{seq}", "run_id": "r1", "claim": "c",
+                                                        "verifier": "v", "verifier_version": "1", "subject": {"a": 1},
+                                                        "subject_digest": "sd", "result": "match",
+                                                        "source_ref": f"lid1#{seq}", "observed_at": 5.0}],
+                                 require_token=1, expect_status=("DISPATCHING",)))
+    out.append(st.record_outcome("t", "lid1", "r1", "tool", "1", "d", "idem", "X", "c", None, None, "conn", 6.0,
+                                 intent_status="FAILED", expect_status=("PENDING",)))
+    out.append(st.create_interaction("t", "r1", "ix1", "approval", "S", 1, {"s": 1}, "sd", 99.0, 6.0))
+    out.append(st.record_response("t", "ix1", "r1", "bob", {"approval_decision": "approved"}, "sd", "rq", 7.0,
+                                  events=[{"type": "RESP"}], run_status="RUNNING"))
+    out.append(st.record_response("t", "ix1", "r1", "eve", {}, "sd", "rq2", 7.0))
+    out.append(st.set_run_status("t", "r1", "WAITING_FOR_INPUT"))
+    st.commit_transition("t", "r1", 0, 1, dict(cp0, revision=1, status="COMPLETED"), [{"type": "DONE"}], 8.0)
+    out.append(st.set_run_status("t", "r1", "RUNNING"))  # terminal status is never overwritten
+    st.invalidate_evidence("t", "e1", "stale", 9.0, run_id="r1")
+    st.request_cancel("t", "r1")
+    st.put_proposal("p1", "sha256:a", None, "CANDIDATE", {"b": 1}, 1.0)
+    st.put_proposal("p1", "sha256:a", "sha256:b", "REJECTED", {"b": 2}, 2.0)
+    out += [st.get_run("t", "r1"), st.latest_checkpoint("t", "r1"), st.checkpoints("t", "r1"),
+            st.events("t", "r1"), st.intents("t", "r1"), st.intent("t", "lid1"), st.receipts("t", "lid1"),
+            st.receipts("t", run_id="r1"), st.interaction("t", "ix1"), st.response("t", "ix1"),
+            st.evidence("t", "r1"), st.lease_token("t", "r1"), st.run_by_request("t", "req"),
+            st.qa("SELECT * FROM update_proposals")]
+    return out
+
+
+@needs_pg
+def test_store_level_results_identical_on_both_backends():
+    with pg_database() as url:
+        pg = open_store(url)
+        try:
+            assert _store_script(pg) == _store_script(Store(":memory:"))
+        finally:
+            pg.close()
 
 
 # ---- runs -------------------------------------------------------------------------------------- #
