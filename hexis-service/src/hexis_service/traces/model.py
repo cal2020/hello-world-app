@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
 from ..canonical import digest, strict_loads
 
@@ -43,6 +43,9 @@ class Trace(BaseModel):
     run_id: str = ""
     artifact_hash: str = ""
     records: list[Record] = Field(default_factory=list)
+    # Seal recorded when the trace was sealed or loaded ({"records_digest", "header_digest"}); kept out of
+    # the serialized model so every consumer can re-check it without the caller passing it along.
+    _seal: dict = PrivateAttr(default_factory=dict)
 
     def seal(self) -> "Trace":
         recs = []
@@ -50,18 +53,37 @@ class Trace(BaseModel):
             r2 = r.model_copy(deep=True)
             r2.meta = {**r2.meta, "digest": r2.body_digest()}
             recs.append(r2)
-        return self.model_copy(update={"records": recs})
+        t = self.model_copy(update={"records": recs})
+        t._seal = {"records_digest": t.records_digest(), "header_digest": t.header_digest()}
+        return t
 
     def records_digest(self) -> str:
         return digest([r.meta.get("digest", "") for r in self.records])
 
+    def header_digest(self) -> str:
+        """Digest of every header field (task incl. initial checkpoint, verdict, error step, provenance)."""
+        return digest({"trace_id": self.trace_id, "task": self.task, "verdict": self.verdict,
+                       "error_step": self.error_step, "source": self.source, "tenant_id": self.tenant_id,
+                       "run_id": self.run_id, "artifact_hash": self.artifact_hash})
+
     def integrity_errors(self, expected_records_digest: Optional[str] = None) -> list[str]:
+        """Per-record digests plus the sealed records/header digests. ``expected_records_digest``
+        overrides the digest recorded at seal/load time; a trace with no seal at all is rejected."""
         errs = []
         for r in self.records:
             if r.meta.get("digest") != r.body_digest():
                 errs.append(f"record {r.step}: digest mismatch (tampered or unsealed)")
-        if expected_records_digest is not None and expected_records_digest != self.records_digest():
+        expected = expected_records_digest if expected_records_digest is not None \
+            else self._seal.get("records_digest")
+        if expected is None:
+            errs.append("no integrity block (unsealed trace)")
+        elif expected != self.records_digest():
             errs.append("header records_digest mismatch (records added, removed or reordered)")
+        hd = self._seal.get("header_digest")
+        if expected is not None and hd is None:
+            errs.append("no header digest (trace header is unsealed)")
+        elif hd is not None and hd != self.header_digest():
+            errs.append("header digest mismatch (task, initial checkpoint, verdict or provenance altered)")
         return errs
 
     def to_jsonl(self) -> str:
@@ -69,7 +91,8 @@ class Trace(BaseModel):
                 "task": self.task, "verdict": self.verdict,
                 "hexis_service": {"format": TRACE_EXT, "trace_id": self.trace_id, "source": self.source,
                                   "tenant_id": self.tenant_id, "run_id": self.run_id,
-                                  "artifact_hash": self.artifact_hash, "records_digest": self.records_digest()}}
+                                  "artifact_hash": self.artifact_hash, "records_digest": self.records_digest(),
+                                  "header_digest": self.header_digest()}}
         if self.error_step is not None:
             head["error_step"] = self.error_step
         lines = [json.dumps(head, sort_keys=True, ensure_ascii=False)]
@@ -90,8 +113,9 @@ class Trace(BaseModel):
                 verdict=head.get("verdict", "unknown"), error_step=head.get("error_step"), source=ext.get("source", ""),
                 tenant_id=ext.get("tenant_id", ""), run_id=ext.get("run_id", ""),
                 artifact_hash=ext.get("artifact_hash", ""), records=[Record(**r) for r in body])
-        errs = t.integrity_errors(ext.get("records_digest")) if ext else ["no integrity block (unsealed trace)"]
-        return t, errs
+        if ext:
+            t._seal = {k: ext[k] for k in ("records_digest", "header_digest") if isinstance(ext.get(k), str)}
+        return t, t.integrity_errors()
 
 
 def export_run_trace(service, run_id: str, principal, verdict: str = "unknown") -> Trace:

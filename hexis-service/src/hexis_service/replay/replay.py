@@ -78,7 +78,19 @@ def replay(package: MachinePackage, trace: Trace, mode: str, **kw: Any) -> Repla
 def _initial_env(package: MachinePackage, trace: Trace) -> dict:
     icp = trace.task.get("initial_checkpoint")
     if isinstance(icp, dict) and "variables" in icp:
-        return copy.deepcopy(icp["variables"])
+        env = copy.deepcopy(icp["variables"])
+        if not isinstance(env, dict):
+            raise K.KernelError("INITIAL_CHECKPOINT_INVALID", "initial checkpoint variables are not an object")
+        # Loop counters are engine-owned and start at their declared initial value; a recorded initial
+        # checkpoint that seeds them otherwise would shift every loop bound (X08).
+        m = package.machine
+        counters = {t.inc for st in m.states.values() for t in st.transitions if t.inc}
+        decl = {v.name: v for v in m.variables}
+        for c in sorted(counters):
+            if c in env and c in decl and not decl[c].init_from and env[c] != (decl[c].init or 0):
+                raise K.KernelError("INITIAL_CHECKPOINT_INVALID",
+                                    f"loop counter {c!r} starts at {env[c]!r}, not its initial value")
+        return env
     inp = trace.task.get("input") or {}
     return K.initial_checkpoint(package, "replay", "replay", inp).variables
 
@@ -94,7 +106,11 @@ def replay_structural(package: MachinePackage, trace: Trace) -> ReplayReport:
     if errs:
         rep.status, rep.detail = "REJECTED", "; ".join(errs[:3])
         return rep
-    events, _ = normalize(trace)
+    events, dropped = normalize(trace)
+    bad = [d["step"] for d in dropped if d.get("unrecognized")]
+    if bad:
+        rep.status, rep.detail = "REJECTED", f"unrecognized record kinds at steps {bad} (may hide effects)"
+        return rep
     if not events or events[-1].kind != "terminal":
         rep.status, rep.detail = "INCOMPLETE", "trace has no terminal event"
         return rep
@@ -169,7 +185,11 @@ def replay_structural(package: MachinePackage, trace: Trace) -> ReplayReport:
                     diverge(ev.model_dump(), "state expects an observable model output")
                     continue
                 for w in a.writes:
-                    env[w] = ev.outputs.get(w, G.UNKNOWN)
+                    if w in ev.outputs:
+                        env[w] = ev.outputs[w]
+                    else:
+                        env[w] = G.UNKNOWN
+                        ph = ph + [{"state": sid, "variable": w, "reason": "model output missing from trace"}]
             nidx, anchor = idx + 1, f"{sid}@{idx}"
         else:  # zero-width model/judge
             for w in a.writes:
@@ -208,6 +228,23 @@ def replay_structural(package: MachinePackage, trace: Trace) -> ReplayReport:
 
 
 # --------------------------------------------------------------------------- #
+def _record_vs_observation(package: MachinePackage, r: Any, obs: K.Observation) -> str:
+    """The visible record (used by structural replay and eligibility) must describe exactly the
+    recorded observation that recorded replay executes; otherwise the modes judge different runs."""
+    if r.state and r.state != obs.state_id:
+        return f"record state {r.state!r} != observation state {obs.state_id!r}"
+    if r.action.get("kind") != obs.kind:
+        return f"record kind {r.action.get('kind')!r} != observation kind {obs.kind!r}"
+    if r.output != obs.outputs:
+        return "record output differs from observation outputs"
+    st = package.machine.states.get(obs.state_id)
+    if obs.kind == "end" and (st is None or st.action.kind != "end" or r.action.get("terminal") != st.action.terminal):
+        return f"record terminal {r.action.get('terminal')!r} does not match observation state {obs.state_id!r}"
+    if obs.kind == "tool" and st is not None and st.action.kind == "tool" and r.action.get("name") != st.action.name:
+        return f"record tool {r.action.get('name')!r} does not match observation state {obs.state_id!r}"
+    return ""
+
+
 def replay_recorded(package: MachinePackage, trace: Trace,
                     on_step: Optional[Callable[[K.RunCheckpoint, K.Observation], None]] = None) -> ReplayReport:
     rep = ReplayReport("recorded", trace.trace_id, package.artifact_hash, "FAIL")
@@ -233,8 +270,17 @@ def replay_recorded(package: MachinePackage, trace: Trace,
                     rep.path = path
                     return rep
                 obs = K.Observation.model_validate(obs_d)
-                if r.meta.get("checkpoint_digest_before") and digest(cp.model_dump(mode="json")) != \
-                        r.meta["checkpoint_digest_before"]:
+                if not r.meta.get("checkpoint_digest_before"):
+                    rep.status, rep.detail = "INCOMPLETE", f"record {r.step} has no recorded checkpoint digest"
+                    rep.path = path
+                    return rep
+                mismatch = _record_vs_observation(package, r, obs)
+                if mismatch:
+                    rep.divergence = {"record": r.step, "reason": mismatch}
+                    rep.detail = "visible record disagrees with its recorded observation"
+                    rep.path = path
+                    return rep
+                if digest(cp.model_dump(mode="json")) != r.meta["checkpoint_digest_before"]:
                     rep.divergence = {"record": r.step, "reason": "checkpoint before step differs from recording"}
                     rep.detail = "state evolution diverged"
                     return rep
