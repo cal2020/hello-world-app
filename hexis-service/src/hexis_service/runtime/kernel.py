@@ -16,7 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from .. import guards as G
 from ..artifacts.package import MachinePackage
-from ..canonical import digest
+from ..canonical import CanonicalError, digest
 from ..tools.catalog import validate_against
 
 Status = Literal["READY", "RUNNING", "WAITING_FOR_INPUT", "WAITING_FOR_APPROVAL", "RECONCILING", "COMPLETED",
@@ -216,10 +216,24 @@ def validate_declared_outputs(package: MachinePackage, state_id: str, obs: Obser
             raise KernelError("OUTPUT_SCHEMA", f"{k!r} fails its schema: {errs[0]}", {"variable": k, "errors": errs})
     scope = package.contracts.field_scoped_writes.get(state_id)
     if scope and scope.variable in delta:
-        old, new = current.get(scope.variable) or {}, delta[scope.variable]
-        allowed = {i.get(scope.field_key) for i in (current.get(scope.allowed_fields_from) or [])
-                   if isinstance(i, dict)}
-        changed = {k for k in set(old) | set(new) if old.get(k) != new.get(k)}
+        old, new = current.get(scope.variable), delta[scope.variable]
+        if old is None:
+            old = {}
+        if not isinstance(old, dict) or not isinstance(new, dict):
+            raise KernelError("FIELD_SCOPE_VIOLATION",
+                              f"{state_id} field-scoped variable {scope.variable!r} must remain an object",
+                              {"variable": scope.variable})
+        issues = current.get(scope.allowed_fields_from) or []
+        allowed = {i.get(scope.field_key) for i in (issues if isinstance(issues, list) else [])
+                   if isinstance(i, dict) and isinstance(i.get(scope.field_key), str)}
+        # Key presence and exact JSON value (via canonical digest) both count: unset vs null,
+        # 1 vs 1.0 vs true are all different values.
+        try:
+            changed = {k for k in set(old) | set(new)
+                       if (k in old) != (k in new) or (k in old and digest(old[k]) != digest(new[k]))}
+        except CanonicalError as exc:
+            raise KernelError("FIELD_SCOPE_VIOLATION", f"{state_id} field-scoped value is not canonical JSON: {exc}",
+                              {"variable": scope.variable}) from exc
         outside = sorted(changed - allowed)
         if outside:
             raise KernelError("FIELD_SCOPE_VIOLATION", f"{state_id} changed fields outside {sorted(allowed)}: {outside}",
