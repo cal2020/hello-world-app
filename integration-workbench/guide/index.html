@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+</head>
+<body>
+<title>Integration Workbench Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --ground:#F4F6F4; --panel:#FFFFFF; --ink:#18201E; --muted:#56635F; --rule:#D5DCD8;
+  --accent:#1D6A73; --accent-soft:#E1EFEF;
+  --real:#2C7A4B; --real-soft:#E3F2E8;
+  --sim:#9A6412; --sim-soft:#FBF0DC;
+  --none:#8A3B3B; --none-soft:#F7E6E4;
+  --code-bg:#EEF2F0;
+  --display:"Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#111615; --panel:#18201E; --ink:#E3EAE7; --muted:#9AA8A3; --rule:#2B3633;
+    --accent:#63B8C2; --accent-soft:#1C3336;
+    --real:#6FC794; --real-soft:#1B3325;
+    --sim:#E2B062; --sim-soft:#3A2E17;
+    --none:#E39A94; --none-soft:#3B2220;
+    --code-bg:#0C1110;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#111615; --panel:#18201E; --ink:#E3EAE7; --muted:#9AA8A3; --rule:#2B3633;
+  --accent:#63B8C2; --accent-soft:#1C3336;
+  --real:#6FC794; --real-soft:#1B3325;
+  --sim:#E2B062; --sim-soft:#3A2E17;
+  --none:#E39A94; --none-soft:#3B2220;
+  --code-bg:#0C1110;
+}
+*{box-sizing:border-box}
+body{background:var(--ground); color:var(--ink); font:17px/1.6 var(--body); padding-inline:20px; padding-block:28px 64px}
+.wrap{max-width:980px; margin:0 auto; display:grid; gap:44px}
+h1,h2,h3{font-family:var(--display); line-height:1.2; text-wrap:balance; margin:0}
+h1{font-size:clamp(28px,4.4vw,42px); font-weight:800; letter-spacing:-.01em}
+h2{font-size:24px; font-weight:700}
+h3{font-size:18px; font-weight:700}
+p{margin:0; max-width:68ch}
+a{color:var(--accent)}
+code, .mono{font-family:var(--mono); font-size:.86em}
+:not(pre)>code{background:var(--code-bg); padding:.08em .35em; border-radius:4px}
+section{display:grid; gap:16px}
+.eyebrow{font:600 12px/1 var(--mono); letter-spacing:.12em; text-transform:uppercase; color:var(--accent)}
+.lede{font-size:19px; color:var(--muted); max-width:66ch}
+header{display:grid; gap:14px; padding-bottom:28px; border-bottom:2px solid var(--ink)}
+.facts{display:flex; flex-wrap:wrap; gap:8px 22px; font:14px/1.4 var(--mono); color:var(--muted)}
+.facts b{color:var(--ink); font-weight:600}
+.callout{background:var(--sim-soft); border:1px solid color-mix(in srgb, var(--sim) 40%, transparent); padding:14px 16px; border-radius:6px; max-width:none}
+.callout strong{color:var(--sim)}
+.tablebox{overflow-x:auto; border:1px solid var(--rule); border-radius:6px; background:var(--panel)}
+table{border-collapse:collapse; width:100%; min-width:680px; font-size:15px}
+th,td{text-align:left; vertical-align:top; padding:10px 14px; border-bottom:1px solid var(--rule)}
+th{font:600 12px/1.3 var(--mono); letter-spacing:.06em; text-transform:uppercase; color:var(--muted); background:var(--code-bg)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:600; white-space:nowrap}
+.tag{display:inline-block; font:600 11px/1 var(--mono); letter-spacing:.06em; text-transform:uppercase; padding:4px 7px; border-radius:3px; white-space:nowrap}
+.tag.real{color:var(--real); background:var(--real-soft)}
+.tag.sim{color:var(--sim); background:var(--sim-soft)}
+.tag.none{color:var(--none); background:var(--none-soft)}
+.legend{display:flex; flex-wrap:wrap; gap:10px 20px; font-size:14px; color:var(--muted); align-items:center}
+.legend span{display:inline-flex; gap:8px; align-items:center}
+.parts{display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:14px}
+.part{background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:16px; display:grid; gap:6px; align-content:start}
+.part h3{font-size:16px}
+.part p{font-size:15px; color:var(--muted)}
+.part code{font-size:12.5px}
+.cmd{position:relative; background:var(--code-bg); border:1px solid var(--rule); border-radius:6px}
+.cmd pre{margin:0; padding:14px 16px; padding-right:84px; overflow-x:auto; font:13.5px/1.6 var(--mono)}
+.cmd button{position:absolute; top:8px; right:8px; font:600 12px/1 var(--body); padding:7px 10px; border-radius:4px; border:1px solid var(--rule); background:var(--panel); color:var(--ink); cursor:pointer}
+.cmd button:hover{border-color:var(--accent); color:var(--accent)}
+.cmd button:focus-visible, a:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.cmt{color:var(--muted)}
+ol.steps{list-style:none; counter-reset:s; margin:0; padding:0; display:grid; gap:0; border-left:2px solid var(--rule); margin-left:13px}
+ol.steps>li{counter-increment:s; position:relative; padding:0 0 22px 30px}
+ol.steps>li:last-child{padding-bottom:0}
+ol.steps>li::before{content:counter(s); position:absolute; left:-14px; top:0; width:26px; height:26px; border-radius:50%; background:var(--ink); color:var(--ground); font:700 13px/26px var(--display); text-align:center}
+.step-h{font-family:var(--display); font-weight:700; font-size:16.5px; display:flex; flex-wrap:wrap; gap:6px 10px; align-items:baseline}
+.who{font:600 11.5px/1 var(--mono); padding:4px 7px; border-radius:3px; background:var(--accent-soft); color:var(--accent)}
+.step p{font-size:15.5px}
+.see{font-size:14.5px; color:var(--muted); margin-top:4px}
+.see b{color:var(--ink); font-weight:600}
+.two{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:26px}
+ul.plain{margin:0; padding-left:20px; display:grid; gap:6px; max-width:68ch}
+.muted{color:var(--muted)}
+footer{border-top:1px solid var(--rule); padding-top:16px; font-size:14px; color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Interview prototype · synthetic data</div>
+  <h1>Integration Workbench</h1>
+  <p class="lede">A local application that follows one engineering model through a series of changes. It keeps each element's identity, generates and tests an API contract for a consuming app, and blocks releases that would break that app. It also proposes links between maintenance records and model elements, which a person must approve.</p>
+  <div class="facts">
+    <span>Repo <b>cal2020/hello-world-app</b></span>
+    <span>Branch <b>claude/kbr-interview-prep-s59ic7</b></span>
+    <span>Folder <b>workbench/</b></span>
+    <span>Commit <b>7d2b5d7</b></span>
+    <span>Tests <b>126 / 126 pass</b></span>
+    <span>Replay <b><a href="../">/integration-workbench/</a></b></span><span>Live app <b>Railway, not deployed yet</b></span>
+  </div>
+</header>
+
+<p class="callout"><strong>Scope.</strong> All data is synthetic. This is not a Cameo, Teamwork Cloud or SysML integration, and it says nothing about KBR's own systems. It explores one integration pattern that was described in conversation. Logins are fixed demo tokens, not real authentication. No real AI model has been run: the "model" in the demo replays scripted outputs.</p>
+
+<section id="built">
+  <div class="eyebrow">What was built</div>
+  <h2>Eight working parts</h2>
+  <div class="parts">
+    <div class="part"><h3>Model importer</h3><p>Reads a model export, keeps a stable identity per element across renames, tracks revisions by their declared parent, and quarantines conflicts, out-of-order and malformed imports instead of applying them.</p><code>lucidwb/importer.py</code></div>
+    <div class="part"><h3>Contract generator</h3><p>Builds an OpenAPI 3.1.1 contract from a reviewed "projection" that allowlists which fields a consumer sees. Flags removed fields, unit changes and reversed relationships before release.</p><code>lucidwb/projection.py</code></div>
+    <div class="part"><h3>Release manager</h3><p>Builds a candidate, validates its real HTTP responses against the contract, asks the consumer to run its own checks, then switches the live release in one step. Rollback is supported.</p><code>lucidwb/release.py</code></div>
+    <div class="part"><h3>Mock consumer app</h3><p>A separate "equipment dashboard" with its own code, database and expectations. It reads the API over HTTP and ignores duplicate or out-of-date events.</p><code>consumer_app/</code></div>
+    <div class="part"><h3>Link review</h3><p>Proposes record-to-element links with exact quotes that must match the stored source text. Accepting one requires the approver role and the proposal's current version, and fails if the model changed since.</p><code>lucidwb/links.py</code></div>
+    <div class="part"><h3>Safe retries and delivery</h3><p>Retried requests return the original result instead of repeating the change. Events to the consumer are saved with the change and resent until acknowledged.</p><code>receipts.py · outbox.py</code></div>
+    <div class="part"><h3>Web UI</h3><p>Panels for model revisions, releases and contract changes, link review with highlighted evidence, and a full operation history. Demo buttons import each test scenario.</p><code>web/</code></div>
+    <div class="part"><h3>Container and access gate</h3><p>One Docker container for Railway (or Fly.io, Render, any Docker host). A shared access code protects every page, and the server runs as a non-root user.</p><code>Dockerfile · DEPLOY.md</code></div>
+  </div>
+</section>
+
+<section id="real">
+  <div class="eyebrow">Real vs. mocked</div>
+  <h2>What is real, simulated, or not yet run</h2>
+  <div class="legend">
+    <span><span class="tag real">Real</span> works as described, tested</span>
+    <span><span class="tag sim">Simulated</span> stand-in for something that would be real in production</span>
+    <span><span class="tag none">Not run</span> built but never exercised</span>
+  </div>
+  <div class="tablebox">
+    <table>
+      <thead><tr><th>Area</th><th>Status</th><th>Details</th></tr></thead>
+      <tbody>
+        <tr><td>Import, identity, revision history</td><td><span class="tag real">Real</span></td><td>Full logic, SQLite storage and history. The input format is a made-up JSON export (<code>lwb-synthetic-export/1</code>), not a real Cameo export.</td></tr>
+        <tr><td>Engineering model data</td><td><span class="tag sim">Simulated</span></td><td>A fictional equipment-health system: pumps, vibration and temperature sensors, a gateway, a telemetry service, requirements. Versions A–E and edge cases are hand-built fixtures.</td></tr>
+        <tr><td>Maintenance records and notes</td><td><span class="tag sim">Simulated</span></td><td>Twelve fictional maintenance records plus engineering notes. One note contains a planted "approve everything" instruction to test that record text can't take control.</td></tr>
+        <tr><td>API contract generation and serving</td><td><span class="tag real">Real</span></td><td>Real OpenAPI documents, validated by independent libraries. Responses are served over HTTP and pinned to a model snapshot.</td></tr>
+        <tr><td>Consumer app</td><td><span class="tag sim">Simulated</span></td><td>The consuming app is a mock. Its checks, event handling and deduplication are real code and are tested. It runs in the same process as the workbench but talks to it only over HTTP.</td></tr>
+        <tr><td>AI link proposals (demo)</td><td><span class="tag sim">Simulated</span></td><td>"Fixture mode" replays scripted outputs, including deliberate faults (a made-up quote, a forged approval, an out-of-scope target). It shows how the system validates model output, not how well a model performs.</td></tr>
+        <tr><td>AI link proposals (live Claude)</td><td><span class="tag none">Not run</span></td><td>An adapter using the official Anthropic SDK exists. It has never been called here: no API key was available, and the package isn't installed by default. Failures show as failures, with no silent fallback.</td></tr>
+        <tr><td>Deterministic baseline</td><td><span class="tag real">Real</span></td><td>Exact serial-number match plus a curated alias table. On the 12-record test set it found 3 of 5 dev links and 1 of 4 held-out links, with no false links. That set is too small to generalize from.</td></tr>
+        <tr><td>Users and permissions</td><td><span class="tag sim">Simulated</span></td><td>Fixed demo tokens (carol, alice, bob, dana, admin). The permission checks behind them are real and enforced on every request, including inside write transactions.</td></tr>
+        <tr><td>Safe retries, event delivery, lost acknowledgments</td><td><span class="tag real">Real</span></td><td>Tested with injected faults: a dropped acknowledgment, duplicate events, out-of-order events and gaps in the sequence.</td></tr>
+        <tr><td>Access code gate</td><td><span class="tag real">Real</span></td><td>Login page, signed cookie, throttled wrong guesses, connection limits. It is a shared code in front of a demo, not user authentication. Codes must be at least 16 characters.</td></tr>
+        <tr><td>Container image</td><td><span class="tag real">Real</span></td><td>Built and run in the sandbox: gate on, non-root user, a platform-assigned port, the full demo, graceful stop.</td></tr>
+        <tr><td>Railway deployment</td><td><span class="tag none">Not run</span></td><td>Config and step-by-step instructions are ready. The sandbox couldn't reach Railway, so no live deploy has happened and <code>railway.json</code> wasn't checked against Railway's schema.</td></tr>
+        <tr><td>Standards and government hosting</td><td><span class="tag none">Not run</span></td><td>No FedRAMP, NIST, ATO, GovCloud or disconnected-environment work. None is claimed.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="run">
+  <div class="eyebrow">How to use it · 1</div>
+  <h2>Run it on your computer</h2>
+  <p>You need Python 3.10 or newer and a terminal. From the repository root:</p>
+  <div class="cmd"><button type="button" data-copy="c1">Copy</button><pre id="c1">cd workbench
+./scripts/setup.sh                        <span class="cmt"># one-time: installs pinned packages into .venv</span>
+.venv/bin/python scripts/run.py --reset   <span class="cmt"># starts the workbench and the consumer with fresh data</span></pre></div>
+  <p>Leave that running. In a second terminal, load the starting data:</p>
+  <div class="cmd"><button type="button" data-copy="c2">Copy</button><pre id="c2">cd workbench && .venv/bin/python scripts/seed.py</pre></div>
+  <div class="two">
+    <div><h3>Workbench</h3><p><a href="http://127.0.0.1:8780/">http://127.0.0.1:8780/</a><br><span class="muted">Main UI. Pick a demo identity in the header.</span></p></div>
+    <div><h3>Consumer dashboard</h3><p><a href="http://127.0.0.1:8781/">http://127.0.0.1:8781/</a><br><span class="muted">What the consuming app currently sees. Also served at <code>/consumer/</code>.</span></p></div>
+  </div>
+  <p class="muted">These links work only on the computer running the workbench. To start over, stop <code>run.py</code> and run it again with <code>--reset</code>.</p>
+</section>
+
+<section id="roles">
+  <div class="eyebrow">How to use it · 2</div>
+  <h2>Demo identities</h2>
+  <p>Switch identity with the <b>Simulated identity</b> selector in the header. Each role can do different things, and the server enforces them.</p>
+  <div class="tablebox">
+    <table>
+      <thead><tr><th>Identity</th><th>Role</th><th>Can do</th></tr></thead>
+      <tbody>
+        <tr><td><code>demo-carol</code></td><td>Release manager (default)</td><td>Import model versions, build and test releases, activate and roll back, run link proposals, approve projections. Cannot accept links.</td></tr>
+        <tr><td><code>demo-alice</code></td><td>Engineer / approver</td><td>Review, accept or reject links. Cannot import or activate.</td></tr>
+        <tr><td><code>demo-bob</code></td><td>Viewer</td><td>Read only.</td></tr>
+        <tr><td><code>demo-dana</code></td><td>Other project</td><td>Sees only the separate "radar" project, to show project isolation.</td></tr>
+        <tr><td><code>demo-admin</code></td><td>Grant admin</td><td>Grants and revokes permissions, for example revoking alice's approval right mid-review.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="walkthrough">
+  <div class="eyebrow">How to use it · 3</div>
+  <h2>The five-minute walkthrough</h2>
+  <p>Before you start, tick <b>send Idempotency-Key</b> in <i>Demo controls</i>, so the retry in step 6 works. For a hands-free version, run <code>.venv/bin/python scripts/demo.py --pause</code> and press Enter between steps.</p>
+  <ol class="steps">
+    <li class="step">
+      <div class="step-h">Import the first model and publish it <span class="who">carol</span></div>
+      <p>Click <b>Import A</b>, then <b>Build candidate</b> (projection 1.0.0), <b>Run consumer checks</b>, and <b>Activate</b>.</p>
+      <p class="see">You should see: import <b>accepted_head</b> with 12 elements, the candidate <b>tested_pass</b>, and the consumer dashboard showing revision <b>7c1e9a</b>.</p>
+    </li>
+    <li class="step">
+      <div class="step-h">Send the same model again <span class="who">carol</span></div>
+      <p>Click <b>Import A</b> a second time.</p>
+      <p class="see">You should see: <b>duplicate_no_change</b> pointing at the first import, with identical counts and no new events.</p>
+    </li>
+    <li class="step">
+      <div class="step-h">Review proposed links <span class="who">carol → alice</span></div>
+      <p>Run the deterministic proposals, then the fixture-model proposals. Note the <b>FIXTURE MODE</b> label, the struck-through made-up quote, and the forged note that gains no authority. Switch to alice. For record MR-1003, reject the DE sensor and accept the NDE sensor; note N-2 explains why.</p>
+      <p class="see">You should see: two competing candidates for MR-1003, then one link with status <b>reviewer_accepted</b>.</p>
+    </li>
+    <li class="step">
+      <div class="step-h">Change the model <span class="who">carol → alice → carol</span></div>
+      <p>As carol, import <b>B</b>, which renames the gateway. As alice, try to accept MR-1004; its proposal was made before the change. As carol, import <b>C</b>, which removes the <code>serialNumber</code> field, then build, test and try to activate it.</p>
+      <p class="see">You should see: the gateway keeps its identity; the old approval is rejected with <b>409 stale_dependency</b>; C is <b>blocked</b> and refused activation; the dashboard keeps serving A and reports it is <b>2 versions behind</b>.</p>
+    </li>
+    <li class="step">
+      <div class="step-h">Fix it without changing the API <span class="who">carol</span></div>
+      <p>Approve projection <b>1.1.0</b>, which maps <code>serialNumber</code> to the renamed source field, then build and run the consumer checks.</p>
+      <p class="see">You should see: the contract diff is empty (consumers see the same API) and the candidate is <b>tested_pass</b>.</p>
+    </li>
+    <li class="step">
+      <div class="step-h">Survive a lost acknowledgment <span class="who">carol</span></div>
+      <p>Pause the outbox, click <b>Inject lost-ack fault</b>, activate, then click <b>Deliver now</b> twice and resume the outbox. Then click <b>Retry last request with same key</b>.</p>
+      <p class="see">You should see: the first delivery reports no acknowledgment and the second is acknowledged. The dashboard shows 2 deliveries but 1 effect. The retry returns the original result (<b>Idempotent-Replay: true</b>).</p>
+    </li>
+  </ol>
+  <p class="muted">The full spoken script, with timings and fallbacks, is in <code>workbench/DEMO_SCRIPT.md</code>. A recorded run is in <code>examples/demo_transcript.txt</code>; present it as a recording.</p>
+</section>
+
+<section id="deploy">
+  <div class="eyebrow">How to use it · 4</div>
+  <h2>Put it online with Railway</h2>
+  <p>About five minutes in the Railway dashboard. The full steps are in <code>workbench/DEPLOY.md</code>.</p>
+  <ul class="plain">
+    <li>New project from GitHub: <code>cal2020/hello-world-app</code>, branch <code>claude/kbr-interview-prep-s59ic7</code>.</li>
+    <li>Settings: Root Directory <code>workbench</code>, config file <code>/workbench/railway.json</code>.</li>
+    <li>Variable <code>LWB_ACCESS_CODE</code>: a random value of at least 16 characters. Don't set <code>PORT</code>.</li>
+    <li>Add a volume at <code>/data</code>, keep replicas at 1, and generate a domain.</li>
+    <li>Open the URL, enter the code, and you get the same UI. The consumer dashboard is at <code>/consumer/</code>.</li>
+  </ul>
+  <p>Generate a code with:</p>
+  <div class="cmd"><button type="button" data-copy="c3">Copy</button><pre id="c3">python3 -c "import secrets; print(secrets.token_urlsafe(18))"</pre></div>
+  <p class="muted">To reset the hosted demo between sessions, set <code>LWB_RESET_ON_START=1</code>, restart, then remove the variable.</p>
+</section>
+
+<section id="files">
+  <div class="eyebrow">Reference</div>
+  <h2>Where to look in the repo</h2>
+  <div class="tablebox">
+    <table>
+      <thead><tr><th>File</th><th>What it tells you</th></tr></thead>
+      <tbody>
+        <tr><td><code>README.md</code></td><td>Commands, layout, stack choice</td></tr>
+        <tr><td><code>ARCHITECTURE.md</code></td><td>Design decisions and tradeoffs, version types, what is lost or simplified</td></tr>
+        <tr><td><code>DEMO_SCRIPT.md</code></td><td>Timed five-minute interview script</td></tr>
+        <tr><td><code>EVALUATION.md</code></td><td>Generated test and evaluation results, with every number from an actual run</td></tr>
+        <tr><td><code>DEPLOY.md</code></td><td>Container, environment variables, Railway, Fly.io, Render and Docker steps</td></tr>
+        <tr><td><code>examples/</code></td><td>Sample generated contract, release manifest, API response, recorded demo, screenshots</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Built on the branch above, at commit 7d2b5d7. A multi-agent review found and fixed 65 confirmed issues; the full test suite and the scripted demo pass on the final code.</footer>
+
+</div>
+
+<script>
+document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var el = document.getElementById(btn.getAttribute('data-copy'));
+    var text = el.innerText.split('\n').map(function (l) { return l.replace(/\s+#.*$/, ''); }).join('\n').trim();
+    var done = function (msg) { btn.textContent = msg; setTimeout(function () { btn.textContent = 'Copy'; }, 1600); };
+    try {
+      navigator.clipboard.writeText(text).then(function () { done('Copied'); }, function () { selectText(el); done('Selected'); });
+    } catch (e) { selectText(el); done('Selected'); }
+  });
+});
+function selectText(el) {
+  var r = document.createRange(); r.selectNodeContents(el);
+  var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+}
+</script>
+
+</body>
+</html>
