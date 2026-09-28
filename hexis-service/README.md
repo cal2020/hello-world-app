@@ -32,17 +32,20 @@ The demo follows the brief's §14 narrative. It resets `build/demo/` and then:
    gate rejects it with a counterexample path, and the bounded repair fixes it. It then writes
    `coverage.md`, which maps every clause to its states.
 2. Runs a clean intake through extraction, one bounded repair and validation, then pauses for approval.
-3. Restarts the worker. The initiator's self-approval is refused (separation of duties). The run then
-   resumes on an authenticated approver's response.
-4. Injects a timeout after the fake ERP commits. The broker reconciles by business reference, leaving
-   one draft and no duplicate.
+3. Restarts the worker. The initiator's self-approval is refused (`user:alice` both lacks the approver
+   role and is the initiator). Separation of duties is then shown on its own: the policy refuses an
+   approver-role holder who is also the initiator. The run resumes on an authenticated approver's response.
+4. Injects a timeout after the fake ERP commits. The broker reconciles the unknown effect with the fake
+   ERP, which matches on the intent's idempotency key (business reference + draft digest is its fallback
+   match), leaving one draft and no duplicate.
 5. Writes an evidence-linked record (`execution_record.json`). The verified terminal names its exact
    scope and receipt.
 6. Refinement, in two halves:
    - a. Accepts a trace-driven refinement (missing documents lead to one input request), replays every
      protected trace, and admits it with a compare-and-swap on the parent.
    - b. Proposes a *repair → approval* shortcut that skips re-validation. The trace is excluded, the
-     candidate fails the ordering and negative-corpus gates, and the active version is unchanged.
+     candidate fails the ordering and negative-corpus gates, so it is never submitted for admission and
+     the active version is unchanged. The demo exits non-zero unless the gates actually rejected it.
 
 ## CLI (`hexisctl`)
 
@@ -88,7 +91,7 @@ src/hexis_service/
 schemas/            JSON Schema 2020-12 exports of every record contract (drift-tested)
 examples/procurement_onboarding/   SKILL.md, tool_catalog.json, policy.json, task.json
 tests/{unit,conformance,integration,replay,security,recovery}/   acceptance matrix A01–A32 + properties/mutations
-evals/              held-out synthetic tasks, fixture-mode runner, committed results
+evals/              synthetic eval tasks (H3 overlaps the dev trace; flagged), fixture-mode runner, results
 docs/               requirements ledger, architecture, sources, limitations, operations, verification
 ```
 

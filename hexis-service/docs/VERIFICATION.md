@@ -65,20 +65,32 @@ are in [SOURCES.md](SOURCES.md).
 
 ## Evaluation (fixture mode, commit `f23c6ba`)
 
-`python evals/run_eval.py` → `evals/results/report.md`. It runs 7 held-out synthetic tasks with 1
-deterministic repeat.
+`python evals/run_eval.py` → `evals/results/report.md`. It runs 7 synthetic tasks with 1
+deterministic repeat. **Only 6 of them are held out:** `H3-missing-then-supplied` is the development
+trace's own case (same supplier `SUP-40002`, same supplied document `DOC-LATE-40002`) that the aligner
+was given to derive the refinement. The runner detects this overlap and reports the strictly held-out
+subset separately.
 
 | Metric | initial compiled | trace refined |
 |---|---|---|
-| business success (independent oracle) | 0.86 | 1.00 |
+| business success, all 7 tasks (independent oracle) | 0.86 | 1.00 |
+| business success, 6 strictly held-out tasks | 1.00 | 1.00 |
 | procedural conformance | 1.00 | 1.00 |
 | terminal honesty | 1.00 | 1.00 |
 | duplicate writes | 0 | 0 |
+| fallback rate (fallback-category terminal or failure fallback) | 0.14 | 0.14 |
+| failure fallback rate | 0.00 | 0.00 |
 | human interactions | 3 | 6 |
 
-- The only difference is `H3-missing-then-supplied`, the case the refinement added.
-- The refined arm needs more human interactions: the extra approvals come from runs that now complete
-  instead of stopping.
+- The whole business-success gain (0.86 → 1.00) comes from `H3`, which is the development trace, not a
+  held-out task. On the strictly held-out tasks there is **no measured gain**.
+- Two tasks differ between arms: `H3` (END_UNVERIFIED with 0 interactions → END_VERIFIED_DRAFT with 2:
+  one input request and one approval) and `H7-missing-twice` (END_UNVERIFIED in both arms, but 0 → 1
+  interaction: the refined machine asks for input once, then still stops unverified).
+- So the refined arm's 3 extra interactions are 2 input requests and 1 approval; only the `H3` ones lead
+  to a completed run.
+- `H4-registry-conflict` ends at `END_REVIEW`, a fallback-category terminal, in both arms (the 0.14
+  fallback rate). No run entered the failure fallback.
 - The ReAct baseline arm was **not run** (it needs a live model).
 - These are fixture-behavior numbers, not model-quality or production claims, and not a comparison with
   the paper's reported results.

@@ -73,8 +73,16 @@ def run_demo(out_dir: str = "build/demo", scenario: str = "full", say: Callable[
     try:
         env.service.resume_interaction(h.run_id, ix["interaction_id"],
                                        {"approval_decision": "approved", "scope_digest": ix["scope_digest"]}, alice)
+        self_refusal = None
     except Exception as exc:  # noqa: BLE001
+        self_refusal = str(exc)
         say(f"   initiator self-approval refused: {exc}")
+    # user:alice lacks the approver role, so the refusal above does not isolate separation of duties.
+    # Show the SoD rule on its own: an approver-role holder (user:bob) acting as initiator is still refused.
+    sod = env.policy.can_approve(env.principal("user:bob"), "user:bob", "acme", "")
+    say(f"   separation of duties in isolation (approver user:bob as initiator): {sod.outcome} {sod.reasons}")
+    summary["steps"]["self_approval"] = {"refused": self_refusal is not None, "detail": self_refusal,
+                                         "sod_isolated": {"outcome": sod.outcome, "reasons": sod.reasons}}
     # 4. Timeout after the ERP commits ---------------------------------------------------------- #
     if scenario in ("full", "timeout-after-commit"):
         env.erp.inject("timeout_after_commit")
@@ -85,7 +93,8 @@ def run_demo(out_dir: str = "build/demo", scenario: str = "full", say: Callable[
     recon = [e for e in rep["events"] if e["type"] in ("EFFECT_UNKNOWN", "RECONCILED")]
     for e in recon:
         say(f"   {e['type']}: {e.get('status', '')} {e.get('reason', '')}")
-    say(f"   ERP drafts for tenant acme: {env.erp.count('acme')} (no duplicate)")
+    say(f"   ERP drafts for tenant acme: {env.erp.count('acme')} (no duplicate; the retry reuses the intent's "
+        "idempotency key, with business reference + draft digest as the fake ERP's fallback match)")
 
     # 5. Evidence-linked record ------------------------------------------------------------------ #
     say("== 5. Final evidence-linked execution record ==")
@@ -153,7 +162,7 @@ def run_demo(out_dir: str = "build/demo", scenario: str = "full", say: Callable[
         f"(now representable: {gates['negative_corpus']['now_representable']})")
     active_after = env.store.get_active("sandbox", refined.machine.skill_id)
     say(f"   active version unchanged: {active_before == active_after} ({active_after[0][:23]}…, archive "
-        f"v{active_after[1]})")
+        f"v{active_after[1]}); the candidate was rejected by the gates above and never submitted for admission")
     _w(out / "shortcut_rejection.json", {"eligibility": p_sc.to_json(), "candidate_gates": gates,
                                          "active_before": active_before, "active_after": active_after})
     summary["steps"]["shortcut"] = {"eligibility": p_sc.status, "static_gate_passed": gates["static_validation"]
