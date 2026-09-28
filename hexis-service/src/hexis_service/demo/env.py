@@ -62,6 +62,7 @@ class Env:
     model: ModelAdapter
     service: RunService
     clock: Callable[[], float]
+    timer: Callable[[], float] = time.perf_counter  # monotonic, latency metrics only (never logical time)
 
     def principal(self, pid: str):
         return self.policy.authenticate(pid)
@@ -73,13 +74,14 @@ class Env:
         store = self.store.reopen()
         erp = fakes.FakeERP(self.erp.path) if self.erp.path != ":memory:" else self.erp
         return build_env(store=store, erp=erp, policy=self.policy, clock=self.clock, model=model or self.model,
-                         docs=self.docs, registry=self.registry)
+                         docs=self.docs, registry=self.registry, timer=self.timer)
 
 
 def build_env(workdir: Optional[str] = None, *, store: Optional[Store] = None, erp: Optional[fakes.FakeERP] = None,
               policy: Optional[PolicyService] = None, clock: Optional[Callable[[], float]] = None,
               model: Optional[ModelAdapter] = None, docs: Optional[fakes.DocumentStore] = None,
-              registry: Optional[fakes.SupplierRegistry] = None, store_url: Optional[str] = None) -> Env:
+              registry: Optional[fakes.SupplierRegistry] = None, store_url: Optional[str] = None,
+              timer: Optional[Callable[[], float]] = None) -> Env:
     """``store_url`` selects the backend (see :func:`storage.open_store`); default: SQLite under ``workdir``."""
     if workdir:
         Path(workdir).mkdir(parents=True, exist_ok=True)
@@ -93,14 +95,16 @@ def build_env(workdir: Optional[str] = None, *, store: Optional[Store] = None, e
     docs = docs or fakes.DocumentStore()
     registry = registry or fakes.SupplierRegistry()
     faults = FaultInjector()
+    timer = timer or time.perf_counter
     connectors = {"documents.read": docs.read, "supplier.lookup": registry.lookup, "draft.validate": fakes.validate_draft,
                   "erp.create_draft": erp.create_draft, "erp.read_draft": erp.read_draft,
                   "draft.verify_persisted": fakes.verify_persisted}
-    broker = ToolBroker(store, catalog, policy, connectors, {"erp.create_draft": erp.reconcile_create}, clock, faults)
+    broker = ToolBroker(store, catalog, policy, connectors, {"erp.create_draft": erp.reconcile_create}, clock, faults,
+                        timer=timer)
     model = model or fakes.FixtureExtractionModel()
     service = RunService(store, catalog, policy, broker, model, clock=clock, faults=faults,
-                         freshness={"persisted_draft_matches_approved_payload": erp_freshness()})
-    return Env(store, catalog, policy, docs, registry, erp, faults, broker, model, service, clock)
+                         freshness={"persisted_draft_matches_approved_payload": erp_freshness()}, timer=timer)
+    return Env(store, catalog, policy, docs, registry, erp, faults, broker, model, service, clock, timer)
 
 
 def admit_initial(env: Env, pkg: MachinePackage, protected: Optional[list] = None, negative: Optional[list] = None):

@@ -130,3 +130,48 @@ racing on one approved run, with both exclusive leases and a millisecond-TTL "le
 the run completes exactly once, with one ERP draft, no duplicate checkpoints and strictly increasing
 revisions. Without `HEXIS_TEST_PG_DSN` the postgres variants are skipped. Tests marked `sqlite_only` use raw
 SQLite SQL on the store and run only on the default SQLite fixture.
+
+## Metrics
+
+Every `advance_run` step that acquires the run lease appends one `TIMING` run event (schema
+`hexis-timing/1`) **after** its commit. Timing is observability data only: it is never part of an
+observation, a checkpoint or a trace, so recorded replay and checkpoint digests do not depend on it.
+Two clocks are kept apart:
+
+- `timer` (monotonic, default `time.perf_counter`, injectable through `RunService`, `ToolBroker` and
+  `build_env(timer=...)`) measures latency.
+- `clock` (logical time) still drives expiry, leases and **human wait** (interaction opened -> answered,
+  from the stored `created_at` of the interaction and the response).
+
+Per step the event records: `state`, `revision`, `kind`, `status`; `model_s` (every model attempt,
+including output repairs and transport retries, with `model_id`, tokens, `cost_usd` and outcome
+`accepted|rejected|unavailable`); `tool_s` (every connector or reconciler call, `op`
+`dispatch|redispatch|reconcile`, attempt, outcome `ok|timeout|failure|error`, including the terminal
+freshness read); `engine_s` = total step time minus model and tool time (prepare, `kernel.advance`, commit
+and bookkeeping); `human_wait_s` (on the step that consumes the answer, or on expiry);
+`retries`; `validation_failures` (`MODEL_OUTPUT_REJECTED`, `OBSERVATION_REJECTED`); `fallback`; and the
+uncertain effects raised and resolved in the step. A step that raises (lease lost, simulated crash) writes
+no `TIMING` event; a crash between the commit and the append loses only that step's timing.
+
+`hexisctl metrics [--run RUN_ID] [--artifact HASH] [--format json|prometheus] --state DIR --as PRINCIPAL`
+aggregates the events of **the principal's tenant only** (a run id of another tenant is `NOT_FOUND`,
+exit 2) into:
+
+- `by_model`, `by_state`, `by_tool`: count; latency p50/p95/max/total (nearest rank); tokens; `cost_usd`;
+  retries; validation failures; fallback visits, entries and frequency; uncertain effects
+  raised/resolved/outstanding. `by_state` also has the human-wait distribution and the engine/model/tool
+  split. Uncertain effects come from the action ledger (`EFFECT_UNKNOWN` / `RECONCILIATION_REQUIRED`
+  events, then intent and receipt status), so a human resolution (`RunService.resolve_effect`) counts as resolved.
+- `per_run`: `engine_s`, `model_s`, `tool_s`, `human_wait_s`, steps, tokens, cost; plus `totals`.
+
+**Cost.** `cost_usd` is `null` whenever any contributing call did not report a cost (the fixture model
+and every connector call). It is never reported as 0. In Prometheus output an unknown cost is omitted and
+`hexis_<dim>_cost_known` is `0`.
+
+**Prometheus.** `--format prometheus` prints the text exposition format (`# HELP`/`# TYPE` before each
+family, escaped label values): `hexis_{model,state,tool}_latency_seconds` (summary with `quantile`
+0.5/0.95, `_sum`, `_count`), `..._calls_total`, `..._tokens_total{direction}`, `..._retries_total`,
+`..._validation_failures_total`, `..._fallback_ratio`, `..._uncertain_effects{phase}`,
+`hexis_state_human_wait_seconds_total`, `hexis_run_seconds{run,component}` and
+`hexis_seconds_total{component}`. It is a snapshot to scrape through a file or sidecar; there is no HTTP
+endpoint. Per-run series have unbounded cardinality, so filter with `--run` or `--artifact` on large stores.

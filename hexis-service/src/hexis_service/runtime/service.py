@@ -9,6 +9,7 @@ separately callable for conformance and recorded replay.
 
 from __future__ import annotations
 
+import threading
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -53,6 +54,25 @@ class StepResult:
 
 
 @dataclass
+class _StepMetrics:
+    """Per-step latency/usage collector. Lives only in memory for the duration of one ``advance_run`` and is
+    persisted as a separate append-only ``TIMING`` run event; it never enters an observation or checkpoint."""
+    t0: float
+    run_id: Optional[str] = None
+    tenant_id: str = ""
+    state: str = ""
+    revision: int = 0
+    kind: str = ""
+    model_calls: list[dict] = field(default_factory=list)
+    human_wait_s: Optional[float] = None
+    human_wait_expired: bool = False
+    validation_failures: list[str] = field(default_factory=list)
+    fallback: bool = False
+    raised: list[str] = field(default_factory=list)
+    resolved: list[str] = field(default_factory=list)
+
+
+@dataclass
 class CancellationResult:
     status: str
     disclosed_effects: list[dict] = field(default_factory=list)
@@ -63,9 +83,14 @@ class RunService:
     def __init__(self, store: Store, catalog: ToolCatalog, policy: PolicyService, broker: ToolBroker,
                  model: ModelAdapter, *, clock: Callable[[], float] = time.time, environment: str = "sandbox",
                  faults: Optional[FaultInjector] = None,
-                 freshness: Optional[dict[str, Callable[..., tuple[bool, str]]]] = None, lease_ttl: float = 300.0):
+                 freshness: Optional[dict[str, Callable[..., tuple[bool, str]]]] = None, lease_ttl: float = 300.0,
+                 timer: Callable[[], float] = time.perf_counter):
         self.store, self.catalog, self.policy, self.broker, self.model = store, catalog, policy, broker, model
         self.clock, self.environment, self.lease_ttl = clock, environment, lease_ttl
+        # ``clock`` is logical time (expiry, leases, human wait). ``timer`` is a monotonic clock used only for
+        # latency metrics (TIMING events); it never influences a decision, a checkpoint or an observation.
+        self.timer = timer
+        self._tl = threading.local()
         self.faults = faults or broker.faults
         self.freshness = freshness or {}
         self._packages: dict[str, MachinePackage] = {}
@@ -122,6 +147,51 @@ class RunService:
     # ------------------------------------------------------------------------------------- #
     def advance_run(self, run_id: str, principal: Principal, expected_revision: Optional[int] = None,
                     worker_id: str = "worker-1") -> StepResult:
+        prev = getattr(self._tl, "metrics", None)
+        m = _StepMetrics(t0=self.timer())
+        if prev is None:
+            self.broker.take_timings()  # discard connector timings made outside any step (e.g. cancellation)
+        self._tl.metrics = m
+        try:
+            res = self._advance_run(run_id, principal, expected_revision, worker_id)
+        finally:
+            self._tl.metrics = prev
+            tool_calls = self.broker.take_timings() if prev is None else []
+        if m.run_id is not None:
+            self._record_timing(m, tool_calls, res)
+        return res
+
+    def _metrics(self) -> _StepMetrics:
+        m = getattr(self._tl, "metrics", None)
+        return m if m is not None else _StepMetrics(t0=0.0)  # outside a step: collected and dropped
+
+    def _record_timing(self, m: _StepMetrics, tool_calls: list[dict], res: StepResult) -> None:
+        """Append the step's TIMING event (after the commit, never inside it: timing is not replay input)."""
+        model_s = sum(c["latency_s"] for c in m.model_calls)
+        tool_s = sum(c["latency_s"] for c in tool_calls)
+        costs = [c["cost_usd"] for c in m.model_calls if c["outcome"] != "unavailable"]
+        event = {
+            "type": "TIMING", "schema": "hexis-timing/1", "state": m.state, "revision": m.revision, "kind": m.kind,
+            "status": res.status, "model_s": model_s, "tool_s": tool_s,
+            "human_wait_s": m.human_wait_s, "human_wait_expired": m.human_wait_expired,
+            "model_calls": m.model_calls, "tool_calls": tool_calls,
+            "tokens": {"input": sum(c["input_tokens"] for c in m.model_calls),
+                       "output": sum(c["output_tokens"] for c in m.model_calls)},
+            # Unknown cost stays unknown (null), never 0: known only if every answered call reported a cost.
+            "cost_usd": sum(costs) if costs and all(c is not None for c in costs) else None,
+            "retries": {"model_transport": sum(1 for c in m.model_calls if c["transport_retry"]),
+                        "output_repair": sum(1 for c in m.model_calls if c["repair"]),
+                        "tool_transport": sum(1 for c in tool_calls if c["attempt"] > 1 or c["op"] == "redispatch")},
+            "validation_failures": len(m.validation_failures), "validation_failure_codes": m.validation_failures,
+            "fallback": m.fallback, "uncertain_effects": {"raised": m.raised, "resolved": m.resolved},
+        }
+        total = self.timer() - m.t0
+        # Engine overhead = prepare + kernel.advance + commit (+ bookkeeping), excluding model and tool calls.
+        event.update(total_s=total, engine_s=max(total - model_s - tool_s, 0.0))
+        self.store.append_events(m.tenant_id, m.run_id, [event], self.clock())
+
+    def _advance_run(self, run_id: str, principal: Principal, expected_revision: Optional[int],
+                     worker_id: str) -> StepResult:
         run = self._run(run_id, principal)
         tenant = run["tenant_id"]
         cp = self._cp(tenant, run_id)
@@ -133,6 +203,10 @@ class RunService:
         if token is None:
             raise RunError("LEASE_HELD", "another worker owns this run")
         pkg = self.package(cp.artifact_hash)
+        m = self._metrics()
+        m.run_id, m.tenant_id, m.state, m.revision = run_id, tenant, cp.state_id, cp.revision
+        st0 = pkg.machine.states.get(cp.state_id)
+        m.kind = st0.action.kind if st0 is not None else ""
         initiator = self.policy.authenticate(run["principal"])
         if run["cancel_requested"]:
             return self._finish_cancel(run, cp, pkg, initiator, token)
@@ -184,6 +258,7 @@ class RunService:
             self.store.append_events(run["tenant_id"], run["run_id"],
                                      [{"type": "OBSERVATION_REJECTED", "code": exc.code, "message": exc.message,
                                        "observation": obs.model_dump(mode="json")}], self.clock())
+            self._metrics().validation_failures.append(exc.code)
             return self._stop(run, cp, token, "FAILED", exc.code, exc.message)
         events = [{"type": "OBSERVATION", "observation": obs.model_dump(mode="json")}] + result.events
         self.faults.hit("before_commit")
@@ -192,6 +267,7 @@ class RunService:
                                          result.checkpoint.model_dump(mode="json"), events, self.clock())
         except ConflictError as exc:
             raise RunError(str(exc).split(":")[0], str(exc)) from exc
+        self._metrics().fallback = any(e.get("type") == "FALLBACK_ENTERED" for e in result.events)
         self._invalidate_stale_evidence(run["tenant_id"], run["run_id"], result.checkpoint)
         status = result.checkpoint.status
         return StepResult(result.checkpoint, status, result.edge["to"] if result.edge else status)
@@ -304,6 +380,7 @@ class RunService:
                                    approval_check=self._approval_check(run, cp, pkg, intent), lease_token=token,
                                    subject_values=subject, transport_retries=pkg.execution_policy.transport_retries)
         if res.status == "UNKNOWN_EFFECT":
+            self._metrics().raised.append(intent["logical_action_id"])
             self.store.append_events(tenant, run["run_id"], [{"type": "EFFECT_UNKNOWN", "logical_action_id":
                                                               intent["logical_action_id"], "reason": res.reason}],
                                      self.clock())
@@ -313,6 +390,8 @@ class RunService:
                                         business_unit=cp.variables.get("business_unit"),
                                         approval_check=self._approval_check(run, cp, pkg, intent), lease_token=token,
                                         subject_values=subject, transport_retries=pkg.execution_policy.transport_retries)
+            if res.status == "SUCCEEDED":
+                self._metrics().resolved.append(intent["logical_action_id"])
             self.store.append_events(tenant, run["run_id"], [{"type": "RECONCILED", "logical_action_id":
                                                               intent["logical_action_id"], "status": res.status,
                                                               "certainty": res.certainty, "reason": res.reason}],
@@ -350,17 +429,29 @@ class RunService:
         rejected: list[dict] = []
         repairs_left = pkg.execution_policy.structured_output_repairs
         retries_left = pkg.execution_policy.transport_retries
+        m = self._metrics()
+        transport_retry = False
         while True:
+            t0 = self.timer()
+            call = {"model_id": getattr(self.model, "model_id", "?"), "attempt": usage["model_calls"] + 1,
+                    "repair": bool(req.repair_feedback), "transport_retry": transport_retry, "input_tokens": 0,
+                    "output_tokens": 0, "cost_usd": None}
             try:
                 resp = self.model.generate(req)
             except ModelUnavailable as exc:
+                m.model_calls.append({**call, "latency_s": self.timer() - t0, "outcome": "unavailable"})
                 usage["model_calls"] += 1
                 if retries_left > 0:
                     retries_left -= 1
+                    transport_retry = True
                     continue
                 return Observation(run_id=cp.run_id, state_id=st.id, revision=cp.revision, kind=a.kind,
                                    actor=f"model:{getattr(self.model, 'model_id', '?')}", usage=usage,
                                    failure=f"MODEL_UNAVAILABLE: {exc}")
+            call.update(latency_s=self.timer() - t0, model_id=resp.model_id, input_tokens=resp.input_tokens,
+                        output_tokens=resp.output_tokens, cost_usd=resp.cost_usd, outcome="accepted")
+            m.model_calls.append(call)
+            transport_retry = False
             usage["model_calls"] += 1
             usage["tokens"] += resp.input_tokens + resp.output_tokens
             obs = Observation(run_id=cp.run_id, state_id=st.id, revision=cp.revision, kind=a.kind,
@@ -372,6 +463,8 @@ class RunService:
                 return obs
             except KernelError as exc:
                 rejected.append({"code": exc.code, "message": exc.message, "output_digest": digest(resp.output or {})})
+                call["outcome"] = "rejected"
+                m.validation_failures.append(exc.code)
                 self.store.append_events(run["tenant_id"], run["run_id"],
                                          [{"type": "MODEL_OUTPUT_REJECTED", "state": st.id, "code": exc.code,
                                            "message": exc.message, "keys": sorted((resp.output or {}).keys())}],
@@ -422,6 +515,8 @@ class RunService:
         resp = self.store.response(tenant, ix["interaction_id"])
         if resp is None:
             if ix["expires_at"] is not None and self.clock() > ix["expires_at"]:
+                m = self._metrics()
+                m.human_wait_s, m.human_wait_expired = self.clock() - ix["created_at"], True
                 self.store.set_interaction_status(tenant, ix["interaction_id"], "EXPIRED")
                 self.store.append_events(tenant, run["run_id"], [{"type": "APPROVAL_EXPIRED",
                                                                   "interaction_id": ix["interaction_id"]}], self.clock())
@@ -432,6 +527,8 @@ class RunService:
             self._pause(run, cp, status, f"waiting on {ix['interaction_id']}",
                         {"type": "INTERACTION_OPEN", "interaction_id": ix["interaction_id"], "kind": ic.type,
                          "scope_digest": ix["scope_digest"]}, ix)
+        # Human wait on the logical clock: interaction opened -> answered.
+        self._metrics().human_wait_s = resp["created_at"] - ix["created_at"]
         return Observation(run_id=cp.run_id, state_id=st.id, revision=cp.revision, kind="user",
                            outputs=resp["response"], actor=f"user:{resp['responder']}",
                            engine={"interaction_id": ix["interaction_id"], "scope_digest": resp["scope_digest"]})
@@ -564,6 +661,9 @@ class RunService:
                                         approval_check=lambda: (False, why), lease_token=token, subject_values={})
             if res.reason.startswith("STALE_LEASE"):
                 raise RunError("STALE_LEASE", "worker no longer owns this run")
+            if res.status == "SUCCEEDED" or (self.store.intent(tenant, intent["logical_action_id"]) or {}).get(
+                    "status") == "ABANDONED":
+                self._metrics().resolved.append(intent["logical_action_id"])
             self.store.append_events(tenant, run_id, [{"type": "RECONCILED", "logical_action_id":
                                                        intent["logical_action_id"], "status": res.status,
                                                        "reason": res.reason, "during": during}], self.clock())

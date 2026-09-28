@@ -208,6 +208,22 @@ def cmd_inspect(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_metrics(args: argparse.Namespace) -> int:
+    from ..metrics import collect, render_prometheus
+    env = _env(args)
+    tenant = env.principal(args.as_).tenant_id  # tenant from the host principal only; never crosses tenants
+    if args.run and env.store.get_run(tenant, args.run) is None:
+        _emit(args, f"error NOT_FOUND: run {args.run} not found for tenant",
+              {"error": "NOT_FOUND", "message": f"run {args.run} not found for tenant"})
+        return EXIT_INVALID
+    rep = collect(env.store, tenant, run_id=args.run or None, artifact_hash=args.artifact or None)
+    if args.format == "prometheus":
+        sys.stdout.write(render_prometheus(rep))
+    else:
+        print(json.dumps(rep, indent=2, sort_keys=True))
+    return EXIT_OK
+
+
 def cmd_demo(args: argparse.Namespace) -> int:
     from ..demo.procurement_demo import run_demo
     summary = run_demo(args.out, args.scenario, say=(lambda s: None) if args.json else print)
@@ -264,6 +280,8 @@ def main(argv: list[str] | None = None) -> int:
         ("--response", {"required": True}), ("--request-id", {"default": ""}), state,
         (("--as",), {"dest": "as_", "default": "user:bob"}), model)
     add("inspect", cmd_inspect, ("--run", {"required": True}), state, who)
+    add("metrics", cmd_metrics, ("--run", {"default": ""}), ("--artifact", {"default": ""}),
+        ("--format", {"choices": ["json", "prometheus"], "default": "json"}), state, who)
     add("demo", cmd_demo, ("scenario_name", {"nargs": "?", "default": "procurement-onboarding"}),
         ("--scenario", {"choices": ["full", "timeout-after-commit"], "default": "full"}),
         ("--out", {"default": "build/demo"}))

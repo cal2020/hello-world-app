@@ -272,6 +272,11 @@ class PostgresStore:
         r = self.q1("SELECT run_id FROM runs WHERE tenant_id=? AND request_id=?", (tenant_id, request_id))
         return r[0] if r else None
 
+    def list_runs(self, tenant_id: str) -> list[str]:
+        """Run ids of one tenant in creation order (never another tenant's)."""
+        return [r[0] for r in self.qa("SELECT run_id FROM runs WHERE tenant_id=? ORDER BY created_at, run_id",
+                                      (tenant_id,))]
+
     def get_run(self, tenant_id: str, run_id: str) -> Optional[dict]:
         r = self.q1("SELECT artifact_hash, principal, status, cancel_requested, created_at FROM runs WHERE "
                     "tenant_id=? AND run_id=?", (tenant_id, run_id))

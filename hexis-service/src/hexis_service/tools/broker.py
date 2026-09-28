@@ -8,6 +8,8 @@ that authorization, approval or verification occurred.
 
 from __future__ import annotations
 
+import threading
+import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional, Protocol
 
@@ -55,13 +57,47 @@ class BrokerResult:
 class ToolBroker:
     def __init__(self, store, catalog: ToolCatalog, policy: PolicyService, connectors: dict[str, Callable],
                  reconcilers: Optional[dict[str, Callable]] = None, clock: Callable[[], float] = None,
-                 faults: Optional[FaultInjector] = None):
-        import time
+                 faults: Optional[FaultInjector] = None, timer: Callable[[], float] = time.perf_counter):
         self.store, self.catalog, self.policy = store, catalog, policy
         self.connectors = connectors
         self.reconcilers = reconcilers or {}
         self.clock = clock or time.time
+        # Monotonic timer for latency metrics only; never used for expiry/leases and never recorded in
+        # observations, receipts or checkpoints (see metrics.py).
+        self.timer = timer
         self.faults = faults or FaultInjector()
+        self._local = threading.local()
+
+    # ---- latency instrumentation (per thread; drained by RunService after each step) ------------ #
+    def _timings(self) -> list[dict]:
+        buf = getattr(self._local, "timings", None)
+        if buf is None:
+            buf = self._local.timings = []
+        return buf
+
+    def take_timings(self) -> list[dict]:
+        """Return and clear the connector/reconciler call timings recorded on this thread."""
+        buf = self._timings()
+        out = list(buf)
+        buf.clear()
+        return out
+
+    def _timed(self, spec: ToolSpec, op: str, attempt: int, fn: Callable[[], Any]) -> Any:
+        t0 = self.timer()
+        outcome = "error"
+        try:
+            out = fn()
+            outcome = "ok"
+            return out
+        except ToolTimeout:
+            outcome = "timeout"
+            raise
+        except ToolFailure:
+            outcome = "failure"
+            raise
+        finally:
+            self._timings().append({"tool": spec.name, "tool_version": spec.version, "op": op, "attempt": attempt,
+                                    "latency_s": self.timer() - t0, "outcome": outcome})
 
     # ------------------------------------------------------------------------------------- #
     def authorize(self, *, intent: dict, spec: ToolSpec, principal: Principal, package, business_unit: Optional[str],
@@ -139,7 +175,7 @@ class ToolBroker:
         return self._call(intent, spec, subject_values, transport_retries, lease_token)
 
     def _call(self, intent: dict, spec: ToolSpec, subject_values: dict, retries: int,
-              lease_token: Optional[int]) -> BrokerResult:
+              lease_token: Optional[int], op: str = "dispatch") -> BrokerResult:
         tenant, lid = intent["tenant_id"], intent["logical_action_id"]
         ctx = {"tenant_id": tenant, "idempotency_key": intent["idempotency_key"], "logical_action_id": lid}
         attempts = 0
@@ -150,7 +186,8 @@ class ToolBroker:
             self.store.update_intent(tenant, lid, "DISPATCHING", self.clock(), bump_attempt=True,
                                      require_token=lease_token, run_id=intent["run_id"])
             try:
-                out = self.connectors[spec.name](intent["args"], ctx)
+                out = self._timed(spec, op, attempts,
+                                  lambda: self.connectors[spec.name](intent["args"], ctx))
             except ToolTimeout as exc:
                 if spec.effect in ("read", "pure") and attempts <= retries:
                     continue  # transport retry of the same read-only operation
@@ -247,10 +284,11 @@ class ToolBroker:
                                      lease_token=lease_token)
             if not ok:
                 return BrokerResult("DENIED", reason=why)
-            return self._call({**intent, "status": "PENDING"}, spec, subject_values, transport_retries, lease_token)
+            return self._call({**intent, "status": "PENDING"}, spec, subject_values, transport_retries, lease_token,
+                              "redispatch")
         proven_absent = False
         if spec.effect == "reconciliable_write" and spec.name in self.reconcilers:
-            found = self.reconcilers[spec.name](intent["args"], ctx)
+            found = self._timed(spec, "reconcile", 1, lambda: self.reconcilers[spec.name](intent["args"], ctx))
             if found is not None:
                 return self._accept(intent, spec, found, "reconciled", subject_values)
             # Proven absent by business-reference lookup: a retry with the same key is safe, but only
@@ -278,7 +316,7 @@ class ToolBroker:
             return BrokerResult("DENIED", reason=why)
         if intent["attempts"] > transport_retries:
             return BrokerResult("NEEDS_RESOLUTION", reason="retry budget for uncertain write exhausted")
-        return self._call(intent, spec, subject_values, 0, lease_token)
+        return self._call(intent, spec, subject_values, 0, lease_token, "redispatch")
 
 
 # Intent statuses a broker denial may overwrite. DISPATCHING / UNKNOWN_EFFECT / SUCCEEDED never are.
