@@ -56,6 +56,7 @@ hexisctl admit    --package build/package.json --state build/state            # 
 hexisctl run      --package build/package.json --input examples/procurement_onboarding/task.json --state build/state
 hexisctl resume   --run RUN_ID --interaction IX_ID --response resp.json --state build/state   # as user:bob
 hexisctl inspect  --run RUN_ID --state build/state
+hexisctl metrics  [--run RUN_ID] [--format json|prometheus] --state build/state   # tenant of --as only
 hexisctl replay   --package build/package.json --archive build/demo/traces --mode structural|recorded
 hexisctl update   --parent build/package.json --trace build/demo/traces/dev_missing_docs.jsonl --out proposals/
 hexisctl demo procurement-onboarding --scenario timeout-after-commit
