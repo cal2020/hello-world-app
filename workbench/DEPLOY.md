@@ -69,7 +69,11 @@ None of this was run on Railway or any other platform. On a normal network, the 
 
 **Not verified here:** any live deployment. The sandbox cannot reach Railway, Fly.io or Render, so the platform steps below have not been run from it, and `railway.json` could not be checked against Railway's schema. After deploying, check the result against step 8 below.
 
-## Option A (chosen): Railway
+## Already live: browser build on GitHub Pages
+
+`browser/build_web.py` produces a static site that runs the workbench in the visitor's browser (see README). It is published on the repository's `gh-pages` branch at `/integration-workbench/app/`, next to the recorded walkthrough (`/integration-workbench/`) and the guide (`/integration-workbench/guide/`). No server, secrets or access code are involved: each visitor gets a private copy in their own tab, seeded with the synthetic baseline, and a reload resets it. Unlisted but public: anyone with the URL can open it. The Railway container below remains the option for one shared, persistent instance.
+
+## Option A: Railway
 
 The repo contains `workbench/railway.json`, which sets a Dockerfile build, the `/healthz` health check and restart-on-failure. Everything else is set in the Railway dashboard. Dashboard labels may differ slightly from the names below.
 

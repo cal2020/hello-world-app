@@ -28,6 +28,8 @@ cd workbench
 
 To host it (one container, access-code gate; Railway, Fly.io, Render or any Docker host), see `DEPLOY.md`.
 
+**Browser build (live, no server).** `.venv/bin/python browser/build_web.py --e2e` builds a static site in `var/browser-build/` where the same workbench and mock consumer run as Python in the visitor's browser tab (Pyodide 314.0.7, self-hosted, every file pinned by SHA-256), then drives the five-minute flow in headless Chromium. `browser/runtime.py` feeds each request as raw HTTP bytes into the unchanged request handlers, and points the internal calls between workbench and consumer at that in-process dispatcher instead of sockets. The outbox has no thread there, so it delivers on a tick after each request and every second. State lives in the tab and resets on reload. The published copy is at `https://cal2020.github.io/hello-world-app/integration-workbench/app/`.
+
 Reset means stopping `run.py` and starting it again with `--reset`. Local state lives in `workbench/var/` and is gitignored. A database written by an earlier version of the code is upgraded in place when the workbench starts.
 
 ## Layout

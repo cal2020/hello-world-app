@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Integration Workbench (live in browser)</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.lb { background: #0f2a2c; color: #eef6f5; padding: 12px 16px; display: grid; gap: 10px; }
+.lb-top { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; justify-content: space-between; max-width: 1400px; margin: 0 auto; width: 100%; }
+.lb-badge { display: inline-flex; gap: 8px; align-items: center; font: 700 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.lb-badge::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #45d483; box-shadow: 0 0 0 3px rgba(69,212,131,.25); }
+.lb-note { font-size: 13px; color: #c3d8d6; max-width: 78ch; margin: 4px 0 0; }
+.lb-note a { color: #9fe0d6; }
+.lb-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: #c3d8d6; }
+.lb-actions button { font: 600 13px/1 system-ui, sans-serif; border-radius: 4px; border: 1px solid #4f8783; background: #16403f; color: #eef6f5; padding: 8px 11px; cursor: pointer; }
+.lb-actions button:hover { border-color: #9fe0d6; }
+.lb-actions button:focus-visible { outline: 2px solid #9fe0d6; outline-offset: 2px; }
+details.lb-panel { max-width: 1400px; margin: 0 auto; width: 100%; background: #fff; color: var(--text); border-radius: 6px; padding: 8px 14px; }
+details.lb-panel summary { cursor: pointer; font-weight: 700; padding: 4px 0; }
+.lb-kv { display: grid; grid-template-columns: max-content 1fr; gap: 3px 12px; font-size: 13.5px; margin: 8px 0; }
+.lb-kv dt { color: var(--muted); }
+.lb-kv dd { margin: 0; font-family: var(--mono); font-size: 12.5px; overflow-wrap: anywhere; }
+.lb-tbl { overflow-x: auto; }
+.lb-tbl table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+.lb-tbl th, .lb-tbl td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.lb-tbl td.bad { background: var(--red-bg); color: var(--red-fg); font-weight: 700; }
+.lb-tbl td.dup { background: var(--amber-bg); color: var(--amber-fg); font-weight: 600; }
+.lb-hint { font-size: 13px; color: var(--muted); margin: 6px 0; }
+#lb-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(15,42,44,.94); color: #eef6f5; display: grid; place-items: center; padding: 24px; text-align: center; }
+#lb-overlay[hidden] { display: none; }
+#lb-overlay .box { max-width: 520px; display: grid; gap: 10px; }
+#lb-overlay h2 { margin: 0; font-size: 1.3rem; justify-content: center; }
+#lb-overlay p { margin: 0; color: #c3d8d6; font-size: 14px; }
+#lb-overlay.failed #lb-status { color: #ffb4a8; }
+.lb-spin { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #4f8783; border-top-color: #9fe0d6; margin: 0 auto; animation: lbspin 1s linear infinite; }
+#lb-overlay.failed .lb-spin { display: none; }
+@keyframes lbspin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .lb-spin { animation: none; } }
+.topbar { top: env(safe-area-inset-top, 0px); }
+</style>
+</head>
+<body>
+<div id="lb-overlay" role="status" aria-live="polite">
+  <div class="box">
+    <div class="lb-spin" aria-hidden="true"></div>
+    <h2>Starting the workbench in your browser</h2>
+    <p id="lb-status">Downloading…</p>
+    <p>First visit downloads about __SIZE__ MB (Python compiled to WebAssembly, and the app). Nothing is sent to a server.</p>
+  </div>
+</div>
+
+<div class="lb">
+  <div class="lb-top">
+    <div>
+      <div class="lb-badge">Live · running in your browser · synthetic data</div>
+      <p class="lb-note">This is the real workbench and mock consumer, running as Python in this tab (Pyodide). Every button works. Data lives only in this tab and resets when you reload. Simulated demo identities, not real authentication. The live-model option fails by design (no API access here). <a href="../guide/">What was built and what is simulated</a> · <a href="../">Recorded walkthrough</a></p>
+    </div>
+    <div class="lb-actions"><span id="lb-state">Starting…</span><button type="button" id="lb-reset">Reset (reload)</button></div>
+  </div>
+  <details class="lb-panel" open>
+    <summary>Consumer dashboard (mock consuming app)</summary>
+    <div id="lb-cons"><p class="lb-hint">Waiting for the workbench to start…</p></div>
+  </details>
+</div>
+
+<!--__APP_BODY__-->
+
+<script src="main.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
