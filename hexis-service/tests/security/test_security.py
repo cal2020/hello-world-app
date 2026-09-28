@@ -55,6 +55,7 @@ def test_task_input_cannot_supply_authority(env, pkg):
     assert e.value.code == "TASK_INPUT_INVALID"
 
 
+@pytest.mark.sqlite_only  # raw SQLite SQL on the store
 def test_business_unit_scope_enforced_by_broker(env, pkg):
     run_id, res = run_to_approval(env, pkg, dict(TASK, business_unit="BU-APAC"), who="user:alice")
     # alice is not scoped to BU-APAC: the very first read is denied by independent policy

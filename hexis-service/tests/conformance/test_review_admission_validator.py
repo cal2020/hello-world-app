@@ -330,6 +330,7 @@ def test_X04_admission_to_other_environment_does_not_allow_runs(pkg, clock, tmp_
     assert e.service.start_run(pkg.artifact_hash, TASK, e.principal("user:alice")).run_id
 
 
+@pytest.mark.sqlite_only  # raw SQLite SQL on the store
 def test_X05_forged_lifecycle_or_unsigned_record_does_not_allow_runs(pkg, clock, tmp_path):
     import json
 

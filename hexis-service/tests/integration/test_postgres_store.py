@@ -18,7 +18,7 @@ from urllib.parse import urlsplit, urlunsplit
 import pytest
 
 from hexis_service.artifacts.registry import admit, enroll_protected
-from hexis_service.demo.env import TASK, admit_initial, build_env, skill_source
+from hexis_service.demo.env import admit_initial, build_env, skill_source
 from hexis_service.demo.procurement_fixture import deployment_policy
 from hexis_service.runtime.service import RunError
 from hexis_service.storage import open_store

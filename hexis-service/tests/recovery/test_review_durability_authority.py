@@ -325,6 +325,7 @@ def test_C18_second_run_adopting_same_draft_keeps_its_evidence(env, pkg):
     assert [e["invalidated_at"] for e in env.store.evidence("acme", run1) if e["receipt_id"] == rid] == [None]
 
 
+@pytest.mark.sqlite_only  # raw SQLite SQL on the store
 def test_C18_store_migrates_v1_evidence_key(tmp_path):
     import sqlite3
     path = str(tmp_path / "old.db")

@@ -28,6 +28,7 @@ packages = ["src/hexis_service"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+markers = ["sqlite_only: uses raw SQLite SQL / sqlite3 APIs on the store; runs on the SQLite backend only (backend parity: tests/integration/test_postgres_store.py)"]
 
 [tool.ruff]
 target-version = "py312"
