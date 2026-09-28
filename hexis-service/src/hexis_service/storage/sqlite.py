@@ -14,11 +14,17 @@ import json
 import sqlite3
 import threading
 from contextlib import contextmanager
-from typing import Any, Iterator, Optional
+from typing import Any, Callable, Iterator, Optional
 
 from ..canonical import canonical_bytes
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
+TERMINAL_RUN_STATUSES = ("COMPLETED", "FAILED", "CANCELLED")
+
+_EVIDENCE_DDL = """CREATE TABLE IF NOT EXISTS evidence_receipts(tenant_id TEXT NOT NULL, receipt_id TEXT NOT NULL,
+  run_id TEXT NOT NULL, claim TEXT NOT NULL, verifier TEXT NOT NULL, verifier_version TEXT NOT NULL, subject TEXT NOT NULL,
+  subject_digest TEXT NOT NULL, result TEXT NOT NULL, source_ref TEXT NOT NULL, observed_at REAL NOT NULL,
+  invalidated_at REAL, invalidation_reason TEXT, PRIMARY KEY(tenant_id, run_id, receipt_id))"""
 
 DDL = """
 CREATE TABLE IF NOT EXISTS schema_migrations(version INTEGER PRIMARY KEY);
@@ -55,17 +61,13 @@ CREATE TABLE IF NOT EXISTS approval_requests(tenant_id TEXT NOT NULL, run_id TEX
 CREATE TABLE IF NOT EXISTS approval_responses(tenant_id TEXT NOT NULL, interaction_id TEXT NOT NULL, run_id TEXT NOT NULL,
   responder TEXT NOT NULL, response TEXT NOT NULL, scope_digest TEXT NOT NULL, request_id TEXT, created_at REAL NOT NULL,
   PRIMARY KEY(tenant_id, interaction_id));
-CREATE TABLE IF NOT EXISTS evidence_receipts(tenant_id TEXT NOT NULL, receipt_id TEXT NOT NULL, run_id TEXT NOT NULL,
-  claim TEXT NOT NULL, verifier TEXT NOT NULL, verifier_version TEXT NOT NULL, subject TEXT NOT NULL,
-  subject_digest TEXT NOT NULL, result TEXT NOT NULL, source_ref TEXT NOT NULL, observed_at REAL NOT NULL,
-  invalidated_at REAL, invalidation_reason TEXT, PRIMARY KEY(tenant_id, receipt_id));
 CREATE TABLE IF NOT EXISTS trace_blobs(trace_id TEXT PRIMARY KEY, sha256 TEXT NOT NULL, body TEXT NOT NULL,
   created_at REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS trace_archive_manifests(skill_id TEXT NOT NULL, version INTEGER NOT NULL,
   artifact_hash TEXT NOT NULL, manifest TEXT NOT NULL, created_at REAL NOT NULL, PRIMARY KEY(skill_id, version));
 CREATE TABLE IF NOT EXISTS update_proposals(proposal_id TEXT PRIMARY KEY, parent_hash TEXT NOT NULL,
   candidate_hash TEXT, status TEXT NOT NULL, body TEXT NOT NULL, created_at REAL NOT NULL);
-"""
+""" + _EVIDENCE_DDL + ";\n"
 
 IMMUTABLE = ("machine_versions", "checkpoints", "run_events", "action_receipts", "trace_blobs",
              "trace_archive_manifests", "approval_responses", "machine_lifecycle", "admission_reports")
@@ -92,7 +94,19 @@ class Store:
                             f"BEGIN SELECT RAISE(ABORT, '{t} is append-only'); END")
             self.db.execute(f"CREATE TRIGGER IF NOT EXISTS {t}_no_delete BEFORE DELETE ON {t} "
                             f"BEGIN SELECT RAISE(ABORT, '{t} is append-only'); END")
+        self._migrate()
         self.db.execute("INSERT OR IGNORE INTO schema_migrations VALUES(?)", (SCHEMA_VERSION,))
+
+    def _migrate(self) -> None:
+        # v2: evidence receipts are keyed per run (a verifier's id is not run-scoped, and two runs that adopt
+        # the same external draft must each keep their own evidence).
+        sql = self.db.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='evidence_receipts'").fetchone()
+        if sql and "PRIMARY KEY(tenant_id, receipt_id)" in sql[0]:
+            with self.tx() as db:
+                db.execute("ALTER TABLE evidence_receipts RENAME TO evidence_receipts_v1")
+                db.execute(_EVIDENCE_DDL)
+                db.execute("INSERT INTO evidence_receipts SELECT * FROM evidence_receipts_v1")
+                db.execute("DROP TABLE evidence_receipts_v1")
 
     @contextmanager
     def tx(self) -> Iterator[sqlite3.Connection]:
@@ -220,10 +234,21 @@ class Store:
             self._append_events(db, tenant_id, run_id, events, now)
             db.execute("UPDATE runs SET status=? WHERE tenant_id=? AND run_id=?", (checkpoint["status"], tenant_id,
                                                                                     run_id))
+            if checkpoint["status"] in TERMINAL_RUN_STATUSES:
+                # A finished run can never be reopened by a late answer to a still-open interaction.
+                db.execute("UPDATE approval_requests SET status='CLOSED' WHERE tenant_id=? AND run_id=? AND "
+                           "status='OPEN'", (tenant_id, run_id))
 
-    def set_run_status(self, tenant_id: str, run_id: str, status: str) -> None:
+    def set_run_status(self, tenant_id: str, run_id: str, status: str) -> bool:
+        """Set a non-terminal run status. Never overwrites a terminal status (returns False)."""
         with self.tx() as db:
-            db.execute("UPDATE runs SET status=? WHERE tenant_id=? AND run_id=?", (status, tenant_id, run_id))
+            return self._set_run_status(db, tenant_id, run_id, status)
+
+    def _set_run_status(self, db: sqlite3.Connection, tenant_id: str, run_id: str, status: str) -> bool:
+        placeholders = ",".join("?" * len(TERMINAL_RUN_STATUSES))
+        cur = db.execute(f"UPDATE runs SET status=? WHERE tenant_id=? AND run_id=? AND status NOT IN ({placeholders})",
+                         (status, tenant_id, run_id, *TERMINAL_RUN_STATUSES))
+        return cur.rowcount > 0
 
     def request_cancel(self, tenant_id: str, run_id: str) -> None:
         with self.tx() as db:
@@ -269,33 +294,84 @@ class Store:
                     (tenant_id, run_id, revision))
         return self._intent_row(r) if r else None
 
+    def intent(self, tenant_id: str, lid: str) -> Optional[dict]:
+        r = self.q1("SELECT * FROM action_intents WHERE tenant_id=? AND logical_action_id=?", (tenant_id, lid))
+        return self._intent_row(r) if r else None
+
     def intents(self, tenant_id: str, run_id: str) -> list[dict]:
         return [self._intent_row(r) for r in self.qa("SELECT * FROM action_intents WHERE tenant_id=? AND run_id=? "
                                                      "ORDER BY revision", (tenant_id, run_id))]
 
+    def _fence_ok(self, db: sqlite3.Connection, tenant_id: str, lid: str, token: int,
+                  run_id: Optional[str]) -> bool:
+        if run_id is None:
+            r = db.execute("SELECT run_id FROM action_intents WHERE tenant_id=? AND logical_action_id=?",
+                           (tenant_id, lid)).fetchone()
+            if not r:
+                return False
+            run_id = r[0]
+        r = db.execute("SELECT token FROM leases WHERE tenant_id=? AND run_id=?", (tenant_id, run_id)).fetchone()
+        return bool(r) and r[0] == token
+
+    def _update_intent(self, db: sqlite3.Connection, tenant_id: str, lid: str, status: str, now: float,
+                       bump_attempt: bool, lease_token: Optional[int], expect_status: Optional[tuple]) -> bool:
+        sql = ("UPDATE action_intents SET status=?, updated_at=?, attempts=attempts+?, "
+               "lease_token=COALESCE(?, lease_token) WHERE tenant_id=? AND logical_action_id=?")
+        args: tuple = (status, now, 1 if bump_attempt else 0, lease_token, tenant_id, lid)
+        if expect_status is not None:
+            sql += f" AND status IN ({','.join('?' * len(expect_status))})"
+            args += tuple(expect_status)
+        return db.execute(sql, args).rowcount > 0
+
     def update_intent(self, tenant_id: str, lid: str, status: str, now: float, bump_attempt: bool = False,
-                      lease_token: Optional[int] = None, require_token: Optional[int] = None) -> None:
+                      lease_token: Optional[int] = None, require_token: Optional[int] = None,
+                      expect_status: Optional[tuple] = None, run_id: Optional[str] = None) -> bool:
+        """Update an intent's status. ``require_token`` fences on the run's current lease (raises
+        ``STALE_LEASE``); ``expect_status`` makes the update conditional on the stored status (returns
+        False when it did not match). ``run_id`` lets the fence apply to an action with no intent row."""
         with self.tx() as db:
-            if require_token is not None:
-                r = db.execute("SELECT i.run_id, l.token FROM action_intents i LEFT JOIN leases l ON "
-                               "l.tenant_id=i.tenant_id AND l.run_id=i.run_id WHERE i.tenant_id=? AND "
-                               "i.logical_action_id=?", (tenant_id, lid)).fetchone()
-                if not r or r[1] != require_token:
-                    raise ConflictError("STALE_LEASE: dispatch fenced off")
-            db.execute("UPDATE action_intents SET status=?, updated_at=?, attempts=attempts+?, "
-                       "lease_token=COALESCE(?, lease_token) WHERE tenant_id=? AND logical_action_id=?",
-                       (status, now, 1 if bump_attempt else 0, lease_token, tenant_id, lid))
+            if require_token is not None and not self._fence_ok(db, tenant_id, lid, require_token, run_id):
+                raise ConflictError("STALE_LEASE: dispatch fenced off")
+            return self._update_intent(db, tenant_id, lid, status, now, bump_attempt, lease_token, expect_status)
+
+    def record_outcome(self, tenant_id: str, lid: str, run_id: str, tool: str, version: str, args_digest: str,
+                       idem: str, dispatch_state: str, certainty: str, external_ref: Optional[str], result: Any,
+                       connector: str, now: float, *, intent_status: Optional[str] = None,
+                       evidence: Optional[Callable[[int], list[dict]]] = None, require_token: Optional[int] = None,
+                       expect_status: Optional[tuple] = None) -> Optional[int]:
+        """Atomically append an action receipt, move the intent to ``intent_status`` and issue the
+        evidence receipts derived from it (``evidence(seq)``), so a crash can never leave a receipt
+        without its intent status or evidence. Returns the receipt seq, or None (writing nothing)
+        when the lease fence or the expected intent status no longer holds."""
+        with self.tx() as db:
+            if require_token is not None and not self._fence_ok(db, tenant_id, lid, require_token, run_id):
+                return None
+            if intent_status is not None:
+                changed = self._update_intent(db, tenant_id, lid, intent_status, now, False, None, expect_status)
+                if expect_status is not None and not changed:
+                    return None
+            seq = self._add_receipt(db, tenant_id, lid, run_id, tool, version, args_digest, idem, dispatch_state,
+                                    certainty, external_ref, result, connector, now)
+            for rec in (evidence(seq) if evidence else []):
+                self._add_evidence(db, tenant_id, rec)
+            return seq
 
     def add_receipt(self, tenant_id: str, lid: str, run_id: str, tool: str, version: str, args_digest: str, idem: str,
                     dispatch_state: str, certainty: str, external_ref: Optional[str], result: Any, connector: str,
                     now: float) -> int:
         with self.tx() as db:
-            seq = db.execute("SELECT COALESCE(MAX(seq),0)+1 FROM action_receipts WHERE tenant_id=? AND "
-                             "logical_action_id=?", (tenant_id, lid)).fetchone()[0]
-            db.execute("INSERT INTO action_receipts VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                       (tenant_id, lid, seq, run_id, tool, version, args_digest, idem, dispatch_state, certainty,
-                        external_ref, _j(result) if result is not None else None, connector, now))
-            return seq
+            return self._add_receipt(db, tenant_id, lid, run_id, tool, version, args_digest, idem, dispatch_state,
+                                     certainty, external_ref, result, connector, now)
+
+    def _add_receipt(self, db: sqlite3.Connection, tenant_id: str, lid: str, run_id: str, tool: str, version: str,
+                     args_digest: str, idem: str, dispatch_state: str, certainty: str, external_ref: Optional[str],
+                     result: Any, connector: str, now: float) -> int:
+        seq = db.execute("SELECT COALESCE(MAX(seq),0)+1 FROM action_receipts WHERE tenant_id=? AND "
+                         "logical_action_id=?", (tenant_id, lid)).fetchone()[0]
+        db.execute("INSERT INTO action_receipts VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                   (tenant_id, lid, seq, run_id, tool, version, args_digest, idem, dispatch_state, certainty,
+                    external_ref, _j(result) if result is not None else None, connector, now))
+        return seq
 
     def receipts(self, tenant_id: str, lid: Optional[str] = None, run_id: Optional[str] = None) -> list[dict]:
         keys = ("tenant_id", "logical_action_id", "seq", "run_id", "tool", "tool_version", "args_digest",
@@ -346,15 +422,26 @@ class Store:
                        (status, tenant_id, iid))
 
     def record_response(self, tenant_id: str, iid: str, run_id: str, responder: str, response: dict,
-                        scope_digest: str, request_id: str, now: float) -> bool:
+                        scope_digest: str, request_id: str, now: float, events: Optional[list[dict]] = None,
+                        run_status: Optional[str] = None) -> bool:
+        """Record the single response to an OPEN interaction, plus its events and the run status, in one
+        transaction. Returns False (writing nothing) if another response won or the interaction is closed."""
         with self.tx() as db:
             if db.execute("SELECT 1 FROM approval_responses WHERE tenant_id=? AND interaction_id=?",
                           (tenant_id, iid)).fetchone():
+                return False
+            st = db.execute("SELECT status FROM approval_requests WHERE tenant_id=? AND interaction_id=?",
+                            (tenant_id, iid)).fetchone()
+            if st is not None and st[0] != "OPEN":
                 return False
             db.execute("INSERT INTO approval_responses VALUES(?,?,?,?,?,?,?,?)",
                        (tenant_id, iid, run_id, responder, _j(response), scope_digest, request_id, now))
             db.execute("UPDATE approval_requests SET status='ANSWERED' WHERE tenant_id=? AND interaction_id=?",
                        (tenant_id, iid))
+            if events:
+                self._append_events(db, tenant_id, run_id, events, now)
+            if run_status is not None:
+                self._set_run_status(db, tenant_id, run_id, run_status)
             return True
 
     def response(self, tenant_id: str, iid: str) -> Optional[dict]:
@@ -367,11 +454,15 @@ class Store:
 
     # ---- evidence --------------------------------------------------------------------------- #
     def add_evidence(self, tenant_id: str, rec: dict) -> None:
+        """Idempotent per (tenant, run, receipt id)."""
         with self.tx() as db:
-            db.execute("INSERT OR IGNORE INTO evidence_receipts VALUES(?,?,?,?,?,?,?,?,?,?,?,NULL,NULL)",
-                       (tenant_id, rec["receipt_id"], rec["run_id"], rec["claim"], rec["verifier"],
-                        rec["verifier_version"], _j(rec["subject"]), rec["subject_digest"], rec["result"],
-                        rec["source_ref"], rec["observed_at"]))
+            self._add_evidence(db, tenant_id, rec)
+
+    def _add_evidence(self, db: sqlite3.Connection, tenant_id: str, rec: dict) -> None:
+        db.execute("INSERT OR IGNORE INTO evidence_receipts VALUES(?,?,?,?,?,?,?,?,?,?,?,NULL,NULL)",
+                   (tenant_id, rec["receipt_id"], rec["run_id"], rec["claim"], rec["verifier"],
+                    rec["verifier_version"], _j(rec["subject"]), rec["subject_digest"], rec["result"],
+                    rec["source_ref"], rec["observed_at"]))
 
     def evidence(self, tenant_id: str, run_id: str) -> list[dict]:
         keys = ("tenant_id", "receipt_id", "run_id", "claim", "verifier", "verifier_version", "subject",
@@ -384,10 +475,17 @@ class Store:
             out.append(d)
         return out
 
-    def invalidate_evidence(self, tenant_id: str, receipt_id: str, reason: str, now: float) -> None:
+    def invalidate_evidence(self, tenant_id: str, receipt_id: str, reason: str, now: float,
+                            run_id: Optional[str] = None) -> None:
+        """Invalidate a receipt. Pass ``run_id`` to scope it to one run (receipt ids are unique per run)."""
         with self.tx() as db:
-            db.execute("UPDATE evidence_receipts SET invalidated_at=?, invalidation_reason=? WHERE tenant_id=? AND "
-                       "receipt_id=? AND invalidated_at IS NULL", (now, reason, tenant_id, receipt_id))
+            sql = ("UPDATE evidence_receipts SET invalidated_at=?, invalidation_reason=? WHERE tenant_id=? AND "
+                   "receipt_id=? AND invalidated_at IS NULL")
+            args: tuple = (now, reason, tenant_id, receipt_id)
+            if run_id is not None:
+                sql += " AND run_id=?"
+                args += (run_id,)
+            db.execute(sql, args)
 
     # ---- traces / proposals ----------------------------------------------------------------- #
     def put_trace(self, trace_id: str, sha: str, body: str, now: float) -> None:
