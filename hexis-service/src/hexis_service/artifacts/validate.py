@@ -388,7 +388,8 @@ def validate_package(pkg: MachinePackage, catalog: ToolCatalog, profile: str = "
             if ic is None:
                 err("INTERACTION_CONTRACT_MISSING", f"user state {sid} has no interaction contract", state=sid)
             elif ic.type == "approval" and ic.approves_state not in m.states:
-                err("UNKNOWN_STATE", f"approval {sid} approves unknown state {ic.approves_state!r}", state=sid)
+                err("UNKNOWN_STATE", f"approval {sid} approves unknown state {ic.approves_state!r}", state=sid,
+                    detail={"malformed_requirement": f"interaction:{sid}"})
         if a.kind == "tool":
             spec = catalog.get(a.name)
             if spec is None:
@@ -588,10 +589,10 @@ def validate_package(pkg: MachinePackage, catalog: ToolCatalog, profile: str = "
             why = selector_problem(sel, pkg, catalog)
             if why:
                 err("ORDERING_SELECTOR_UNKNOWN", f"requirement {req.id}: {why}", clause=req.clause or None,
-                    detail={"requirement": req.id, "selector": sel})
+                    detail={"requirement": req.id, "selector": sel, "malformed_requirement": f"ordering:{req.id}"})
         if not req.requires:
             err("ORDERING_SELECTOR_UNKNOWN", f"requirement {req.id} requires nothing", clause=req.clause or None,
-                detail={"requirement": req.id})
+                detail={"requirement": req.id, "malformed_requirement": f"ordering:{req.id}"})
     for req in list(C.ordering) + derived_ordering(pkg):
         path = check_ordering(pkg, req, reach)
         if path is not None:
@@ -645,10 +646,12 @@ def validate_package(pkg: MachinePackage, catalog: ToolCatalog, profile: str = "
             for ev in tc.evidence:
                 spec = catalog.get(ev.verifier_tool)
                 if spec is None or ev.claim not in spec.verifier_claims:
-                    err("UNAPPROVED_VERIFIER", f"{ev.verifier_tool!r} is not an approved verifier for {ev.claim!r}")
+                    err("UNAPPROVED_VERIFIER", f"{ev.verifier_tool!r} is not an approved verifier for {ev.claim!r}",
+                        detail={"malformed_requirement": f"evidence:{tid}:{ev.claim}"})
                 for v in ev.subject_vars:
                     if v not in types:
-                        err("UNKNOWN_VARIABLE", f"evidence subject {v!r} undeclared", variable=v)
+                        err("UNKNOWN_VARIABLE", f"evidence subject {v!r} undeclared", variable=v,
+                            detail={"malformed_requirement": f"evidence:{tid}:{ev.claim}"})
 
     # ---- fallback / policy ----------------------------------------------------------------- #
     # write_workflow is derived from the catalog effects of the machine's tools, not self-declared.
@@ -682,6 +685,20 @@ def validate_package(pkg: MachinePackage, catalog: ToolCatalog, profile: str = "
                              clause=c.id))
     if skill_text is not None and sha256_hex(skill_text) != pkg.source_manifest.skill_sha256:
         F.append(Finding("SKILL_HASH", "skill source does not match the recorded hash", prov_sev))
+    if skill_text is not None:
+        # The manifest must index every clause of the source: a clause left out of it would escape
+        # the coverage checks below. Omitting a **MUST** clause is always an error.
+        from ..compiler.clauses import index_clauses
+        for sc in index_clauses(skill_text):
+            mc = clauses.get(sc.id)
+            if mc is not None and (mc.start, mc.end, mc.text) == (sc.start, sc.end, sc.text):
+                continue
+            if CRITICAL_MARK in sc.text:
+                err("CRITICAL_CLAUSE_UNSUPPORTED", f"safety-critical source clause {sc.id} is missing from (or "
+                    "altered in) the source manifest", clause=sc.id)
+            else:
+                F.append(Finding("CLAUSE_MISSING", f"source clause {sc.id} is missing from (or altered in) the "
+                                 "source manifest", prov_sev, clause=sc.id))
     for sid, st in m.states.items():
         if st.clause and st.clause not in clauses:
             F.append(Finding("UNKNOWN_CLAUSE", f"{sid} references unknown clause {st.clause!r}", prov_sev, state=sid,

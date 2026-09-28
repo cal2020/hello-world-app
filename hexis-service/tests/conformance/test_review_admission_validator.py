@@ -1,5 +1,5 @@
 """Regression tests for review findings on admission and static validation (round 1):
-C20-C24, C26-C28, C32, X02, X03."""
+C20-C24, C26-C28, C32, X02, X03; round 2: C21 honest-repair regression, C22 manifest omission, X04, X05."""
 
 from __future__ import annotations
 
@@ -248,3 +248,107 @@ def test_initial_admission_still_works(pkg, clock, tmp_path):
     from hexis_service.demo.env import build_env
     e = build_env(str(tmp_path / "s2"), clock=clock)
     assert admit_initial(e, pkg).status == "ADMITTED"
+
+
+# ================================ round 2 ========================================================== #
+# --- C21 (regression): repairing a requirement the validator flagged as malformed is allowed ------- #
+class _TypoFixer:
+    model_id = "test:typo-fixer"
+    settings: dict = {}
+
+    def draft(self, ctx, diags, attempt):
+        c = copy.deepcopy(contracts_dict())
+        if attempt == 1:  # malformed selector in the first draft; later drafts correct it
+            c["ordering"][0]["before"] = c["ordering"][0]["before"].replace("tool:", "tool: ")
+        return {"machine": machine_dict(defect=False), "contracts": c}
+
+
+def test_C21_honest_repair_of_malformed_requirement_validates(catalog):
+    res = compile_skill(skill_source(), catalog, deployment_policy(), _TypoFixer())
+    assert {f["code"] for f in res.attempts[0]["findings"]} == {"ORDERING_SELECTOR_UNKNOWN"}
+    assert res.status == "validated", res.attempts
+
+
+class _Weakener:
+    model_id = "test:weakener"
+    settings: dict = {}
+
+    def draft(self, ctx, diags, attempt):
+        c = copy.deepcopy(contracts_dict())
+        if attempt > 1:  # a well-formed but violated requirement is weakened instead of the machine fixed
+            bad = {d["detail"]["requirement"] for d in diags if d.get("code") == "ORDERING_VIOLATION"}
+            for o in c["ordering"]:
+                if o["id"] in bad:
+                    o["requires"] = [o["before"]]
+        return {"machine": machine_dict(defect=True), "contracts": c}
+
+
+def test_C21_weakening_a_violated_requirement_is_still_rejected(catalog):
+    res = compile_skill(skill_source(), catalog, deployment_policy(), _Weakener())
+    assert res.status == "rejected"
+    assert "REQUIREMENT_DROPPED" in {f["code"] for f in res.attempts[1]["findings"]}
+
+
+# --- C22 (variant): a critical clause cannot escape by being left out of the source manifest -------- #
+def _drop_critical_clause(pkg):
+    cid = next(c.id for c in index_clauses(skill_source().text) if is_critical(c))
+
+    def fn(d):
+        d["source_manifest"]["clauses"] = [c for c in d["source_manifest"]["clauses"] if c["id"] != cid]
+        d["contracts"]["clause_coverage"].pop(cid, None)
+        for s in d["machine"]["states"].values():
+            if s.get("clause") == cid:
+                s["clause"] = ""
+        for o in d["contracts"]["ordering"]:
+            if o.get("clause") == cid:
+                o["clause"] = ""
+    return cid, reseal(pkg, fn)
+
+
+def test_C22_critical_clause_removed_from_manifest_rejected(pkg, catalog, clock, tmp_path):
+    from hexis_service.demo.env import build_env
+    cid, bad = _drop_critical_clause(pkg)
+    r = rep(bad, catalog)
+    assert not r.passed
+    assert any(f.code == "CRITICAL_CLAUSE_UNSUPPORTED" and f.clause == cid for f in r.errors)
+    e = build_env(str(tmp_path / "s3"), clock=clock)
+    assert admit_initial(e, bad).status == "REJECTED"
+    assert e.store.get_active("sandbox", SKILL) is None
+
+
+# --- X04 / X05: a run starts only for an artifact admitted, with a verified record, to this env ---- #
+def test_X04_admission_to_other_environment_does_not_allow_runs(pkg, clock, tmp_path):
+    from hexis_service.demo.env import build_env
+    from hexis_service.runtime.service import RunError
+    e = build_env(str(tmp_path / "s4"), clock=clock)
+    assert e.service.environment == "sandbox"
+    assert admit_as_dana(e, pkg, None, environment="staging").status == "ADMITTED"
+    with pytest.raises(RunError) as exc:
+        e.service.start_run(pkg.artifact_hash, TASK, e.principal("user:alice"))
+    assert exc.value.code == "ARTIFACT_NOT_ADMITTED"
+    assert admit_as_dana(e, pkg, None, environment="sandbox").status == "ADMITTED"
+    assert e.service.start_run(pkg.artifact_hash, TASK, e.principal("user:alice")).run_id
+
+
+def test_X05_forged_lifecycle_or_unsigned_record_does_not_allow_runs(pkg, clock, tmp_path):
+    import json
+
+    from hexis_service.demo.env import build_env
+    from hexis_service.runtime.service import RunError
+    e = build_env(str(tmp_path / "s5"), clock=clock)
+    e.store.put_version(pkg.to_json(), "mallory", 1.0)
+    with e.store.tx() as db:
+        e.store.add_lifecycle(db, pkg.artifact_hash, "admitted", "mallory", "sandbox", 1.0)
+    alice = e.principal("user:alice")
+    with pytest.raises(RunError) as exc:
+        e.service.start_run(pkg.artifact_hash, TASK, alice)
+    assert exc.value.code == "ARTIFACT_NOT_ADMITTED"
+    rec = {"artifact_hash": pkg.artifact_hash, "environment": "sandbox", "approver": "mallory",
+           "admitted_at": "2026-01-01T00:00:00+00:00", "validation_report_digest": "d", "replay_archive_digest": "a",
+           "key_id": "k", "signature": "hmac-sha256:" + "0" * 64}
+    with e.store.tx() as db:
+        db.execute("INSERT INTO admission_reports VALUES(?,?,?)",
+                   (f"{pkg.artifact_hash}@sandbox", json.dumps(rec), json.dumps({"report_digest": "d"})))
+    with pytest.raises(RunError) as exc:
+        e.service.start_run(pkg.artifact_hash, TASK, alice)
+    assert exc.value.code == "ARTIFACT_NOT_ADMITTED"

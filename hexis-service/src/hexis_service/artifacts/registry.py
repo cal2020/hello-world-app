@@ -19,7 +19,7 @@ from typing import Optional
 from ..canonical import digest, sha256_hex
 from ..tools.catalog import ToolCatalog
 from ..tools.policy import Principal
-from .package import AdmissionRecord, MachinePackage, sign_admission
+from .package import AdmissionRecord, MachinePackage, sign_admission, verify_admission
 from .validate import validate_package
 
 ADMIN_ROLE = "artifact_admin"
@@ -156,6 +156,9 @@ def admit(store, pkg: MachinePackage, catalog: ToolCatalog, *, expected_parent_h
             db.execute("INSERT OR IGNORE INTO trace_blobs VALUES(?,?,?,?)", (t.trace_id, sha256_hex(body), body, now))
         db.execute("INSERT OR IGNORE INTO admission_reports VALUES(?,?,?)", (h, _j(rec.model_dump(mode="json")),
                                                                             _j(rj)))
+        # per-environment signed record: what ``is_admitted_in`` verifies before a run may start
+        db.execute("INSERT OR IGNORE INTO admission_reports VALUES(?,?,?)",
+                   (_env_key(h, environment), _j(rec.model_dump(mode="json")), _j(rj)))
         store.add_lifecycle(db, h, "admitted", approver.id, environment, now)
         store.add_lifecycle(db, h, "active", approver.id, environment, now)
         db.execute("INSERT INTO trace_archive_manifests VALUES(?,?,?,?,?)",
@@ -163,6 +166,33 @@ def admit(store, pkg: MachinePackage, catalog: ToolCatalog, *, expected_parent_h
         db.execute("INSERT OR REPLACE INTO active_machine_versions VALUES(?,?,?,?,?)",
                    (environment, skill_id, h, version, now))
     return AdmissionResult("ADMITTED", h, [], rec.model_dump(mode="json"), version)
+
+
+def _env_key(artifact_hash: str, environment: str) -> str:
+    return f"{artifact_hash}@{environment}"
+
+
+def is_admitted_in(store, artifact_hash: str, environment: str) -> bool:
+    """True only if ``artifact_hash`` was admitted to ``environment`` by :func:`admit`: an
+    ``admitted`` lifecycle entry for that environment *and* a stored admission record for that
+    environment whose HMAC signature verifies and which binds this hash, this environment and the
+    stored validation report. A bare lifecycle row (or an admission to another environment) is not
+    enough."""
+    import json
+    if not any(e["state"] == "admitted" and e["reason"] == environment for e in store.lifecycle(artifact_hash)):
+        return False
+    row = store.q1("SELECT record, report FROM admission_reports WHERE artifact_hash=?",
+                   (_env_key(artifact_hash, environment),))
+    if not row:
+        return False
+    try:
+        rec = AdmissionRecord.model_validate(json.loads(row[0]))
+        report = json.loads(row[1])
+    except Exception:  # noqa: BLE001 - an unparsable record is simply not an admission
+        return False
+    _, key = signing_key()
+    return (rec.artifact_hash == artifact_hash and rec.environment == environment
+            and rec.validation_report_digest == report.get("report_digest") and verify_admission(rec, key))
 
 
 def revoke(store, artifact_hash: str, actor: Principal, reason: str, now: float) -> None:
