@@ -150,9 +150,25 @@ def policy_widening(parent: MachinePackage, cand: MachinePackage) -> list[str]:
         out.append("task input contract changed")
     for cid, cov in pc.clause_coverage.items():
         new = cc.clause_coverage.get(cid)
-        if cov.classification == "executable_control" and (new is None or new.classification != "executable_control"):
-            out.append(f"coverage of clause {cid} downgraded")
+        if new is None:
+            out.append(f"coverage of clause {cid} removed")
+            continue
+        if cov.classification != new.classification and \
+                _COVERAGE_RANK[new.classification] <= _COVERAGE_RANK[cov.classification]:
+            out.append(f"coverage of clause {cid} downgraded ({cov.classification} -> {new.classification})")
+        if cov.critical and not new.critical:
+            out.append(f"clause {cid} is no longer marked critical")
+        if cov.classification == "executable_control" and new.classification == "executable_control" \
+                and not set(cov.states) <= set(new.states):
+            out.append(f"executable control of clause {cid} remapped away from states "
+                       f"{sorted(set(cov.states) - set(new.states))}")
     return out
+
+
+# Strength of a coverage claim. An update may only strengthen a clause's coverage; a lateral move
+# between equally ranked classes is treated as a downgrade (it changes what the clause means).
+_COVERAGE_RANK = {"non_material": 0, "unsupported": 1, "external_precondition": 2, "state_local_knowledge": 2,
+                  "executable_control": 3}
 
 
 def evaluate_candidate(parent: MachinePackage, cand: MachinePackage, trace: Trace, protected: list[Trace],
