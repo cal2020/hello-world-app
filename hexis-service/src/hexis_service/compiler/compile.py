@@ -50,7 +50,20 @@ class CompilerModel(Protocol):
     settings: dict
 
     def draft(self, context: dict, diagnostics: list[dict], attempt: int) -> dict:
-        """Return ``{"machine": <efsm-v1 dict>, "contracts": <Contracts dict>}``."""
+        """Return ``{"machine": <efsm-v1 dict>, "contracts": <Contracts dict>}``, or
+        ``{"malformed": {"code": ..., "message": ...}}`` when the proposal could not be obtained or parsed
+        (recorded as a malformed attempt; the diagnostic is fed to the next attempt)."""
+
+
+def prompts_digest(context: dict, model: CompilerModel) -> str:
+    """``compiler_manifest.prompts_sha256``: the context digest; when the model renders a versioned prompt
+    template (live compilers), the template name and digest are bound in as well. Models without a
+    template (the fixture) keep the context-only digest, so fixture artifact hashes are unchanged."""
+    tmpl = getattr(model, "prompt_template_sha256", "")
+    if not tmpl:
+        return digest(context)
+    return digest({"context_sha256": digest(context), "prompt_template": getattr(model, "prompt_template", ""),
+                   "prompt_template_sha256": tmpl})
 
 
 @dataclass
@@ -196,7 +209,7 @@ def compile_skill(source: SkillSource, tool_catalog: ToolCatalog, deployment_pol
         resources={k: sha256_hex(v) for k, v in sorted(source.resources.items())}, clauses=clauses,
         tool_catalog_sha256=tool_catalog.digest(), input_contract_sha256=digest(deployment_policy.task_input_schema),
         deployment_policy_sha256=digest(deployment_policy.model_dump(mode="json")))
-    cmanifest = CompilerManifest(compiler=COMPILER_VERSION, prompts_sha256=digest(context), model_id=model.model_id,
+    cmanifest = CompilerManifest(compiler=COMPILER_VERSION, prompts_sha256=prompts_digest(context, model), model_id=model.model_id,
                                  model_settings=model.settings, validator_version=VALIDATOR_VERSION,
                                  normalizer_version=NORMALIZER_VERSION)
     attempts: list[dict] = []
@@ -207,6 +220,13 @@ def compile_skill(source: SkillSource, tool_catalog: ToolCatalog, deployment_pol
     report: Optional[ValidationReport] = None
     for attempt in range(1, max_attempts + 1):
         raw = model.draft(context, diagnostics, attempt)
+        if isinstance(raw, dict) and isinstance(raw.get("malformed"), dict):
+            bad = raw["malformed"]
+            diagnostics = [{"code": str(bad.get("code") or "DRAFT_MALFORMED"),
+                            "message": str(bad.get("message", ""))[:2000],
+                            **({"detail": bad["detail"]} if isinstance(bad.get("detail"), dict) else {})}]
+            attempts.append({"attempt": attempt, "status": "malformed", "findings": diagnostics})
+            continue
         try:
             machine = load_machine(raw["machine"])
             contracts = Contracts.model_validate(raw["contracts"])
