@@ -68,9 +68,9 @@ def _check_archive(store, pkg: MachinePackage, protected: list, negative: list, 
             if sup is None or sup.records_digest() != rd:
                 reasons.append(f"archive: {kind} entry {tid} of the current archive is missing or altered")
                 continue
-            row = store.q1("SELECT body FROM trace_blobs WHERE trace_id=?", (tid,))
-            if row:
-                stored, errs = Trace.from_jsonl(row[0])
+            body = store.trace_body(tid)
+            if body is not None:
+                stored, errs = Trace.from_jsonl(body)
                 if errs or stored.records_digest() != rd:
                     reasons.append(f"archive: stored body of {kind} trace {tid} does not match the manifest")
                     continue
@@ -141,34 +141,18 @@ def admit(store, pkg: MachinePackage, catalog: ToolCatalog, *, expected_parent_h
         replay_archive_digest=digest(archive_manifest), key_id=key_id), key)
     skill_id = pkg.machine.skill_id
     register(store, pkg, approver.id, now)
-    with store.tx() as db:
-        row = db.execute("SELECT artifact_hash, archive_version FROM active_machine_versions WHERE environment=? AND "
-                         "skill_id=?", (environment, skill_id)).fetchone()
-        current = row[0] if row else None
-        if current != expected_parent_hash:
-            return AdmissionResult("CONFLICT", h, [f"active version is {current}, expected {expected_parent_hash}; "
-                                                   "rebase onto the new parent and rerun all gates"])
-        latest = db.execute("SELECT MAX(version) FROM trace_archive_manifests WHERE skill_id=?",
-                            (skill_id,)).fetchone()[0]
-        if latest != gated_version:
-            return AdmissionResult("CONFLICT", h, ["protected archive changed during admission; rerun all gates"])
-        # archive versions are per skill (shared across environments), so allocate from the global max
-        version = (latest or 0) + 1
-        from ..storage.sqlite import _j
-        for t in protected + negative:
-            body = t.to_jsonl()
-            db.execute("INSERT OR IGNORE INTO trace_blobs VALUES(?,?,?,?)", (t.trace_id, sha256_hex(body), body, now))
-        db.execute("INSERT OR IGNORE INTO admission_reports VALUES(?,?,?)", (h, _j(rec.model_dump(mode="json")),
-                                                                            _j(rj)))
-        # per-environment signed record: what ``is_admitted_in`` verifies before a run may start
-        db.execute("INSERT OR IGNORE INTO admission_reports VALUES(?,?,?)",
-                   (_env_key(h, environment), _j(rec.model_dump(mode="json")), _j(rj)))
-        store.add_lifecycle(db, h, "admitted", approver.id, environment, now)
-        store.add_lifecycle(db, h, "active", approver.id, environment, now)
-        db.execute("INSERT INTO trace_archive_manifests VALUES(?,?,?,?,?)",
-                   (skill_id, version, h, _j({**archive_manifest, "version": version, "artifact_hash": h}), now))
-        db.execute("INSERT OR REPLACE INTO active_machine_versions VALUES(?,?,?,?,?)",
-                   (environment, skill_id, h, version, now))
+    pub = store.publish_admission(
+        environment=environment, skill_id=skill_id, artifact_hash=h, expected_parent_hash=expected_parent_hash,
+        gated_archive_version=gated_version, traces=_trace_rows(protected + negative),
+        record=rec.model_dump(mode="json"), report=rj, env_key=_env_key(h, environment), actor=approver.id,
+        manifest=archive_manifest, now=now)
+    if pub["status"] == "CONFLICT":
+        if pub["conflict"] == "active":
+            return AdmissionResult("CONFLICT", h, [f"active version is {pub['current']}, expected "
+                                                   f"{expected_parent_hash}; rebase onto the new parent and rerun "
+                                                   "all gates"])
+        return AdmissionResult("CONFLICT", h, ["protected archive changed during admission; rerun all gates"])
+    version = pub["version"]
     return AdmissionResult("ADMITTED", h, [], rec.model_dump(mode="json"), version)
 
 
@@ -182,7 +166,6 @@ def enroll_protected(store, skill_id: str, traces: list, *, actor: Principal, en
     replay against the active version in ``environment``; a negative trace must NOT replay. The new
     archive version is published with a compare-and-swap on the current version."""
     from ..replay.replay import replay_structural
-    from ..storage.sqlite import _j
     from ..traces.normalize import eligibility
     kind = "negative" if negative else "protected"
     if ADMIN_ROLE not in actor.roles:
@@ -221,23 +204,22 @@ def enroll_protected(store, skill_id: str, traces: list, *, actor: Principal, en
                 "negative": list(current.get("negative", []) or []),
                 "held_out": current.get("held_out", "never stored here")}
     manifest[kind] = [existing[k] for k in sorted(existing)]
-    with store.tx() as db:
-        latest = db.execute("SELECT MAX(version) FROM trace_archive_manifests WHERE skill_id=?",
-                            (skill_id,)).fetchone()[0]
-        if latest != current.get("version"):
-            return AdmissionResult("CONFLICT", active_hash, ["protected archive changed concurrently; retry"])
-        version = (latest or 0) + 1
-        for t in traces:
-            body = t.to_jsonl()
-            db.execute("INSERT OR IGNORE INTO trace_blobs VALUES(?,?,?,?)", (t.trace_id, sha256_hex(body), body, now))
-        db.execute("INSERT INTO trace_archive_manifests VALUES(?,?,?,?,?)",
-                   (skill_id, version, active_hash, _j({**manifest, "version": version, "artifact_hash": active_hash}),
-                    now))
-        db.execute("UPDATE active_machine_versions SET archive_version=? WHERE skill_id=? AND artifact_hash=?",
-                   (version, skill_id, active_hash))
-        store.add_lifecycle(db, active_hash, f"archive_enrolled:{kind}", actor.id,
-                            ",".join(t.trace_id for t in traces), now)
+    pub = store.append_archive_manifest(
+        skill_id=skill_id, expected_version=current.get("version"), artifact_hash=active_hash, manifest=manifest,
+        traces=_trace_rows(traces), actor=actor.id, lifecycle_state=f"archive_enrolled:{kind}",
+        lifecycle_reason=",".join(t.trace_id for t in traces), now=now)
+    if pub["status"] == "CONFLICT":
+        return AdmissionResult("CONFLICT", active_hash, ["protected archive changed concurrently; retry"])
+    version = pub["version"]
     return AdmissionResult("ADMITTED", active_hash, [], None, version)
+
+
+def _trace_rows(traces: list) -> list[tuple[str, str, str]]:
+    rows = []
+    for t in traces:
+        body = t.to_jsonl()
+        rows.append((t.trace_id, sha256_hex(body), body))
+    return rows
 
 
 def _env_key(artifact_hash: str, environment: str) -> str:
@@ -253,8 +235,7 @@ def is_admitted_in(store, artifact_hash: str, environment: str) -> bool:
     import json
     if not any(e["state"] == "admitted" and e["reason"] == environment for e in store.lifecycle(artifact_hash)):
         return False
-    row = store.q1("SELECT record, report FROM admission_reports WHERE artifact_hash=?",
-                   (_env_key(artifact_hash, environment),))
+    row = store.admission_record(_env_key(artifact_hash, environment))
     if not row:
         return False
     try:
@@ -270,5 +251,4 @@ def is_admitted_in(store, artifact_hash: str, environment: str) -> bool:
 def revoke(store, artifact_hash: str, actor: Principal, reason: str, now: float) -> None:
     if ADMIN_ROLE not in actor.roles:
         raise PermissionError(f"{actor.id} lacks role {ADMIN_ROLE}")
-    with store.tx() as db:
-        store.add_lifecycle(db, artifact_hash, "revoked", actor.id, reason, now)
+    store.add_lifecycle_entry(artifact_hash, "revoked", actor.id, reason, now)

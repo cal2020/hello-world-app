@@ -5,7 +5,8 @@ and ``action_receipts`` are append-only: triggers reject UPDATE/DELETE. The acti
 is changed only through :meth:`Store.swap_active` (compare-and-swap). Transactions are short and
 never span a model call, human wait or remote tool call.
 
-A PostgreSQL adapter for multi-worker deployment is NOT implemented (docs/LIMITATIONS.md).
+For multi-worker deployment use :class:`storage.postgres.PostgresStore` (same method surface); pick a
+backend with :func:`storage.open_store`.
 """
 
 from __future__ import annotations
@@ -97,6 +98,18 @@ class Store:
         self._migrate()
         self.db.execute("INSERT OR IGNORE INTO schema_migrations VALUES(?)", (SCHEMA_VERSION,))
 
+    def schema_version(self) -> int:
+        return self.q1("SELECT MAX(version) FROM schema_migrations")[0]
+
+    def reopen(self) -> "Store":
+        """A fresh connection to the same database (simulated process restart). A ':memory:' database
+        cannot be reopened, so the same object is returned."""
+        return Store(self.path) if self.path != ":memory:" else self
+
+    def close(self) -> None:
+        with self._lock:
+            self.db.close()
+
     def _migrate(self) -> None:
         # v2: evidence receipts are keyed per run (a verifier's id is not run-scoped, and two runs that adopt
         # the same external draft must each keep their own evidence).
@@ -160,6 +173,74 @@ class Store:
     def is_admitted(self, artifact_hash: str) -> bool:
         return self.q1("SELECT 1 FROM machine_lifecycle WHERE artifact_hash=? AND state='admitted'",
                        (artifact_hash,)) is not None
+
+    def add_lifecycle_entry(self, artifact_hash: str, state: str, actor: str, reason: str, now: float) -> None:
+        with self.tx() as db:
+            self.add_lifecycle(db, artifact_hash, state, actor, reason, now)
+
+    def admission_record(self, key: str) -> Optional[tuple[str, str]]:
+        """``(record_json, report_json)`` stored under ``key`` (an artifact hash or ``hash@environment``)."""
+        r = self.q1("SELECT record, report FROM admission_reports WHERE artifact_hash=?", (key,))
+        return (r[0], r[1]) if r else None
+
+    def publish_admission(self, *, environment: str, skill_id: str, artifact_hash: str,
+                          expected_parent_hash: Optional[str], gated_archive_version: Optional[int],
+                          traces: list[tuple[str, str, str]], record: dict, report: dict, env_key: str, actor: str,
+                          manifest: dict, now: float) -> dict:
+        """Atomically publish an admission: CAS the active pointer of ``(environment, skill_id)`` against
+        ``expected_parent_hash`` and the latest protected-archive version against ``gated_archive_version``;
+        then store the trace bodies ``(trace_id, sha256, body)``, the signed record (under the artifact hash
+        and under ``env_key``), the ``admitted`` / ``active`` lifecycle entries, the next archive manifest and
+        the new active pointer. Returns ``{"status": "ADMITTED", "version": n}`` or
+        ``{"status": "CONFLICT", "conflict": "active"|"archive", "current": <active hash or None>}`` (writing
+        nothing)."""
+        with self.tx() as db:
+            row = db.execute("SELECT artifact_hash FROM active_machine_versions WHERE environment=? AND skill_id=?",
+                             (environment, skill_id)).fetchone()
+            current = row[0] if row else None
+            if current != expected_parent_hash:
+                return {"status": "CONFLICT", "conflict": "active", "current": current}
+            latest = db.execute("SELECT MAX(version) FROM trace_archive_manifests WHERE skill_id=?",
+                                (skill_id,)).fetchone()[0]
+            if latest != gated_archive_version:
+                return {"status": "CONFLICT", "conflict": "archive", "current": current}
+            # archive versions are per skill (shared across environments), so allocate from the global max
+            version = (latest or 0) + 1
+            for tid, sha, body in traces:
+                db.execute("INSERT OR IGNORE INTO trace_blobs VALUES(?,?,?,?)", (tid, sha, body, now))
+            for key in (artifact_hash, env_key):
+                db.execute("INSERT OR IGNORE INTO admission_reports VALUES(?,?,?)", (key, _j(record), _j(report)))
+            self.add_lifecycle(db, artifact_hash, "admitted", actor, environment, now)
+            self.add_lifecycle(db, artifact_hash, "active", actor, environment, now)
+            db.execute("INSERT INTO trace_archive_manifests VALUES(?,?,?,?,?)",
+                       (skill_id, version, artifact_hash,
+                        _j({**manifest, "version": version, "artifact_hash": artifact_hash}), now))
+            db.execute("INSERT OR REPLACE INTO active_machine_versions VALUES(?,?,?,?,?)",
+                       (environment, skill_id, artifact_hash, version, now))
+        return {"status": "ADMITTED", "version": version}
+
+    def append_archive_manifest(self, *, skill_id: str, expected_version: Optional[int], artifact_hash: str,
+                                manifest: dict, traces: list[tuple[str, str, str]], actor: str, lifecycle_state: str,
+                                lifecycle_reason: str, now: float) -> dict:
+        """Atomically append the next protected-archive manifest of ``skill_id`` with a CAS on the latest
+        version (``expected_version``), store the trace bodies, move the archive version of every active
+        pointer to ``artifact_hash`` and record a lifecycle entry. Returns ``{"status": "ADMITTED",
+        "version": n}`` or ``{"status": "CONFLICT"}`` (writing nothing)."""
+        with self.tx() as db:
+            latest = db.execute("SELECT MAX(version) FROM trace_archive_manifests WHERE skill_id=?",
+                                (skill_id,)).fetchone()[0]
+            if latest != expected_version:
+                return {"status": "CONFLICT"}
+            version = (latest or 0) + 1
+            for tid, sha, body in traces:
+                db.execute("INSERT OR IGNORE INTO trace_blobs VALUES(?,?,?,?)", (tid, sha, body, now))
+            db.execute("INSERT INTO trace_archive_manifests VALUES(?,?,?,?,?)",
+                       (skill_id, version, artifact_hash,
+                        _j({**manifest, "version": version, "artifact_hash": artifact_hash}), now))
+            db.execute("UPDATE active_machine_versions SET archive_version=? WHERE skill_id=? AND artifact_hash=?",
+                       (version, skill_id, artifact_hash))
+            self.add_lifecycle(db, artifact_hash, lifecycle_state, actor, lifecycle_reason, now)
+        return {"status": "ADMITTED", "version": version}
 
     def get_active(self, environment: str, skill_id: str) -> Optional[tuple[str, int]]:
         r = self.q1("SELECT artifact_hash, archive_version FROM active_machine_versions WHERE environment=? AND "
@@ -491,6 +572,10 @@ class Store:
     def put_trace(self, trace_id: str, sha: str, body: str, now: float) -> None:
         with self.tx() as db:
             db.execute("INSERT OR IGNORE INTO trace_blobs VALUES(?,?,?,?)", (trace_id, sha, body, now))
+
+    def trace_body(self, trace_id: str) -> Optional[str]:
+        r = self.q1("SELECT body FROM trace_blobs WHERE trace_id=?", (trace_id,))
+        return r[0] if r else None
 
     def put_proposal(self, pid: str, parent: str, cand: Optional[str], status: str, body: dict, now: float) -> None:
         with self.tx() as db:
