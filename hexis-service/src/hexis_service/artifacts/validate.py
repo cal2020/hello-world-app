@@ -17,7 +17,10 @@ from .. import guards as G
 from ..canonical import digest, sha256_hex
 from ..tools.catalog import ToolCatalog, WRITE_EFFECTS
 from .efsm import Machine, State
-from .package import MachinePackage, OrderingRequirement
+from .package import ExecutionPolicy, MachinePackage, OrderingRequirement
+
+CRITICAL_MARK = "**MUST**"  # same marker as compiler.clauses.CRITICAL_MARK (criticality comes from source text)
+SELECTOR_KINDS = ("state", "tool", "terminal", "user")
 
 VALIDATOR_VERSION = "hexis-service-validator/1"
 _TEMPLATE_RE = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
@@ -157,13 +160,16 @@ def _matches(sel: str, sid: str, st: State, pkg: MachinePackage) -> bool:
 def check_ordering(pkg: MachinePackage, req: OrderingRequirement, states: Optional[Iterable[str]] = None
                    ) -> Optional[list[str]]:
     """Return a counterexample path violating ``req`` or ``None``. Guard feasibility is ignored
-    (conservative: may over-report, never under-reports graph paths)."""
+    (conservative: may over-report, never under-reports graph paths). The fallback state is also a
+    start point: the kernel enters it from any state without a graph edge, with no guarantees."""
     m = pkg.machine
     inval = set(req.invalidated_by)
     allowed = set(states) if states is not None else set(m.states)
-    start = (m.initial, False)
-    parent: dict[tuple[str, bool], Optional[tuple[str, bool]]] = {start: None}
-    q = deque([start])
+    starts = [(m.initial, False)]
+    if m.fallback in m.states and m.fallback in allowed and m.fallback != m.initial:
+        starts.append((m.fallback, False))
+    parent: dict[tuple[str, bool], Optional[tuple[str, bool]]] = {s: None for s in starts}
+    q = deque(starts)
     while q:
         sid, flag = q.popleft()
         st = m.states[sid]
@@ -186,6 +192,41 @@ def check_ordering(pkg: MachinePackage, req: OrderingRequirement, states: Option
                     parent[nxt] = (sid, flag)
                     q.append(nxt)
     return None
+
+
+def selector_problem(sel: str, pkg: MachinePackage, catalog: ToolCatalog) -> Optional[str]:
+    """Return why an ordering selector is malformed or matches nothing, else ``None``."""
+    kind, sep, val = sel.partition(":")
+    if not sep or kind not in SELECTOR_KINDS or not val or val != val.strip():
+        return f"malformed selector {sel!r} (expected one of {', '.join(k + ':<name>' for k in SELECTOR_KINDS)})"
+    if kind == "tool" and catalog.get(val) is None:
+        return f"selector {sel!r} names a tool that is not in the catalog"
+    if not any(_matches(sel, sid, st, pkg) for sid, st in pkg.machine.states.items()):
+        return f"selector {sel!r} matches no state of the machine"
+    return None
+
+
+def policy_widening_findings(pkg_policy: ExecutionPolicy, operator: ExecutionPolicy) -> list[str]:
+    """Ways the package's self-declared execution policy is wider than the operator's deployment
+    policy. Authority comes from the host: a package may only narrow these ceilings."""
+    out = []
+    extra = sorted(set(pkg_policy.capability_ceiling) - set(operator.capability_ceiling))
+    if extra:
+        out.append(f"capability_ceiling adds {extra}")
+    if operator.fallback_mode == "stop_for_review" and pkg_policy.fallback_mode != "stop_for_review":
+        out.append(f"fallback_mode {pkg_policy.fallback_mode!r} widens operator 'stop_for_review'")
+    if operator.write_workflow and not pkg_policy.write_workflow:
+        out.append("write_workflow=false relaxes operator write-workflow controls")
+    for f in ("max_loop_bound", "structured_output_repairs", "transport_retries", "approval_expiry_s"):
+        if getattr(pkg_policy, f) > getattr(operator, f):
+            out.append(f"{f} {getattr(pkg_policy, f)} > operator {getattr(operator, f)}")
+    pb, ob = pkg_policy.budgets, operator.budgets
+    for f in ("max_steps", "max_tool_calls", "max_model_calls", "max_tokens", "max_elapsed_s"):
+        if getattr(pb, f) > getattr(ob, f):
+            out.append(f"budgets.{f} {getattr(pb, f)} > operator {getattr(ob, f)}")
+    if ob.max_spend_usd is not None and (pb.max_spend_usd is None or pb.max_spend_usd > ob.max_spend_usd):
+        out.append(f"budgets.max_spend_usd {pb.max_spend_usd} exceeds operator {ob.max_spend_usd}")
+    return out
 
 
 def derived_ordering(pkg: MachinePackage) -> list[OrderingRequirement]:
@@ -213,6 +254,26 @@ def _top_conjuncts(expr: str) -> list:
     return [body]
 
 
+def _requires_approved(expr: str, dvar: str) -> bool:
+    """True iff ``expr`` has a top-level conjunct ``dvar == 'approved'`` (so it can only hold for an
+    approved decision, whatever the other variables are)."""
+    import ast
+    if not expr:
+        return False
+    try:
+        conj = _top_conjuncts(expr)
+    except G.GuardError:
+        return False
+    for c in conj:
+        if isinstance(c, ast.Compare) and len(c.ops) == 1 and isinstance(c.ops[0], ast.Eq):
+            sides = [c.left, c.comparators[0]]
+            names = [x for x in sides if isinstance(x, ast.Name)]
+            consts = [x for x in sides if isinstance(x, ast.Constant)]
+            if len(names) == 1 and names[0].id == dvar and len(consts) == 1 and consts[0].value == "approved":
+                return True
+    return False
+
+
 def edge_bound(expr: str, counter: str) -> Optional[int]:
     """If ``expr`` has a top-level conjunct ``counter < K`` / ``counter <= K``, return the number of
     times the edge can be taken with an increment of one from zero."""
@@ -233,7 +294,9 @@ def edge_bound(expr: str, counter: str) -> Optional[int]:
 
 
 def validate_package(pkg: MachinePackage, catalog: ToolCatalog, profile: str = "production",
-                     skill_text: Optional[str] = None) -> ValidationReport:
+                     skill_text: Optional[str] = None, deployment_policy: object = None) -> ValidationReport:
+    """``deployment_policy`` (an :class:`ExecutionPolicy` or anything with ``.execution_policy``) is
+    the operator's trusted policy; when given, the package's own policy may not widen it."""
     F: list[Finding] = []
     analyses: list[dict] = []
     m = pkg.machine
@@ -245,8 +308,14 @@ def validate_package(pkg: MachinePackage, catalog: ToolCatalog, profile: str = "
         F.append(Finding(code, msg, **kw))
 
     # ---- integrity -------------------------------------------------------------------------- #
-    if pkg.artifact_hash and not pkg.verify_hash():
+    if not pkg.artifact_hash:
+        err("HASH_MISSING", "package is unsealed: artifact_hash is empty")
+    elif not pkg.verify_hash():
         err("HASH_MISMATCH", "artifact_hash does not match the canonical hash payload")
+    if deployment_policy is not None:
+        op = getattr(deployment_policy, "execution_policy", deployment_policy)
+        for w in policy_widening_findings(P, op):
+            err("POLICY_EXCEEDS_DEPLOYMENT", f"execution_policy exceeds the operator deployment policy: {w}")
     if pkg.source_manifest.tool_catalog_sha256 != catalog.digest():
         err("CATALOG_MISMATCH", "package was compiled against a different tool catalog digest")
     for e in catalog.check_schemas():
@@ -319,7 +388,8 @@ def validate_package(pkg: MachinePackage, catalog: ToolCatalog, profile: str = "
             if ic is None:
                 err("INTERACTION_CONTRACT_MISSING", f"user state {sid} has no interaction contract", state=sid)
             elif ic.type == "approval" and ic.approves_state not in m.states:
-                err("UNKNOWN_STATE", f"approval {sid} approves unknown state {ic.approves_state!r}", state=sid)
+                err("UNKNOWN_STATE", f"approval {sid} approves unknown state {ic.approves_state!r}", state=sid,
+                    detail={"malformed_requirement": f"interaction:{sid}"})
         if a.kind == "tool":
             spec = catalog.get(a.name)
             if spec is None:
@@ -369,6 +439,12 @@ def validate_package(pkg: MachinePackage, catalog: ToolCatalog, profile: str = "
             var = m.var(v)
             if var is not None and var.init_from:
                 err("ENGINE_FROM_TASK", f"engine-owned {v!r} cannot be initialised from task input", variable=v)
+    for v in sorted(counters_written_by_inc):
+        var = m.var(v)
+        # Loop bounds assume a counter counts up by one from zero (see edge_bound).
+        if var is not None and (isinstance(var.init, bool) or not isinstance(var.init, int) or var.init != 0):
+            err("COUNTER_INIT", f"loop counter {v!r} must be initialised to integer 0 (got {var.init!r})",
+                variable=v)
 
     # ---- guards ---------------------------------------------------------------------------- #
     for sid, st in m.states.items():
@@ -403,10 +479,14 @@ def validate_package(pkg: MachinePackage, catalog: ToolCatalog, profile: str = "
                 err("GUARDS_DISJOINTNESS_UNKNOWN", f"{sid}: disjointness not proven ({an.detail})", state=sid)
 
     # ---- reachability ---------------------------------------------------------------------- #
+    # The kernel enters the fallback from any state without a graph edge, so the fallback and
+    # everything reachable from it are analyzed like the main graph.
     reach = reachable(m, m.initial)
+    fb_reach = reachable(m, m.fallback) if m.fallback in m.states else set()
     for sid in m.states:
-        if sid not in reach and sid not in C.explained_unreachable and sid != m.fallback:
+        if sid not in reach and sid not in C.explained_unreachable and sid not in fb_reach:
             err("DEAD_STATE", f"state {sid} is unreachable from {m.initial}", state=sid)
+    reach = reach | fb_reach
     ends = {sid for sid, st in m.states.items() if st.action.kind == "end"}
     pred: dict[str, set[str]] = {s: set() for s in m.states}
     for sid, st in m.states.items():
@@ -435,14 +515,17 @@ def validate_package(pkg: MachinePackage, catalog: ToolCatalog, profile: str = "
             F.append(Finding("OPTIONAL_TASK_INPUT", f"{v.name!r} comes from optional task field", "warning",
                              variable=v.name))
     universe = set(types)
-    IN = {s: (set(a0) if s == m.initial else set(universe)) for s in reach}
+    entries = {m.initial} | ({m.fallback} if m.fallback in reach else set())
+    IN = {s: (set(a0) if s in entries else set(universe)) for s in reach}
     OUT = {s: IN[s] | action_writes(m.states[s]) for s in reach}
     changed = True
     while changed:
         changed = False
         for s in reach:
-            if s == m.initial:
-                new_in = set(a0)  # first entry sees only a0; OUT sets only grow, so re-entry cannot shrink it
+            if s in entries:
+                # first entry (initial, or fallback from anywhere) sees only a0; every OUT set contains
+                # a0, so re-entry cannot shrink it
+                new_in = set(a0)
             else:
                 new_in = set(universe)
                 for p in (p for p in pred[s] if p in reach):
@@ -501,6 +584,15 @@ def validate_package(pkg: MachinePackage, catalog: ToolCatalog, profile: str = "
                 detail={"cycle_states": sorted(c)})
 
     # ---- ordering / evidence --------------------------------------------------------------- #
+    for req in C.ordering:
+        for sel in [req.before, *req.requires]:
+            why = selector_problem(sel, pkg, catalog)
+            if why:
+                err("ORDERING_SELECTOR_UNKNOWN", f"requirement {req.id}: {why}", clause=req.clause or None,
+                    detail={"requirement": req.id, "selector": sel, "malformed_requirement": f"ordering:{req.id}"})
+        if not req.requires:
+            err("ORDERING_SELECTOR_UNKNOWN", f"requirement {req.id} requires nothing", clause=req.clause or None,
+                detail={"requirement": req.id, "malformed_requirement": f"ordering:{req.id}"})
     for req in list(C.ordering) + derived_ordering(pkg):
         path = check_ordering(pkg, req, reach)
         if path is not None:
@@ -524,9 +616,29 @@ def validate_package(pkg: MachinePackage, catalog: ToolCatalog, profile: str = "
                         weak.append(val)
                 except G.GuardError:
                     weak.append(val)
+            if not weak and not _requires_approved(t.cond, dvar):
+                weak.append("(guard is not conjunctively bound to decision == 'approved')")
             if weak:
                 err("APPROVAL_GUARD_WEAK", f"{sid} edge {i} enters {ic.approves_state} for decision values "
                     f"{weak}; only 'approved' may", state=sid, edge=i)
+        # Every other exit of the approval must not reach the approved action without first passing
+        # through the approval again (e.g. a default edge into a no-op state that falls through).
+        if ic.approves_state in m.states:
+            succ_wo = {s: [t.to for t in m.states[s].transitions if t.to in m.states and t.to != sid]
+                       for s in m.states}
+            for i, t in enumerate(st.transitions):
+                if t.to == ic.approves_state or t.to not in m.states or t.to == sid:
+                    continue
+                seen, q2 = {t.to}, deque([t.to])
+                while q2:
+                    x = q2.popleft()
+                    for y in succ_wo.get(x, []):
+                        if y not in seen:
+                            seen.add(y)
+                            q2.append(y)
+                if ic.approves_state in seen:
+                    err("APPROVAL_BYPASS", f"{sid} edge {i} reaches {ic.approves_state} via {t.to} without a "
+                        "fresh approval", state=sid, edge=i)
     for tid, tc in C.terminals.items():
         if tc.category == "verified":
             if not tc.evidence:
@@ -534,16 +646,26 @@ def validate_package(pkg: MachinePackage, catalog: ToolCatalog, profile: str = "
             for ev in tc.evidence:
                 spec = catalog.get(ev.verifier_tool)
                 if spec is None or ev.claim not in spec.verifier_claims:
-                    err("UNAPPROVED_VERIFIER", f"{ev.verifier_tool!r} is not an approved verifier for {ev.claim!r}")
+                    err("UNAPPROVED_VERIFIER", f"{ev.verifier_tool!r} is not an approved verifier for {ev.claim!r}",
+                        detail={"malformed_requirement": f"evidence:{tid}:{ev.claim}"})
                 for v in ev.subject_vars:
                     if v not in types:
-                        err("UNKNOWN_VARIABLE", f"evidence subject {v!r} undeclared", variable=v)
+                        err("UNKNOWN_VARIABLE", f"evidence subject {v!r} undeclared", variable=v,
+                            detail={"malformed_requirement": f"evidence:{tid}:{ev.claim}"})
 
     # ---- fallback / policy ----------------------------------------------------------------- #
-    if P.write_workflow and P.fallback_mode != "stop_for_review":
+    # write_workflow is derived from the catalog effects of the machine's tools, not self-declared.
+    write_tools = sorted({st.action.name for st in m.states.values() if st.action.kind == "tool"
+                          and catalog.get(st.action.name) is not None
+                          and catalog.get(st.action.name).effect in WRITE_EFFECTS})
+    if write_tools and not P.write_workflow:
+        err("WRITE_WORKFLOW_UNDECLARED", f"machine calls consequential tools {write_tools} but declares "
+            "write_workflow = false")
+    if (P.write_workflow or write_tools) and P.fallback_mode != "stop_for_review":
         err("FALLBACK_MODE", "write workflows require fallback_mode = stop_for_review")
     fb = m.states.get(m.fallback)
-    if fb is not None and P.fallback_mode == "stop_for_review":
+    # sandbox_interpret is not implemented by the runtime: the fallback is always a review end state.
+    if fb is not None:
         if fb.action.kind != "end":
             err("FALLBACK_NOT_REVIEW", "fallback state must be a review end state under stop_for_review",
                 state=m.fallback)
@@ -563,10 +685,33 @@ def validate_package(pkg: MachinePackage, catalog: ToolCatalog, profile: str = "
                              clause=c.id))
     if skill_text is not None and sha256_hex(skill_text) != pkg.source_manifest.skill_sha256:
         F.append(Finding("SKILL_HASH", "skill source does not match the recorded hash", prov_sev))
+    if skill_text is not None:
+        # The manifest must index every clause of the source: a clause left out of it would escape
+        # the coverage checks below. Omitting a **MUST** clause is always an error.
+        from ..compiler.clauses import index_clauses
+        for sc in index_clauses(skill_text):
+            mc = clauses.get(sc.id)
+            if mc is not None and (mc.start, mc.end, mc.text) == (sc.start, sc.end, sc.text):
+                continue
+            if CRITICAL_MARK in sc.text:
+                err("CRITICAL_CLAUSE_UNSUPPORTED", f"safety-critical source clause {sc.id} is missing from (or "
+                    "altered in) the source manifest", clause=sc.id)
+            else:
+                F.append(Finding("CLAUSE_MISSING", f"source clause {sc.id} is missing from (or altered in) the "
+                                 "source manifest", prov_sev, clause=sc.id))
     for sid, st in m.states.items():
         if st.clause and st.clause not in clauses:
             F.append(Finding("UNKNOWN_CLAUSE", f"{sid} references unknown clause {st.clause!r}", prov_sev, state=sid,
                              clause=st.clause))
+    for cid, c in clauses.items():
+        critical = CRITICAL_MARK in c.text  # derived from source text, never from the package's flag
+        cov = C.clause_coverage.get(cid)
+        if critical and (cov is None or cov.classification in ("unsupported", "non_material")):
+            err("CRITICAL_CLAUSE_UNSUPPORTED", f"safety-critical clause {cid} is "
+                f"{cov.classification if cov else 'unclassified'}", clause=cid)
+        if cov is not None and cov.critical != critical:
+            err("CRITICAL_FLAG_MISMATCH", f"clause {cid} declares critical={cov.critical} but its source text "
+                f"{'contains' if critical else 'lacks'} {CRITICAL_MARK}", clause=cid)
     for cid, cov in C.clause_coverage.items():
         if cid not in clauses:
             F.append(Finding("UNKNOWN_CLAUSE", f"coverage for unknown clause {cid!r}", prov_sev, clause=cid))

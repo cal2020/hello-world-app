@@ -16,6 +16,7 @@ from typing import Any, Callable, Optional
 
 from ..approvals.scope import approval_scope, idempotency_key, logical_action_id, scope_digest
 from ..artifacts.package import MachinePackage
+from ..artifacts.registry import is_admitted_in
 from ..artifacts.validate import template_vars
 from ..canonical import digest
 from ..evidence.receipts import evidence_scope, is_current, subject_of, valid_positive
@@ -102,7 +103,7 @@ class RunService:
         pkg = self.package(package_hash)
         if self.store.is_revoked(package_hash):
             raise RunError("ARTIFACT_REVOKED", "revoked artifacts cannot start new runs")
-        if not self.store.is_admitted(package_hash):
+        if not is_admitted_in(self.store, package_hash, self.environment):
             raise RunError("ARTIFACT_NOT_ADMITTED", "only admitted artifacts can run")
         run_id = "run_" + uuid.uuid4().hex[:16]
         try:

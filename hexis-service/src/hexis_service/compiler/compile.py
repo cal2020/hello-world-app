@@ -119,6 +119,73 @@ def _coverage_regressions(prev: dict, cur: dict, critical_ids: set[str]) -> list
     return out
 
 
+def _requirements(contracts: Contracts) -> dict[str, dict]:
+    """The requirement set a repair must not shrink: ordering requirements, interaction contracts
+    and terminal evidence requirements, each keyed by a stable identity."""
+    out: dict[str, dict] = {}
+    for o in contracts.ordering:
+        out[f"ordering:{o.id}"] = o.model_dump()
+    for sid, ic in contracts.interactions.items():
+        out[f"interaction:{sid}"] = ic.model_dump()
+    for tid, tc in contracts.terminals.items():
+        for ev in tc.evidence:
+            out[f"evidence:{tid}:{ev.claim}"] = ev.model_dump()
+    return out
+
+
+def _at_least_as_strong(key: str, prev: dict, cur: dict) -> bool:
+    """True when ``cur`` constrains at least as much as ``prev`` (a strengthening is not a drop)."""
+    kind = key.split(":", 1)[0]
+    if kind == "ordering":
+        # ``requires`` is a disjunction (fewer alternatives = stronger); more invalidators = stronger.
+        return (cur["before"] == prev["before"] and cur["clause"] == prev["clause"]
+                and bool(cur["requires"]) and set(cur["requires"]) <= set(prev["requires"])
+                and set(cur["invalidated_by"]) >= set(prev["invalidated_by"]))
+    if kind == "interaction":
+        return (all(cur[k] == prev[k] for k in ("type", "approves_state", "response_schema"))
+                and (not prev["required_role"] or cur["required_role"] == prev["required_role"]))
+    if kind == "evidence":
+        return (cur["verifier_tool"] == prev["verifier_tool"]
+                and set(cur["subject_vars"]) >= set(prev["subject_vars"]))
+    return False
+
+
+def _malformed_requirements(findings: list[Finding]) -> set[str]:
+    """Requirement keys the validator flagged as malformed (not merely violated) in this attempt."""
+    return {str(f.detail["malformed_requirement"]) for f in findings if f.detail.get("malformed_requirement")}
+
+
+def _requirement_regressions(prev: dict[str, dict], cur: dict[str, dict], named: set[str]) -> list[Finding]:
+    """Requirements are monotone across repair attempts: a well-formed requirement present in an
+    earlier attempt must be present in every later attempt, unchanged or strengthened (REQ-025 "no
+    requirement dropping"). ``prev`` is the baseline built by :func:`_advance_baseline`; requirements
+    an attempt's validator flagged as malformed never enter it, so repairing them is allowed."""
+    out = []
+    for key in sorted(prev):
+        if key not in cur:
+            why = "removed"
+        elif cur[key] != prev[key] and not _at_least_as_strong(key, prev[key], cur[key]):
+            why = "changed"
+        else:
+            continue
+        note = " (named by a previous diagnostic)" if key.split(":", 1)[-1] in named or key in named else ""
+        out.append(Finding("REQUIREMENT_DROPPED", f"repair {why} requirement {key}{note}",
+                           detail={"requirement": key}))
+    return out
+
+
+def _advance_baseline(prev: dict[str, dict], cur: dict[str, dict], malformed: set[str]) -> dict[str, dict]:
+    """New baseline: the previous one plus every well-formed requirement of this attempt that is new
+    or at least as strong as its baseline version (so later attempts cannot fall back below it)."""
+    out = dict(prev)
+    for key, val in cur.items():
+        if key in malformed:
+            continue
+        if key not in prev or val == prev[key] or _at_least_as_strong(key, prev[key], val):
+            out[key] = val
+    return out
+
+
 def compile_skill(source: SkillSource, tool_catalog: ToolCatalog, deployment_policy: DeploymentPolicy,
                   model: CompilerModel, max_attempts: int = 3) -> CompileResult:
     clauses = index_clauses(source.text)
@@ -136,6 +203,7 @@ def compile_skill(source: SkillSource, tool_catalog: ToolCatalog, deployment_pol
     diagnostics: list[dict] = []
     prev_pkg: Optional[MachinePackage] = None
     prev_cov: dict = {}
+    prev_reqs: dict[str, dict] = {}
     report: Optional[ValidationReport] = None
     for attempt in range(1, max_attempts + 1):
         raw = model.draft(context, diagnostics, attempt)
@@ -150,9 +218,13 @@ def compile_skill(source: SkillSource, tool_catalog: ToolCatalog, deployment_pol
         pkg = MachinePackage(machine=machine, source_manifest=manifest, compiler_manifest=cmanifest,
                              contracts=contracts, execution_policy=deployment_policy.execution_policy,
                              lineage=Lineage()).sealed()
-        report = validate_package(pkg, tool_catalog, deployment_policy.profile, skill_text=source.text)
+        report = validate_package(pkg, tool_catalog, deployment_policy.profile, skill_text=source.text,
+                                  deployment_policy=deployment_policy)
         cov = {k: v.model_dump() for k, v in contracts.clause_coverage.items()}
         regress = _coverage_regressions(prev_cov, cov, critical_ids)
+        reqs = _requirements(contracts)
+        named = {str((d.get("detail") or {}).get("requirement", "")) for d in diagnostics}
+        regress += _requirement_regressions(prev_reqs, reqs, named)
         report.findings.extend(regress)
         entry = {"attempt": attempt, "draft_hash": pkg.artifact_hash, "status": "valid" if report.passed else "invalid",
                  "findings": [f.to_json() for f in report.findings if f.severity == "error"]}
@@ -160,11 +232,13 @@ def compile_skill(source: SkillSource, tool_catalog: ToolCatalog, deployment_pol
             entry["diff_from_previous"] = package_diff(prev_pkg, pkg, tool_catalog)
         attempts.append(entry)
         prev_pkg, prev_cov = pkg, (cov if not prev_cov else {**prev_cov, **cov})
+        prev_reqs = _advance_baseline(prev_reqs, reqs, _malformed_requirements(report.findings))
         if report.passed:
             normalized = MachinePackage(machine=normalize_machine(machine), source_manifest=manifest,
                                         compiler_manifest=cmanifest, contracts=contracts,
                                         execution_policy=deployment_policy.execution_policy).sealed()
-            nreport = validate_package(normalized, tool_catalog, deployment_policy.profile, skill_text=source.text)
+            nreport = validate_package(normalized, tool_catalog, deployment_policy.profile, skill_text=source.text,
+                                       deployment_policy=deployment_policy)
             if not nreport.passed:
                 attempts.append({"attempt": attempt, "status": "normalization_broke_validity",
                                  "findings": [f.to_json() for f in nreport.errors]})

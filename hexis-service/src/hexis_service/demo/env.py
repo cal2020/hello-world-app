@@ -98,10 +98,10 @@ def build_env(workdir: Optional[str] = None, *, store: Optional[Store] = None, e
     return Env(store, catalog, policy, docs, registry, erp, faults, broker, model, service, clock)
 
 
-def admit_initial(env: Env, pkg: MachinePackage, archive: Optional[dict] = None):
+def admit_initial(env: Env, pkg: MachinePackage, protected: Optional[list] = None, negative: Optional[list] = None):
     return admit(env.store, pkg, env.catalog, expected_parent_hash=None, approver=env.principal("user:dana"),
-                 environment="sandbox", archive_manifest=archive or {"protected": [], "negative": []},
-                 now=env.clock(), skill_text=skill_source().text)
+                 environment="sandbox", deployment_policy=deployment_policy(), protected=protected or [],
+                 negative=negative or [], now=env.clock(), skill_text=skill_source().text)
 
 
 TASK = {"supplier_ref": "SUP-10042", "business_unit": "BU-EMEA", "document_ids": ["DOC-W9-10042", "DOC-FORM-10042"],

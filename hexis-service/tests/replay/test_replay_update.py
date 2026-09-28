@@ -9,6 +9,7 @@ import pytest
 from hexis_service.artifacts.registry import admit
 from hexis_service.demo import reference as R
 from hexis_service.demo.env import TASK, skill_source
+from hexis_service.demo.procurement_fixture import deployment_policy
 from hexis_service.replay.replay import replay
 from hexis_service.traces.model import Trace, export_run_trace
 from hexis_service.traces.normalize import normalize
@@ -98,7 +99,8 @@ def test_new_trace_accepted_and_admitted_atomically(env, pkg, catalog, archive):
     assert prop.candidate.lineage.parent_hash == pkg.artifact_hash
     res = admit(env.store, prop.candidate, catalog, expected_parent_hash=pkg.artifact_hash,
                 approver=env.principal("user:dana"), environment="sandbox",
-                archive_manifest=archive_manifest(archive + [dev], []), now=env.clock(), skill_text=skill_source().text)
+                archive_manifest=archive_manifest(archive + [dev], []), protected=archive + [dev],
+              deployment_policy=deployment_policy(), now=env.clock(), skill_text=skill_source().text)
     assert res.status == "ADMITTED" and res.archive_version == 2
     assert env.store.get_active("sandbox", "supplier-onboarding-draft") == (prop.candidate.artifact_hash, 2)
     assert len(env.store.archive("supplier-onboarding-draft")["protected"]) == 3
@@ -174,7 +176,8 @@ def test_A18_racing_updates_one_wins_other_must_rebase(env, pkg, catalog, archiv
     p2 = propose_update(pkg, dev, archive, [], catalog, VariantAligner(), skill_source().text)
     assert p1.candidate.artifact_hash != p2.candidate.artifact_hash
     kw = dict(approver=env.principal("user:dana"), environment="sandbox",
-              archive_manifest=archive_manifest(archive + [dev], []), now=env.clock(), skill_text=skill_source().text)
+              archive_manifest=archive_manifest(archive + [dev], []), protected=archive + [dev],
+              deployment_policy=deployment_policy(), now=env.clock(), skill_text=skill_source().text)
     r1 = admit(env.store, p1.candidate, catalog, expected_parent_hash=pkg.artifact_hash, **kw)
     r2 = admit(env.store, p2.candidate, catalog, expected_parent_hash=pkg.artifact_hash, **kw)
     assert (r1.status, r2.status) == ("ADMITTED", "CONFLICT")

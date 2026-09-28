@@ -124,12 +124,14 @@ def cmd_update(args: argparse.Namespace) -> int:
 def cmd_admit(args: argparse.Namespace) -> int:
     from ..artifacts.registry import admit
     from ..demo.env import skill_source
-    from ..traces.update import archive_manifest
+    from ..demo.procurement_fixture import deployment_policy
     env = _env(args)
     pkg = _pkg(args.package)
+    # admission replays the protected archive and checks the negative corpus itself, against the
+    # operator's deployment policy (never a caller-supplied "replay passed" flag)
     res = admit(env.store, pkg, env.catalog, expected_parent_hash=args.expected_parent or None,
-                approver=env.principal(args.as_), environment="sandbox",
-                archive_manifest=archive_manifest(_traces(args.archive), _traces(args.negative)), now=env.clock(),
+                approver=env.principal(args.as_), environment="sandbox", deployment_policy=deployment_policy(),
+                protected=_traces(args.archive), negative=_traces(args.negative), now=env.clock(),
                 skill_text=skill_source().text)
     _emit(args, f"{res.status} {res.artifact_hash} {res.reasons}", res.__dict__)
     return EXIT_OK if res.status == "ADMITTED" else EXIT_REJECTED
