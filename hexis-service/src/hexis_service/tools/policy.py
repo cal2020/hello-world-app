@@ -93,16 +93,20 @@ class PolicyService:
     def requires_approval(self, capability: str) -> bool:
         return capability in self.doc.approval_required_capabilities
 
-    def can_approve(self, approver: Principal, initiator_id: str, tenant_id: str, required_role: str) -> Decision:
+    def can_approve(self, approver: Principal, initiator_id: str, tenant_id: str, required_role: str = "") -> Decision:
         e = self._entry(approver)
         if e is None:
             return Decision("INDETERMINATE", ["approver not found in current policy"])
         reasons = []
         if approver.tenant_id != tenant_id:
             reasons.append("approver from another tenant")
-        role = required_role or self.doc.approver_role
-        if role not in e.get("roles", []):
-            reasons.append(f"approver lacks role {role}")
+        # Authority comes from host policy: the deployment's approver_role is always required. A package's
+        # interaction required_role can only ADD a requirement (narrow who may approve), never replace it.
+        roles = [self.doc.approver_role] + ([required_role] if required_role and
+                                            required_role != self.doc.approver_role else [])
+        for role in roles:
+            if role not in e.get("roles", []):
+                reasons.append(f"approver lacks role {role}")
         if self.doc.separation_of_duties and approver.id == initiator_id:
             reasons.append("separation of duties: initiator cannot approve")
         return Decision("DENY", reasons) if reasons else Decision("ALLOW")

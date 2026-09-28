@@ -136,10 +136,14 @@ class RunService:
         if run["cancel_requested"]:
             return self._finish_cancel(run, cp, pkg, initiator, token)
         if self.store.is_revoked(cp.artifact_hash):
+            # In-flight runs reconcile any unresolved write, then stop as CANCELLED (docs/OPERATIONS.md).
+            self._reconcile_unresolved(run, cp, pkg, initiator, token, "artifact revoked", "revocation")
             unresolved = self._unresolved(tenant, run_id)
-            if not unresolved:
-                return self._stop(run, cp, token, "CANCELLED", "ARTIFACT_REVOKED",
-                                  "artifact revoked; in-flight policy stops before further dispatch")
+            if unresolved:
+                self.store.set_run_status(tenant, run_id, "RECONCILING")
+                return StepResult(cp, "RECONCILING", "artifact revoked; unresolved external effects " + str(unresolved))
+            return self._stop(run, cp, token, "CANCELLED", "ARTIFACT_REVOKED",
+                              "artifact revoked; in-flight policy stops before further dispatch")
         st = pkg.machine.states[cp.state_id]
         kind = st.action.kind
         try:
@@ -155,6 +159,8 @@ class RunService:
             return StepResult(self._cp(tenant, run_id), p.status, p.detail, p.interaction)
         except KernelError as exc:
             return self._stop(run, cp, token, "FAILED", exc.code, exc.message)
+        except ConflictError as exc:  # fenced off while dispatching
+            raise RunError(str(exc).split(":")[0], str(exc)) from exc
         return self._commit(run, cp, pkg, obs, token)
 
     def run_until_blocked(self, run_id: str, principal: Principal, worker_id: str = "worker-1",
@@ -197,9 +203,13 @@ class RunService:
             a.policy_violations.append(message)
         a.unresolved_effects = self._unresolved(run["tenant_id"], run["run_id"])
         new = cp.model_copy(update={"status": status, "assurance": a, "revision": cp.revision + 1})
-        self.store.commit_transition(run["tenant_id"], run["run_id"], cp.revision, token, new.model_dump(mode="json"),
-                                     [{"type": "RUN_STOPPED", "status": status, "code": code, "message": message,
-                                       "state": cp.state_id}], self.clock())
+        try:
+            self.store.commit_transition(run["tenant_id"], run["run_id"], cp.revision, token,
+                                         new.model_dump(mode="json"),
+                                         [{"type": "RUN_STOPPED", "status": status, "code": code, "message": message,
+                                           "state": cp.state_id}], self.clock())
+        except ConflictError as exc:
+            raise RunError(str(exc).split(":")[0], str(exc)) from exc
         return StepResult(new, status, f"{code}: {message}")
 
     def _pause(self, run: dict, cp: RunCheckpoint, status: str, detail: str, event: dict,
@@ -208,10 +218,18 @@ class RunService:
         self.store.set_run_status(run["tenant_id"], run["run_id"], status)
         raise _Paused(status, detail, interaction)
 
+    def _is_write(self, tool: str) -> bool:
+        """A tool missing from the current catalog is treated as a write (conservative disclosure)."""
+        spec = self.catalog.get(tool)
+        return spec is None or spec.is_write
+
     def _unresolved(self, tenant: str, run_id: str) -> list[str]:
+        # Reconcile from receipts, not intent status alone: a SUCCEEDED receipt resolves the intent.
+        succeeded = {r["logical_action_id"] for r in self.store.receipts(tenant, run_id=run_id)
+                     if r["dispatch_state"] == "SUCCEEDED"}
         return [f"{i['logical_action_id']}:{i['tool']}:{i['status']}" for i in self.store.intents(tenant, run_id)
-                if i["status"] in ("DISPATCHING", "UNKNOWN_EFFECT")
-                and self.catalog.get(i["tool"]) is not None and self.catalog.get(i["tool"]).is_write]
+                if i["status"] in ("DISPATCHING", "UNKNOWN_EFFECT") and i["logical_action_id"] not in succeeded
+                and self._is_write(i["tool"])]
 
     # ---- tool ---------------------------------------------------------------------------- #
     def _prepare_tool(self, cp: RunCheckpoint, pkg: MachinePackage, state_id: str, revision: int) -> dict:
@@ -302,6 +320,8 @@ class RunService:
             self._pause(run, cp, "RECONCILING", res.reason, {"type": "RECONCILIATION_REQUIRED",
                                                              "logical_action_id": intent["logical_action_id"],
                                                              "reason": res.reason})
+        if res.status == "DENIED" and res.reason.startswith("STALE_LEASE"):
+            raise RunError("STALE_LEASE", f"worker no longer owns this run ({res.reason})")
         if res.status == "DENIED":
             code = "POLICY_DENIED" if res.reason.startswith("POLICY") else res.reason.split(":")[0]
             raise KernelError(code, f"broker denied {intent['tool']}: {res.reason}")
@@ -427,8 +447,16 @@ class RunService:
             if request_id and existing["request_id"] == request_id:
                 return StepResult(self._cp(tenant, run_id), run["status"], "duplicate response ignored")
             raise RunError("ALREADY_ANSWERED", interaction_id)
+        cp = self._cp(tenant, run_id)
+        if cp.status in K.TERMINAL_STATUSES or run["status"] in K.TERMINAL_STATUSES:
+            raise RunError("RUN_FINISHED", f"run is {run['status']}; interactions can no longer be answered")
+        if run["cancel_requested"]:
+            raise RunError("RUN_CANCELLED", "cancellation requested; interactions can no longer be answered")
         if ix["status"] != "OPEN":
             raise RunError("INTERACTION_CLOSED", ix["status"])
+        if ix["revision"] != cp.revision:
+            raise RunError("INTERACTION_CLOSED", f"interaction belongs to revision {ix['revision']}, run is at "
+                                                 f"{cp.revision}")
         if ix["expires_at"] is not None and self.clock() > ix["expires_at"]:
             raise RunError("INTERACTION_EXPIRED", interaction_id)
         pkg = self.package(run["artifact_hash"])
@@ -445,12 +473,18 @@ class RunService:
                 raise RunError("SCOPE_MISMATCH", "approval must reference the exact scope digest presented")
         elif principal.id != run["principal"] and self.policy.doc.approver_role not in principal.roles:
             raise RunError("NOT_AUTHORIZED", "only the requester or an approver may answer input requests")
-        self.store.record_response(tenant, interaction_id, run_id, principal.id, values, ix["scope_digest"], request_id,
-                                   self.clock())
-        self.store.append_events(tenant, run_id, [{"type": "INTERACTION_ANSWERED", "interaction_id": interaction_id,
-                                                   "responder": principal.id, "response_digest": digest(values)}],
-                                 self.clock())
-        self.store.set_run_status(tenant, run_id, "RUNNING")
+        recorded = self.store.record_response(
+            tenant, interaction_id, run_id, principal.id, values, ix["scope_digest"], request_id, self.clock(),
+            events=[{"type": "INTERACTION_ANSWERED", "interaction_id": interaction_id, "responder": principal.id,
+                     "response_digest": digest(values)}], run_status="RUNNING")
+        if not recorded:  # lost a race: another response (or a closure) won; this one was not recorded
+            won = self.store.response(tenant, interaction_id)
+            if won is not None and request_id and won["request_id"] == request_id:
+                run = self._run(run_id, principal)
+                return StepResult(self._cp(tenant, run_id), run["status"], "duplicate response ignored")
+            if won is not None:
+                raise RunError("ALREADY_ANSWERED", interaction_id)
+            raise RunError("INTERACTION_CLOSED", interaction_id)
         initiator = self.policy.authenticate(run["principal"])
         return self.advance_run(run_id, initiator)
 
@@ -471,10 +505,10 @@ class RunService:
                     continue
                 fresh = self.freshness.get(req.claim)
                 if fresh is not None:
-                    good, why = fresh(self, run, cp, pkg, initiator)
+                    good, why = fresh(self, run, cp, pkg, initiator, lease_token=token)
                     if not good:
                         for r in ok:
-                            self.store.invalidate_evidence(tenant, r["receipt_id"], why, self.clock())
+                            self.store.invalidate_evidence(tenant, r["receipt_id"], why, self.clock(), run_id=run_id)
                         missing.append(f"{req.claim}: invalidated ({why})")
                         continue
                 used.extend(r["receipt_id"] for r in ok)
@@ -486,7 +520,8 @@ class RunService:
     def _invalidate_stale_evidence(self, tenant: str, run_id: str, cp: RunCheckpoint) -> None:
         for r in self.store.evidence(tenant, run_id):
             if r["invalidated_at"] is None and not is_current(r, cp.variables):
-                self.store.invalidate_evidence(tenant, r["receipt_id"], "subject variable changed", self.clock())
+                self.store.invalidate_evidence(tenant, r["receipt_id"], "subject variable changed", self.clock(),
+                                               run_id=run_id)
                 self.store.append_events(tenant, run_id, [{"type": "EVIDENCE_INVALIDATED",
                                                            "receipt_id": r["receipt_id"],
                                                            "reason": "subject variable changed"}], self.clock())
@@ -511,32 +546,84 @@ class RunService:
         disclosed = [{"logical_action_id": r["logical_action_id"], "tool": r["tool"], "external_ref": r["external_ref"],
                       "certainty": r["certainty"]}
                      for r in self.store.receipts(run["tenant_id"], run_id=run_id)
-                     if r["dispatch_state"] == "SUCCEEDED" and self.catalog.get(r["tool"]).is_write]
+                     if r["dispatch_state"] == "SUCCEEDED" and self._is_write(r["tool"])]
         return CancellationResult(res.status, disclosed, self._unresolved(run["tenant_id"], run_id))
+
+    def _reconcile_unresolved(self, run: dict, cp: RunCheckpoint, pkg: MachinePackage, initiator: Principal,
+                              token: int, why: str, during: str) -> None:
+        """Reconcile every in-flight write without authorizing any retry. A write the reconciler
+        proves absent is resolved as no-effect by the broker; one it finds is recorded as reconciled."""
+        tenant, run_id = run["tenant_id"], run["run_id"]
+        unresolved = {u.split(":")[0] for u in self._unresolved(tenant, run_id)}
+        for intent in self.store.intents(tenant, run_id):
+            if intent["logical_action_id"] not in unresolved or self.catalog.get(intent["tool"]) is None:
+                continue  # a tool missing from the catalog cannot be reconciled: stays unresolved (disclosed)
+            res = self.broker.reconcile(intent=intent, principal=initiator, package=pkg,
+                                        business_unit=cp.variables.get("business_unit"),
+                                        approval_check=lambda: (False, why), lease_token=token, subject_values={})
+            if res.reason.startswith("STALE_LEASE"):
+                raise RunError("STALE_LEASE", "worker no longer owns this run")
+            self.store.append_events(tenant, run_id, [{"type": "RECONCILED", "logical_action_id":
+                                                       intent["logical_action_id"], "status": res.status,
+                                                       "reason": res.reason, "during": during}], self.clock())
 
     def _finish_cancel(self, run: dict, cp: RunCheckpoint, pkg: MachinePackage, initiator: Principal,
                        token: int) -> StepResult:
         tenant, run_id = run["tenant_id"], run["run_id"]
-        for intent in self.store.intents(tenant, run_id):
-            spec = self.catalog.get(intent["tool"])
-            if intent["status"] in ("DISPATCHING", "UNKNOWN_EFFECT") and spec is not None and spec.is_write:
-                res = self.broker.reconcile(intent=intent, principal=initiator, package=pkg,
-                                            business_unit=cp.variables.get("business_unit"),
-                                            approval_check=lambda: (False, "run cancelled"), lease_token=token,
-                                            subject_values={})
-                self.store.append_events(tenant, run_id, [{"type": "RECONCILED", "logical_action_id":
-                                                           intent["logical_action_id"], "status": res.status,
-                                                           "reason": res.reason, "during": "cancellation"}],
-                                         self.clock())
+        self._reconcile_unresolved(run, cp, pkg, initiator, token, "run cancelled", "cancellation")
         unresolved = self._unresolved(tenant, run_id)
         if unresolved:
             self.store.set_run_status(tenant, run_id, "RECONCILING")
             return StepResult(cp, "RECONCILING", "cancellation pending: unresolved external effects " + str(unresolved))
         effects = [r for r in self.store.receipts(tenant, run_id=run_id)
-                   if r["dispatch_state"] == "SUCCEEDED" and self.catalog.get(r["tool"]).is_write]
+                   if r["dispatch_state"] == "SUCCEEDED" and self._is_write(r["tool"])]
         msg = "cancelled" + (f"; completed external effects disclosed: {[e['external_ref'] for e in effects]}"
                              if effects else "")
         return self._stop(run, cp, token, "CANCELLED", "CANCELLED", msg)
+
+    # ---- human resolution of uncertain effects ----------------------------------------------- #
+    def resolve_effect(self, run_id: str, logical_action_id: str, outcome: str, principal: Principal,
+                       output: Optional[dict] = None, note: str = "") -> dict:
+        """Record a human's resolution of an in-flight write whose effect is unknown (docs/OPERATIONS.md:
+        "Record the resolution, then cancel or continue the run"). ``outcome`` is ``"absent"`` (the effect
+        did not happen: the intent is closed as no-effect) or ``"present"`` (it happened: ``output`` is the
+        connector result the human observed, validated against the tool's output schema). Only holders of
+        the deployment policy's approver role may resolve."""
+        run = self._run(run_id, principal)
+        tenant = run["tenant_id"]
+        if self.policy.doc.approver_role not in principal.roles or self.policy.doc.principals.get(
+                principal.id, {}).get("tenant_id") != tenant:
+            raise RunError("NOT_AUTHORIZED", "only an approver may record the resolution of an external effect")
+        intent = self.store.intent(tenant, logical_action_id)
+        if intent is None or intent["run_id"] != run_id:
+            raise RunError("NOT_FOUND", f"action {logical_action_id}")
+        if intent["status"] not in ("DISPATCHING", "UNKNOWN_EFFECT"):
+            raise RunError("NOT_UNRESOLVED", f"action is {intent['status']}")
+        spec = self.catalog.get(intent["tool"])
+        if outcome == "present":
+            if spec is None:
+                raise RunError("UNKNOWN_TOOL", intent["tool"])
+            errs = validate_against(spec.output_schema, output)
+            if errs:
+                raise RunError("RESPONSE_INVALID", "; ".join(errs[:3]))
+            state, certainty, result = "SUCCEEDED", "human_resolved", output
+            ext = (output.get("draft_id") or output.get("receipt_id")) if isinstance(output, dict) else None
+        elif outcome == "absent":
+            state, certainty, result, ext = "ABANDONED", "no_effect", {"note": note}, None
+        else:
+            raise RunError("RESPONSE_INVALID", "outcome must be 'present' or 'absent'")
+        # Conditional on the intent still being unresolved (atomic with the receipt), so a concurrent
+        # reconciliation by a worker can never be overwritten.
+        seq = self.store.record_outcome(
+            tenant, logical_action_id, run_id, intent["tool"], intent["tool_version"], intent["args_digest"],
+            intent["idempotency_key"], state, certainty, ext, result, f"human:{principal.id}", self.clock(),
+            intent_status=state, expect_status=("DISPATCHING", "UNKNOWN_EFFECT"))
+        if seq is None:
+            raise RunError("CONFLICT", "the action changed concurrently; re-inspect and retry")
+        self.store.append_events(tenant, run_id, [{"type": "EFFECT_RESOLVED", "logical_action_id": logical_action_id,
+                                                   "outcome": outcome, "resolver": principal.id, "note": note,
+                                                   "receipt_ref": f"{logical_action_id}#{seq}"}], self.clock())
+        return {"logical_action_id": logical_action_id, "status": state, "receipt_ref": f"{logical_action_id}#{seq}"}
 
     # ---- inspection ------------------------------------------------------------------------- #
     def inspect_run(self, run_id: str, principal: Principal) -> dict:
@@ -570,17 +657,24 @@ def erp_freshness(read_tool: str = "erp.read_draft") -> Callable[..., tuple[bool
     recorded) and require the same version and payload digest as the verified receipt."""
 
     def check(svc: RunService, run: dict, cp: RunCheckpoint, pkg: MachinePackage,
-              initiator: Principal) -> tuple[bool, str]:
+              initiator: Principal, lease_token: Optional[int] = None) -> tuple[bool, str]:
         spec = svc.catalog.get(read_tool)
         args = {"draft_id": cp.variables["erp_draft_id"]}
         ad = digest(args)
-        lid = logical_action_id(cp.run_id, f"{cp.state_id}#freshness", cp.revision, ad)
         tenant = run["tenant_id"]
-        intent = svc.store.create_intent(tenant, run["run_id"], lid, cp.state_id, cp.revision, spec.name,
-                                         spec.version, args, ad, idempotency_key(tenant, lid), None, svc.clock())
+        # Every terminal-time check is a NEW logical action (per-attempt nonce): it is never deduplicated
+        # against a read made before a crash or a failed commit, so it always reads the ERP again. The read
+        # is recorded as an action receipt; no intent row is kept for it (reads have no effect to reconcile).
+        lid = logical_action_id(cp.run_id, f"{cp.state_id}#freshness#{uuid.uuid4().hex}", cp.revision, ad)
+        intent = {"tenant_id": tenant, "run_id": run["run_id"], "logical_action_id": lid, "state_id": cp.state_id,
+                  "revision": cp.revision, "tool": spec.name, "tool_version": spec.version, "args": args,
+                  "args_digest": ad, "idempotency_key": idempotency_key(tenant, lid), "status": "PENDING",
+                  "lease_token": lease_token, "attempts": 0}
         res = svc.broker.dispatch(intent=intent, principal=initiator, package=pkg,
                                   business_unit=cp.variables.get("business_unit"), approval_check=lambda: (True, ""),
-                                  lease_token=None, subject_values={})
+                                  lease_token=lease_token, subject_values={})
+        if res.status == "DENIED" and res.reason.startswith("STALE_LEASE"):
+            raise RunError("STALE_LEASE", "worker no longer owns this run")
         if res.status != "SUCCEEDED" or res.output.get("status") != "found":
             return False, "persisted draft unavailable at terminal admission"
         if res.output["version"] != cp.variables.get("persisted_version"):

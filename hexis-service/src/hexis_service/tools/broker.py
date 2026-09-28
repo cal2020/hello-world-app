@@ -81,6 +81,13 @@ class ToolBroker:
         errs = validate_against(spec.input_schema, intent["args"])
         if errs:
             return False, "INPUT_SCHEMA: " + "; ".join(errs[:3])
+        # The business unit the effect actually targets is the one in the arguments, not only the run's
+        # task variable: every business unit named in the arguments must be the run's scoped unit.
+        targeted = sorted(_business_units_in(intent["args"]))
+        foreign = [b for b in targeted if b != business_unit]
+        if foreign:
+            return False, (f"POLICY_DENY: tool arguments target business unit(s) {foreign} outside the run's scoped "
+                           f"business unit {business_unit}")
         d = self.policy.evaluate_dispatch(principal, tenant, spec.capability, package.execution_policy.capability_ceiling,
                                           business_unit)
         if not d.allowed:
@@ -98,11 +105,20 @@ class ToolBroker:
         spec = self.catalog.get(intent["tool"])
         if spec is None:
             return BrokerResult("DENIED", reason="UNKNOWN_TOOL")
+        # Never trust the caller's snapshot of the intent: another worker may have moved it on.
+        stored = self.store.intent(tenant, lid)
+        if stored is not None:
+            intent = {**intent, "status": stored["status"], "attempts": stored["attempts"]}
         prior = self.store.receipts(tenant, lid)
         done = [r for r in prior if r["dispatch_state"] == "SUCCEEDED"]
         if done:  # deduplicate repeated delivery of the same logical action
             r = done[-1]
-            return BrokerResult("SUCCEEDED", r["result"], "deduplicated", f"{lid}#{r['seq']}", r["certainty"])
+            if stored is not None and stored["status"] != "SUCCEEDED":
+                # Receipts are authoritative: repair an intent left behind by an interrupted update.
+                self.store.update_intent(tenant, lid, "SUCCEEDED", self.clock())
+            evidence = self._recover_evidence(intent, spec, r, subject_values)
+            return BrokerResult("SUCCEEDED", r["result"], "deduplicated", f"{lid}#{r['seq']}", r["certainty"],
+                                evidence)
         if intent["status"] in ("DISPATCHING", "UNKNOWN_EFFECT"):
             return self.reconcile(intent=intent, principal=principal, package=package, business_unit=business_unit,
                                   approval_check=approval_check, lease_token=lease_token,
@@ -110,10 +126,15 @@ class ToolBroker:
         ok, why = self.authorize(intent=intent, spec=spec, principal=principal, package=package,
                                  business_unit=business_unit, approval_check=approval_check, lease_token=lease_token)
         if not ok:
-            self.store.update_intent(tenant, lid, "DENIED", self.clock())
-            self.store.add_receipt(tenant, lid, intent["run_id"], spec.name, spec.version, intent["args_digest"],
-                                   intent["idempotency_key"], "DENIED", "no_effect", None, {"reason": why}, "broker",
-                                   self.clock())
+            if why == "STALE_LEASE":  # a fenced-off worker must not touch the ledger at all
+                return BrokerResult("DENIED", reason=why)
+            seq = self.store.record_outcome(
+                tenant, lid, intent["run_id"], spec.name, spec.version, intent["args_digest"],
+                intent["idempotency_key"], "DENIED", "no_effect", None, {"reason": why}, "broker", self.clock(),
+                intent_status="DENIED" if stored is not None else None, require_token=lease_token,
+                expect_status=_DENIABLE if stored is not None else None)
+            if seq is None:  # fenced off, or another worker moved the intent past PENDING meanwhile
+                return BrokerResult("DENIED", reason="STALE_LEASE: intent changed concurrently")
             return BrokerResult("DENIED", reason=why)
         return self._call(intent, spec, subject_values, transport_retries, lease_token)
 
@@ -127,60 +148,83 @@ class ToolBroker:
             self.faults.hit("before_dispatch")
             # Fencing is enforced again atomically with the DISPATCHING transition.
             self.store.update_intent(tenant, lid, "DISPATCHING", self.clock(), bump_attempt=True,
-                                     require_token=lease_token)
+                                     require_token=lease_token, run_id=intent["run_id"])
             try:
                 out = self.connectors[spec.name](intent["args"], ctx)
             except ToolTimeout as exc:
                 if spec.effect in ("read", "pure") and attempts <= retries:
                     continue  # transport retry of the same read-only operation
                 if spec.effect in ("read", "pure"):
-                    self._receipt(intent, spec, "FAILED", "no_effect", None, {"error": str(exc)})
-                    self.store.update_intent(tenant, lid, "FAILED", self.clock())
+                    self._receipt(intent, spec, "FAILED", "no_effect", None, {"error": str(exc)}, "FAILED")
                     return BrokerResult("FAILED", reason=f"TIMEOUT: {exc}")
-                self._receipt(intent, spec, "UNKNOWN_EFFECT", "unknown", None, {"error": str(exc)})
-                self.store.update_intent(tenant, lid, "UNKNOWN_EFFECT", self.clock())
+                self._receipt(intent, spec, "UNKNOWN_EFFECT", "unknown", None, {"error": str(exc)}, "UNKNOWN_EFFECT")
                 return BrokerResult("UNKNOWN_EFFECT", reason=f"TIMEOUT_AFTER_DISPATCH: {exc}")
             except ToolFailure as exc:
                 certainty = "no_effect" if not spec.is_write else "unknown"
                 state = "FAILED" if not spec.is_write else "UNKNOWN_EFFECT"
-                self._receipt(intent, spec, state, certainty, None, {"error": str(exc)})
-                self.store.update_intent(tenant, lid, state, self.clock())
+                self._receipt(intent, spec, state, certainty, None, {"error": str(exc)}, state)
                 return BrokerResult(state, reason=f"TOOL_FAILURE: {exc}")
             self.faults.hit("after_remote_call")
             return self._accept(intent, spec, out, "certain", subject_values)
 
     def _receipt(self, intent: dict, spec: ToolSpec, state: str, certainty: str, ext: Optional[str],
-                 result: Any) -> int:
-        return self.store.add_receipt(intent["tenant_id"], intent["logical_action_id"], intent["run_id"], spec.name,
-                                      spec.version, intent["args_digest"], intent["idempotency_key"], state, certainty,
-                                      ext, result, f"connector:{spec.name}@{spec.version}", self.clock())
+                 result: Any, intent_status: Optional[str] = None,
+                 evidence: Optional[Callable[[int], list[dict]]] = None) -> int:
+        """Append a receipt and (atomically) move the intent to ``intent_status`` / issue evidence."""
+        seq = self.store.record_outcome(intent["tenant_id"], intent["logical_action_id"], intent["run_id"], spec.name,
+                                        spec.version, intent["args_digest"], intent["idempotency_key"], state,
+                                        certainty, ext, result, f"connector:{spec.name}@{spec.version}", self.clock(),
+                                        intent_status=intent_status, evidence=evidence)
+        assert seq is not None
+        return seq
+
+    def _evidence_for(self, intent: dict, spec: ToolSpec, out: Any, seq: int, subject_values: dict,
+                      observed_at: float) -> list[dict]:
+        if not spec.verifier_claims or not isinstance(out, dict):
+            return []
+        from ..evidence.receipts import make_receipt, subject_of
+        subj = subject_of(subject_values, sorted(subject_values))
+        return [make_receipt(intent["run_id"], claim, spec.name, spec.version, subj, str(out.get("status")),
+                             f"{intent['logical_action_id']}#{seq}", observed_at, receipt_id=out.get("receipt_id"))
+                for claim in spec.verifier_claims]
+
+    def _recover_evidence(self, intent: dict, spec: ToolSpec, receipt: dict, subject_values: dict) -> list[dict]:
+        """Evidence is derived from the SUCCEEDED receipt; re-issue it (idempotently) if it is missing,
+        e.g. after a crash of a process that stored the receipt under an older, non-atomic layout."""
+        if not spec.verifier_claims or not subject_values:
+            return []
+        ref = f"{intent['logical_action_id']}#{receipt['seq']}"
+        have = [e for e in self.store.evidence(intent["tenant_id"], intent["run_id"]) if e["source_ref"] == ref]
+        if have:
+            return have
+        recs = self._evidence_for(intent, spec, receipt["result"], receipt["seq"], subject_values,
+                                  receipt["created_at"])
+        for rec in recs:
+            self.store.add_evidence(intent["tenant_id"], rec)
+        return recs
 
     def _accept(self, intent: dict, spec: ToolSpec, out: Any, certainty: str, subject_values: dict) -> BrokerResult:
-        tenant, lid = intent["tenant_id"], intent["logical_action_id"]
+        lid = intent["logical_action_id"]
         errs = validate_against(spec.output_schema, out)
         if errs:  # spoofed / malformed connector output never reaches machine variables
             state = "UNKNOWN_EFFECT" if spec.is_write else "FAILED"
             self._receipt(intent, spec, state, "unknown" if spec.is_write else "no_effect", None,
-                          {"invalid_output": errs[:3]})
-            self.store.update_intent(tenant, lid, state, self.clock())
+                          {"invalid_output": errs[:3]}, state)
             return BrokerResult(state, reason="OUTPUT_SCHEMA: " + "; ".join(errs[:3]))
         ext = None
         if isinstance(out, dict):
             ext = out.get("draft_id") or out.get("receipt_id")
-        seq = self._receipt(intent, spec, "SUCCEEDED", certainty, ext, out)
-        self.store.update_intent(tenant, lid, "SUCCEEDED", self.clock())
+        now = self.clock()
+        issued: list[dict] = []
+
+        def evidence(seq: int) -> list[dict]:
+            issued.extend(self._evidence_for(intent, spec, out, seq, subject_values, now))
+            return issued
+
+        # Receipt, intent status and evidence are one transaction: a crash leaves all or none of them.
+        seq = self._receipt(intent, spec, "SUCCEEDED", certainty, ext, out, "SUCCEEDED", evidence)
         self.faults.hit("after_receipt")
-        evidence = []
-        if spec.verifier_claims:
-            from ..evidence.receipts import make_receipt, subject_of
-            subj = subject_of(subject_values, sorted(subject_values))
-            for claim in spec.verifier_claims:
-                rec = make_receipt(intent["run_id"], claim, spec.name, spec.version, subj, str(out.get("status")),
-                                   f"{lid}#{seq}", self.clock(),
-                                   receipt_id=(out.get("receipt_id") if isinstance(out, dict) else None))
-                self.store.add_evidence(tenant, rec)
-                evidence.append(rec)
-        return BrokerResult("SUCCEEDED", out, "", f"{lid}#{seq}", certainty, evidence)
+        return BrokerResult("SUCCEEDED", out, "", f"{lid}#{seq}", certainty, issued)
 
     # ------------------------------------------------------------------------------------- #
     def reconcile(self, *, intent: dict, principal: Principal, package, business_unit: Optional[str],
@@ -190,36 +234,70 @@ class ToolBroker:
         non-idempotent write."""
         tenant, lid = intent["tenant_id"], intent["logical_action_id"]
         spec = self.catalog.get(intent["tool"])
-        assert spec is not None
+        if spec is None:
+            return BrokerResult("NEEDS_RESOLUTION", reason=f"tool {intent['tool']} is not in the current catalog; "
+                                                           "cannot reconcile automatically")
         ctx = {"tenant_id": tenant, "idempotency_key": intent["idempotency_key"], "logical_action_id": lid}
         if spec.effect in ("read", "pure"):
             # No external effect to reconcile: safe to (re)dispatch under full authorization.
-            self.store.update_intent(tenant, lid, "PENDING", self.clock())
+            self.store.update_intent(tenant, lid, "PENDING", self.clock(), require_token=lease_token,
+                                     run_id=intent["run_id"])
             ok, why = self.authorize(intent=intent, spec=spec, principal=principal, package=package,
                                      business_unit=business_unit, approval_check=approval_check,
                                      lease_token=lease_token)
             if not ok:
                 return BrokerResult("DENIED", reason=why)
             return self._call({**intent, "status": "PENDING"}, spec, subject_values, transport_retries, lease_token)
+        proven_absent = False
         if spec.effect == "reconciliable_write" and spec.name in self.reconcilers:
             found = self.reconcilers[spec.name](intent["args"], ctx)
             if found is not None:
                 return self._accept(intent, spec, found, "reconciled", subject_values)
             # Proven absent by business-reference lookup: a retry with the same key is safe, but only
             # under a fresh authorization/approval check.
+            proven_absent = True
         elif spec.effect == "idempotent_write":
             pass  # retry with same key and identical arguments
         else:
-            self.store.update_intent(tenant, lid, "UNKNOWN_EFFECT", self.clock())
+            self.store.update_intent(tenant, lid, "UNKNOWN_EFFECT", self.clock(),
+                                     expect_status=("DISPATCHING", "UNKNOWN_EFFECT"))
             return BrokerResult("NEEDS_RESOLUTION", reason="non-idempotent write with unknown effect: human resolution "
                                                             "required; no automatic retry")
-        if intent["attempts"] > transport_retries:
-            return BrokerResult("NEEDS_RESOLUTION", reason="retry budget for uncertain write exhausted")
         ok, why = self.authorize(intent=intent, spec=spec, principal=principal, package=package,
                                  business_unit=business_unit, approval_check=approval_check, lease_token=lease_token)
         if not ok:
+            if proven_absent and why != "STALE_LEASE":
+                # The effect provably did not happen and will not be retried (cancelled, revoked, denied):
+                # resolve it as no-effect so it is not reported as unresolved forever.
+                self.store.record_outcome(
+                    tenant, lid, intent["run_id"], spec.name, spec.version, intent["args_digest"],
+                    intent["idempotency_key"], "ABANDONED", "no_effect", None,
+                    {"reason": "proven absent by business-reference lookup; retry not authorized: " + why},
+                    "broker:reconcile", self.clock(), intent_status="ABANDONED", require_token=lease_token,
+                    expect_status=("DISPATCHING", "UNKNOWN_EFFECT"))
             return BrokerResult("DENIED", reason=why)
+        if intent["attempts"] > transport_retries:
+            return BrokerResult("NEEDS_RESOLUTION", reason="retry budget for uncertain write exhausted")
         return self._call(intent, spec, subject_values, 0, lease_token)
+
+
+# Intent statuses a broker denial may overwrite. DISPATCHING / UNKNOWN_EFFECT / SUCCEEDED never are.
+_DENIABLE = ("PENDING", "DENIED", "FAILED", "ABANDONED")
+
+
+def _business_units_in(value: Any) -> set[str]:
+    """Every ``business_unit`` value named anywhere in a tool's arguments."""
+    found: set[str] = set()
+    if isinstance(value, dict):
+        for k, v in value.items():
+            if k == "business_unit" and isinstance(v, str):
+                found.add(v)
+            else:
+                found |= _business_units_in(v)
+    elif isinstance(value, list):
+        for v in value:
+            found |= _business_units_in(v)
+    return found
 
 
 def args_digest(args: Any) -> str:
