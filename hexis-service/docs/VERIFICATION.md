@@ -131,3 +131,25 @@ Each has a regression test in `tests/*/test_review_*.py`.
 After the merge: `pytest` gives **217 passed, 12 skipped**, and **229 passed** with the pinned upstream
 checkout. `ruff` is clean, and `hexisctl demo procurement-onboarding` exits 0. The counts at the top of
 this file are from the pre-review commit `f23c6ba`.
+
+## Gap closure (28 Sep 2026)
+
+Three builders worked in isolated worktrees, and each was checked by an independent verifier against
+the numbered requirements of its written spec. All three were accepted in round 1. After merging,
+three items are closed:
+- the PostgreSQL store, with versioned migrations, row and advisory locking, and a multi-process race test
+- the live-model compiler adapter, which is **not executed live**
+- metrics with an engine / model / tool / human-wait latency split, exported as JSON or Prometheus
+
+Results after merge:
+
+| Configuration | Result |
+|---|---|
+| default (SQLite) | 278 passed, 48 skipped (36 PostgreSQL variants + 12 upstream) |
+| `HEXIS_TEST_PG_DSN` set, local PostgreSQL 16.13 | 314 passed, 12 skipped |
+| PostgreSQL + `HEXIS_UPSTREAM_DIR` (pinned 96be2719) | **326 passed** |
+| `ruff check src tests evals` | clean |
+| `hexisctl demo procurement-onboarding` | exit 0 |
+
+CLI smoke test on PostgreSQL: `compile`, `admit`, `run` (exit 5, waiting), `resume` → `END_VERIFIED_DRAFT`,
+then `metrics --format prometheus`. Each command ran as a separate process against the same database.

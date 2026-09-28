@@ -8,9 +8,11 @@ Labels follow the master prompt: **implemented and verified**, **implemented but
 - **Claude model adapter** (`models/anthropic_adapter.py`, `--model anthropic:<id>`). The request
   shape and parsing are tested with an injected fake client only. No live API call was made, so there
   is no evidence about live extraction quality, refusal rates, latency or cost.
-- **LLM compiler model.** The compiler takes any `CompilerModel`, but only the fixture compiler is
-  wired. `hexisctl compile --compiler <other>` exits 2. No prompt for a live compiler model has been
-  written or evaluated.
+- **LLM compiler model** (`compiler/llm_compiler.py`, `hexisctl compile --compiler anthropic:<id>`).
+  It has a versioned prompt (`compiler/prompts/compile_v1.*`) and strict parsing, and malformed drafts
+  feed the bounded repair loop. It is tested with an injected fake client, plus the real SDK over a mock
+  HTTP transport during verification. No live API call was made, so there is no evidence about how well
+  a live model compiles skills. Every draft still has to pass validation and admission.
 
 ## Simulated
 
@@ -29,11 +31,12 @@ Labels follow the master prompt: **implemented and verified**, **implemented but
 
 ## Not implemented
 
-- PostgreSQL store, migrations beyond SQLite `CREATE IF NOT EXISTS`, and multi-process worker pools.
-  Single-process SQLite with WAL is the only store.
+- A long-running worker daemon or process pool. Multi-worker safety is implemented and tested in the
+  PostgreSQL store: row locks and advisory locks, fencing, and a test with N>=4 OS processes racing
+  one run. There is no supervisor that schedules workers.
 - LangGraph hosting adapter (optional in the brief).
-- A metrics exporter, and splitting latency into engine, model, tool and human waiting time. Events are
-  recorded, but there is no timing breakdown or cost accounting (cost is unknown, never zero).
+- A metrics HTTP endpoint. `hexisctl metrics --format prometheus` renders the exposition text, but
+  nothing serves or pushes it. Cost stays `null` because no adapter reports prices.
 - Retention/redaction tooling, encryption at rest, KMS-backed admission signatures (HMAC dev key only),
   and deleting protected traces with an updated coverage record.
 - The optional sandbox interpreted fallback. Only `stop_for_review` exists.

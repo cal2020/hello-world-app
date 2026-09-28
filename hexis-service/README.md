@@ -22,7 +22,7 @@ for the license discrepancy).
 cd hexis-service
 uv venv -p 3.12 .venv && uv pip install -p .venv/bin/python -e ".[dev]"   # or: pip install -e ".[dev]"
 .venv/bin/hexisctl demo procurement-onboarding          # one-command demo -> build/demo/
-.venv/bin/python -m pytest                               # 217 passed, 12 skipped (upstream conformance)
+.venv/bin/python -m pytest                               # 278 passed, 48 skipped (PostgreSQL + upstream tests skip without their env vars)
 .venv/bin/python evals/run_eval.py                       # fixture-mode eval -> evals/results/
 ```
 

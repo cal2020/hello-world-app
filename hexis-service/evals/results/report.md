@@ -1,6 +1,6 @@
 # Fixture-mode evaluation (held-out synthetic tasks)
 
-Mode: fixture (deterministic fake model + fake connectors; software behavior only). Commit `ad00d244261b`. Tasks: 7. Repeats: 1 (deterministic).
+Mode: fixture (deterministic fake model + fake connectors; software behavior only). Commit `b748916710ad`. Tasks: 7. Repeats: 1 (deterministic).
 
 | Metric | initial_compiled | trace_refined |
 |---|---|---|

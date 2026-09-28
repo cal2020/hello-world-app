@@ -355,7 +355,7 @@
   },
   "environment": {
     "command": "python evals/run_eval.py",
-    "git_commit": "ad00d244261b855746e984227827fb2e165922f0",
+    "git_commit": "b748916710ad4808ec5da6dad59e1a6988dd8a54",
     "platform": "Linux-6.18.44-fc-v42-x86_64-with-glibc2.39",
     "python": "3.12.3"
   },

@@ -46,7 +46,7 @@ section numbers.
 | REQ-022 | §7.4 | Separate transport retry / output repair / business repair / loop / run budget; boundary 0,1,2 | `_model_step`, broker, `edge_bound`, `Budget` | A10 (parametrized 0/1/2) | V |
 | REQ-023 | §7.4 | SCC loop analysis; learned bounds clamped to an operator ceiling | `validate.py` loops | A11, `test_learned_loop_bound_clamped_to_operator_ceiling` | V |
 | REQ-024 | §7.5 | Status separate from outcome; fallback recorded permanently; stop_for_review | `RunCheckpoint.status/outcome/assurance` | A29 | V |
-| REQ-025 | §8 | Bounded compile pipeline: snapshot, clause spans, coverage, repair (≤3), no requirement dropping, normalization | `compiler/` | A01, `test_normalization_preserves_behavior` | V (fixture compiler model) |
+| REQ-025 | §8 | Bounded compile pipeline: snapshot, clause spans, coverage, repair (≤3), no requirement dropping, normalization | `compiler/`, `compiler/llm_compiler.py` | A01, `test_normalization_preserves_behavior`, `tests/unit/test_llm_compiler.py` | V (fixture model); live LLM compiler implemented, not executed live |
 | REQ-026 | §8 static checks | Structure, reachability, dataflow, guards, tool contracts, ordering, evidence, loops, provenance | `artifacts/validate.py` | A02, A04, A08, A11, A17, mutation tests | V |
 | REQ-027 | §9.1 | Protected / negative / held-out sets kept separate; an honest failure can be protected | `traces/update.py`, `evals/heldout_tasks.json` | A15; conflict→review trace in the protected archive | V |
 | REQ-028 | §9.2 | Normalization preserves consequential events; merge only one logical operation | `traces/normalize.py` | A16 | V |
@@ -56,7 +56,7 @@ section numbers.
 | REQ-032 | §10 | Three modes exposed; placeholders reported; recorded mode blocks the network; INCOMPLETE ≠ pass; divergence report | `replay/replay.py` | A12, A13, A31 | P: `sandbox_live` = the eval runner in fixture mode |
 | REQ-033 | §11.1 | Intent → lease → recheck → dispatch w/ key → receipt → commit; effect classes; UNKNOWN_EFFECT | `service._tool_step`, `broker` | A22, A23, timeout tests | V |
 | REQ-034 | §11.2 | Monotonic revisions, fencing at the store and broker, cancellation reconciles and discloses | leases, `cancel_run` | A24, A27 | V |
-| REQ-035 | §11.3 | The listed tables, tenant-scoped, append-only immutables, active pointer via admission only | `storage/sqlite.py` | `test_immutable_records_cannot_be_rewritten` | V (SQLite only) |
+| REQ-035 | §11.3 | The listed tables, tenant-scoped, append-only immutables, active pointer via admission only | `storage/sqlite.py`, `storage/postgres.py` | `test_immutable_records_cannot_be_rewritten`, `tests/integration/test_postgres_store.py` | V (SQLite + PostgreSQL 16) |
 | REQ-036 | §12.1 | Durable interactions; approval binds the full scope; rechecked at dispatch | `approvals/scope.py`, `_user_step` | A19, A20, `test_approval_authentication_rules`, expiry | V |
 | REQ-037 | §12.1 | LangGraph adapter runs the same conformance suite | none | none | N (optional; not needed) |
 | REQ-038 | §12.2 | Deterministic policy; INDETERMINATE ⇒ deny; compiler cannot modify policy | `tools/policy.py` | A21, business-unit test | V |
@@ -64,9 +64,9 @@ section numbers.
 | REQ-040 | §13 | Injection, spoofing, cross-tenant, coercion, secrets controls | broker, kernel, store | A26, `tests/security/*` | V |
 | REQ-041 | §14 | Procurement demo: states, tools, narrative steps 1–6 | `demo/` | `test_one_command_offline_demo` | S (fake ERP) |
 | REQ-042 | §15 | Python API names, CLI commands, JSON output, exit codes (waiting ≠ error) | `RunService`, `cli/main.py` | `test_cli_*` | V |
-| REQ-043 | §15 | Observability: structured events for all listed happenings; per-model/state/tool metrics | `run_events`, `Budget` | inspected in `execution_record.json` | P: no metrics exporter or latency split |
+| REQ-043 | §15 | Observability: per-model/state/tool latency, tokens, cost (null if unknown), retries, validation failures, fallback, human wait, uncertain effects; engine vs model vs tool vs human split | `TIMING` events, `metrics.py`, `hexisctl metrics` | `tests/integration/test_metrics.py` | V (no serving endpoint) |
 | REQ-044 | §16 | A01–A32, property, mutation and crash-injection tests | `tests/` | 101 pass (+12 upstream) | V |
 | REQ-045 | §17 | Baseline vs initial vs refined; held-out; separate metrics; honest labels | `evals/run_eval.py` | `evals/results/report.md` | P: ReAct baseline not run (needs a live model) |
-| REQ-046 | §18 | Deliverables: source, lockfile, schemas, skill/coverage/machines/diff, demo, traces, reports, docs | repo | this ledger | P: no PostgreSQL migrations |
-| REQ-047 | §5 | PostgreSQL adapter for multi-worker | none | none | N |
+| REQ-046 | §18 | Deliverables: source, lockfile, schemas, skill/coverage/machines/diff, demo, traces, reports, docs, migrations | repo, `storage/migrations/postgres/` | this ledger | V |
+| REQ-047 | §5 | PostgreSQL adapter for multi-worker | `storage/postgres.py`, `open_store`, `--store` / `HEXIS_STORE_URL` | backend-contract suite over [sqlite, postgres], multi-process race test | V (run against a local PostgreSQL 16.13) |
 | REQ-048 | §5 | Keys only in the environment / secret store | adapter via SDK env; `HEXIS_ADMISSION_KEY` | `test_secrets_not_in_artifacts` | V |
