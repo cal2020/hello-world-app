@@ -600,9 +600,17 @@ class RunService:
         if intent["status"] not in ("DISPATCHING", "UNKNOWN_EFFECT"):
             raise RunError("NOT_UNRESOLVED", f"action is {intent['status']}")
         spec = self.catalog.get(intent["tool"])
-        if outcome == "present":
-            if spec is None:
+        # Only writes carry an external effect a human can attest to. Reads, pure tools and verifiers are
+        # safely re-dispatched on recovery and must never take a human-supplied result as their output
+        # (it would become validator/verifier evidence). A tool retired from the catalog may only be
+        # resolved as "absent" (its effect class is unknown, so nothing it "returned" can be trusted).
+        if spec is None:
+            if outcome != "absent":
                 raise RunError("UNKNOWN_TOOL", intent["tool"])
+        elif not spec.is_write:
+            raise RunError("NOT_A_WRITE", f"{intent['tool']} has no external effect to resolve; it is re-run")
+        if outcome == "present":
+            assert spec is not None
             errs = validate_against(spec.output_schema, output)
             if errs:
                 raise RunError("RESPONSE_INVALID", "; ".join(errs[:3]))

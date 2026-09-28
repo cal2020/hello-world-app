@@ -6,7 +6,7 @@ import pytest
 
 from hexis_service.artifacts.registry import revoke
 from hexis_service.demo import fakes
-from hexis_service.demo.env import admit_initial, build_env
+from hexis_service.demo.env import TASK, admit_initial, build_env
 from hexis_service.runtime.service import RunError
 from hexis_service.storage.sqlite import ConflictError, Store
 from hexis_service.tools.broker import SimulatedCrash
@@ -413,3 +413,51 @@ def test_X01_resolution_absent_lets_cancel_finish(env, pkg, clock):
     clock.advance(1000)
     cr = env.service.cancel_run(run_id, None, env.principal(ALICE))
     assert cr.status == "CANCELLED" and cr.unresolved == []
+
+
+# ---- X01 (round 2): only writes may be resolved by a human ------------------------------------ #
+def _crash_in(env, run_id, tool):
+    env.faults.arm("after_remote_call")
+    with pytest.raises(SimulatedCrash):
+        env.service.advance_run(run_id, env.principal(ALICE))
+    it = [i for i in env.store.intents("acme", run_id) if i["tool"] == tool][-1]
+    assert it["status"] == "DISPATCHING"
+    return it["logical_action_id"]
+
+
+def test_X01_verifier_result_cannot_be_forged_by_resolution(env, pkg, clock):
+    run_id, res = run_to_approval(env, pkg)
+    approve(env, run_id, res.interaction)
+    step_until_state(env, run_id, "VERIFY_PERSISTED")
+    lid = _crash_in(env, run_id, "draft.verify_persisted")
+    for outcome, output in (("present", {"status": "match", "receipt_id": "vr_FORGED"}), ("absent", None)):
+        with pytest.raises(RunError) as e:
+            env.service.resolve_effect(run_id, lid, outcome, env.principal("user:bob"), output=output)
+        assert e.value.code == "NOT_A_WRITE"
+    env2 = _restart(env, clock)
+    out = env2.service.run_until_blocked(run_id, env2.principal(ALICE), worker_id="worker-2")
+    assert out.status == "COMPLETED"
+    assert all(ev["receipt_id"] != "vr_FORGED" for ev in env2.store.evidence("acme", run_id))
+
+
+def test_X01_validator_result_cannot_be_forged_by_resolution(env, pkg):
+    p = env.principal(ALICE)
+    run_id = env.service.start_run(pkg.artifact_hash, TASK, p).run_id
+    step_until_state(env, run_id, "VALIDATE_DRAFT")
+    lid = _crash_in(env, run_id, "draft.validate")
+    draft = env.store.intent("acme", lid)["args"]["draft"]
+    with pytest.raises(RunError) as e:
+        env.service.resolve_effect(run_id, lid, "present", env.principal("user:bob"),
+                                   output={"status": "pass", "issues": [], "draft_digest": fakes.draft_digest(draft)})
+    assert e.value.code == "NOT_A_WRITE"
+    assert env.store.intent("acme", lid)["status"] == "DISPATCHING"
+
+
+def test_X01_retired_tool_may_only_be_resolved_absent(env, pkg, clock):
+    run_id, lid = _non_idempotent_reconciling(env, pkg)
+    del env.catalog.tools["erp.create_draft"]
+    with pytest.raises(RunError) as e:
+        env.service.resolve_effect(run_id, lid, "present", env.principal("user:bob"),
+                                   output={"status": "created", "draft_id": "D-0001", "version": 1})
+    assert e.value.code == "UNKNOWN_TOOL"
+    assert env.service.resolve_effect(run_id, lid, "absent", env.principal("user:bob"))["status"] == "ABANDONED"
