@@ -97,7 +97,7 @@ def _validate_ops(parent: MachinePackage, ops: list[dict], events: list, catalog
     return errs
 
 
-def apply_ops(parent: MachinePackage, ops: list[dict]) -> MachinePackage:
+def apply_ops(parent: MachinePackage, ops: list[dict], trace_ids: Optional[list[str]] = None) -> MachinePackage:
     md = copy.deepcopy(parent.machine.to_json())
     cd = copy.deepcopy(parent.contracts.model_dump(mode="json", by_alias=True))
     for o in ops:
@@ -119,7 +119,7 @@ def apply_ops(parent: MachinePackage, ops: list[dict]) -> MachinePackage:
             md["states"][o["from"]]["transitions"][o["index"]]["to"] = o["to"]
         elif k == "set_coverage":
             cd["clause_coverage"][o["clause"]] = o["coverage"]
-    lineage = Lineage(parent_hash=parent.artifact_hash,
+    lineage = Lineage(parent_hash=parent.artifact_hash, trace_ids=list(trace_ids or []),
                       changes=[{kk: vv for kk, vv in op.items() if kk in ("op", "rationale", "clause", "from", "to",
                                                                           "event_index")} for op in ops])
     return MachinePackage(machine=load_machine(md), source_manifest=parent.source_manifest,
@@ -224,7 +224,7 @@ def propose_update(parent: MachinePackage, trace: Trace, protected: list[Trace],
             diagnostics = [{"op_errors": op_errs}]
             continue
         try:
-            cand = apply_ops(parent, ops)
+            cand = apply_ops(parent, ops, [trace.trace_id])
         except Exception as exc:  # noqa: BLE001
             entry["op_errors"] = [f"candidate construction failed: {exc}"]
             prop.attempts.append(entry)

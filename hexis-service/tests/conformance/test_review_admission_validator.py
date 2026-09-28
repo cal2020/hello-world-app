@@ -208,7 +208,7 @@ def test_C28_negative_corpus_checked_at_admission(env, pkg, catalog, archive):
     dev = R.missing_docs_trace()
     prop = propose_update(pkg, dev, archive, [], catalog, R.FixtureAligner(), skill_source().text)
     # a trace the candidate represents cannot sit in the negative corpus
-    res = admit_as_dana(env, prop.candidate, pkg.artifact_hash, protected=archive, negative=[dev])
+    res = admit_as_dana(env, prop.candidate, pkg.artifact_hash, protected=archive + [dev], negative=[dev])
     assert res.status == "REJECTED" and any("negative corpus" in r for r in res.reasons)
 
 
@@ -352,3 +352,49 @@ def test_X05_forged_lifecycle_or_unsigned_record_does_not_allow_runs(pkg, clock,
     with pytest.raises(RunError) as exc:
         e.service.start_run(pkg.artifact_hash, TASK, alice)
     assert exc.value.code == "ARTIFACT_NOT_ADMITTED"
+
+
+# --- C28 (residual): the stored archive, not the caller, decides what is protected ----------------- #
+def test_C28_enrolled_traces_cannot_be_dropped_by_first_update(env, pkg, catalog, archive):
+    from hexis_service.artifacts.registry import enroll_protected
+    enr = enroll_protected(env.store, "supplier-onboarding-draft", archive, actor=env.principal("user:dana"),
+                           environment="sandbox", now=env.clock())
+    assert enr.status == "ADMITTED" and enr.archive_version == 2
+    stored = env.store.archive("supplier-onboarding-draft")
+    assert {e["trace_id"] for e in stored["protected"]} == {t.trace_id for t in archive}
+    dev = R.missing_docs_trace()
+    cand = apply_ops(pkg, R.BreakingAligner().propose({}), [dev.trace_id])
+    # the caller omits the enrolled run traces the breaking candidate would fail on
+    res = admit_as_dana(env, cand, pkg.artifact_hash, protected=[dev])
+    assert res.status == "REJECTED" and any("current archive is missing" in r for r in res.reasons)
+    # supplying them makes admission replay them, and the breaking candidate fails
+    res = admit_as_dana(env, cand, pkg.artifact_hash, protected=archive + [dev])
+    assert res.status == "REJECTED" and any("protected replay" in r for r in res.reasons)
+    assert env.store.get_active("sandbox", "supplier-onboarding-draft")[0] == pkg.artifact_hash
+
+
+def test_C28_originating_trace_must_be_protected(env, pkg, catalog, archive):
+    dev = R.missing_docs_trace()
+    prop = propose_update(pkg, dev, archive, [], catalog, R.FixtureAligner(), skill_source().text)
+    assert prop.candidate.lineage.trace_ids == [dev.trace_id]
+    res = admit_as_dana(env, prop.candidate, pkg.artifact_hash, protected=archive)
+    assert res.status == "REJECTED" and "originating trace" in res.reasons[0]
+    assert admit_as_dana(env, prop.candidate, pkg.artifact_hash, protected=archive + [dev]).status == "ADMITTED"
+
+
+def test_C28_enrollment_gates(env, pkg, archive):
+    from hexis_service.artifacts.registry import enroll_protected
+    kw = dict(environment="sandbox", now=env.clock())
+    assert enroll_protected(env.store, "supplier-onboarding-draft", archive, actor=env.principal("user:alice"),
+                            **kw).status == "REJECTED"  # not an artifact admin
+    bad = [R.forbidden_write_trace()]  # correct answer via a forbidden action: never protected
+    r = enroll_protected(env.store, "supplier-onboarding-draft", bad, actor=env.principal("user:dana"), **kw)
+    assert r.status == "REJECTED" and "ineligible" in r.reasons[0]
+    unrep = [R.missing_docs_trace()]  # not representable by the active (initial) version
+    r = enroll_protected(env.store, "supplier-onboarding-draft", unrep, actor=env.principal("user:dana"), **kw)
+    assert r.status == "REJECTED" and "does not replay" in r.reasons[0]
+    neg = enroll_protected(env.store, "supplier-onboarding-draft", [R.shortcut_trace()],
+                           actor=env.principal("user:dana"), negative=True, **kw)
+    assert neg.status == "ADMITTED"
+    assert [e["trace_id"] for e in env.store.archive("supplier-onboarding-draft")["negative"]] == \
+        ["dev:repair-then-approve-without-revalidation"]

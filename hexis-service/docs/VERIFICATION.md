@@ -103,3 +103,31 @@ subset separately.
 - No performance or latency measurement.
 
 See [LIMITATIONS.md](LIMITATIONS.md).
+
+## Adversarial review round (27-28 Sep 2026)
+
+Method:
+1. A 108-agent review workflow ran one reviewer per subsystem. Two independent skeptics per finding then
+   tried to refute each claim, using their own reproduction scripts.
+2. 51 findings were raised. 36 were confirmed by both skeptics, 13 were contested and 2 were refuted.
+3. Five fixers each worked in an isolated git worktree, with a regression test required for every fix.
+   An independent verifier re-ran the original reproductions against each fix branch, and a second fix
+   round ran wherever the verifier rejected the first.
+4. The merged result, and the one partial C28 item the verifier left open (the first update could omit
+   accepted traces that were never stored), were closed on the main branch. That closure is
+   `registry.enroll_protected`, plus the rule that an update's originating trace must be protected.
+
+The confirmed defects included:
+- a stale fenced-off worker overwriting an in-flight write's intent, which enabled a duplicate
+  non-idempotent write (critical)
+- the approver role taken from the package instead of host policy
+- admission trusting a caller-supplied `replay_passed` flag and the package's own execution policy
+- terminal freshness checks reusing a pre-crash read
+- guard disjointness reported PROVEN for overlapping `in` or large-constant guards
+- trace header fields outside the integrity digest
+
+Each has a regression test in `tests/*/test_review_*.py`.
+
+After the merge: `pytest` gives **217 passed, 12 skipped**, and **229 passed** with the pinned upstream
+checkout. `ruff` is clean, and `hexisctl demo procurement-onboarding` exits 0. The counts at the top of
+this file are from the pre-review commit `f23c6ba`.

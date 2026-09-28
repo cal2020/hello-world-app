@@ -10,7 +10,7 @@ import shutil
 from pathlib import Path
 from typing import Callable
 
-from ..artifacts.registry import admit
+from ..artifacts.registry import admit, enroll_protected
 from ..compiler.compile import coverage_markdown
 from ..traces.model import export_run_trace
 from ..traces.update import apply_ops, evaluate_candidate, propose_update
@@ -114,6 +114,10 @@ def run_demo(out_dir: str = "build/demo", scenario: str = "full", say: Callable[
     protected, negative = [t_main, t_conflict], []
     for t in protected:
         _w(out / "traces" / (t.trace_id.replace(":", "_") + ".jsonl"), t.to_jsonl())
+    enr = enroll_protected(env.store, pkg.machine.skill_id, protected, actor=env.principal("user:dana"),
+                           environment="sandbox", now=clock())
+    say(f"   enrolled {len(protected)} run traces into the stored protected archive: {enr.status} "
+        f"(archive v{enr.archive_version}); every later admission must replay them")
 
     # 6a. Accept a legitimate trace-driven refinement ------------------------------------------ #
     say("== 6a. Trace-driven refinement: documents missing → request input once ==")

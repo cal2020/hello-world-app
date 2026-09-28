@@ -143,6 +143,15 @@ def cmd_admit(args: argparse.Namespace) -> int:
     return EXIT_OK if res.status == "ADMITTED" else EXIT_REJECTED
 
 
+def cmd_enroll(args: argparse.Namespace) -> int:
+    from ..artifacts.registry import enroll_protected
+    env = _env(args)
+    res = enroll_protected(env.store, args.skill, _traces(args.traces), actor=env.principal(args.as_),
+                           environment="sandbox", now=env.clock(), negative=args.negative)
+    _emit(args, f"{res.status} archive v{res.archive_version} {res.reasons}", res.__dict__)
+    return EXIT_OK if res.status == "ADMITTED" else EXIT_REJECTED
+
+
 def _step_out(args: argparse.Namespace, res) -> int:
     data = {"status": res.status, "detail": res.detail, "revision": res.checkpoint.revision,
             "state": res.checkpoint.state_id, "outcome": res.checkpoint.outcome, "run_id": res.checkpoint.run_id,
@@ -241,6 +250,8 @@ def main(argv: list[str] | None = None) -> int:
     add("admit", cmd_admit, ("--package", {"required": True}), ("--expected-parent", {"default": ""}),
         ("--archive", {"default": None}), ("--negative", {"default": None}), state,
         (("--as",), {"dest": "as_", "default": "user:dana"}))
+    add("enroll", cmd_enroll, ("--skill", {"required": True}), ("--traces", {"required": True}),
+        ("--negative", {"action": "store_true"}), state, (("--as",), {"dest": "as_", "default": "user:dana"}))
     add("run", cmd_run, ("--package", {"required": True}), ("--input", {"required": True}),
         ("--request-id", {"default": ""}), state, who, model)
     add("resume", cmd_resume, ("--run", {"required": True}), ("--interaction", {"required": True}),

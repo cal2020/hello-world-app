@@ -45,12 +45,19 @@ resolved, the run stays `RECONCILING` and is not reported as safely cancelled.
 
 ## Promotion (trace-driven update)
 
+0. Enroll accepted run traces into the stored protected archive first:
+   `hexisctl enroll --skill <skill_id> --traces traces/ --state ...` (admin only). A trace must be intact,
+   eligible and replay against the active version. The stored archive is the only authority on what
+   later admissions must replay; an admission cannot drop an enrolled trace. `--negative` enrolls a
+   trace into the negative corpus, and it must NOT be representable.
 1. `hexisctl update --parent P --trace T --archive protected/ --negative negative/ --out proposals/`
    writes a proposal only.
 2. Review `proposal.json`: the diff, `newly_reachable_effects`, gate results, placeholders and affected
    clauses. If the proposal reports **requires_review**, get sign-off from the policy owner.
 3. Run `hexisctl admit --package proposals/candidate_package.json --expected-parent <P hash> --archive ...`
-   as an `artifact_admin`. On `CONFLICT` another update won the race: re-run `update` against the new
+   as an `artifact_admin`. Admission re-validates against the operator deployment policy. It replays every
+   stored and supplied protected trace itself, checks the negative corpus, and requires the update's
+   originating trace to be in the protected set. On `CONFLICT` another update won the race: re-run `update` against the new
    active parent. That reruns every gate.
 
 ## Revocation

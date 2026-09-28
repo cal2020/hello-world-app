@@ -124,6 +124,10 @@ def admit(store, pkg: MachinePackage, catalog: ToolCatalog, *, expected_parent_h
     if archive_manifest is not None and digest(archive_manifest) != digest(computed_manifest):
         return AdmissionResult("REJECTED", h, ["archive manifest does not match the supplied archive traces"])
     archive_manifest = computed_manifest
+    missing_origin = sorted(set(pkg.lineage.trace_ids) - {t.trace_id for t in protected})
+    if missing_origin:
+        return AdmissionResult("REJECTED", h, [f"originating trace {tid} of this update must be in the protected "
+                                               "archive it is admitted with" for tid in missing_origin])
     current_archive = store.archive(pkg.machine.skill_id) or {}
     gated_version = current_archive.get("version")
     gate = _check_archive(store, pkg, protected, negative, current_archive)
@@ -166,6 +170,74 @@ def admit(store, pkg: MachinePackage, catalog: ToolCatalog, *, expected_parent_h
         db.execute("INSERT OR REPLACE INTO active_machine_versions VALUES(?,?,?,?,?)",
                    (environment, skill_id, h, version, now))
     return AdmissionResult("ADMITTED", h, [], rec.model_dump(mode="json"), version)
+
+
+def enroll_protected(store, skill_id: str, traces: list, *, actor: Principal, environment: str, now: float,
+                     negative: bool = False) -> AdmissionResult:
+    """Append traces to the stored protected archive (or the negative corpus) without a new machine.
+
+    The stored archive is the only authority on what later admissions must replay: traces that
+    were never enrolled are not protected, and an admission cannot drop an enrolled one. Each
+    protected trace must be intact, eligible (no ordering / evidence violations) and structurally
+    replay against the active version in ``environment``; a negative trace must NOT replay. The new
+    archive version is published with a compare-and-swap on the current version."""
+    from ..replay.replay import replay_structural
+    from ..storage.sqlite import _j
+    from ..traces.normalize import eligibility
+    kind = "negative" if negative else "protected"
+    if ADMIN_ROLE not in actor.roles:
+        return AdmissionResult("REJECTED", "", [f"{actor.id} lacks role {ADMIN_ROLE}"])
+    active = store.get_active(environment, skill_id)
+    if active is None:
+        return AdmissionResult("REJECTED", "", [f"no active version of {skill_id} in {environment}"])
+    active_hash = active[0]
+    pkg = MachinePackage.from_json(store.get_version(active_hash))
+    current = store.archive(skill_id) or {}
+    reasons = []
+    for t in traces:
+        integ = t.integrity_errors()
+        if integ:
+            reasons.append(f"{t.trace_id}: integrity: {integ[0]}")
+            continue
+        rep = replay_structural(pkg, t)
+        if negative:
+            if rep.status == "PASS":
+                reasons.append(f"{t.trace_id}: negative trace is representable by the active version")
+            continue
+        viol = eligibility(t, pkg)
+        if viol:
+            reasons.append(f"{t.trace_id}: ineligible for the protected archive: {viol[0]['code']}")
+        if rep.status != "PASS":
+            reasons.append(f"{t.trace_id}: does not replay against the active version: {rep.status} {rep.detail}")
+    if reasons:
+        return AdmissionResult("REJECTED", active_hash, reasons)
+    existing = {e["trace_id"]: e for e in current.get(kind, []) or []}
+    for t in traces:
+        prev = existing.get(t.trace_id)
+        if prev is not None and prev.get("records_digest") != t.records_digest():
+            return AdmissionResult("REJECTED", active_hash, [f"{t.trace_id}: already enrolled with different records"])
+        existing[t.trace_id] = {"trace_id": t.trace_id, "records_digest": t.records_digest()}
+    manifest = {"protected": list(current.get("protected", []) or []),
+                "negative": list(current.get("negative", []) or []),
+                "held_out": current.get("held_out", "never stored here")}
+    manifest[kind] = [existing[k] for k in sorted(existing)]
+    with store.tx() as db:
+        latest = db.execute("SELECT MAX(version) FROM trace_archive_manifests WHERE skill_id=?",
+                            (skill_id,)).fetchone()[0]
+        if latest != current.get("version"):
+            return AdmissionResult("CONFLICT", active_hash, ["protected archive changed concurrently; retry"])
+        version = (latest or 0) + 1
+        for t in traces:
+            body = t.to_jsonl()
+            db.execute("INSERT OR IGNORE INTO trace_blobs VALUES(?,?,?,?)", (t.trace_id, sha256_hex(body), body, now))
+        db.execute("INSERT INTO trace_archive_manifests VALUES(?,?,?,?,?)",
+                   (skill_id, version, active_hash, _j({**manifest, "version": version, "artifact_hash": active_hash}),
+                    now))
+        db.execute("UPDATE active_machine_versions SET archive_version=? WHERE skill_id=? AND artifact_hash=?",
+                   (version, skill_id, active_hash))
+        store.add_lifecycle(db, active_hash, f"archive_enrolled:{kind}", actor.id,
+                            ",".join(t.trace_id for t in traces), now)
+    return AdmissionResult("ADMITTED", active_hash, [], None, version)
 
 
 def _env_key(artifact_hash: str, environment: str) -> str:
