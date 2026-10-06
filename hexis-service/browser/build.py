@@ -7,10 +7,21 @@ Outputs (in dist/):
                         local testing (Playwright), mirroring the Artifact viewer's restrictions.
 
 Template placeholders in app/index.template.html:
-  {{HX:CSS}}     app/NN_*.css concatenated        {{HX:ENGINE}}  src/NN_*.js concatenated
-  {{HX:APP}}     app/NN_*.js concatenated         {{HX:EMBED}}   JSON object built from app/embed.json
-                                                                  ({"key": "path relative to browser/"})
-Run: python build.py [--check]   (--check also fails on size > 15 MB)
+  {{HX:CSS}}      app/NN_*.css concatenated (goes inside one <style>)
+  {{HX:ENGINE}}   one <script> element per src/NN_*.js module
+  {{HX:APP}}      one <script> element per app/NN_*.js file
+  {{HX:EMBED}}    JSON object built from app/embed.json ({"key": "path relative to browser/"}), placed inside
+                  <script type="application/json" id="hx-embed">
+Each module gets its own <script> element, so a module that fails to parse or throws at load time only loses its
+own namespace (the boot code reports which ones are missing) instead of taking the whole engine down.
+
+Run: python build.py [--check] [--engine-prefixes 00,05,10,15] [--app-prefixes 00,35] [--out DIR]
+  --check            also fail if the page is larger than 15 MB
+  --engine-prefixes  include only the src modules with these two-digit prefixes (UI development against a
+                     partially ported engine); the default includes every module
+  --app-prefixes     the same filter for app/ files (.css and .js), for developing one UI file in isolation
+  --out DIR          write into DIR (relative to browser/) instead of dist/, so parallel builds don't collide;
+                     run the E2E tests against it with HX_PAGE=DIR/hexis-lab.local.html
 """
 
 from __future__ import annotations
@@ -59,14 +70,32 @@ def concat(files: list[Path], comment: str) -> str:
     return "\n".join(parts)
 
 
-def build(check: bool = False) -> dict:
+def script_elements(files: list[Path], folder: str) -> tuple[str, int]:
+    """One <script> element per file, each made safe to inline."""
+    out, escaped = [], 0
+    for f in files:
+        code, n = script_safe(f.read_text(encoding="utf-8"))
+        escaped += n
+        out.append(f'<script data-hx-module="{folder}/{f.name}">/* ==== {folder}/{f.name} ==== */\n{code}\n</script>')
+    return "\n".join(out), escaped
+
+
+def build(check: bool = False, engine_prefixes: list[str] | None = None, out: Path = DIST,
+          app_prefixes: list[str] | None = None) -> dict:
     template_path = APP / "index.template.html"
     if not template_path.exists():
         raise SystemExit(f"missing {template_path}")
     template = template_path.read_text(encoding="utf-8")
-    engine, n1 = script_safe(concat(numbered(SRC, ".js"), "/* ==== src/{name} ==== */"))
-    app_js, n2 = script_safe(concat(numbered(APP, ".js"), "/* ==== app/{name} ==== */"))
-    css = concat(numbered(APP, ".css"), "/* ==== app/{name} ==== */")
+    engine_files = numbered(SRC, ".js")
+    if engine_prefixes is not None:
+        engine_files = [f for f in engine_files if f.name[:2] in engine_prefixes]
+    app_files, css_files = numbered(APP, ".js"), numbered(APP, ".css")
+    if app_prefixes is not None:
+        app_files = [f for f in app_files if f.name[:2] in app_prefixes]
+        css_files = [f for f in css_files if f.name[:2] in app_prefixes]
+    engine, n1 = script_elements(engine_files, "src")
+    app_js, n2 = script_elements(app_files, "app")
+    css = concat(css_files, "/* ==== app/{name} ==== */")
     if "</style" in css.lower():
         raise SystemExit("CSS contains '</style'")
     embed = {}
@@ -96,16 +125,39 @@ def build(check: bool = False) -> dict:
         problems.append(f"external CSS url() at {m.start()}")
     if problems:
         raise SystemExit("build refuses external resources:\n  " + "\n  ".join(problems))
-    DIST.mkdir(exist_ok=True)
-    (DIST / "hexis-lab.html").write_text(page, encoding="utf-8")
-    (DIST / "hexis-lab.local.html").write_text(SKELETON_HEAD + page + SKELETON_TAIL, encoding="utf-8")
+    out.mkdir(parents=True, exist_ok=True)
+    for name, text in (("hexis-lab.html", page), ("hexis-lab.local.html", SKELETON_HEAD + page + SKELETON_TAIL)):
+        tmp = out / (name + ".tmp")
+        tmp.write_text(text, encoding="utf-8")
+        tmp.replace(out / name)  # atomic: a test never loads a half-written page
     size = len(page.encode("utf-8"))
     if check and size > 15 * 1024 * 1024:
         raise SystemExit(f"page too large: {size} bytes")
-    info = {"bytes": size, "engine_files": len(numbered(SRC, ".js")), "app_files": len(numbered(APP, ".js")),
-            "css_files": len(numbered(APP, ".css")), "embedded": sorted(embed), "escaped_sequences": n1 + n2}
+    info = {"bytes": size, "engine_files": [f.name for f in engine_files], "app_files": [f.name for f in app_files],
+            "css_files": [f.name for f in css_files], "embedded": sorted(embed), "escaped_sequences": n1 + n2}
     return info
 
 
+def prefix_arg(argv: list[str], flag: str) -> list[str] | None:
+    if flag not in argv:
+        return None
+    i = argv.index(flag)
+    if i + 1 >= len(argv):
+        raise SystemExit(f"{flag} needs a comma-separated list of two-digit prefixes, e.g. 00,05,10,15")
+    return [x.strip() for x in argv[i + 1].split(",") if x.strip()]
+
+
+def main(argv: list[str]) -> None:
+    prefixes = prefix_arg(argv, "--engine-prefixes")
+    app_prefixes = prefix_arg(argv, "--app-prefixes")
+    out = DIST
+    if "--out" in argv:
+        i = argv.index("--out")
+        if i + 1 >= len(argv):
+            raise SystemExit("--out needs a directory")
+        out = (HERE / argv[i + 1]).resolve()
+    print(json.dumps(build(check="--check" in argv, engine_prefixes=prefixes, out=out, app_prefixes=app_prefixes)))
+
+
 if __name__ == "__main__":
-    print(json.dumps(build(check="--check" in sys.argv)))
+    main(sys.argv[1:])

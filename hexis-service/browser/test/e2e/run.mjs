@@ -11,7 +11,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "playwright";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
-const PAGE = path.join(ROOT, "dist", "hexis-lab.local.html");
+// HX_PAGE overrides the page under test (e.g. a parallel build written with `python build.py --out dist-x`).
+const PAGE = process.env.HX_PAGE ? path.resolve(ROOT, process.env.HX_PAGE) : path.join(ROOT, "dist", "hexis-lab.local.html");
+const SHOTS = path.dirname(PAGE);
 const filters = process.argv.slice(2);
 if (!fs.existsSync(PAGE)) { console.error(`missing ${PAGE}: run python3 build.py`); process.exit(2); }
 
@@ -56,7 +58,7 @@ for (const f of files) {
       } catch (e) {
         failed++;
         console.log(`FAIL ${label}\n${(e && e.stack) || e}\n${errors.join("\n")}`);
-        try { await page.screenshot({ path: path.join(ROOT, "dist", `fail-${f}-${viewport.width}-${scheme}.png`), fullPage: true }); } catch {}
+        try { await page.screenshot({ path: path.join(SHOTS, `fail-${f}-${viewport.width}-${scheme}.png`), fullPage: true }); } catch {}
       }
       await ctx.close();
     }

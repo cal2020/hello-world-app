@@ -1,0 +1,148 @@
+/* HEXIS Runtime Lab: design tokens. Every color on the page comes from this file.
+   Layout concept: an instrument panel. A section rail on the left (a tab strip on phones), one working
+   canvas per section, and the live state-machine graph as the centrepiece of the run workbench.
+   Cool, slightly blue-biased neutrals; one cobalt accent for "the thing under control"; semantic
+   ok / warn / crit / info colors are separate from the accent and always paired with text. */
+:root {
+  /* ground and surfaces */
+  --bg: #f1f3f7;
+  --surface: #ffffff;
+  --surface-2: #f6f7fa;          /* insets: code, JSON, table headers */
+  --surface-3: #e9edf3;          /* hover / selected rows */
+  /* ink */
+  --ink: #16202c;
+  --ink-2: #4c5768;              /* secondary text */
+  --ink-3: #5f6a7b;              /* captions, faint labels (4.5:1 or better on every surface) */
+  /* rules */
+  --rule: #dce1e8;
+  --rule-strong: #c2c9d4;
+  /* accent: cobalt */
+  --accent: #2642c2;
+  --accent-hover: #1d35a3;
+  --accent-ink: #ffffff;         /* text on an accent fill */
+  --accent-tint: #e7ebfb;        /* selected chip / current state fill */
+  /* semantic (text color + tint background, both themes) */
+  --ok: #17703f;
+  --ok-tint: #e1f2e8;
+  --warn: #8a5300;
+  --warn-tint: #faefd6;
+  --crit: #b3261e;
+  --crit-tint: #fbe5e2;
+  --info: #6440c0;               /* "simulated", "fixture", "model output" */
+  --info-tint: #efeafb;
+  /* focus */
+  --focus: #2642c2;
+  --focus-ring: 0 0 0 2px var(--surface), 0 0 0 4px var(--focus);
+  /* graph canvas */
+  --graph-bg: #f8f9fb;
+  --graph-grid: #e3e7ee;
+  --graph-node: #ffffff;
+  --graph-node-stroke: #868f9e;
+  --graph-edge: #7a8495;
+  --graph-edge-faint: #cdd3dc;
+  --graph-label: #4c5768;
+  /* elevation: only for floating things (menus, popovers) */
+  --shadow-pop: 0 6px 24px rgba(15, 25, 45, 0.12), 0 1px 3px rgba(15, 25, 45, 0.08);
+
+  /* type */
+  --font-display: "Literata", Georgia, "Times New Roman", serif;
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --fs-1: 0.75rem;     /* 12px: uppercase labels (letter-spaced), graph labels */
+  --fs-2: 0.8125rem;   /* 13px: tables, chips, code */
+  --fs-3: 0.875rem;    /* 14px: UI body */
+  --fs-4: 1rem;        /* 16px: lead text */
+  --fs-5: 1.25rem;     /* 20px: section titles */
+  --fs-6: 1.75rem;     /* 28px: page title */
+  --lh-tight: 1.25;
+  --lh-body: 1.5;
+
+  /* space, radius, layout */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 3rem;
+  --r-1: 3px;          /* chips, inputs */
+  --r-2: 6px;          /* cards, panels that are separate objects */
+  --r-pill: 999px;     /* terminal-state pills in the graph */
+  --gutter: 1rem;      /* never less than 16px at any width */
+  --rail-w: 13.5rem;
+  --content-max: 82rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1218;
+    --surface: #151a22;
+    --surface-2: #1a2029;
+    --surface-3: #212835;
+    --ink: #e3e8ef;
+    --ink-2: #a5afbf;
+    --ink-3: #8691a2;
+    --rule: #272f3c;
+    --rule-strong: #364153;
+    --accent: #8ea3ff;
+    --accent-hover: #a8b8ff;
+    --accent-ink: #0b1230;
+    --accent-tint: #1c254d;
+    --ok: #5fcb8d;
+    --ok-tint: #11301e;
+    --warn: #e8b34b;
+    --warn-tint: #33270e;
+    --crit: #ff8b7c;
+    --crit-tint: #3b1613;
+    --info: #b9a0ff;
+    --info-tint: #261c42;
+    --focus: #a8b8ff;
+    --graph-bg: #121720;
+    --graph-grid: #1f2633;
+    --graph-node: #19202a;
+    --graph-node-stroke: #606c82;
+    --graph-edge: #7c879a;
+    --graph-edge-faint: #323b4b;
+    --graph-label: #a5afbf;
+    --shadow-pop: 0 8px 28px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0e1218;
+  --surface: #151a22;
+  --surface-2: #1a2029;
+  --surface-3: #212835;
+  --ink: #e3e8ef;
+  --ink-2: #a5afbf;
+  --ink-3: #8691a2;
+  --rule: #272f3c;
+  --rule-strong: #364153;
+  --accent: #8ea3ff;
+  --accent-hover: #a8b8ff;
+  --accent-ink: #0b1230;
+  --accent-tint: #1c254d;
+  --ok: #5fcb8d;
+  --ok-tint: #11301e;
+  --warn: #e8b34b;
+  --warn-tint: #33270e;
+  --crit: #ff8b7c;
+  --crit-tint: #3b1613;
+  --info: #b9a0ff;
+  --info-tint: #261c42;
+  --focus: #a8b8ff;
+  --graph-bg: #121720;
+  --graph-grid: #1f2633;
+  --graph-node: #19202a;
+  --graph-node-stroke: #606c82;
+  --graph-edge: #7c879a;
+  --graph-edge-faint: #323b4b;
+  --graph-label: #a5afbf;
+  --shadow-pop: 0 8px 28px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}

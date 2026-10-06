@@ -98,4 +98,12 @@ browser/
 * `dist/hexis-lab.local.html`: the same page wrapped in a full document with a strict CSP meta (no network)
   for local Playwright testing.
 
+Each engine module and each app script becomes its own `<script data-hx-module="src/NN_x.js">` element. A
+module that fails to parse or throws while loading only loses its own namespace; the UI reports missing
+namespaces instead of failing as a whole. `python build.py --engine-prefixes 00,05,10,15` includes only the
+listed engine modules, for UI work against a partially ported engine.
+
 The build fails if the output references any external URL other than Google Fonts.
+
+`node test/e2e/run.mjs [filter...]` runs the Playwright tests in `test/e2e/` against
+`dist/hexis-lab.local.html` at 1280px and 400px in light and dark color schemes.
