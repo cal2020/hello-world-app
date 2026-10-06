@@ -9,7 +9,8 @@
   --hxg-edge-dim: color-mix(in srgb, var(--graph-edge) 80%, var(--graph-bg));
   display: grid;
   gap: var(--sp-3);
-  width: fit-content; /* the figure hugs its drawing and never grows past its container */
+  /* the figure fills its container and the drawing sits centered on the canvas, so the frame never changes width
+     with what the caption or the legend says */
   min-width: 0;
   max-width: 100%;
   margin: 0;
@@ -87,22 +88,26 @@
   overscroll-behavior-x: contain;
   border-radius: calc(var(--r-2) - 1px);
 }
-/* while the drawing overflows, the side that has more fades out (the same cue as the section tab strip) */
+/* while the drawing overflows, the side that has more fades out over 1rem (the same cue as the section tab strip;
+   the resting scroll position keeps the spine just inside it: FADE in app/35_graph.js) */
 .hxg-canvas[data-scroll-end="more"] {
-  -webkit-mask-image: linear-gradient(to right, var(--ink) calc(100% - 2rem), transparent);
-  mask-image: linear-gradient(to right, var(--ink) calc(100% - 2rem), transparent);
+  -webkit-mask-image: linear-gradient(to right, var(--ink) calc(100% - 1rem), transparent);
+  mask-image: linear-gradient(to right, var(--ink) calc(100% - 1rem), transparent);
 }
 .hxg-canvas[data-scroll-start="more"][data-scroll-end="more"] {
-  -webkit-mask-image: linear-gradient(to right, transparent, var(--ink) 2rem, var(--ink) calc(100% - 2rem), transparent);
-  mask-image: linear-gradient(to right, transparent, var(--ink) 2rem, var(--ink) calc(100% - 2rem), transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, var(--ink) 1rem, var(--ink) calc(100% - 1rem), transparent);
+  mask-image: linear-gradient(to right, transparent, var(--ink) 1rem, var(--ink) calc(100% - 1rem), transparent);
 }
 .hxg-canvas[data-scroll-start="more"][data-scroll-end="edge"] {
-  -webkit-mask-image: linear-gradient(to right, transparent, var(--ink) 2rem);
-  mask-image: linear-gradient(to right, transparent, var(--ink) 2rem);
+  -webkit-mask-image: linear-gradient(to right, transparent, var(--ink) 1rem);
+  mask-image: linear-gradient(to right, transparent, var(--ink) 1rem);
 }
 /* the canvas is a Tab stop only while it overflows; its focus ring sits on the frame, outside the fades */
 .hxg-canvas:focus { outline: none; }
 .hxg-frame:has(> .hxg-canvas:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
+@supports not selector(:has(*)) {
+  .hxg-canvas:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+}
 .hxg .hxg-svg {
   display: block;
   max-width: none; /* the drawing keeps its natural size and scrolls; it never shrinks into unreadable text */
@@ -177,7 +182,7 @@
 .hxg-term[data-tone="ok"] { --hxg-tone: var(--ok); --hxg-tint: var(--ok-tint); }
 .hxg-term[data-tone="warn"] { --hxg-tone: var(--warn); --hxg-tint: var(--warn-tint); }
 .hxg-term[data-tone="crit"] { --hxg-tone: var(--crit); --hxg-tint: var(--crit-tint); }
-.hxg-term .hxg-box { fill: var(--hxg-tint); stroke: color-mix(in srgb, var(--hxg-tone) 55%, var(--graph-bg)); }
+.hxg-term .hxg-box { fill: var(--hxg-tint); stroke: color-mix(in srgb, var(--hxg-tone) 62%, var(--graph-bg)); }
 .hxg-term .hxg-cat { font: 500 12px var(--font-sans); fill: var(--hxg-tone); transition: fill 0.15s ease; }
 .hxg-term .hxg-id { fill: var(--ink); }
 .hxg-missing .hxg-box { fill: var(--crit-tint); stroke: var(--crit); stroke-dasharray: 4 3; }
@@ -247,11 +252,12 @@
   white-space: nowrap;
 }
 
-/* compact: tighter header, and one caption line for whatever is hovered or focused, or the run status */
+/* compact: tighter header, and a caption for whatever is hovered or focused, or the run status. Two lines are
+   reserved, so pointing at states and edges never moves what follows; a focused state lists its transitions. */
 .hxg.is-compact { gap: var(--sp-2); }
 .hxg-caption {
   margin: 0;
-  min-height: calc(var(--fs-2) * var(--lh-body));
+  min-height: calc(var(--fs-2) * var(--lh-body) * 2);
   font: 400 var(--fs-2) / var(--lh-body) var(--font-sans);
   color: var(--ink-2);
   overflow-wrap: anywhere;

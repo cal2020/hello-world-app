@@ -50,14 +50,15 @@ function parity_geometry(page) {
   });
 }
 
-/* The title's glyphs and the top bar actions never intersect. */
+/* The title's glyphs stay inside the brand box (whatever the font metrics) and never meet the top bar actions. */
 function topbar_clear(page) {
   return page.evaluate(() => {
     const range = document.createRange();
     range.selectNodeContents(document.querySelector(".hx-brand-name"));
     const t = range.getBoundingClientRect();
+    const brand = document.querySelector(".hx-brand").getBoundingClientRect();
     const a = document.querySelector(".hx-top-actions").getBoundingClientRect();
-    return !(t.left < a.right && a.left < t.right && t.top < a.bottom && a.top < t.bottom);
+    return t.right <= brand.right + 0.5 && !(t.left < a.right && a.left < t.right && t.top < a.bottom && a.top < t.bottom);
   });
 }
 
@@ -119,10 +120,10 @@ export default async function (t) {
     return { text: label.textContent, shown: getComputedStyle(label).display !== "none", aria: document.getElementById("hx-theme-toggle").getAttribute("aria-label") };
   });
   if (t.viewport.width < 600) {
-    for (const w of [400, 389, 360]) {
+    for (let w = 360; w <= 420; w += 4) {
       await page.setViewportSize({ width: w, height: t.viewport.height });
       await frames(page);
-      assert.ok(await topbar_clear(page), `at ${w}px the title and the top bar actions do not overlap`);
+      assert.ok(await topbar_clear(page), `at ${w}px the title fits its box and stays clear of the top bar actions`);
     }
     await page.setViewportSize(t.viewport);
     await frames(page);
@@ -401,6 +402,23 @@ export default async function (t) {
       if (r.px > 0) covered.push(r);
     }
     assert.deepEqual(covered, [], "no control focused with Shift+Tab sits under the sticky section strip");
+    /* the review's case, built on purpose: a link scrolled to 10px from the top (under the strip) gets focus
+       with Shift+Tab from the next link, and must be scrolled clear of the strip */
+    for (const i of [2, 4]) {
+      const r = await page.evaluate((i) => {
+        const el = document.querySelector(`#ov-step-${i} .ov-step-link`);
+        scrollBy(0, el.getBoundingClientRect().top - 10);
+        document.querySelector(`#ov-step-${i + 1} .ov-step-link`).focus({ preventScroll: true });
+        return Math.round(el.getBoundingClientRect().top);
+      }, i);
+      assert.equal(r, 10, "set-up: the link starts under the strip");
+      await page.keyboard.press("Shift+Tab");
+      const after = await page.evaluate((i) => {
+        const el = document.activeElement;
+        return { same: el === document.querySelector(`#ov-step-${i} .ov-step-link`), top: el.getBoundingClientRect().top, strip: document.querySelector(".hx-rail").getBoundingClientRect().bottom };
+      }, i);
+      assert.ok(after.same && after.top >= after.strip, `step ${i} link focused with Shift+Tab is clear of the strip: ${JSON.stringify(after)}`);
+    }
   }
 
   await page.evaluate(() => HXUI.go("selftest"));

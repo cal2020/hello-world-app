@@ -76,22 +76,24 @@
   gap: var(--sp-6);
   align-items: start;
 }
-/* The machine panel is only as tall as its content (its rule ends with the graph). When the window can show
-   all of it (data-fit, measured by 10_overview.js), it stays in view beside the step being read, which the
-   guided demo relies on. */
-.ov-split > .ov-machine { padding-left: var(--sp-6); border-left: 1px solid var(--rule); }
+/* The rule between the columns belongs to the demo column, so it ends with the last step. The machine panel is
+   only as tall as its content; when the window can show all of it (data-fit, measured by 10_overview.js), it
+   stays in view beside the step being read, which the guided demo relies on. */
+.ov-split > .ov-demo { padding-right: var(--sp-6); border-right: 1px solid var(--rule); }
 .ov-split[data-graph="ready"] > .ov-machine[data-fit="yes"] { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--sp-4)); }
 /* without a graph the demo takes the full width and the machine panel follows it */
 .ov-split:not([data-graph="ready"]):not([data-graph="pending"]) { grid-template-columns: minmax(0, 1fr); }
-.ov-split:not([data-graph="ready"]):not([data-graph="pending"]) > .ov-machine {
-  padding-left: 0; border-left: 0; padding-top: var(--sp-6); border-top: 1px solid var(--rule);
-}
+.ov-split:not([data-graph="ready"]):not([data-graph="pending"]) > .ov-demo { padding-right: 0; border-right: 0; }
+.ov-split:not([data-graph="ready"]):not([data-graph="pending"]) > .ov-machine { padding-top: var(--sp-6); border-top: 1px solid var(--rule); }
 @container ov (max-width: 54rem) {
   .ov-split { grid-template-columns: minmax(0, 1fr); }
-  .ov-split > .ov-machine { padding-left: 0; border-left: 0; padding-top: var(--sp-6); border-top: 1px solid var(--rule); }
+  .ov-split > .ov-demo { padding-right: 0; border-right: 0; }
+  .ov-split > .ov-machine { padding-top: var(--sp-6); border-top: 1px solid var(--rule); }
   .ov-split[data-graph="ready"] > .ov-machine[data-fit] { position: static; }
 }
 
+/* both panels of the split share one head shape (title, then its chips), so their leads start level */
+.ov-split > .hx-panel > .hx-panel-head { flex-direction: column; align-items: flex-start; gap: var(--sp-2); }
 .ov-demo { container: ovdemo / inline-size; }
 .ov-demo-actions { display: grid; justify-items: start; gap: var(--sp-2); }
 .ov-demo-actions .hx-reason { max-width: 60ch; }

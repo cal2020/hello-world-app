@@ -76,6 +76,7 @@
   const LABEL_REACH = 20; // a guard label is never further than this from its own edge
   const SCALE_MIN = 0.9;  // the compact drawing never shrinks text below 90%; the canvas scrolls the rest
   const AUTO_SLACK = 24;  // "auto": back to the full drawing only with this much room to spare (no flip-flop)
+  const FADE = 16;        // px: the edge fade of an overflowing canvas (app/35_graph.css, 1rem)
 
   const SIZES = {
     normal: {
@@ -739,6 +740,8 @@
       e.segs = segs;
       e.samples = sample(segs, 4);
       e.length = path_length(segs);
+      e.bb = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+      for (const q of e.samples) { e.bb.x0 = Math.min(e.bb.x0, q.x); e.bb.y0 = Math.min(e.bb.y0, q.y); e.bb.x1 = Math.max(e.bb.x1, q.x); e.bb.y1 = Math.max(e.bb.y1, q.y); }
     }
 
     // ---- badge slots: numbered step badges sit on the path near its start
@@ -791,8 +794,9 @@
 
     // ---- edge labels. Hard rules: clear of every node, reserved pill, other label and the start marker (4px),
     // never over another edge (1.5px), and within LABEL_REACH of the label's own edge. Compact labels also stay
-    // inside the drawing. Among the spots that pass, the cheapest wins: near the preferred anchor, off its own
-    // line, away from step badge slots.
+    // inside the drawing; they are shown one state at a time (on hover or focus), so they only have to keep clear
+    // of the labels and edges shown with them, those of the same source state (other edges only cost). Among the
+    // spots that pass, the cheapest wins: near the preferred anchor, off its own line, away from step badge slots.
     const placed = [];
     const node_list = all_boxes();
     const slot_r = 10;
@@ -807,19 +811,23 @@
     function score(bx, e, anchor, pen, on_line) {
       for (const b of node_list) if (overlaps(bx, b, 4)) return Infinity;
       for (const b of reserved) if (overlaps(bx, b, 4)) return Infinity;
-      for (const l of placed) if (overlaps(bx, l, 4)) return Infinity;
+      for (const l of placed) if ((!opts.compact || l.from === e.from) && overlaps(bx, l, 4)) return Infinity;
       if (start && overlaps(bx, start.box, 2)) return Infinity;
       const out = Math.max(0, core.x0 - bx.x) + Math.max(0, bx.x + bx.w - core.x1) + Math.max(0, core.y0 - bx.y) + Math.max(0, bx.y + bx.h - core.y1);
       if (opts.compact && out > 0.5) return Infinity; // compact labels never widen the drawing
       if (own_dist(bx, e) > LABEL_REACH) return Infinity;
       let s = pen + 0.15 * out;
       for (const o of edges) {
+        // an edge whose samples and badge slots all lie further than slot_r from the box cannot touch it
+        if (o.bb.x1 < bx.x - slot_r || o.bb.x0 > bx.x + bx.w + slot_r || o.bb.y1 < bx.y - slot_r || o.bb.y0 > bx.y + bx.h + slot_r) continue;
         if (o === e) {
-          if (!on_line) for (const q of o.samples) if (contains(bx, q, 2)) s += 25;
+          if (on_line) continue; // the on-line spot is laid out around this edge's own line and first badge slot
+          for (const q of o.samples) if (contains(bx, q, 2)) s += 25;
         } else {
+          const together = !opts.compact || o.from === e.from; // drawn (or, compact, shown) at the same time
           for (const q of o.samples) {
-            if (contains(bx, q, 1.5)) return Infinity; // a label never hides another edge
-            if (contains(bx, q, 4)) s += 20;
+            if (contains(bx, q, 1.5)) { if (together) return Infinity; s += 70; } // a label never hides another edge
+            else if (contains(bx, q, 4)) s += 20;
           }
         }
         for (const q of o.badge_slots.slice(0, 2)) {
@@ -927,7 +935,7 @@
       // no spot near the edge: leave the label out (its tooltip, the caption and the text alternative carry it)
       if (!best) { e.label = null; continue; }
       e.label = { x: best.x, y: best.y, w, h, text: lines[0], lines };
-      placed.push(e.label);
+      placed.push({ x: best.x, y: best.y, w, h, from: e.from });
     }
 
     // ---- status tag ("current", "waiting", ...): inside the state at the top right, on the id's baseline.
@@ -1306,18 +1314,30 @@
       const p = list.find((x) => x.copy === null) || list.find((x) => x.copy === 0);
       return p ? p.g : g;
     }
-    // caption parts: strings in sans, [text] in mono (ids and guards)
+    // caption parts: strings in sans, [text] in mono (ids and guards), "\n" starts a new line
     function set_caption(parts) {
-      if (caption) caption.replaceChildren(...parts.filter((p) => p !== null && p !== "").map((p) => (Array.isArray(p) ? code(p[0]) : p)));
+      if (!caption) return;
+      const kids = [];
+      for (const p of parts) {
+        if (p === null || p === "") continue;
+        kids.push(p === "\n" ? el("br") : Array.isArray(p) ? code(p[0]) : p);
+      }
+      caption.replaceChildren(...kids);
     }
     function edge_caption(e) {
       return [[e.from], " → ", [e.to], e.cond ? " if " : " otherwise", e.cond ? [e.cond] : null, e.inc ? ", then +1 " : null, e.inc ? [e.inc] : null];
     }
-    function node_caption(n) {
+    /** One line (pointer hover), or with full = true one more line per transition with its guard (keyboard focus or a
+        tap: a deliberate request, so the caption may grow). */
+    function node_caption(n, full) {
       if (n.kind === "end") return [[n.id], ": terminal, " + (n.terminal_kind || "no category")];
-      const outs = D.L.edges.filter((e) => e.from === n.id).length;
-      return [[n.id], ": " + n.kind_text + (n.detail ? " · " + n.lead : ""), n.detail ? (n.detail_mono ? [n.detail] : n.detail) : null,
-        " · " + outs + (outs === 1 ? " transition" : " transitions")];
+      const outs = D.L.edges.filter((e) => e.from === n.id);
+      const parts = [[n.id], ": " + n.kind_text + (n.detail ? " · " + n.lead : ""), n.detail ? (n.detail_mono ? [n.detail] : n.detail) : null];
+      if (!full || !outs.length) return parts.concat(" · " + outs.length + (outs.length === 1 ? " transition" : " transitions"));
+      for (const e of outs) {
+        parts.push("\n", "→ ", [e.to], e.cond ? " if " : " otherwise", e.cond ? [e.cond] : null, e.inc ? ", then +1 " : null, e.inc ? [e.inc] : null);
+      }
+      return parts;
     }
     function caption_default() {
       if (!caption) return;
@@ -1332,20 +1352,20 @@
         set_caption(["Tap a state to read it here."]);
       }
     }
-    function hover_node(id, on) {
+    // what the pointer is over and which state has focus; the marks and the caption follow from them
+    const pointer = { state: null, edge: null };
+    let focused = null;
+    function refresh_marks() {
+      if (!D) return;
       for (const e of D.L.edges) {
-        if (e.from !== id) continue;
+        const on = e.from === pointer.state || e.from === focused || e.key === pointer.edge;
         D.edge_el[e.key].g.classList.toggle("is-hover", on);
         if (D.label_el[e.key]) D.label_el[e.key].classList.toggle("is-shown", on);
       }
-      if (on && D.by_id[id]) set_caption(node_caption(D.by_id[id])); else caption_default();
-    }
-    function hover_edge(key, on) {
-      const x = D.edge_el[key];
-      if (!x) return;
-      x.g.classList.toggle("is-hover", on);
-      if (D.label_el[key]) D.label_el[key].classList.toggle("is-shown", on);
-      if (on) set_caption(edge_caption(x.e)); else caption_default();
+      if (pointer.edge && D.edge_el[pointer.edge]) set_caption(edge_caption(D.edge_el[pointer.edge].e));
+      else if (pointer.state && D.by_id[pointer.state]) set_caption(node_caption(D.by_id[pointer.state], false));
+      else if (focused && D.by_id[focused]) set_caption(node_caption(D.by_id[focused], true));
+      else caption_default();
     }
     // every listener sits on the HTML canvas: focus listeners on an <svg> would make the drawing itself a Tab stop
     listen(canvas, "click", (ev) => {
@@ -1381,20 +1401,27 @@
       const g = node_of(ev.target);
       if (!g) return;
       set_roving(g);
-      hover_node(g.getAttribute("data-state"), true);
+      focused = g.getAttribute("data-state");
+      refresh_marks();
     });
-    listen(canvas, "focusout", (ev) => { const g = node_of(ev.target); if (g) hover_node(g.getAttribute("data-state"), false); });
-    listen(canvas, "mouseover", (ev) => {
+    listen(canvas, "focusout", (ev) => {
       const g = node_of(ev.target);
-      if (g) { hover_node(g.getAttribute("data-state"), true); return; }
-      const eg = edge_of(ev.target);
-      if (eg) hover_edge(eg.getAttribute("data-key"), true);
+      if (!g || focused !== g.getAttribute("data-state")) return;
+      focused = null;
+      refresh_marks();
+    });
+    listen(canvas, "mouseover", (ev) => {
+      const g = node_of(ev.target), eg = g ? null : edge_of(ev.target);
+      pointer.state = g ? g.getAttribute("data-state") : null;
+      pointer.edge = eg ? eg.getAttribute("data-key") : null;
+      refresh_marks();
     });
     listen(canvas, "mouseout", (ev) => {
-      const g = node_of(ev.target);
-      if (g) { hover_node(g.getAttribute("data-state"), false); return; }
-      const eg = edge_of(ev.target);
-      if (eg) hover_edge(eg.getAttribute("data-key"), false);
+      const to = ev.relatedTarget;
+      if (to && (node_of(to) || edge_of(to))) return; // the mouseover that follows sets the new target
+      pointer.state = null;
+      pointer.edge = null;
+      refresh_marks();
     });
 
     /* ---------------------------------------------------------------- size, overflow and scrolling */
@@ -1474,13 +1501,14 @@
       }
       reveal_box(x0, x1 - x0);
     }
-    /** At rest: the spine column starts at the left edge (its labels and the outcome lane are to its right). */
+    /** At rest: the spine column starts at the left edge, just inside the 16px edge fade (its guards and the
+        outcome lane are to its right). */
     function rest_scroll() {
       if (user_scrolled || !D) return;
       const cw = canvas.clientWidth;
       const sp = D.L.spine.length ? D.by_id[D.L.spine[0]] : D.L.nodes[0];
       if (!sp || !cw || canvas.scrollWidth <= cw + 1) { sync_overflow(); return; }
-      set_scroll(svg_left() + (sp.x - 12) * scale);
+      set_scroll(svg_left() + sp.x * scale - FADE);
     }
     function show_focus_target() {
       if (state.current || state.terminal) reveal(state.current || state.terminal);
@@ -1498,15 +1526,17 @@
     }
     function redraw(compact) {
       const active = document.activeElement;
-      const focused = D && active && D.svg.contains(active) ? active.getAttribute("data-state") : null;
+      const had_focus = D && active && D.svg.contains(active) ? active.getAttribute("data-state") : null;
       mount(draw(compact));
+      // the old drawing is gone (removing a focused element fires no focusout): start the tracking afresh
+      pointer.state = null; pointer.edge = null; focused = null;
       last_current = null;
       user_scrolled = false;
       fit();
       apply(state);
       if (state.highlight.length) highlight(state.highlight);
-      if (focused) {
-        const list = D.node_els[focused] || [];
+      if (had_focus) {
+        const list = D.node_els[had_focus] || [];
         const p = (list.find((x) => x.copy === null) || list.find((x) => x.copy === 0) || {}).g;
         if (p && D.focusables.indexOf(p) >= 0) {
           set_roving(p);
@@ -1737,7 +1767,7 @@
         parts.push(visited.length ? "Steps taken: " + visited.map((v, i) => (i + 1) + ". " + (v && v.from) + " to " + (v && v.to) + (resolve_edge(v) ? "" : " (fallback, not an edge)")).join("; ") + "." : "No transition taken yet.");
         alt_run.textContent = parts.join(" ");
       }
-      caption_default();
+      refresh_marks();
       const target = current || terminal;
       if (target && target !== last_current) {
         const jp = g_jumps.querySelector(".hxg-node.hxg-jump.is-reached, .hxg-node.hxg-jump.is-current, .hxg-node.hxg-jump.is-stopped");
@@ -1768,7 +1798,7 @@
     // first paint: the drawing that fits, at rest, with the spine in view
     mount(draw(want_compact()));
     fit();
-    caption_default();
+    refresh_marks();
     sync_overflow();
     if (typeof requestAnimationFrame === "function") requestAnimationFrame(() => { if (!destroyed) { sync_overflow(); rest_scroll(); } });
 

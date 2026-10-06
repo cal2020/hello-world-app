@@ -243,7 +243,8 @@
       btn.dataset.state = state;
       btn.replaceChildren(HXUI.icon(state === "copied" ? "check" : "copy"));
       const msg = state === "copied" ? "Copied" : COPY_BLOCKED;
-      btn.setAttribute("aria-label", msg);
+      /* blocked: the button keeps its name and the visible note becomes its description (read once) */
+      btn.setAttribute("aria-label", state === "copied" ? msg : name);
       btn.title = msg;
       if (state === "selected") show_note(target); else drop_note();
       HXUI.announce(state === "copied" ? "Copied to the clipboard." : msg);
