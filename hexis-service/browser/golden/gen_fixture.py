@@ -39,6 +39,30 @@ try:
 except AttributeError:
     bad_diag = "AttributeError"
 
+
+def repair_edge(fn):
+    """Where the REPAIR_DRAFT edge goes, or the exception class name and message."""
+    try:
+        out = fn()
+    except Exception as exc:  # noqa: BLE001
+        return {"exc": type(exc).__name__, "message": str(exc)}
+    m = out["machine"] if "machine" in out else out
+    return {"to": m["states"]["REPAIR_DRAFT"]["transitions"][0]["to"]}
+
+
+# Python truthiness of non-boolean arguments. JS machine_dict(x) is the positional call for a non-dict x; a plain
+# object is always the keyword-options object, so machine_dict({...}) mirrors machine_dict(**{...}).
+TRUTHY = [[], [1], "", "x", 0, 1, 2, -1, 0.5, None, True, False, [[]], [0]]
+positional = [{"arg": a, "result": repair_edge(lambda: PF.machine_dict(a))} for a in TRUTHY]
+keyword = [{"kwargs": kw, "result": repair_edge(lambda: PF.machine_dict(**kw))}
+           for kw in [{}, {"defect": []}, {"defect": [1]}, {"defect": {}}, {"defect": {"a": 1}}, {"defect": ""},
+                      {"defect": "x"}, {"defect": 0}, {"defect": 1}, {"defect": None}, {"defect": True},
+                      {"defect": False}, {"x": 1}, {"defect": True, "x": 1}]]
+diagnostics_iter = [{"diagnostics": d, "result": repair_edge(lambda: model.draft({}, d, 1))}
+                    for d in [{}, {"a": 1}, {"code": "ORDERING_VIOLATION"}, "", "ab", 1, None, True, 0.5, [], [[]],
+                              [{"code": "ORDERING_VIOLATION"}, 5], [5, {"code": "ORDERING_VIOLATION"}],
+                              [{"code": "X"}, "s", {"code": "ORDERING_VIOLATION"}], [{}, {"code": "ORDERING_VIOLATION"}]]]
+
 machines = {}
 for flag in (False, True):
     raw = PF.machine_dict(defect=flag)
@@ -59,6 +83,7 @@ write("fixture", {
     "machine_dict": machines, "contracts_dict": PF.contracts_dict(), "contracts_key_orders": contract_orders,
     "contracts_canonical": canonical_bytes(contracts.model_dump(mode="json", by_alias=True)).decode("utf-8"),
     "compiler_model": {"model_id": model.model_id, "settings": model.settings, "drafts": drafts,
-                       "bad_diagnostic": bad_diag},
+                       "bad_diagnostic": bad_diag, "diagnostics_iteration": diagnostics_iter},
+    "machine_dict_truthiness": {"positional": positional, "keyword": keyword},
 })
 print(f"fixture: {len(policies)} policies, {len(drafts)} drafts")

@@ -10433,6 +10433,74 @@
    "text": "\u001d####### )😀####### \n"
   }
  ],
+ "errors": [
+  {
+   "result": {
+    "exc": "UnicodeEncodeError",
+    "message": "'utf-8' codec can't encode character '\\ud800' in position 0: surrogates not allowed"
+   },
+   "text_json": "\"- \\ud800 lone surrogate\""
+  },
+  {
+   "result": {
+    "exc": "UnicodeEncodeError",
+    "message": "'utf-8' codec can't encode character '\\ud800' in position 0: surrogates not allowed"
+   },
+   "text_json": "\"\\ud800\\n\\n- a\""
+  },
+  {
+   "result": {
+    "ok": [
+     "S0.1"
+    ]
+   },
+   "text_json": "\"# \\ud800 title\\n- a\\n\""
+  },
+  {
+   "result": {
+    "exc": "UnicodeEncodeError",
+    "message": "'utf-8' codec can't encode character '\\udc00' in position 0: surrogates not allowed"
+   },
+   "text_json": "\"## H\\n\\n\\udc00\\n\""
+  },
+  {
+   "result": {
+    "ok": [
+     "S0.1",
+     "S1.1"
+    ]
+   },
+   "text_json": "\"a\\n\\n## \\ud800\\n\\nb\""
+  },
+  {
+   "result": {
+    "exc": "UnicodeEncodeError",
+    "message": "'utf-8' codec can't encode character '\\ud800' in position 0: surrogates not allowed"
+   },
+   "text_json": "\"  \\n\\ud800  \\n\""
+  },
+  {
+   "result": {
+    "exc": "AttributeError",
+    "message": "'NoneType' object has no attribute 'splitlines'"
+   },
+   "text_json": "null"
+  },
+  {
+   "result": {
+    "exc": "AttributeError",
+    "message": "'int' object has no attribute 'splitlines'"
+   },
+   "text_json": "5"
+  },
+  {
+   "result": {
+    "exc": "AttributeError",
+    "message": "'list' object has no attribute 'splitlines'"
+   },
+   "text_json": "[\"- a\"]"
+  }
+ ],
  "helpers": {
   "critical_mark": "**MUST**",
   "splitlines": [

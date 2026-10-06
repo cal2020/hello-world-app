@@ -50,10 +50,100 @@
     }
   });
 
+  test("DocumentStore with malformed collections follows Python's .get / in / [] (messages too)", () => {
+    const EXACT = ["AttributeError", "IndexError", "TypeError", "KeyError"];
+    const check = (label, store, args, ctx, py) => {
+      let got, err;
+      try { got = store.read(args, ctx); } catch (e) { err = e; }
+      if (py.exc === undefined) {
+        assert.ok(!err, `${label}: unexpected ${err && excName(err)}: ${err && err.message}`);
+        assert.deepEqual(plain(got), py.ok, label);
+      } else {
+        assert.ok(err, `${label}: expected ${py.exc}, got ${JSON.stringify(got)}`);
+        assert.equal(excName(err), py.exc, `${label}: ${err.message}`);
+        if (EXACT.indexOf(py.exc) >= 0) assert.equal(err.message, py.message, `${label}: message`);
+      }
+    };
+    let malformed = 0;
+    for (const c of G().documents) {
+      if (c.docs === null || (HX.util.is_plain_object(c.docs) && Object.values(c.docs).every(HX.util.is_plain_object))) continue;
+      malformed++;
+      check(`read ${JSON.stringify(c.docs)} ${JSON.stringify(c.args)} ${JSON.stringify(c.ctx)}`, new FK.DocumentStore(c.docs), c.args, c.ctx, c.result);
+    }
+    assert.ok(malformed >= 30, `${malformed}`);
+    for (const c of G().documents_escaped) {
+      check(`read ${c.docs_json} ${c.args_json}`, new FK.DocumentStore(JSON.parse(c.docs_json)), JSON.parse(c.args_json),
+        JSON.parse(c.ctx_json), JSON.parse(c.result_json));
+    }
+    /* the verifier's cases */
+    const acme = { tenant_id: "acme" };
+    assert.deepEqual(new FK.DocumentStore({ acme: ["x"] }).read({ document_ids: ["0"] }, acme), { status: "missing", documents: [], missing_ids: ["0"] });
+    assert.throws(() => new FK.DocumentStore(["x"]).read({ document_ids: ["0"] }, { tenant_id: "0" }), (e) => e.code === "AttributeError");
+    assert.throws(() => new FK.DocumentStore({ acme: "hello" }).read({ document_ids: ["ell"] }, acme), (e) => e.code === "TypeError");
+  });
+
+  test("FakeERP SQL parameter binding: ProgrammingError / OverflowError / UnicodeEncodeError / KeyError like sqlite3", () => {
+    const EXACT = ["ProgrammingError", "OverflowError", "KeyError", "TypeError"];
+    for (const c of G().erp_bind) {
+      const erp = new FK.FakeERP();
+      erp.create_draft({ draft: { n: 1 }, draft_digest: "d0", supplier_ref: "S0" }, { tenant_id: "acme", idempotency_key: "k-1" });
+      const args = JSON.parse(c.args_json), ctx = JSON.parse(c.ctx_json), py = JSON.parse(c.result_json);
+      const fn = {
+        create: () => erp.create_draft(args, ctx), reconcile: () => erp.reconcile_create(args, ctx),
+        read: () => erp.read_draft(args, ctx), count: () => erp.count(args),
+        modify: () => erp.modify_out_of_band(...args), tamper: () => erp.tamper_payload(...args),
+      }[c.op];
+      const label = `${c.op} ${c.args_json} ${c.ctx_json}`;
+      let got, err;
+      try { got = fn(); } catch (e) { err = e; }
+      if (c.js) {
+        /* documented: Python stores floats (as SQLite text); the JS port refuses them and writes nothing */
+        assert.ok(err && err.code === c.js, `${label}: expected ${c.js}`);
+        assert.ok(py.exc === undefined, label);
+        assert.equal(erp.count("acme"), 1, `${label}: rows`);
+        continue;
+      } else if (py.exc === undefined) {
+        assert.ok(!err, `${label}: unexpected ${err && excName(err)}: ${err && err.message}`);
+        assert.deepEqual(plain(got), py.ok, label);
+      } else {
+        assert.ok(err, `${label}: expected ${py.exc}`);
+        assert.equal(excName(err), py.exc, `${label}: ${err.message}`);
+        if (EXACT.indexOf(py.exc) >= 0) assert.equal(err.message, py.message, `${label}: message`);
+      }
+      assert.equal(erp.count("acme"), c.rows, `${label}: rows`);
+    }
+    /* integers the golden files cannot carry: Python's outcome vs the documented JS behavior */
+    const big = G().erp_big_ints;
+    const py = (k) => JSON.parse(big[k]);
+    const A0 = () => ({ supplier_ref: "S", draft_digest: "d", draft: {} });
+    const code = (fn) => { try { fn(); } catch (e) { return excName(e); } return "ok"; };
+    assert.equal(py("tenant_2_64").exc, "OverflowError");
+    assert.equal(code(() => new FK.FakeERP().create_draft(A0(), { tenant_id: 2 ** 64, idempotency_key: "k" })), "OverflowError");
+    assert.equal(py("count_2_70").exc, "OverflowError");
+    assert.equal(code(() => new FK.FakeERP().count(2 ** 70)), "OverflowError");
+    /* Python accepts 64-bit integers beyond 2^53 (stored as text): the port refuses them (documented) */
+    assert.equal(py("tenant_2_60").ok.status, "created");
+    assert.equal(code(() => new FK.FakeERP().create_draft(A0(), { tenant_id: 2 ** 60, idempotency_key: "k" })), "InterfaceError");
+    assert.equal(py("count_2_60").ok, 0);
+    assert.equal(code(() => new FK.FakeERP().count(2 ** 60)), "InterfaceError");
+    /* -2^63-1 is -2^63 as a JS number (a 64-bit value): Python OverflowError, JS InterfaceError, both refuse */
+    assert.equal(py("tenant_neg_2_63_minus_1").exc, "OverflowError");
+    assert.equal(code(() => new FK.FakeERP().create_draft(A0(), { tenant_id: -(2 ** 63) - 1, idempotency_key: "k" })), "InterfaceError");
+    /* unsafe integers anywhere in the arguments fail the argument digest first (canonical deviation) */
+    assert.equal(py("supplier_2_70").exc, "OverflowError");
+    assert.equal(code(() => new FK.FakeERP().create_draft(Object.assign(A0(), { supplier_ref: 2 ** 70 }), { tenant_id: "a", idempotency_key: "k" })), "CanonicalError");
+    assert.equal(py("draft_2_60").ok.status, "created");
+    assert.equal(code(() => new FK.FakeERP().create_draft(Object.assign(A0(), { draft: { n: 2 ** 60 } }), { tenant_id: "a", idempotency_key: "k" })), "CanonicalError");
+  });
+
   test("SupplierRegistry.lookup matches Python (new / compatible / conflict, Python == semantics)", () => {
     for (const c of G().registry) {
-      const reg = new FK.SupplierRegistry(c.records === null ? undefined : c.records);
-      same(`lookup ${JSON.stringify(c.args)} ${JSON.stringify(c.ctx)}`, () => reg.lookup(c.args, c.ctx), c.result);
+      /* records === null is Python's default (None); constructor errors (dict() of a non-mapping) count too */
+      same(`lookup ${JSON.stringify(c.records)} ${JSON.stringify(c.args)} ${JSON.stringify(c.ctx)}`,
+        () => new FK.SupplierRegistry(c.records === null ? undefined : c.records).lookup(c.args, c.ctx), c.result);
+      if (c.result.exc && ["TypeError", "ValueError"].indexOf(c.result.exc) >= 0 && c.records !== null && typeof c.records !== "object") {
+        assert.throws(() => new FK.SupplierRegistry(c.records), (e) => e.code === c.result.exc && e.message === c.result.message);
+      }
     }
     const reg = new FK.SupplierRegistry([[["t", "R"], { business_unit: "B" }]]);
     assert.equal(reg.lookup({ supplier_ref: "R", business_unit: "B" }, { tenant_id: "t" }).status, "exists_compatible");
@@ -129,6 +219,26 @@
     }
     const m = new FK.FixtureExtractionModel();
     for (const c of G().model_malformed) same(`malformed ${c.request_json}`, () => m.generate(parse(c.request_json)), c.result);
+  });
+
+  test("FixtureExtractionModel arguments: Python truthiness, n > 0 comparison, keyword/positional forms", () => {
+    const g = G();
+    assert.ok(g.model_args.length >= 12);
+    for (const c of g.model_args) {
+      const label = c.kwargs === null ? `positional ${JSON.stringify(c.positional)}` : `kwargs ${JSON.stringify(c.kwargs)}`;
+      same(label, () => {
+        const m = c.kwargs === null ? new FK.FixtureExtractionModel(c.positional) : new FK.FixtureExtractionModel(c.kwargs);
+        const calls = [0, 1, 2].map(() => {
+          try { return { ok: plain(m.generate(JSON.parse(JSON.stringify(g.model_args_request)))) }; } catch (e) {
+            return { exc: excName(e), message: e.message };
+          }
+        });
+        /* compare exception classes (and ModelUnavailable messages) like same() does */
+        return { calls: calls.map((x) => (x.exc === undefined || x.exc === "ModelUnavailable" ? x : { exc: x.exc })),
+          invalid_outputs_after: m.invalid_outputs, n_requests: m.requests.length };
+      }, c.result.exc ? c.result : { ok: Object.assign({}, c.result.ok, {
+        calls: c.result.ok.calls.map((x) => (x.exc === undefined || x.exc === "ModelUnavailable" ? x : { exc: x.exc })) }) });
+    }
   });
 
   test("ModelRequest / ModelResponse validation and output_schema_for match models/base.py", () => {

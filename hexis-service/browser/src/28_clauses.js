@@ -89,13 +89,30 @@
     return offs;
   }
 
+  /** Python built-in errors as HX.HXError with the class name as ``code`` (as in 55_fakes). */
+  function pyerr(type, msg) {
+    const e = new HX.HXError(type, msg);
+    e.message = msg;
+    return e;
+  }
+
   function clause_ref(id, start, end, heading, body) {
+    /* Python hashes body.encode("utf-8"): a lone surrogate in a clause body is a UnicodeEncodeError
+       (only clause bodies are hashed; a heading or blank line with one is fine, as in Python) */
+    if (HX.util.has_lone_surrogate(body)) {
+      throw pyerr("UnicodeEncodeError", "'utf-8' codec can't encode character: surrogates not allowed");
+    }
     return { id, start, end, heading, text: body, sha256: HX.canonical.sha256_hex(body) };
   }
 
-  /** ``index_clauses(text)`` -> list of ClauseRef dumps ``{id, start, end, heading, text, sha256}``. */
+  /** ``index_clauses(text)`` -> list of ClauseRef dumps ``{id, start, end, heading, text, sha256}``.
+   *  A non-string raises AttributeError (``text.splitlines``), as in Python. */
   clauses.index_clauses = function (text) {
-    if (typeof text !== "string") throw new TypeError("index_clauses expects a string");
+    if (typeof text !== "string") {
+      const t = text === null || text === undefined ? "NoneType" : typeof text === "boolean" ? "bool"
+        : typeof text === "number" ? (Number.isInteger(text) ? "int" : "float") : Array.isArray(text) ? "list" : "dict";
+      throw pyerr("AttributeError", "'" + t + "' object has no attribute 'splitlines'");
+    }
     const offs = cp_offsets(text);
     const slice = (s, e) => text.slice(offs[s], offs[e]);
     const out = [];

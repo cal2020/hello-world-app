@@ -417,7 +417,105 @@ for k, v in DEVIATIONS.items():
     assert r["py"] == "ok", (k, r)
     deviation_cases.append({"name": k, "input_json": jtext(v)})
 
-write("models_efsm", {"cases": efsm_cases, "deviations": deviation_cases})
+# Lone surrogates (JSON-escaped in ``input_ascii``; the JS test reads them with JSON.parse). pydantic reads
+# int/float/bool/Literal string input as UTF-8 first (string_unicode at the field), and one lone-surrogate
+# KEY fails the whole model with a single string_unicode at the model's loc. Python accepts them in str,
+# dict and Any fields and in dict keys; the JS port rejects those (documented).
+from hexis_service.compiler.compile import DeploymentPolicy  # noqa: E402
+from hexis_service.models.base import ModelRequest, ModelResponse  # noqa: E402
+
+SUR = "x\ud800"
+SURROGATE_MODELS = {"efsm.Variable": E.Variable, "efsm.Transition": E.Transition, "efsm.ModelAction": E.ModelAction,
+                    "efsm.Machine": E.Machine, "efsm.Prohibition": E.Prohibition, "efsm.Example": E.Example,
+                    "efsm.JudgeAction": E.JudgeAction, "efsm.Thresholds": E.Thresholds, "pkg.Budgets": P.Budgets,
+                    "pkg.ExecutionPolicy": P.ExecutionPolicy, "pkg.VariableContract": P.VariableContract,
+                    "pkg.SourceManifest": P.SourceManifest, "pkg.ClauseCoverage": P.ClauseCoverage,
+                    "pkg.DeploymentPolicy": DeploymentPolicy, "fakes.ModelResponse": ModelResponse,
+                    "fakes.ModelRequest": ModelRequest}
+M0 = {"format": "efsm-v1", "skill_id": "s", "initial": "A"}
+SURROGATE_INPUTS = [
+    ("efsm.Variable", {"name": "v", "type": SUR}), ("efsm.Variable", {"name": "v", "type": "\udc00"}),
+    ("efsm.Variable", {"name": SUR}), ("efsm.Variable", {"name": "v", "init": SUR}),
+    ("efsm.Variable", {"name": "v", "init_from": SUR}), ("efsm.Variable", {"name": "v", "init": 1, "init_from": "x", SUR: 1}),
+    ("efsm.Transition", {"to": "B", "support": "1\ud800"}), ("efsm.Transition", {"to": SUR}),
+    ("efsm.Transition", {"if": SUR, "to": "B"}), ("efsm.Transition", {"cond": SUR, "to": "B"}),
+    ("efsm.Transition", {"to": "B", SUR: 1, "if": 5}), ("efsm.Transition", {"to": "B", "support": "\ud800", "inc": 5}),
+    ("efsm.ModelAction", {"prompt": "p", "introduced": "1\ud800"}), ("efsm.ModelAction", {"prompt": "p", "observable": SUR,
+                                                                                          "introduced": "maybe"}),
+    ("efsm.Machine", {**M0, "states": {SUR: {"id": "a", "action": {"kind": "end", "terminal": "T"}}}}),
+    ("efsm.Machine", {**M0, "states": {"A": {"id": "a", "action": {"kind": SUR, "terminal": "T"}}}}),
+    ("efsm.Machine", {**M0, "states": {"A": {"id": "a", "action": {"kind": "end", "terminal": "T", SUR: 1}}}}),
+    ("efsm.Machine", {**M0, "states": {"A": {"id": "a", "action": {"terminal": "T", SUR: 1}}}}),
+    ("efsm.Machine", {**M0, "max_steps": "zz", "states": {"A": {"id": "a", SUR: 2, "action": {"kind": "end"}}}}),
+    ("efsm.Machine", {**M0, SUR: 1, "max_steps": "zz", "states": {"A": {"id": "a", SUR: 2}}}),
+    ("efsm.Machine", {"format": SUR, "skill_id": "s", "initial": "A"}),
+    ("efsm.Machine", {**M0, "thresholds": {"acc_thr": "0.\ud800", "min_support": "x"}}),
+    ("efsm.Machine", {**M0, "variables": [{"name": "a", "type": "x\udfff"}, {"name": "b", SUR: 0}]}),
+    ("efsm.Prohibition", {"id": "p", "check": SUR, "pattern": SUR}), ("efsm.Prohibition", {"id": "p", "check": "absent",
+                                                                                           "pattern": SUR}),
+    ("efsm.Example", {"label": "l", SUR: 1}), ("efsm.Example", {"label": "l", "x": SUR}), ("efsm.Example", {SUR: 1}),
+    ("efsm.Example", {"label": 5, SUR: 1}),
+    ("efsm.JudgeAction", {"prompt": "p", "reads": ["a"], "writes": ["b"], "labels": ["abstain"], SUR: 1}),
+    ("efsm.JudgeAction", {"question": "p", "reads": ["a"], "writes": ["b"], "labels": ["x"], SUR: 1}),
+    ("efsm.JudgeAction", {"prompt": "p", "reads": ["a"], "writes": ["b"], "labels": ["abstain"], "error_rate": SUR,
+                          "support": "\ud8001", "introduced": "y\ud800"}),
+    ("efsm.Thresholds", {"holdout_ratio": SUR, "judge_rewrite_max": "\udc002"}),
+    ("pkg.Budgets", {"max_spend_usd": "1\ud800"}), ("pkg.Budgets", {"max_spend_usd": SUR}), ("pkg.Budgets", {SUR: 1}),
+    ("pkg.Budgets", {"max_steps": "zz", SUR: 1}), ("pkg.Budgets", {SUR: 1, "y\udc00": 2}),
+    ("pkg.Budgets", {"max_steps": "\ud800", "max_tool_calls": "x"}),
+    ("pkg.ExecutionPolicy", {"capability_ceiling": [SUR], "write_workflow": "t\ud800"}),
+    ("pkg.ExecutionPolicy", {"capability_ceiling": ["a"], "fallback_mode": SUR, "budgets": {SUR: 1}}),
+    ("pkg.ExecutionPolicy", {"budgets": {SUR: 1}, SUR: 2}),
+    ("pkg.VariableContract", {"owner": SUR}), ("pkg.VariableContract", {"owner": "tool", "schema": {SUR: 1}}),
+    ("pkg.SourceManifest", {"skill_sha256": "a", "tool_catalog_sha256": "b", "resources": {SUR: "x"}}),
+    ("pkg.SourceManifest", {"skill_sha256": "a", "tool_catalog_sha256": "b", "resources": {"k": SUR}}),
+    ("pkg.ClauseCoverage", {"classification": SUR, "justification": "j", "critical": "\ud800"}),
+    ("pkg.DeploymentPolicy", {"execution_policy": {"capability_ceiling": []}, "task_input_schema": {}, "profile": SUR}),
+    ("fakes.ModelResponse", {"model_id": "m", "cost_usd": "1\ud800", "input_tokens": "\ud8001"}),
+    ("fakes.ModelRequest", {"kind": SUR, "state_id": "s", "prompt": "p", "inputs": {SUR: SUR}, "output_schema": {}}),
+    ("fakes.ModelRequest", {"kind": "model", "state_id": "s", "prompt": "p", "inputs": {}, "output_schema": {},
+                            "labels": [SUR]}),
+]
+surrogate_cases = []
+for name, data in SURROGATE_INPUTS:
+    c = {"model": name, "input_ascii": json.dumps(data, ensure_ascii=True)}
+    try:
+        SURROGATE_MODELS[name].model_validate(data)  # (a JSON dump of such a model would raise)
+        c["py"] = "ok"
+    except ValidationError as exc:
+        c["py"] = "error"
+        c["errors"] = sorted([[e["type"], list(e["loc"])] for e in exc.errors()], key=lambda x: (x[0], json.dumps(x[1])))
+    surrogate_cases.append(c)
+
+# A value rejected only by a documented deviation still takes part in validating its container (the JS port's
+# error list is a superset of pydantic's): pydantic's errors next to deviation inputs
+DEEP = []
+for _ in range(70):
+    DEEP = [DEEP]
+J0 = {"kind": "judge", "prompt": "p", "reads": ["a"], "writes": ["b"], "labels": ["x"]}
+SOFT_INPUTS = [
+    ("efsm.Variable", {"name": "v", "init": DEEP, "init_from": "x"}),
+    ("efsm.Variable", {"name": "v", "init": {"7": DEEP}, "init_from": "x", "type": "nope"}),
+    ("efsm.Machine", {**M0, "states": {"7": 5}}),
+    ("efsm.Machine", {**M0, "states": {"7": {"id": "a"}, "0": {"id": "b", "action": {"kind": "end", "terminal": "T"}}}}),
+    ("efsm.Machine", {**M0, "states": {"A": {"id": "a", "action": {"kind": "tool", "name": "t", "binds": {"42": 5}}}}}),
+    ("efsm.Machine", {**M0, "states": {"A": {"id": "a", "action": {**J0, "error_rate": "inf"}}}}),
+    ("efsm.Machine", {**M0, "states": {"A": {"id": "a", "action": {**J0, "error_rate": "1e400", "support": "x"}}}}),
+    ("efsm.Machine", {**M0, "states": {"A": {"id": "a", "action": {**J0, "examples": [{"label": "x", "deep": DEEP}]}}}}),
+    ("efsm.Machine", {**M0, "states": {"A": {"id": "a", "action": {"kind": "tool", "name": "t", "input": {"3": "${x}"},
+                                                                   "reads": 5}}}}),
+    ("efsm.Machine", {**M0, "thresholds": {"acc_thr": "NaN", "min_support": "x"}, "max_steps": "9007199254740993"}),
+    ("pkg.Contracts", {"variables": {"0": {"owner": "x"}}, "terminals": {"1": 5}}),
+    ("pkg.SourceManifest", {"skill_sha256": "a", "tool_catalog_sha256": 5, "resources": {"0": 1}}),
+]
+soft_cases = []
+for name, data in SOFT_INPUTS:
+    r = outcome((SURROGATE_MODELS.get(name) or getattr(P, name.split(".")[1])).model_validate, data)
+    assert r["py"] == "error", (name, r)
+    soft_cases.append({"model": name, "input_json": jtext(data), "errors": r["errors"]})
+
+write("models_efsm", {"cases": efsm_cases, "deviations": deviation_cases, "surrogates": surrogate_cases,
+                      "soft": soft_cases})
 
 # =============================================================================================== #
 # lax coercions
@@ -485,6 +583,20 @@ coerce = {
     "float": [coerce_case(TF, v, "float") for v in float_inputs],
     "bool": [coerce_case(TB, v, "bool") for v in bool_inputs],
 }
+
+
+def bool_error(v):
+    try:
+        TB.validate_python(v)
+        return None
+    except ValidationError as exc:
+        return exc.errors()[0]["type"]
+
+
+# numbers the golden files cannot carry: (JS expression, Python error type); the JS value is the same number
+coerce["bool_big"] = [[expr, bool_error(eval(expr))] for expr in  # noqa: S307 - fixed literals
+                      ["2**63", "-(2**63)", "2**64", "-(2**64)", "2**53 + 2", "-(2**53) - 2", "2**62", "1e300", "-1e300",
+                       "2.0**63", "2.5e18"]]
 write("models_coerce", coerce)
 
 # =============================================================================================== #
@@ -680,6 +792,49 @@ for name, doc in TARGETED:
                            "canonical_sha": sha(canonical_bytes(p.to_json())),
                            "machine_digest": digest(p.machine.to_json())})
 
+# float fields holding integral values beyond 2^53 (Python floats, printed as "1e+16"): normalization accepts
+# them and every hash API must agree with Python (the values arrive as numeric strings)
+BIG_FLOAT_EDITS = [
+    ("max_spend_usd 1e16", lambda d: d["execution_policy"]["budgets"].__setitem__("max_spend_usd", "1e16")),
+    ("max_spend_usd 2^53+1", lambda d: d["execution_policy"]["budgets"].__setitem__("max_spend_usd", "9007199254740993")),
+    ("max_spend_usd -1e20", lambda d: d["execution_policy"]["budgets"].__setitem__("max_spend_usd", "-1e20")),
+    ("max_spend_usd 1e300", lambda d: d["execution_policy"]["budgets"].__setitem__("max_spend_usd", " 1e300 ")),
+    ("thresholds big", lambda d: d["machine"].__setitem__("thresholds", {"acc_thr": "1e17", "loop_margin": "123456789012345678",
+                                                                         "judge_err_max": "2e53"})),
+    ("judge error_rate 1e22", lambda d: d["machine"]["states"].__setitem__("JUDGE", {
+        "id": "JUDGE", "action": {"kind": "judge", "prompt": "ok?", "reads": ["draft"], "writes": ["verify_status"],
+                                  "labels": ["abstain"], "error_rate": "1e22"}})),
+]
+float_big = []
+for idx, (name, fn) in enumerate(BIG_FLOAT_EDITS):
+    which = ("initial", "refined")[idx % 2]
+    doc = copy.deepcopy(base_dumps[which])
+    fn(doc)
+    p = P.MachinePackage.model_validate(doc)
+    s = p.sealed()
+    float_big.append({"name": f"{name} ({which})", "input_json": jtext(doc), "compute_hash": p.compute_hash(),
+                      "verify_hash": p.verify_hash(), "sealed_hash": s.artifact_hash, "sealed_verify": s.verify_hash(),
+                      "canonical_sha": sha(canonical_bytes(p.to_json())), "machine_digest": digest(p.machine.to_json()),
+                      "policy_digest": digest(p.execution_policy.model_dump(mode="json"))})
+float_big_models = []
+for model_name, cls, data in [("Budgets", P.Budgets, {"max_spend_usd": "1e16"}),
+                              ("Budgets", P.Budgets, {"max_spend_usd": "9007199254740993"}),
+                              ("Budgets", P.Budgets, {"max_spend_usd": "-123456789012345678901234567890"}),
+                              ("ExecutionPolicy", P.ExecutionPolicy, {"capability_ceiling": [], "budgets": {"max_spend_usd": "4e18"}}),
+                              ("ModelResponse", ModelResponse, {"model_id": "m", "cost_usd": "1e16"}),
+                              ("ModelResponse", ModelResponse, {"model_id": "m", "cost_usd": "2.5e15"})]:
+    dump = cls.model_validate(data).model_dump(mode="json")
+    float_big_models.append({"model": model_name, "input": data, "canonical": canonical_bytes(dump).decode("utf-8"),
+                             "digest": digest(dump)})
+
+# error ORDER with integer-like extra keys (JS objects iterate them first): Python's unsorted list
+try:
+    P.ExecutionPolicy.model_validate({"capability_ceiling": [], "budgets": {"1e3": 1, "7": 2, "b": 3}})
+    raise AssertionError("expected errors")
+except ValidationError as exc:
+    error_order_case = {"input_json": jtext({"capability_ceiling": [], "budgets": {"1e3": 1, "7": 2, "b": 3}}),
+                        "errors_in_order": [[e["type"], list(e["loc"])] for e in exc.errors()]}
+
 # other sub-models validated on their own
 SUB = [
     ("Contracts", PF.contracts_dict()),
@@ -714,6 +869,7 @@ write("models_pkg", {"anchors": anchors, "base": {k: jtext(ints(v)) for k, v in 
                      "mutations": pkg_cases, "targeted": targeted_cases, "float_packages": float_pkgs,
                      "admission": admission, "admission_binary": admission_binary,
                      "admission_nonascii_signature": nonascii, "sub_models": sub_cases,
+                     "float_big": float_big, "float_big_models": float_big_models, "error_order": error_order_case,
                      "package_digest_of": [{"value": v, "digest": P.package_digest_of(v)}
                                            for v in [None, {"b": 1, "a": [0.5]}, "x", [1, "é"]]]})
 
@@ -792,6 +948,261 @@ for i, sch in enumerate(STRICTER_SCHEMAS):
 
 write("models_catalog", {"raw_json": jtext(cat_raw), "anchor": catalog_anchor, "mutations": cat_cases,
                          "schemas": schema_cases})
+
+# =============================================================================================== #
+# regex acceptance (python-jsonschema's "regex" format = re.compile) and check_schemas fuzz
+# =============================================================================================== #
+import warnings  # noqa: E402
+
+warnings.simplefilter("ignore")  # re's FutureWarnings ("Possible nested set") are not errors
+rrng = random.Random(3_141_592)
+
+
+def re_kind(p: str):
+    """None when re.compile(p) succeeds, else the exception class name ("error" for re.error)."""
+    re.purge()
+    try:
+        re.compile(p)
+    except re.error:
+        return "error"
+    except Exception as exc:  # noqa: BLE001 - OverflowError, ValueError, RecursionError escape check_schema
+        return type(exc).__name__
+    return None
+
+
+RE_TOK = (
+    ["a", "b", "x", "é", "😀", "0", "1", "-", "]", "}", ",", ":", "=", "!", "<", ">", "#", " ", "\n", "&", "~", "_"]
+    + [r"\d", r"\D", r"\w", r"\W", r"\s", r"\S", r"\b", r"\B", r"\A", r"\Z", r"\n", r"\t", r"\r", r"\f", r"\v", r"\a",
+       r"\0", r"\00", r"\01", r"\012", r"\07", r"\08", r"\1", r"\2", r"\3", r"\10", r"\11", r"\12", r"\99", r"\100",
+       r"\377", r"\400", r"\x41", r"\x4", r"A", r"\u004", r"\U0001F600", r"\U00110000", r"\N{DIGIT ONE}", r"\c",
+       r"\cA", r"\e", r"\z", r"\G", r"\p{L}", r"\P{L}", r"\k<n>", r"\u{41}", r"\-", r"\.", r"\*", r"\+", r"\?", r"\(",
+       r"\)", r"\[", r"\]", r"\{", r"\}", r"\|", r"\^", r"\$", "\\\\", r"\/", r"\_", "\\ ", r"\'", r'\"', r"\:", r"\#",
+       r"\@", "\\é", "\\😀", r"\8", r"\9"]
+    + ["(", ")", "(?:", "(?=", "(?!", "(?<=", "(?<!", "(?P<n>", "(?P<m>", "(?P=n)", "(?P=m)", "(?<n>", "(?>", "(?#c)",
+       "(?(1)", "(?(n)", "(?(2)", "(?(0)", "(?i)", "(?x)", "(?s)", "(?m)", "(?a)", "(?u)", "(?L)", "(?t)", "(?au)",
+       "(?i:", "(?-i:", "(?i-s:", "(?x:", "(?-x:", "(?a:", "(?u:", "(?i-i:", "(?-a:", "(?q)", "(?", "(?P", "(?<",
+       "(?P<é>", "(?P<1>", "(?P<n", "(?P=)"]
+    + ["[", "[^", "]", "[]", "[^]", "[a-z]", "[z-a]", "[\\d-z]", "[a-\\d]", "[\\w-]", "[-a]", "[a-]", "[\\]]", "[]]",
+       "[^]]", "[[:digit:]]", "[a&&b]", "[a--b]", "[a||b]", "[a~~b]", "[\\b]", "[\\cJ]", "[\\8]", "[\\0]", "[\\377]",
+       "[\\400]", "[\\x41-\\x5a]", "[\\N{DIGIT ONE}]", "[😀-😃]", "[\\A]", "[\\Z]", "[\\B]"]
+    + ["*", "+", "?", "*?", "+?", "??", "*+", "++", "?+", "{2}", "{1,3}", "{,2}", "{2,}", "{,}", "{}", "{a}", "{3,2}",
+       "{0}", "{65535}", "{4294967294}", "{4294967295}", "{2147483648}", "{1,4294967295}", "{01}", "{1,a}", "{-1}",
+       "{ 1}", "{1}{2}", "{1,2}?", "{1,2}+"]
+    + ["^", "$", "|", ".", "||", "(|)"])
+
+
+def rand_atom(d: int) -> str:
+    """Structured (mostly well-formed) regex: groups, lookarounds, backrefs, conditionals, flags."""
+    r = rrng.random()
+    if d > 2 or r < 0.35:
+        if rrng.random() < 0.12:
+            return rrng.choice([r"\1", r"\2", "(?P=n)", "(?P=m)"])
+        return rrng.choice(["a", "b", "ab", "abc", ".", r"\d", "[xy]", "[^a]", r"\w", "é", "😀", r"\b", "^", "$", "x{2}",
+                            "x{1,2}", "a?", "b*", r"\x41", "[a-c]{3}", ""])
+    inner = rand_seq(d + 1)
+    kind = rrng.choice(["group", "group", "noncap", "named", "la", "nla", "lb", "lb", "nlb", "alt", "alt", "cond", "atomic",
+                        "flags", "rep", "rep"])
+    if kind == "group":
+        return "(" + inner + ")"
+    if kind == "noncap":
+        return "(?:" + inner + ")"
+    if kind == "named":
+        return "(?P<" + rrng.choice(["n", "m", "n"]) + ">" + inner + ")"
+    if kind == "la":
+        return "(?=" + inner + ")"
+    if kind == "nla":
+        return "(?!" + inner + ")"
+    if kind == "lb":
+        return "(?<=" + inner + ")"
+    if kind == "nlb":
+        return "(?<!" + inner + ")"
+    if kind == "alt":
+        return inner + "|" + rand_seq(d + 1)
+    if kind == "cond":
+        return "(?(" + rrng.choice(["1", "2", "n", "3"]) + ")" + inner + ("|" + rand_seq(d + 1) if rrng.random() < 0.6 else "") + ")"
+    if kind == "atomic":
+        return "(?>" + inner + ")"
+    if kind == "flags":
+        return "(?" + rrng.choice(["i", "s", "m", "x", "a", "u", "-i", "i-s", "-x"]) + ":" + inner + ")"
+    return "(" + inner + ")" + rrng.choice(["*", "+", "?", "{2}", "{1,3}", "{2,}", "*?", "{0}", "{3}"])
+
+
+def rand_seq(d: int) -> str:
+    return "".join(rand_atom(d) for _ in range(rrng.randint(1, 2 if d else 3)))
+
+
+pattern_set = set()
+for _ in range(7500):
+    pattern_set.add("".join(rrng.choice(RE_TOK) for _ in range(rrng.randint(1, 6))))
+structured = set()
+while len(structured) < 5500:
+    p = rand_seq(0)
+    if len(p) <= 48:
+        structured.add(p)
+pattern_set.update(structured)
+TARGETED_RE = [
+    # the classes the verifier reported (Python rejects, JS RegExp(u) accepts)
+    "[]", "[^]", "[]a", r"\cA", r"\cz", r"[\cJ]", r"\1(a)", r"(a\1)", r"(?<=\1)(a)", "(?<=(ab)|c)x", "(?<=(a)+)x",
+    "(?<=(a){2,3})x", "(?<!(ab)|c)x", r"(a+)(?<=\1)", "x{4294967295}", "a{1,4294967295}", "a{4294967296,}",
+    "(?<=a(b)c|d)x", r"(?<=\b(a)|b)",
+    # accepted by both
+    "(?<=[ab]{2})", "(?<=a{2})", "(a)(?<=\\1)", r"(a)(?<=\1\1)", r"(?<=(?:ab|cd))", r"(?<=a|b)", r"(?<=ab|cd)x",
+    r"(?<=a(?=bc)b)", "(?:)*", "()*", "(|a)*", "a{2147483648}", "(?=a)+", "x(?<=)", "(?<=a)(?<!b)", "[a-a]",
+    r"[\x00-\x7f]", r"(?<=\x41)", r"(?<=[*])", r"\0", r"\00", r"[\0]", "a{4294967294}", "a{0,4294967294}",
+    "^SUP-[0-9]{3,10}$", r"^[A-Z]{2}[A-Z0-9]{8,12}$", r"^[^@\s]+@[^@\s]+\.[a-z]{2,}$", r"^\d{4}-\d{2}-\d{2}$",
+    # look-behind widths, group references and conditionals
+    r"(a)(b)(?<=\1\2)", r"(a|bc)(?<=\1)", r"(?<=(a)\1)", r"(?<=(a))\1", r"(?P<n>a)(?<=(?P=n))", r"(?P<n>a+)(?<=(?P=n))",
+    r"(a)(?<=(?(1)b|c))", r"(a)(?<=(?(1)b|cd))", r"(?<=(?(1)b|c))(a)", r"(a)(?(1)b|c)", r"(?(1)b|c)(a)", r"(?(1)b|c)",
+    r"(a)(?(1)b|c|d)", r"(a)(?(0)b)", r"(?(1a)b)", r"(?P<n>a)(?(n)b|c)", r"(a)(?<=(?(1)bb))", r"(a)(?<=(?(1)b))",
+    r"(?<=(?>ab))", r"(?<=(?>a|bc))", r"(?<=a*+)", r"(?<=a{2}+)", r"(?<=a{2}?)", r"(?<=(?i:ab))", r"(?<=\Z)",
+    r"(?<=x{70000}{2})", r"(?<=(?:x{70000}){70000})", r"(?<=(?:x{65536}){65536})", r"(?<=(?:x{65535}){65537})",
+    r"(?<=(?:x{65535}){65538})", "(?<=" + "(?:a{4294967294})" * 2 + ")", r"(?<=(?:x{4294967294})(?:y{4294967294}){2})",
+    # flags
+    "(?i)a", "a(?i)", "(?i)(?s)a", "(?i)|(?s)", "a|(?i)b", "(?x) a # c\n(?i)", "(?x)(?i)", "(?#c)(?i)", "(?:)(?i)",
+    "(?a)(?u)", "(?au)", "(?a:(?u:x))", "(?u)(?a)", "(?L)", "(?t)", "(?t)a*", "(?t)a", "(?t:a)", "(?-t:a)", "(?-u:a)",
+    "(?i-i:a)", "(?i", "(?i-", "(?-", "(?-:a)", "(?i-:a)", "(?x)\\", "(?x)a#\\", "(?x)[ ]", "(?x)a{1, 2}", "(?x)a {2}",
+    "(?x: a  b )", "(?-x:a b)", "(?x)(?-x: )", "(?ims)", "(?imsx-:a)",
+    # braces and repeats
+    "{", "}", "x{", "x{1", "x{1,", "x{,", "x{,}", "{,}", "x{}", "{}", "x{1}{2}", "x{2}?", "x{2}+", "x{2}*", "x**", "x*?*",
+    "x{0001}", "x{" + "0" * 4300 + "1}", "x{" + "0" * 4301 + "1}", "x{" + "9" * 30 + "}", "x{1," + "9" * 30 + "}",
+    "x{4294967294,4294967293}", "x{3,2}", r"\b*", r"\B+", "^*", "$?", r"\A{2}", r"\Z*", "(?=a)*", "(?!a){2}",
+    "(?<=a)*", "(?:^)*", r"(?:\b)+", "(a)\\1*", "(a)\\1{2}",
+    # escapes and classes
+    r"\x", r"\x4", r"\x4g", r"\u12", r"\U1234567", r"\U0010ffff", r"\U00110000", r"\U7fffffff", r"\U80000000",
+    r"\Ua4294967", r"[\Uffffffff]", r"[a-\U80000000]", r"\N", r"\N{", r"\N{DIGIT ONE",
+    r"\N{DIGIT ONE}", r"\N{NOT A NAME}", r"[\N{DIGIT ONE}]", r"\08", r"\018", r"\0123", r"\777", r"[\777]", r"[\08]",
+    r"[\9]", r"[\x]", r"[a-\x]", r"[\w-a]", r"[a-\w]", r"[\s-]", "[a-]", "[-]", "[--]", "[---]", "[]-a]", "[^-]",
+    r"[\]]", "[]]", "[^]]", "[[]", "[[]]", "[a", "[a-", "[\\", "\\", "a\\", "[\\]", "[^", "[^]a]", r"[\b-\d]",
+    "[😀-😃]", "[😃-😀]", "[é-é]", r"[\U0001F600-\U0001F603]",
+    # groups and names
+    "(", ")", "())", "(()", "(?", "(?P", "(?P<", "(?P<n", "(?P<n>", "(?P<n>a", "(?P<n>a)", "(?P<n>a)(?P<n>b)",
+    "(?P<1>a)", "(?P<_a1>a)", "(?P<é>a)", "(?P<a b>a)", "(?P=n)", "(?P<n>a)(?P=n)", "(?P<n>(?P=n))", "(?P<n>a)(?P=m)",
+    "(?Px)", "(?<n>a)", "(?<", "(?<=", "(?<=a", "(?<!", "(?<x", "(?>", "(?>a)", "(?>a)+", "a*+", "a++", "a?+", "a{1,2}+",
+    "(?#", "(?#a", "(?#a)", "(?#a)*", "a(?#c)*", "(?z)", "(?-z:a)", "(?i-z:a)", "(?=", "(?!", "(?:", "(?:a", "a|",
+    "|a", "|", "||", "(|)", "a||b",
+    # nesting depth (the JS port refuses more than 100 levels; Python raises RecursionError much deeper)
+    "(" * 100 + ")" * 100, "(" * 101 + ")" * 101, "(?:" * 100 + "a" + ")" * 100, "(?:" * 101 + "a" + ")" * 101,
+    "(?<=" * 100 + ")" * 100, "(" * 600 + ")" * 600, "(?(1)" * 120 + ")" * 120, "(a)" + "(?(1)" * 99 + ")" * 99,
+]
+pattern_set.update(TARGETED_RE)
+NAMED_ESCAPE = re.compile(r"\\N")
+
+
+def strict_only(p: str) -> bool:
+    """Patterns the JS port may reject although Python accepts them (documented): \\N{...} escapes,
+    non-ASCII group names and groups nested deeper than 100 levels."""
+    if NAMED_ESCAPE.search(p) or re.search(r"\(\?P[<=][^>)]*[^\x00-\x7f]", p) or re.search(r"\(\?\([^)]*[^\x00-\x7f]", p):
+        return True
+    depth = best = 0
+    for ch in p:
+        depth += ch == "("
+        best = max(best, depth)
+        depth -= ch == ")"
+    return best > 100
+
+
+regex_cases = []
+for p in sorted(pattern_set):
+    regex_cases.append([p, re_kind(p), strict_only(p)])
+
+# python-jsonschema's verdict on a schema carrying the pattern is exactly re.compile's (checked here)
+for i, (p, kind, _) in enumerate(regex_cases):
+    if i % 7:
+        continue
+    c = ToolCatalog.model_validate({"catalog_id": "c", "version": "1", "tools": {"t": {
+        "name": "t", "version": "1", "input_schema": {"type": "string", "pattern": p},
+        "output_schema": {"type": "object", "patternProperties": {p: {}}}, "effect": "read", "capability": "x"}}})
+    re.purge()
+    names = [e.split(" invalid:")[0] for e in c.check_schemas()]
+    assert names == ([] if kind is None else ["t.input_schema", "t.output_schema"]), (p, kind, names)
+
+# random Draft 2020-12 schemas (supported keywords, annotations, a few unsupported ones) with regexes from the
+# pool above (half of them valid for Python): Python's check_schemas verdict per tool schema
+SCHEMA_PATTERNS_OK = [p for p, k, _ in regex_cases if len(p) < 30 and k is None]
+SCHEMA_PATTERNS_BAD = [p for p, k, _ in regex_cases if len(p) < 30 and k is not None]
+SCHEMA_PATTERNS = SCHEMA_PATTERNS_OK + rrng.sample(SCHEMA_PATTERNS_BAD, len(SCHEMA_PATTERNS_OK))
+SUP_KW = ["type", "enum", "const", "required", "properties", "additionalProperties", "patternProperties", "items",
+          "minItems", "maxItems", "uniqueItems", "minLength", "maxLength", "pattern", "minimum", "maximum",
+          "exclusiveMinimum", "exclusiveMaximum", "multipleOf", "allOf", "anyOf", "oneOf", "not"]
+ANN_KW = ["title", "description", "default", "examples", "format", "$comment", "$schema", "$id", "readOnly", "writeOnly",
+          "deprecated"]
+OTHER_KW = ["$ref", "$defs", "$anchor", "if", "then", "else", "prefixItems", "contains", "dependentRequired",
+            "propertyNames", "unevaluatedProperties", "minProperties", "contentMediaType", "x-ext", "nullable"]
+JTYPES = ["string", "integer", "number", "boolean", "array", "object", "null"]
+ODD_VALUES = [None, True, False, 0, 1, -1, 2, 0.5, -0.5, "", "a", "string", "#", "a#", "a#b", "abc#\n", "abc\n",
+              "a#\n\n", "http://x/y#", "urn:x\n", [], ["a"], ["a", "a"], ["a", 1], {}, {"a": {}}, {"a": 5}, [{}], [True],
+              ["string", "string"], ["string", "null"]]
+
+
+def rand_schema(d=0):
+    if d > 3 or rrng.random() < 0.15:
+        return rrng.choice([True, False, {}, {"type": rrng.choice(JTYPES)}])
+    s = {}
+    for _ in range(rrng.randint(0, 4)):
+        r = rrng.random()
+        k = rrng.choice(SUP_KW) if r < 0.75 else rrng.choice(ANN_KW) if r < 0.94 else rrng.choice(OTHER_KW)
+        s[k] = schema_value(k, d)
+    return s
+
+
+def schema_value(k, d):
+    if rrng.random() < 0.12:
+        return copy.deepcopy(rrng.choice(ODD_VALUES))
+    if k == "type":
+        return rrng.choice(JTYPES) if rrng.random() < 0.6 else rrng.sample(JTYPES, rrng.randint(1, 3))
+    if k in ("enum", "examples"):
+        return rrng.choice([[], [1, "a"], [None], [{"a": 1}]])
+    if k == "required":
+        return rrng.sample(["a", "b", "c"], rrng.randint(0, 3))
+    if k in ("properties", "$defs"):
+        return {kk: rand_schema(d + 1) for kk in rrng.sample(["a", "b", "type", "^x$"], rrng.randint(0, 2))}
+    if k == "patternProperties":
+        return {rrng.choice(SCHEMA_PATTERNS): rand_schema(d + 1) for _ in range(rrng.randint(0, 2))}
+    if k in ("additionalProperties", "items", "not", "if", "then", "else", "contains", "propertyNames",
+             "unevaluatedProperties"):
+        return rand_schema(d + 1)
+    if k in ("allOf", "anyOf", "oneOf", "prefixItems"):
+        return [rand_schema(d + 1) for _ in range(rrng.randint(0, 3))]
+    if k in ("minItems", "maxItems", "minLength", "maxLength", "minProperties"):
+        return rrng.choice([0, 1, 5])
+    if k in ("minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum"):
+        return rrng.choice([0, -3, 2.5])
+    if k == "multipleOf":
+        return rrng.choice([1, 0.5, 3])
+    if k in ("uniqueItems", "readOnly", "writeOnly", "deprecated"):
+        return rrng.choice([True, False])
+    if k == "pattern":
+        return rrng.choice(SCHEMA_PATTERNS)
+    if k in ("title", "description", "$comment", "format", "contentMediaType"):
+        return "t"
+    if k == "$schema":
+        return "https://json-schema.org/draft/2020-12/schema"
+    if k == "$id":
+        return rrng.choice(["http://x/y", "urn:a", "a#", "a#b", "abc#\n", "abc\n", "a#\n\n", "\n#"])
+    if k == "$ref":
+        return "#/$defs/a"
+    if k == "$anchor":
+        return rrng.choice(["a1", "1a", "-x"])
+    if k == "dependentRequired":
+        return {"a": ["b"]}
+    return copy.deepcopy(rrng.choice(ODD_VALUES))
+
+
+schema_fuzz = []
+for _ in range(2400):
+    s_in, s_out = rand_schema(), rand_schema()
+    s_in = s_in if isinstance(s_in, dict) else {"x": s_in}
+    s_out = s_out if isinstance(s_out, dict) else {}
+    cat_doc = {"catalog_id": "c", "version": "1", "tools": {"t": {
+        "name": "t", "version": "1", "input_schema": s_in, "output_schema": s_out, "effect": "read", "capability": "x"}}}
+    re.purge()
+    names = [e.split(" invalid:")[0] for e in ToolCatalog.model_validate(cat_doc).check_schemas()]
+    schema_fuzz.append([jtext(s_in), jtext(s_out), names])
+
+write("models_regex", {"patterns": regex_cases, "schemas": schema_fuzz})
+print(f"regex: {len(regex_cases)} patterns ({sum(k is None for _, k, _ in regex_cases)} accepted by Python, "
+      f"{sum(s for _, _, s in regex_cases)} may be stricter in JS); {len(schema_fuzz)} catalogs "
+      f"({sum(bool(c[2]) for c in schema_fuzz)} with invalid schemas)")
 
 print(f"efsm: {len(efsm_cases)} cases ({sum(c['py'] == 'ok' for c in efsm_cases)} ok), "
       f"{len(deviation_cases)} deviations; coerce: {sum(len(v) for v in coerce.values())}; "

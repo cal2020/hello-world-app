@@ -1278,6 +1278,908 @@
      "status": "available"
     }
    }
+  },
+  {
+   "args": {
+    "document_ids": [
+     0
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": [
+     "x",
+     0
+    ]
+   },
+   "result": {
+    "ok": {
+     "documents": [
+      {
+       "content": "x",
+       "document_id": 0,
+       "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881"
+      }
+     ],
+     "missing_ids": [],
+     "status": "available"
+    }
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     true
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": [
+     1
+    ]
+   },
+   "result": {
+    "exc": "IndexError",
+    "message": "list index out of range"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     -1
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": [
+     "x",
+     -1
+    ]
+   },
+   "result": {
+    "exc": "TypeError",
+    "message": "object supporting the buffer API required"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "0",
+     "q"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": [
+     "x",
+     "y"
+    ]
+   },
+   "result": {
+    "ok": {
+     "documents": [],
+     "missing_ids": [
+      "0",
+      "q"
+     ],
+     "status": "missing"
+    }
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "0",
+     "x"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": [
+     "x",
+     "y"
+    ]
+   },
+   "result": {
+    "exc": "TypeError",
+    "message": "list indices must be integers or slices, not str"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "0"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "docs": {
+    "acme": [
+     "x"
+    ]
+   },
+   "result": {
+    "ok": {
+     "documents": [],
+     "missing_ids": [
+      "0"
+     ],
+     "status": "missing"
+    }
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     1
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": [
+     1,
+     "z"
+    ]
+   },
+   "result": {
+    "ok": {
+     "documents": [
+      {
+       "content": "z",
+       "document_id": 1,
+       "sha256": "594e519ae499312b29433b7dd8a97ff068defcba9755b6d5d00e84c524d67b06"
+      }
+     ],
+     "missing_ids": [],
+     "status": "available"
+    }
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     1.5,
+     "w"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": [
+     1,
+     "z"
+    ]
+   },
+   "result": {
+    "ok": {
+     "documents": [],
+     "missing_ids": [
+      1.5,
+      "w"
+     ],
+     "status": "missing"
+    }
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     1
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": [
+     true
+    ]
+   },
+   "result": {
+    "exc": "IndexError",
+    "message": "list index out of range"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     false
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": [
+     0,
+     "q"
+    ]
+   },
+   "result": {
+    "exc": "TypeError",
+    "message": "object supporting the buffer API required"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     [
+      "x"
+     ]
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": [
+     [
+      "x"
+     ]
+    ]
+   },
+   "result": {
+    "exc": "TypeError",
+    "message": "list indices must be integers or slices, not list"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     {
+      "k": 1
+     }
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": [
+     {
+      "k": 1
+     }
+    ]
+   },
+   "result": {
+    "exc": "TypeError",
+    "message": "list indices must be integers or slices, not dict"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "x"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": []
+   },
+   "result": {
+    "ok": {
+     "documents": [],
+     "missing_ids": [
+      "x"
+     ],
+     "status": "missing"
+    }
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     0
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": "hello"
+   },
+   "result": {
+    "exc": "TypeError",
+    "message": "'in <string>' requires string as left operand, not int"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "ell"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": "hello"
+   },
+   "result": {
+    "exc": "TypeError",
+    "message": "string indices must be integers, not 'str'"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "zz"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": "hello"
+   },
+   "result": {
+    "ok": {
+     "documents": [],
+     "missing_ids": [
+      "zz"
+     ],
+     "status": "missing"
+    }
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "zz",
+     "h"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": "hello"
+   },
+   "result": {
+    "exc": "TypeError",
+    "message": "string indices must be integers, not 'str'"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     null
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": "hello"
+   },
+   "result": {
+    "exc": "TypeError",
+    "message": "'in <string>' requires string as left operand, not NoneType"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     ""
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": ""
+   },
+   "result": {
+    "exc": "TypeError",
+    "message": "string indices must be integers, not 'str'"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "zz"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": 5
+   },
+   "result": {
+    "exc": "TypeError",
+    "message": "argument of type 'int' is not iterable"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "zz"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": null
+   },
+   "result": {
+    "exc": "TypeError",
+    "message": "argument of type 'NoneType' is not iterable"
+   }
+  },
+  {
+   "args": {
+    "document_ids": []
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": null
+   },
+   "result": {
+    "ok": {
+     "documents": [],
+     "missing_ids": [],
+     "status": "missing"
+    }
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "x"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": true
+   },
+   "result": {
+    "exc": "TypeError",
+    "message": "argument of type 'bool' is not iterable"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "x"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": 1.5
+   },
+   "result": {
+    "exc": "TypeError",
+    "message": "argument of type 'float' is not iterable"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "d"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": {
+     "d": null
+    }
+   },
+   "result": {
+    "exc": "TypeError",
+    "message": "object supporting the buffer API required"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "d"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": {
+     "d": true
+    }
+   },
+   "result": {
+    "exc": "TypeError",
+    "message": "object supporting the buffer API required"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "d"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": {
+     "d": {
+      "x": 1
+     }
+    }
+   },
+   "result": {
+    "exc": "TypeError",
+    "message": "object supporting the buffer API required"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     [
+      "x"
+     ]
+    ]
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": {
+     "x": "1"
+    }
+   },
+   "result": {
+    "exc": "TypeError",
+    "message": "unhashable type: 'list'"
+   }
+  },
+  {
+   "args": {
+    "document_ids": "d"
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": {
+     "d": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "documents": [
+      {
+       "content": "x",
+       "document_id": "d",
+       "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881"
+      }
+     ],
+     "missing_ids": [],
+     "status": "available"
+    }
+   }
+  },
+  {
+   "args": {
+    "document_ids": {
+     "d": 1
+    }
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "docs": {
+    "a": {
+     "d": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "documents": [
+      {
+       "content": "x",
+       "document_id": "d",
+       "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881"
+      }
+     ],
+     "missing_ids": [],
+     "status": "available"
+    }
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "d"
+    ]
+   },
+   "ctx": {
+    "tenant_id": 1
+   },
+   "docs": {
+    "1": {
+     "d": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "documents": [],
+     "missing_ids": [
+      "d"
+     ],
+     "status": "missing"
+    }
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "d"
+    ]
+   },
+   "ctx": {
+    "tenant_id": 1.5
+   },
+   "docs": {
+    "a": {
+     "d": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "documents": [],
+     "missing_ids": [
+      "d"
+     ],
+     "status": "missing"
+    }
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "d"
+    ]
+   },
+   "ctx": {
+    "tenant_id": null
+   },
+   "docs": {
+    "a": {
+     "d": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "documents": [],
+     "missing_ids": [
+      "d"
+     ],
+     "status": "missing"
+    }
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "0"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "0"
+   },
+   "docs": [
+    "x"
+   ],
+   "result": {
+    "exc": "AttributeError",
+    "message": "'list' object has no attribute 'get'"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "0"
+    ]
+   },
+   "ctx": {},
+   "docs": [
+    "x"
+   ],
+   "result": {
+    "exc": "AttributeError",
+    "message": "'list' object has no attribute 'get'"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "0"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "0"
+   },
+   "docs": "abc",
+   "result": {
+    "exc": "AttributeError",
+    "message": "'str' object has no attribute 'get'"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "0"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "0"
+   },
+   "docs": 5,
+   "result": {
+    "exc": "AttributeError",
+    "message": "'int' object has no attribute 'get'"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "0"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "0"
+   },
+   "docs": true,
+   "result": {
+    "exc": "AttributeError",
+    "message": "'bool' object has no attribute 'get'"
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "DOC-GLOBEX-1"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "globex"
+   },
+   "docs": 0,
+   "result": {
+    "ok": {
+     "documents": [
+      {
+       "content": "Legal name: Globex Secret Supplier\nTax ID: US000000000\n",
+       "document_id": "DOC-GLOBEX-1",
+       "sha256": "ff614a51dc89b2785b1031b4d9e7b6ac4faa4738289abc3bf3404c5cc002a130"
+      }
+     ],
+     "missing_ids": [],
+     "status": "available"
+    }
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "DOC-GLOBEX-1"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "globex"
+   },
+   "docs": [],
+   "result": {
+    "ok": {
+     "documents": [
+      {
+       "content": "Legal name: Globex Secret Supplier\nTax ID: US000000000\n",
+       "document_id": "DOC-GLOBEX-1",
+       "sha256": "ff614a51dc89b2785b1031b4d9e7b6ac4faa4738289abc3bf3404c5cc002a130"
+      }
+     ],
+     "missing_ids": [],
+     "status": "available"
+    }
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "DOC-GLOBEX-1"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "globex"
+   },
+   "docs": "",
+   "result": {
+    "ok": {
+     "documents": [
+      {
+       "content": "Legal name: Globex Secret Supplier\nTax ID: US000000000\n",
+       "document_id": "DOC-GLOBEX-1",
+       "sha256": "ff614a51dc89b2785b1031b4d9e7b6ac4faa4738289abc3bf3404c5cc002a130"
+      }
+     ],
+     "missing_ids": [],
+     "status": "available"
+    }
+   }
+  },
+  {
+   "args": {
+    "document_ids": [
+     "DOC-GLOBEX-1"
+    ]
+   },
+   "ctx": {
+    "tenant_id": "globex"
+   },
+   "docs": false,
+   "result": {
+    "ok": {
+     "documents": [
+      {
+       "content": "Legal name: Globex Secret Supplier\nTax ID: US000000000\n",
+       "document_id": "DOC-GLOBEX-1",
+       "sha256": "ff614a51dc89b2785b1031b4d9e7b6ac4faa4738289abc3bf3404c5cc002a130"
+      }
+     ],
+     "missing_ids": [],
+     "status": "available"
+    }
+   }
+  }
+ ],
+ "documents_escaped": [
+  {
+   "args_json": "{\"document_ids\": [\"\\ude00\"]}",
+   "ctx_json": "{\"tenant_id\": \"a\"}",
+   "docs_json": "{\"a\": \"\\ud83d\\ude00\"}",
+   "result_json": "{\"ok\": {\"status\": \"missing\", \"documents\": [], \"missing_ids\": [\"\\ude00\"]}}"
+  },
+  {
+   "args_json": "{\"document_ids\": [\"\\ud83d\\ude00\", \"\\ud83d\"]}",
+   "ctx_json": "{\"tenant_id\": \"a\"}",
+   "docs_json": "{\"a\": \"a\\ud83d\\ude00b\"}",
+   "result_json": "{\"exc\": \"TypeError\", \"message\": \"string indices must be integers, not 'str'\"}"
+  },
+  {
+   "args_json": "{\"document_ids\": [\"d\"]}",
+   "ctx_json": "{\"tenant_id\": \"a\"}",
+   "docs_json": "{\"a\": {\"d\": \"x\\ud800\"}}",
+   "result_json": "{\"exc\": \"UnicodeEncodeError\", \"message\": \"'utf-8' codec can't encode character '\\\\ud800' in position 1: surrogates not allowed\"}"
+  },
+  {
+   "args_json": "{\"document_ids\": [\"\\ud800\"]}",
+   "ctx_json": "{\"tenant_id\": \"a\"}",
+   "docs_json": "{\"a\": [\"\\ud800\"]}",
+   "result_json": "{\"exc\": \"TypeError\", \"message\": \"list indices must be integers or slices, not str\"}"
   }
  ],
  "erp": [
@@ -11982,6 +12884,289 @@
    "supplier_ref": "SUP-5"
   }
  ],
+ "erp_big_ints": {
+  "count_2_60": "{\"ok\": 0}",
+  "count_2_70": "{\"exc\": \"OverflowError\", \"message\": \"Python int too large to convert to SQLite INTEGER\"}",
+  "draft_2_60": "{\"ok\": {\"status\": \"created\", \"draft_id\": \"D-0001\", \"version\": 1}}",
+  "supplier_2_70": "{\"exc\": \"OverflowError\", \"message\": \"Python int too large to convert to SQLite INTEGER\"}",
+  "tenant_2_60": "{\"ok\": {\"status\": \"created\", \"draft_id\": \"D-0001\", \"version\": 1}}",
+  "tenant_2_64": "{\"exc\": \"OverflowError\", \"message\": \"Python int too large to convert to SQLite INTEGER\"}",
+  "tenant_neg_2_63_minus_1": "{\"exc\": \"OverflowError\", \"message\": \"Python int too large to convert to SQLite INTEGER\"}"
+ },
+ "erp_bind": [
+  {
+   "args_json": "{\"supplier_ref\": {\"a\": 1}, \"draft_digest\": \"d1\", \"draft\": {\"n\": 1}}",
+   "ctx_json": "{\"tenant_id\": \"acme\", \"idempotency_key\": \"k-2\"}",
+   "js": null,
+   "op": "create",
+   "result_json": "{\"exc\": \"ProgrammingError\", \"message\": \"Error binding parameter 3: type 'dict' is not supported\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "{\"supplier_ref\": [1], \"draft\": {\"n\": 1}}",
+   "ctx_json": "{\"tenant_id\": \"acme\", \"idempotency_key\": \"k-2\"}",
+   "js": null,
+   "op": "create",
+   "result_json": "{\"exc\": \"KeyError\", \"message\": \"'draft_digest'\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "{\"supplier_ref\": \"S\", \"draft_digest\": [\"d\"], \"draft\": {}}",
+   "ctx_json": "{\"tenant_id\": \"acme\", \"idempotency_key\": \"k-2\"}",
+   "js": null,
+   "op": "create",
+   "result_json": "{\"exc\": \"ProgrammingError\", \"message\": \"Error binding parameter 4: type 'list' is not supported\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "{\"supplier_ref\": \"S\", \"draft_digest\": \"d\", \"draft\": {}}",
+   "ctx_json": "{\"tenant_id\": [1], \"idempotency_key\": \"k\"}",
+   "js": null,
+   "op": "create",
+   "result_json": "{\"exc\": \"ProgrammingError\", \"message\": \"Error binding parameter 1: type 'list' is not supported\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "{\"supplier_ref\": \"S\", \"draft_digest\": \"d\", \"draft\": {}}",
+   "ctx_json": "{\"tenant_id\": \"acme\", \"idempotency_key\": {\"a\": 1}}",
+   "js": null,
+   "op": "create",
+   "result_json": "{\"exc\": \"ProgrammingError\", \"message\": \"Error binding parameter 2: type 'dict' is not supported\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "{\"supplier_ref\": \"S\", \"draft_digest\": \"d\", \"draft\": {}}",
+   "ctx_json": "{\"tenant_id\": {\"t\": 1}}",
+   "js": null,
+   "op": "create",
+   "result_json": "{\"exc\": \"KeyError\", \"message\": \"'idempotency_key'\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "{\"supplier_ref\": \"S\", \"draft_digest\": \"d\", \"draft\": [1, \"x\"]}",
+   "ctx_json": "{\"tenant_id\": \"acme\", \"idempotency_key\": \"k-2\"}",
+   "js": null,
+   "op": "create",
+   "result_json": "{\"ok\": {\"status\": \"created\", \"draft_id\": \"D-0002\", \"version\": 1}}",
+   "rows": 2
+  },
+  {
+   "args_json": "{\"supplier_ref\": \"S\", \"draft_digest\": \"d\", \"draft\": \"text\"}",
+   "ctx_json": "{\"tenant_id\": \"acme\", \"idempotency_key\": \"k-2\"}",
+   "js": null,
+   "op": "create",
+   "result_json": "{\"ok\": {\"status\": \"created\", \"draft_id\": \"D-0002\", \"version\": 1}}",
+   "rows": 2
+  },
+  {
+   "args_json": "{\"supplier_ref\": true, \"draft_digest\": null, \"draft\": null}",
+   "ctx_json": "{\"tenant_id\": \"acme\", \"idempotency_key\": \"k-2\"}",
+   "js": null,
+   "op": "create",
+   "result_json": "{\"ok\": {\"status\": \"created\", \"draft_id\": \"D-0002\", \"version\": 1}}",
+   "rows": 2
+  },
+  {
+   "args_json": "{\"supplier_ref\": 7, \"draft_digest\": -3, \"draft\": {}}",
+   "ctx_json": "{\"tenant_id\": 5, \"idempotency_key\": false}",
+   "js": null,
+   "op": "create",
+   "result_json": "{\"ok\": {\"status\": \"created\", \"draft_id\": \"D-0002\", \"version\": 1}}",
+   "rows": 1
+  },
+  {
+   "args_json": "{\"supplier_ref\": \"S\", \"draft_digest\": \"d\", \"draft\": {}}",
+   "ctx_json": "{\"tenant_id\": \"\\ud800\", \"idempotency_key\": \"k\"}",
+   "js": null,
+   "op": "create",
+   "result_json": "{\"exc\": \"UnicodeEncodeError\", \"message\": \"'utf-8' codec can't encode character '\\\\ud800' in position 0: surrogates not allowed\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "{\"supplier_ref\": \"S\\udc00\", \"draft_digest\": \"d\", \"draft\": {}}",
+   "ctx_json": "{\"tenant_id\": \"acme\", \"idempotency_key\": \"k-2\"}",
+   "js": null,
+   "op": "create",
+   "result_json": "{\"exc\": \"CanonicalError\", \"message\": \"lone surrogate in string\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "{\"supplier_ref\": 1.5, \"draft_digest\": \"d\", \"draft\": {}}",
+   "ctx_json": "{\"tenant_id\": \"acme\", \"idempotency_key\": \"k-2\"}",
+   "js": "InterfaceError",
+   "op": "create",
+   "result_json": "{\"ok\": {\"status\": \"created\", \"draft_id\": \"D-0002\", \"version\": 1}}",
+   "rows": 2
+  },
+  {
+   "args_json": "{\"supplier_ref\": \"S\", \"draft_digest\": \"d\", \"draft\": {}}",
+   "ctx_json": "{\"tenant_id\": 0.5, \"idempotency_key\": \"k\"}",
+   "js": "InterfaceError",
+   "op": "create",
+   "result_json": "{\"ok\": {\"status\": \"created\", \"draft_id\": \"D-0002\", \"version\": 1}}",
+   "rows": 1
+  },
+  {
+   "args_json": "{\"supplier_ref\": \"S\", \"draft_digest\": {}}",
+   "ctx_json": "{\"tenant_id\": \"acme\", \"idempotency_key\": \"k-9\"}",
+   "js": null,
+   "op": "reconcile",
+   "result_json": "{\"exc\": \"ProgrammingError\", \"message\": \"Error binding parameter 4: type 'dict' is not supported\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "{\"supplier_ref\": [\"S\"]}",
+   "ctx_json": "{\"tenant_id\": \"acme\", \"idempotency_key\": \"k-9\"}",
+   "js": null,
+   "op": "reconcile",
+   "result_json": "{\"exc\": \"KeyError\", \"message\": \"'draft_digest'\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "{\"supplier_ref\": \"S0\", \"draft_digest\": \"d0\"}",
+   "ctx_json": "{\"tenant_id\": \"acme\", \"idempotency_key\": [1]}",
+   "js": null,
+   "op": "reconcile",
+   "result_json": "{\"exc\": \"ProgrammingError\", \"message\": \"Error binding parameter 2: type 'list' is not supported\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "{\"supplier_ref\": \"S0\", \"draft_digest\": \"d0\"}",
+   "ctx_json": "{\"tenant_id\": \"acme\", \"idempotency_key\": null}",
+   "js": null,
+   "op": "reconcile",
+   "result_json": "{\"ok\": {\"status\": \"existing\", \"draft_id\": \"D-0001\", \"version\": 1}}",
+   "rows": 1
+  },
+  {
+   "args_json": "{\"supplier_ref\": \"S0\", \"draft_digest\": 2.5}",
+   "ctx_json": "{\"tenant_id\": \"acme\", \"idempotency_key\": \"k-9\"}",
+   "js": "InterfaceError",
+   "op": "reconcile",
+   "result_json": "{\"ok\": null}",
+   "rows": 1
+  },
+  {
+   "args_json": "{\"draft_id\": [\"D-0001\"]}",
+   "ctx_json": "{\"tenant_id\": \"acme\"}",
+   "js": null,
+   "op": "read",
+   "result_json": "{\"exc\": \"ProgrammingError\", \"message\": \"Error binding parameter 2: type 'list' is not supported\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "{\"draft_id\": \"D-0001\"}",
+   "ctx_json": "{\"tenant_id\": {\"x\": 1}}",
+   "js": null,
+   "op": "read",
+   "result_json": "{\"exc\": \"ProgrammingError\", \"message\": \"Error binding parameter 1: type 'dict' is not supported\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "{\"draft_id\": \"D-0001\"}",
+   "ctx_json": "{\"tenant_id\": \"acme\\udfff\"}",
+   "js": null,
+   "op": "read",
+   "result_json": "{\"exc\": \"UnicodeEncodeError\", \"message\": \"'utf-8' codec can't encode character '\\\\udfff' in position 4: surrogates not allowed\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "{}",
+   "ctx_json": "{\"tenant_id\": [\"acme\"]}",
+   "js": null,
+   "op": "read",
+   "result_json": "{\"exc\": \"KeyError\", \"message\": \"'draft_id'\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "[1]",
+   "ctx_json": "{}",
+   "js": null,
+   "op": "count",
+   "result_json": "{\"exc\": \"ProgrammingError\", \"message\": \"Error binding parameter 1: type 'list' is not supported\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "{}",
+   "ctx_json": "{}",
+   "js": null,
+   "op": "count",
+   "result_json": "{\"exc\": \"ProgrammingError\", \"message\": \"Error binding parameter 1: type 'dict' is not supported\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "true",
+   "ctx_json": "{}",
+   "js": null,
+   "op": "count",
+   "result_json": "{\"ok\": 0}",
+   "rows": 1
+  },
+  {
+   "args_json": "1.5",
+   "ctx_json": "{}",
+   "js": "InterfaceError",
+   "op": "count",
+   "result_json": "{\"ok\": 0}",
+   "rows": 1
+  },
+  {
+   "args_json": "[[\"acme\"], \"D-0001\", {\"x\": 1}]",
+   "ctx_json": "{}",
+   "js": null,
+   "op": "modify",
+   "result_json": "{\"exc\": \"ProgrammingError\", \"message\": \"Error binding parameter 1: type 'list' is not supported\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "[\"acme\", \"D-0001\", [1]]",
+   "ctx_json": "{}",
+   "js": null,
+   "op": "modify",
+   "result_json": "{\"exc\": \"TypeError\", \"message\": \"'list' object is not a mapping\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "[\"acme\", {\"d\": 1}, {\"x\": 1}]",
+   "ctx_json": "{}",
+   "js": null,
+   "op": "modify",
+   "result_json": "{\"exc\": \"ProgrammingError\", \"message\": \"Error binding parameter 2: type 'dict' is not supported\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "[\"acme\", \"D-0009\", {\"x\": 1}]",
+   "ctx_json": "{}",
+   "js": null,
+   "op": "modify",
+   "result_json": "{\"exc\": \"TypeError\", \"message\": \"'NoneType' object is not subscriptable\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "[\"acme\", {\"d\": 1}, {\"x\": 1}]",
+   "ctx_json": "{}",
+   "js": null,
+   "op": "tamper",
+   "result_json": "{\"exc\": \"ProgrammingError\", \"message\": \"Error binding parameter 2: type 'dict' is not supported\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "[null, \"D-0001\", {\"x\": 1}]",
+   "ctx_json": "{}",
+   "js": null,
+   "op": "tamper",
+   "result_json": "{\"exc\": \"TypeError\", \"message\": \"'NoneType' object is not subscriptable\"}",
+   "rows": 1
+  },
+  {
+   "args_json": "[\"acme\", \"D-0001\", \"x\"]",
+   "ctx_json": "{}",
+   "js": null,
+   "op": "tamper",
+   "result_json": "{\"exc\": \"TypeError\", \"message\": \"'str' object is not a mapping\"}",
+   "rows": 1
+  }
+ ],
  "extractor_model_id": "fixture:procurement-extractor/1",
  "model": [
   {
@@ -13004,6 +14189,899 @@
    ]
   }
  ],
+ "model_args": [
+  {
+   "kwargs": {
+    "gullible": []
+   },
+   "positional": null,
+   "result": {
+    "ok": {
+     "calls": [
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         }
+        },
+        "output_tokens": 27,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         }
+        },
+        "output_tokens": 27,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         }
+        },
+        "output_tokens": 27,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}}"
+       }
+      }
+     ],
+     "invalid_outputs_after": 0,
+     "n_requests": 3
+    }
+   }
+  },
+  {
+   "kwargs": {
+    "gullible": [
+     1
+    ]
+   },
+   "positional": null,
+   "result": {
+    "ok": {
+     "calls": [
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "approved": true,
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         },
+         "tenant_id": "globex"
+        },
+        "output_tokens": 37,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}, \"approved\": true, \"tenant_id\": \"globex\"}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "approved": true,
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         },
+         "tenant_id": "globex"
+        },
+        "output_tokens": 37,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}, \"approved\": true, \"tenant_id\": \"globex\"}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "approved": true,
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         },
+         "tenant_id": "globex"
+        },
+        "output_tokens": 37,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}, \"approved\": true, \"tenant_id\": \"globex\"}"
+       }
+      }
+     ],
+     "invalid_outputs_after": 0,
+     "n_requests": 3
+    }
+   }
+  },
+  {
+   "kwargs": {
+    "gullible": "x"
+   },
+   "positional": null,
+   "result": {
+    "ok": {
+     "calls": [
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "approved": true,
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         },
+         "tenant_id": "globex"
+        },
+        "output_tokens": 37,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}, \"approved\": true, \"tenant_id\": \"globex\"}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "approved": true,
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         },
+         "tenant_id": "globex"
+        },
+        "output_tokens": 37,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}, \"approved\": true, \"tenant_id\": \"globex\"}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "approved": true,
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         },
+         "tenant_id": "globex"
+        },
+        "output_tokens": 37,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}, \"approved\": true, \"tenant_id\": \"globex\"}"
+       }
+      }
+     ],
+     "invalid_outputs_after": 0,
+     "n_requests": 3
+    }
+   }
+  },
+  {
+   "kwargs": {
+    "unavailable": 0
+   },
+   "positional": null,
+   "result": {
+    "ok": {
+     "calls": [
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         }
+        },
+        "output_tokens": 27,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         }
+        },
+        "output_tokens": 27,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         }
+        },
+        "output_tokens": 27,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}}"
+       }
+      }
+     ],
+     "invalid_outputs_after": 0,
+     "n_requests": 3
+    }
+   }
+  },
+  {
+   "kwargs": {
+    "unavailable": []
+   },
+   "positional": null,
+   "result": {
+    "ok": {
+     "calls": [
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         }
+        },
+        "output_tokens": 27,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         }
+        },
+        "output_tokens": 27,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         }
+        },
+        "output_tokens": 27,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}}"
+       }
+      }
+     ],
+     "invalid_outputs_after": 0,
+     "n_requests": 3
+    }
+   }
+  },
+  {
+   "kwargs": {
+    "unavailable": "x"
+   },
+   "positional": null,
+   "result": {
+    "ok": {
+     "calls": [
+      {
+       "exc": "ModelUnavailable",
+       "message": "fixture model configured unavailable"
+      },
+      {
+       "exc": "ModelUnavailable",
+       "message": "fixture model configured unavailable"
+      },
+      {
+       "exc": "ModelUnavailable",
+       "message": "fixture model configured unavailable"
+      }
+     ],
+     "invalid_outputs_after": 0,
+     "n_requests": 3
+    }
+   }
+  },
+  {
+   "kwargs": {
+    "invalid_outputs": true
+   },
+   "positional": null,
+   "result": {
+    "ok": {
+     "calls": [
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "legal_name": 42
+         }
+        },
+        "output_tokens": 12,
+        "raw_text": ""
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         }
+        },
+        "output_tokens": 27,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         }
+        },
+        "output_tokens": 27,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}}"
+       }
+      }
+     ],
+     "invalid_outputs_after": 0,
+     "n_requests": 3
+    }
+   }
+  },
+  {
+   "kwargs": {
+    "invalid_outputs": null
+   },
+   "positional": null,
+   "result": {
+    "ok": {
+     "calls": [
+      {
+       "exc": "TypeError",
+       "message": "'>' not supported between instances of 'NoneType' and 'int'"
+      },
+      {
+       "exc": "TypeError",
+       "message": "'>' not supported between instances of 'NoneType' and 'int'"
+      },
+      {
+       "exc": "TypeError",
+       "message": "'>' not supported between instances of 'NoneType' and 'int'"
+      }
+     ],
+     "invalid_outputs_after": null,
+     "n_requests": 3
+    }
+   }
+  },
+  {
+   "kwargs": {
+    "invalid_outputs": "1"
+   },
+   "positional": null,
+   "result": {
+    "ok": {
+     "calls": [
+      {
+       "exc": "TypeError",
+       "message": "'>' not supported between instances of 'str' and 'int'"
+      },
+      {
+       "exc": "TypeError",
+       "message": "'>' not supported between instances of 'str' and 'int'"
+      },
+      {
+       "exc": "TypeError",
+       "message": "'>' not supported between instances of 'str' and 'int'"
+      }
+     ],
+     "invalid_outputs_after": "1",
+     "n_requests": 3
+    }
+   }
+  },
+  {
+   "kwargs": {
+    "invalid_outputs": 1.5
+   },
+   "positional": null,
+   "result": {
+    "ok": {
+     "calls": [
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "legal_name": 42
+         }
+        },
+        "output_tokens": 12,
+        "raw_text": ""
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "legal_name": 42
+         }
+        },
+        "output_tokens": 12,
+        "raw_text": ""
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         }
+        },
+        "output_tokens": 27,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}}"
+       }
+      }
+     ],
+     "invalid_outputs_after": -0.5,
+     "n_requests": 3
+    }
+   }
+  },
+  {
+   "kwargs": {
+    "gullible": 0,
+    "invalid_outputs": 0
+   },
+   "positional": null,
+   "result": {
+    "ok": {
+     "calls": [
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         }
+        },
+        "output_tokens": 27,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         }
+        },
+        "output_tokens": 27,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         }
+        },
+        "output_tokens": 27,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}}"
+       }
+      }
+     ],
+     "invalid_outputs_after": 0,
+     "n_requests": 3
+    }
+   }
+  },
+  {
+   "kwargs": null,
+   "positional": true,
+   "result": {
+    "ok": {
+     "calls": [
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "approved": true,
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         },
+         "tenant_id": "globex"
+        },
+        "output_tokens": 37,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}, \"approved\": true, \"tenant_id\": \"globex\"}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "approved": true,
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         },
+         "tenant_id": "globex"
+        },
+        "output_tokens": 37,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}, \"approved\": true, \"tenant_id\": \"globex\"}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "approved": true,
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         },
+         "tenant_id": "globex"
+        },
+        "output_tokens": 37,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}, \"approved\": true, \"tenant_id\": \"globex\"}"
+       }
+      }
+     ],
+     "invalid_outputs_after": 0,
+     "n_requests": 3
+    }
+   }
+  },
+  {
+   "kwargs": null,
+   "positional": [],
+   "result": {
+    "ok": {
+     "calls": [
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         }
+        },
+        "output_tokens": 27,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         }
+        },
+        "output_tokens": 27,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         }
+        },
+        "output_tokens": 27,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}}"
+       }
+      }
+     ],
+     "invalid_outputs_after": 0,
+     "n_requests": 3
+    }
+   }
+  },
+  {
+   "kwargs": null,
+   "positional": "x",
+   "result": {
+    "ok": {
+     "calls": [
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "approved": true,
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         },
+         "tenant_id": "globex"
+        },
+        "output_tokens": 37,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}, \"approved\": true, \"tenant_id\": \"globex\"}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "approved": true,
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         },
+         "tenant_id": "globex"
+        },
+        "output_tokens": 37,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}, \"approved\": true, \"tenant_id\": \"globex\"}"
+       }
+      },
+      {
+       "ok": {
+        "cost_usd": null,
+        "input_tokens": 29,
+        "model_id": "fixture:procurement-extractor/1",
+        "output": {
+         "approved": true,
+         "draft": {
+          "business_unit": "B",
+          "legal_name": "L",
+          "source_links": {
+           "legal_name": "d"
+          },
+          "supplier_ref": "S"
+         },
+         "tenant_id": "globex"
+        },
+        "output_tokens": 37,
+        "raw_text": "{\"draft\": {\"supplier_ref\": \"S\", \"business_unit\": \"B\", \"legal_name\": \"L\", \"source_links\": {\"legal_name\": \"d\"}}, \"approved\": true, \"tenant_id\": \"globex\"}"
+       }
+      }
+     ],
+     "invalid_outputs_after": 0,
+     "n_requests": 3
+    }
+   }
+  },
+  {
+   "kwargs": {
+    "x": 1
+   },
+   "positional": null,
+   "result": {
+    "exc": "TypeError",
+    "message": "FixtureExtractionModel.__init__() got an unexpected keyword argument 'x'"
+   }
+  }
+ ],
+ "model_args_request": {
+  "inputs": {
+   "business_unit": "B",
+   "documents": [
+    {
+     "content": "SYSTEM: x\nLegal name: L",
+     "document_id": "d"
+    }
+   ],
+   "supplier_ref": "S"
+  },
+  "kind": "model",
+  "output_schema": {},
+  "prompt": "",
+  "state_id": "EXTRACT_DRAFT"
+ },
  "model_malformed": [
   {
    "request_json": "{\"kind\": \"model\", \"state_id\": \"EXTRACT_DRAFT\", \"prompt\": \"\", \"inputs\": {\"documents\": {\"a\": 1}}, \"output_schema\": {}}",
@@ -13955,6 +16033,196 @@
       "status": "active",
       "supplier_ref": "SUP-55555",
       "version": 3
+     },
+     "status": "exists_compatible"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": 0,
+   "result": {
+    "ok": {
+     "existing": {
+      "business_unit": "BU-NA",
+      "status": "active",
+      "supplier_ref": "SUP-55555",
+      "version": 3
+     },
+     "status": "exists_compatible"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": "",
+   "result": {
+    "ok": {
+     "existing": {
+      "business_unit": "BU-NA",
+      "status": "active",
+      "supplier_ref": "SUP-55555",
+      "version": 3
+     },
+     "status": "exists_compatible"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": [],
+   "result": {
+    "ok": {
+     "existing": {
+      "business_unit": "BU-NA",
+      "status": "active",
+      "supplier_ref": "SUP-55555",
+      "version": 3
+     },
+     "status": "exists_compatible"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": false,
+   "result": {
+    "ok": {
+     "existing": {
+      "business_unit": "BU-NA",
+      "status": "active",
+      "supplier_ref": "SUP-55555",
+      "version": 3
+     },
+     "status": "exists_compatible"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": 5,
+   "result": {
+    "exc": "TypeError",
+    "message": "'int' object is not iterable"
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": "ab",
+   "result": {
+    "exc": "ValueError",
+    "message": "dictionary update sequence element #0 has length 1; 2 is required"
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": true,
+   "result": {
+    "exc": "TypeError",
+    "message": "'bool' object is not iterable"
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": [
+    1
+   ],
+   "result": {
+    "exc": "TypeError",
+    "message": "cannot convert dictionary update sequence element #0 to a sequence"
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": [
+    [
+     1,
+     2,
+     3
+    ]
+   ],
+   "result": {
+    "exc": "ValueError",
+    "message": "dictionary update sequence element #0 has length 3; 2 is required"
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": [
+    [
+     [
+      "acme",
+      "SUP-55555"
+     ],
+     {
+      "business_unit": "BU-NA"
+     }
+    ]
+   ],
+   "result": {
+    "ok": {
+     "existing": {
+      "business_unit": "BU-NA"
      },
      "status": "exists_compatible"
     }

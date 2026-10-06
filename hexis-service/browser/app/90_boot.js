@@ -28,8 +28,9 @@
   function stub_missing_sections() {
     for (const id of HXUI.SECTION_ORDER) {
       if (HXUI.has_section(id)) continue;
+      /* no summary: the notice below the title says it once */
       HXUI.register_section({
-        id, title: HXUI.DEFAULT_TITLES[id], summary: "This section did not load", needs: [],
+        id, title: HXUI.DEFAULT_TITLES[id], summary: "", blurb: "Not loaded", needs: [],
         mount(el) {
           el.appendChild(HXUI.notice("crit", "This section did not load",
             "Its script is missing from this build or stopped while loading. The other sections still work, and Self-test lists what this build contains."));
@@ -133,16 +134,34 @@
   function rail(links) {
     const h = HXUI.h;
     const list = h("ul", { class: "hx-rail-list", role: "list" });
+    /* tab-strip affordance on narrow screens: fade the edge that has more items behind it */
+    const sync_edges = () => {
+      const max = list.scrollWidth - list.clientWidth;
+      list.dataset.scrollStart = list.scrollLeft > 2 ? "more" : "edge";
+      list.dataset.scrollEnd = list.scrollLeft < max - 2 ? "more" : "edge";
+    };
+    /* keep a tab clear of the faded edges: scroll the strip so it sits at least 24px inside */
+    const reveal = (a) => {
+      if (a && list.scrollWidth > list.clientWidth + 1) {
+        const pad = 24;
+        const left = a.offsetLeft;
+        const right = left + a.offsetWidth;
+        if (left - pad < list.scrollLeft) list.scrollLeft = Math.max(0, left - pad);
+        else if (right + pad > list.scrollLeft + list.clientWidth) list.scrollLeft = right + pad - list.clientWidth;
+      }
+      sync_edges();
+    };
     for (const s of HXUI.sections()) {
       const a = h("a", { class: "hx-rail-link", href: "#" + s.id, dataset: { section: s.id } },
         h("span", { class: "hx-rail-title" }, s.title),
         h("span", { class: "hx-rail-short" }, s.nav),
-        s.summary ? h("span", { class: "hx-rail-sum" }, s.summary) : null);
+        h("span", { class: "hx-rail-sum", hidden: !s.blurb }, s.blurb || ""));
       a.addEventListener("click", (e) => {
         if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
         e.preventDefault();
         HXUI.go(s.id);
       });
+      a.addEventListener("focus", () => reveal(a));
       links.set(s.id, a);
       list.appendChild(h("li", null, a));
     }
@@ -153,15 +172,14 @@
       e.preventDefault();
       HXUI.go(a.getAttribute("data-section-link"), { focus: true });
     });
-    /* tab-strip affordance on narrow screens: fade the edge that has more items behind it */
-    const sync_edges = () => {
-      const max = list.scrollWidth - list.clientWidth;
-      list.dataset.scrollStart = list.scrollLeft > 2 ? "more" : "edge";
-      list.dataset.scrollEnd = list.scrollLeft < max - 2 ? "more" : "edge";
-    };
     list.addEventListener("scroll", sync_edges, { passive: true });
-    if (typeof ResizeObserver === "function") new ResizeObserver(sync_edges).observe(list);
-    return { nav, list, sync_edges };
+    if (typeof ResizeObserver === "function") {
+      /* the tabs too: when the web fonts arrive the tabs change width while the strip itself does not */
+      const ro = new ResizeObserver(sync_edges);
+      ro.observe(list);
+      for (const a of links.values()) ro.observe(a);
+    }
+    return { nav, list, sync_edges, reveal };
   }
 
   /* ---------------------------------------------------------------- boot */
@@ -191,22 +209,16 @@
           if (sid === id) a.setAttribute("aria-current", "page");
           else a.removeAttribute("aria-current");
         }
-        const a = links.get(id);
-        const list = r.list;
-        if (a && list.scrollWidth > list.clientWidth + 1) {
-          const pad = 24;
-          const left = a.offsetLeft;
-          const right = left + a.offsetWidth;
-          if (left - pad < list.scrollLeft) list.scrollLeft = Math.max(0, left - pad);
-          else if (right + pad > list.scrollLeft + list.clientWidth) list.scrollLeft = right + pad - list.clientWidth;
-        }
-        r.sync_edges();
+        r.reveal(links.get(id));
       },
       on_register(rec) {
         if (links.has(rec.id)) {
           const a = links.get(rec.id);
           a.querySelector(".hx-rail-title").textContent = rec.title;
           a.querySelector(".hx-rail-short").textContent = rec.nav;
+          const sum = a.querySelector(".hx-rail-sum");
+          sum.textContent = rec.blurb || "";
+          sum.hidden = !rec.blurb;
         }
       },
     });

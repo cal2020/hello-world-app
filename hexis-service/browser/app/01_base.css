@@ -54,13 +54,14 @@ table { border-collapse: collapse; }
 .hx-faint { color: var(--ink-3); }
 .hx-mono { font-family: var(--font-mono); font-size: var(--fs-2); }
 .hx-num { font-variant-numeric: tabular-nums; }
+.hx-nowrap { white-space: nowrap; }
 .hx-link {
   color: var(--accent);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.18em;
   text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
-  border-radius: 1px;
+  border-radius: var(--r-1);
 }
 .hx-link:hover { text-decoration-color: currentColor; color: var(--accent-hover); }
 code.hx-inline {
@@ -113,13 +114,14 @@ code.hx-inline {
   padding-block: var(--sp-4) var(--sp-3);
   border-bottom: 1px solid var(--rule);
 }
+/* The brand never shrinks below its one-line title (min-width stays auto): when the title and the actions do
+   not fit side by side, the actions wrap to their own row instead of sliding under the title. */
 .hx-brand {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.15rem var(--sp-4);
   flex: 1 1 18rem;
-  min-width: 0;
 }
 .hx-brand-name {
   display: inline-flex;
@@ -143,6 +145,8 @@ code.hx-inline {
   gap: var(--sp-5);
 }
 
+/* Sticky beside the canvas. In a window shorter than the rail, the rail scrolls inside itself, so its top
+   links and its engine notes both stay reachable. */
 .hx-rail {
   position: sticky;
   top: calc(env(safe-area-inset-top, 0px) + var(--sp-4));
@@ -150,6 +154,12 @@ code.hx-inline {
   flex-direction: column;
   gap: var(--sp-6);
   min-width: 0;
+  max-height: calc(100vh - env(safe-area-inset-top, 0px) - 2 * var(--sp-4));
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 2 * var(--sp-4));
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  padding-bottom: var(--sp-1);
 }
 .hx-rail-list {
   position: relative;
@@ -222,7 +232,7 @@ code.hx-inline {
   border: 1px solid color-mix(in srgb, var(--crit) 40%, transparent);
   border-radius: var(--r-2);
 }
-.hx-boot-error h1 { font: 600 var(--fs-5) / 1.25 var(--font-display); color: var(--crit); }
+.hx-boot-error h1 { font: 600 var(--fs-5) / 1.25 var(--font-display); color: var(--crit); text-wrap: balance; }
 .hx-boot-error p { color: var(--ink-2); }
 .hx-boot-error pre {
   overflow-x: auto;
@@ -235,6 +245,8 @@ code.hx-inline {
 
 /* ------------------------------------------------------------------ narrow screens: tab strip */
 @media (max-width: 859.98px) {
+  /* focus and anchor scrolling stop below the sticky section strip, never under it */
+  html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 3.5rem); }
   #app { gap: 0; }
   .hx-top { padding-block: var(--sp-3); border-bottom: 0; }
   .hx-frame { grid-template-columns: minmax(0, 1fr); gap: 0; }
@@ -243,6 +255,9 @@ code.hx-inline {
     top: env(safe-area-inset-top, 0px);
     z-index: 10;
     gap: 0;
+    max-height: none;
+    overflow: visible;
+    padding-bottom: 0;
     margin-inline: calc(-1 * var(--hx-gutter-l)) calc(-1 * var(--hx-gutter-r));
     background: var(--bg);
     border-block: 1px solid var(--rule);
@@ -251,7 +266,8 @@ code.hx-inline {
     flex-direction: row;
     gap: 0;
     overflow-x: auto;
-    padding-inline: calc(var(--hx-gutter-l) - 0.6rem) calc(var(--hx-gutter-r) - 0.6rem);
+    padding-inline: calc(var(--hx-gutter-l) - 0.5rem) calc(var(--hx-gutter-r) - 0.5rem);
+    scroll-padding-inline: 2.5rem;
     scrollbar-width: none;
     overscroll-behavior-x: contain;
   }
@@ -270,7 +286,7 @@ code.hx-inline {
   }
   .hx-rail-link {
     display: block;
-    padding: 0.7rem 0.6rem 0.6rem;
+    padding: 0.7rem 0.5rem 0.6rem;
     border-radius: 0;
     border-bottom: 2px solid transparent;
     white-space: nowrap;
@@ -295,10 +311,11 @@ code.hx-inline {
   .hx-theme-label { display: none; }
   .hx-theme-toggle { padding-inline: 0.5rem; }
   .hx-brand { flex-basis: 12rem; }
-  /* the Reset lab confirmation spans the top bar instead of hanging off the button */
+  /* the Reset lab confirmation spans the top bar (which sits inside the gutters) instead of hanging off the
+     button, so its edges line up with the content column */
   .hx-top { position: relative; }
   .hx-top .hx-reset-wrap { position: static; }
-  .hx-top .hx-pop { width: min(21rem, 100%); }
+  .hx-top .hx-pop { left: 0; right: 0; width: auto; }
 }
 
 /* ------------------------------------------------------------------ motion */

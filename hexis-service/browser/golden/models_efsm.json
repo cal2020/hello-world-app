@@ -11877,5 +11877,802 @@
    "input_json": "{\"format\": \"efsm-v1\", \"skill_id\": \"s\", \"initial\": \"A\", \"states\": {\"A\": {\"id\": \"A\", \"action\": {\"kind\": \"end\", \"terminal\": \"T\"}}}, \"max_steps\": \"0__5\"}",
    "name": "pydantic odd int string 2"
   }
+ ],
+ "soft": [
+  {
+   "errors": [
+    [
+     "value_error",
+     []
+    ]
+   ],
+   "input_json": "{\"name\": \"v\", \"init\": [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]], \"init_from\": \"x\"}",
+   "model": "efsm.Variable"
+  },
+  {
+   "errors": [
+    [
+     "literal_error",
+     [
+      "type"
+     ]
+    ]
+   ],
+   "input_json": "{\"name\": \"v\", \"init\": {\"7\": [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}, \"init_from\": \"x\", \"type\": \"nope\"}",
+   "model": "efsm.Variable"
+  },
+  {
+   "errors": [
+    [
+     "model_type",
+     [
+      "states",
+      "7"
+     ]
+    ]
+   ],
+   "input_json": "{\"format\": \"efsm-v1\", \"skill_id\": \"s\", \"initial\": \"A\", \"states\": {\"7\": 5}}",
+   "model": "efsm.Machine"
+  },
+  {
+   "errors": [
+    [
+     "missing",
+     [
+      "states",
+      "7",
+      "action"
+     ]
+    ]
+   ],
+   "input_json": "{\"format\": \"efsm-v1\", \"skill_id\": \"s\", \"initial\": \"A\", \"states\": {\"7\": {\"id\": \"a\"}, \"0\": {\"id\": \"b\", \"action\": {\"kind\": \"end\", \"terminal\": \"T\"}}}}",
+   "model": "efsm.Machine"
+  },
+  {
+   "errors": [
+    [
+     "string_type",
+     [
+      "states",
+      "A",
+      "action",
+      "tool",
+      "binds",
+      "42"
+     ]
+    ]
+   ],
+   "input_json": "{\"format\": \"efsm-v1\", \"skill_id\": \"s\", \"initial\": \"A\", \"states\": {\"A\": {\"id\": \"a\", \"action\": {\"kind\": \"tool\", \"name\": \"t\", \"binds\": {\"42\": 5}}}}}",
+   "model": "efsm.Machine"
+  },
+  {
+   "errors": [
+    [
+     "value_error",
+     [
+      "states",
+      "A",
+      "action",
+      "judge"
+     ]
+    ]
+   ],
+   "input_json": "{\"format\": \"efsm-v1\", \"skill_id\": \"s\", \"initial\": \"A\", \"states\": {\"A\": {\"id\": \"a\", \"action\": {\"kind\": \"judge\", \"prompt\": \"p\", \"reads\": [\"a\"], \"writes\": [\"b\"], \"labels\": [\"x\"], \"error_rate\": \"inf\"}}}}",
+   "model": "efsm.Machine"
+  },
+  {
+   "errors": [
+    [
+     "int_parsing",
+     [
+      "states",
+      "A",
+      "action",
+      "judge",
+      "support"
+     ]
+    ]
+   ],
+   "input_json": "{\"format\": \"efsm-v1\", \"skill_id\": \"s\", \"initial\": \"A\", \"states\": {\"A\": {\"id\": \"a\", \"action\": {\"kind\": \"judge\", \"prompt\": \"p\", \"reads\": [\"a\"], \"writes\": [\"b\"], \"labels\": [\"x\"], \"error_rate\": \"1e400\", \"support\": \"x\"}}}}",
+   "model": "efsm.Machine"
+  },
+  {
+   "errors": [
+    [
+     "value_error",
+     [
+      "states",
+      "A",
+      "action",
+      "judge"
+     ]
+    ]
+   ],
+   "input_json": "{\"format\": \"efsm-v1\", \"skill_id\": \"s\", \"initial\": \"A\", \"states\": {\"A\": {\"id\": \"a\", \"action\": {\"kind\": \"judge\", \"prompt\": \"p\", \"reads\": [\"a\"], \"writes\": [\"b\"], \"labels\": [\"x\"], \"examples\": [{\"label\": \"x\", \"deep\": [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}]}}}}",
+   "model": "efsm.Machine"
+  },
+  {
+   "errors": [
+    [
+     "list_type",
+     [
+      "states",
+      "A",
+      "action",
+      "tool",
+      "reads"
+     ]
+    ]
+   ],
+   "input_json": "{\"format\": \"efsm-v1\", \"skill_id\": \"s\", \"initial\": \"A\", \"states\": {\"A\": {\"id\": \"a\", \"action\": {\"kind\": \"tool\", \"name\": \"t\", \"input\": {\"3\": \"${x}\"}, \"reads\": 5}}}}",
+   "model": "efsm.Machine"
+  },
+  {
+   "errors": [
+    [
+     "int_parsing",
+     [
+      "thresholds",
+      "min_support"
+     ]
+    ]
+   ],
+   "input_json": "{\"format\": \"efsm-v1\", \"skill_id\": \"s\", \"initial\": \"A\", \"thresholds\": {\"acc_thr\": \"NaN\", \"min_support\": \"x\"}, \"max_steps\": \"9007199254740993\"}",
+   "model": "efsm.Machine"
+  },
+  {
+   "errors": [
+    [
+     "literal_error",
+     [
+      "variables",
+      "0",
+      "owner"
+     ]
+    ],
+    [
+     "model_type",
+     [
+      "terminals",
+      "1"
+     ]
+    ]
+   ],
+   "input_json": "{\"variables\": {\"0\": {\"owner\": \"x\"}}, \"terminals\": {\"1\": 5}}",
+   "model": "pkg.Contracts"
+  },
+  {
+   "errors": [
+    [
+     "string_type",
+     [
+      "resources",
+      "0"
+     ]
+    ],
+    [
+     "string_type",
+     [
+      "tool_catalog_sha256"
+     ]
+    ]
+   ],
+   "input_json": "{\"skill_sha256\": \"a\", \"tool_catalog_sha256\": 5, \"resources\": {\"0\": 1}}",
+   "model": "pkg.SourceManifest"
+  }
+ ],
+ "surrogates": [
+  {
+   "errors": [
+    [
+     "string_unicode",
+     [
+      "type"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"name\": \"v\", \"type\": \"x\\ud800\"}",
+   "model": "efsm.Variable",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     [
+      "type"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"name\": \"v\", \"type\": \"\\udc00\"}",
+   "model": "efsm.Variable",
+   "py": "error"
+  },
+  {
+   "input_ascii": "{\"name\": \"x\\ud800\"}",
+   "model": "efsm.Variable",
+   "py": "ok"
+  },
+  {
+   "input_ascii": "{\"name\": \"v\", \"init\": \"x\\ud800\"}",
+   "model": "efsm.Variable",
+   "py": "ok"
+  },
+  {
+   "input_ascii": "{\"name\": \"v\", \"init_from\": \"x\\ud800\"}",
+   "model": "efsm.Variable",
+   "py": "ok"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     []
+    ]
+   ],
+   "input_ascii": "{\"name\": \"v\", \"init\": 1, \"init_from\": \"x\", \"x\\ud800\": 1}",
+   "model": "efsm.Variable",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     [
+      "support"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"to\": \"B\", \"support\": \"1\\ud800\"}",
+   "model": "efsm.Transition",
+   "py": "error"
+  },
+  {
+   "input_ascii": "{\"to\": \"x\\ud800\"}",
+   "model": "efsm.Transition",
+   "py": "ok"
+  },
+  {
+   "input_ascii": "{\"if\": \"x\\ud800\", \"to\": \"B\"}",
+   "model": "efsm.Transition",
+   "py": "ok"
+  },
+  {
+   "input_ascii": "{\"cond\": \"x\\ud800\", \"to\": \"B\"}",
+   "model": "efsm.Transition",
+   "py": "ok"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     []
+    ]
+   ],
+   "input_ascii": "{\"to\": \"B\", \"x\\ud800\": 1, \"if\": 5}",
+   "model": "efsm.Transition",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_type",
+     [
+      "inc"
+     ]
+    ],
+    [
+     "string_unicode",
+     [
+      "support"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"to\": \"B\", \"support\": \"\\ud800\", \"inc\": 5}",
+   "model": "efsm.Transition",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     [
+      "introduced"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"prompt\": \"p\", \"introduced\": \"1\\ud800\"}",
+   "model": "efsm.ModelAction",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "bool_parsing",
+     [
+      "introduced"
+     ]
+    ],
+    [
+     "string_unicode",
+     [
+      "observable"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"prompt\": \"p\", \"observable\": \"x\\ud800\", \"introduced\": \"maybe\"}",
+   "model": "efsm.ModelAction",
+   "py": "error"
+  },
+  {
+   "input_ascii": "{\"format\": \"efsm-v1\", \"skill_id\": \"s\", \"initial\": \"A\", \"states\": {\"x\\ud800\": {\"id\": \"a\", \"action\": {\"kind\": \"end\", \"terminal\": \"T\"}}}}",
+   "model": "efsm.Machine",
+   "py": "ok"
+  },
+  {
+   "errors": [
+    [
+     "union_tag_invalid",
+     [
+      "states",
+      "A",
+      "action"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"format\": \"efsm-v1\", \"skill_id\": \"s\", \"initial\": \"A\", \"states\": {\"A\": {\"id\": \"a\", \"action\": {\"kind\": \"x\\ud800\", \"terminal\": \"T\"}}}}",
+   "model": "efsm.Machine",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     [
+      "states",
+      "A",
+      "action",
+      "end"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"format\": \"efsm-v1\", \"skill_id\": \"s\", \"initial\": \"A\", \"states\": {\"A\": {\"id\": \"a\", \"action\": {\"kind\": \"end\", \"terminal\": \"T\", \"x\\ud800\": 1}}}}",
+   "model": "efsm.Machine",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "union_tag_not_found",
+     [
+      "states",
+      "A",
+      "action"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"format\": \"efsm-v1\", \"skill_id\": \"s\", \"initial\": \"A\", \"states\": {\"A\": {\"id\": \"a\", \"action\": {\"terminal\": \"T\", \"x\\ud800\": 1}}}}",
+   "model": "efsm.Machine",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "int_parsing",
+     [
+      "max_steps"
+     ]
+    ],
+    [
+     "string_unicode",
+     [
+      "states",
+      "A"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"format\": \"efsm-v1\", \"skill_id\": \"s\", \"initial\": \"A\", \"max_steps\": \"zz\", \"states\": {\"A\": {\"id\": \"a\", \"x\\ud800\": 2, \"action\": {\"kind\": \"end\"}}}}",
+   "model": "efsm.Machine",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     []
+    ]
+   ],
+   "input_ascii": "{\"format\": \"efsm-v1\", \"skill_id\": \"s\", \"initial\": \"A\", \"x\\ud800\": 1, \"max_steps\": \"zz\", \"states\": {\"A\": {\"id\": \"a\", \"x\\ud800\": 2}}}",
+   "model": "efsm.Machine",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     [
+      "format"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"format\": \"x\\ud800\", \"skill_id\": \"s\", \"initial\": \"A\"}",
+   "model": "efsm.Machine",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "int_parsing",
+     [
+      "thresholds",
+      "min_support"
+     ]
+    ],
+    [
+     "string_unicode",
+     [
+      "thresholds",
+      "acc_thr"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"format\": \"efsm-v1\", \"skill_id\": \"s\", \"initial\": \"A\", \"thresholds\": {\"acc_thr\": \"0.\\ud800\", \"min_support\": \"x\"}}",
+   "model": "efsm.Machine",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     [
+      "variables",
+      0,
+      "type"
+     ]
+    ],
+    [
+     "string_unicode",
+     [
+      "variables",
+      1
+     ]
+    ]
+   ],
+   "input_ascii": "{\"format\": \"efsm-v1\", \"skill_id\": \"s\", \"initial\": \"A\", \"variables\": [{\"name\": \"a\", \"type\": \"x\\udfff\"}, {\"name\": \"b\", \"x\\ud800\": 0}]}",
+   "model": "efsm.Machine",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     [
+      "check"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"id\": \"p\", \"check\": \"x\\ud800\", \"pattern\": \"x\\ud800\"}",
+   "model": "efsm.Prohibition",
+   "py": "error"
+  },
+  {
+   "input_ascii": "{\"id\": \"p\", \"check\": \"absent\", \"pattern\": \"x\\ud800\"}",
+   "model": "efsm.Prohibition",
+   "py": "ok"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     []
+    ]
+   ],
+   "input_ascii": "{\"label\": \"l\", \"x\\ud800\": 1}",
+   "model": "efsm.Example",
+   "py": "error"
+  },
+  {
+   "input_ascii": "{\"label\": \"l\", \"x\": \"x\\ud800\"}",
+   "model": "efsm.Example",
+   "py": "ok"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     []
+    ]
+   ],
+   "input_ascii": "{\"x\\ud800\": 1}",
+   "model": "efsm.Example",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     []
+    ]
+   ],
+   "input_ascii": "{\"label\": 5, \"x\\ud800\": 1}",
+   "model": "efsm.Example",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     []
+    ]
+   ],
+   "input_ascii": "{\"prompt\": \"p\", \"reads\": [\"a\"], \"writes\": [\"b\"], \"labels\": [\"abstain\"], \"x\\ud800\": 1}",
+   "model": "efsm.JudgeAction",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     []
+    ]
+   ],
+   "input_ascii": "{\"question\": \"p\", \"reads\": [\"a\"], \"writes\": [\"b\"], \"labels\": [\"x\"], \"x\\ud800\": 1}",
+   "model": "efsm.JudgeAction",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     [
+      "error_rate"
+     ]
+    ],
+    [
+     "string_unicode",
+     [
+      "introduced"
+     ]
+    ],
+    [
+     "string_unicode",
+     [
+      "support"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"prompt\": \"p\", \"reads\": [\"a\"], \"writes\": [\"b\"], \"labels\": [\"abstain\"], \"error_rate\": \"x\\ud800\", \"support\": \"\\ud8001\", \"introduced\": \"y\\ud800\"}",
+   "model": "efsm.JudgeAction",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     [
+      "holdout_ratio"
+     ]
+    ],
+    [
+     "string_unicode",
+     [
+      "judge_rewrite_max"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"holdout_ratio\": \"x\\ud800\", \"judge_rewrite_max\": \"\\udc002\"}",
+   "model": "efsm.Thresholds",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     [
+      "max_spend_usd"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"max_spend_usd\": \"1\\ud800\"}",
+   "model": "pkg.Budgets",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     [
+      "max_spend_usd"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"max_spend_usd\": \"x\\ud800\"}",
+   "model": "pkg.Budgets",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     []
+    ]
+   ],
+   "input_ascii": "{\"x\\ud800\": 1}",
+   "model": "pkg.Budgets",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     []
+    ]
+   ],
+   "input_ascii": "{\"max_steps\": \"zz\", \"x\\ud800\": 1}",
+   "model": "pkg.Budgets",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     []
+    ]
+   ],
+   "input_ascii": "{\"x\\ud800\": 1, \"y\\udc00\": 2}",
+   "model": "pkg.Budgets",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "int_parsing",
+     [
+      "max_tool_calls"
+     ]
+    ],
+    [
+     "string_unicode",
+     [
+      "max_steps"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"max_steps\": \"\\ud800\", \"max_tool_calls\": \"x\"}",
+   "model": "pkg.Budgets",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     [
+      "write_workflow"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"capability_ceiling\": [\"x\\ud800\"], \"write_workflow\": \"t\\ud800\"}",
+   "model": "pkg.ExecutionPolicy",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     [
+      "budgets"
+     ]
+    ],
+    [
+     "string_unicode",
+     [
+      "fallback_mode"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"capability_ceiling\": [\"a\"], \"fallback_mode\": \"x\\ud800\", \"budgets\": {\"x\\ud800\": 1}}",
+   "model": "pkg.ExecutionPolicy",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     []
+    ]
+   ],
+   "input_ascii": "{\"budgets\": {\"x\\ud800\": 1}, \"x\\ud800\": 2}",
+   "model": "pkg.ExecutionPolicy",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     [
+      "owner"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"owner\": \"x\\ud800\"}",
+   "model": "pkg.VariableContract",
+   "py": "error"
+  },
+  {
+   "input_ascii": "{\"owner\": \"tool\", \"schema\": {\"x\\ud800\": 1}}",
+   "model": "pkg.VariableContract",
+   "py": "ok"
+  },
+  {
+   "input_ascii": "{\"skill_sha256\": \"a\", \"tool_catalog_sha256\": \"b\", \"resources\": {\"x\\ud800\": \"x\"}}",
+   "model": "pkg.SourceManifest",
+   "py": "ok"
+  },
+  {
+   "input_ascii": "{\"skill_sha256\": \"a\", \"tool_catalog_sha256\": \"b\", \"resources\": {\"k\": \"x\\ud800\"}}",
+   "model": "pkg.SourceManifest",
+   "py": "ok"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     [
+      "classification"
+     ]
+    ],
+    [
+     "string_unicode",
+     [
+      "critical"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"classification\": \"x\\ud800\", \"justification\": \"j\", \"critical\": \"\\ud800\"}",
+   "model": "pkg.ClauseCoverage",
+   "py": "error"
+  },
+  {
+   "input_ascii": "{\"execution_policy\": {\"capability_ceiling\": []}, \"task_input_schema\": {}, \"profile\": \"x\\ud800\"}",
+   "model": "pkg.DeploymentPolicy",
+   "py": "ok"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     [
+      "cost_usd"
+     ]
+    ],
+    [
+     "string_unicode",
+     [
+      "input_tokens"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"model_id\": \"m\", \"cost_usd\": \"1\\ud800\", \"input_tokens\": \"\\ud8001\"}",
+   "model": "fakes.ModelResponse",
+   "py": "error"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     [
+      "kind"
+     ]
+    ]
+   ],
+   "input_ascii": "{\"kind\": \"x\\ud800\", \"state_id\": \"s\", \"prompt\": \"p\", \"inputs\": {\"x\\ud800\": \"x\\ud800\"}, \"output_schema\": {}}",
+   "model": "fakes.ModelRequest",
+   "py": "error"
+  },
+  {
+   "input_ascii": "{\"kind\": \"model\", \"state_id\": \"s\", \"prompt\": \"p\", \"inputs\": {}, \"output_schema\": {}, \"labels\": [\"x\\ud800\"]}",
+   "model": "fakes.ModelRequest",
+   "py": "ok"
+  }
  ]
 }

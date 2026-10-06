@@ -15,7 +15,12 @@
  *  - model records and free-form JSON (``dict``/``Any`` fields) are ordinary objects;
  *  - JS has one number type, so float fields holding integral values are serialized with Python's
  *    float repr by the model-aware canonical serializer (``pyd.canonical_text``), which makes package
- *    hashes match Python byte for byte (``error_rate: 0.0`` hashes as ``0.0``).
+ *    hashes match Python byte for byte (``error_rate: 0.0`` hashes as ``0.0``, ``max_spend_usd: "1e16"``
+ *    as ``1e+16``). It serializes the by-alias dump (``if``, ``schema``), which is the form Python hashes
+ *    (``to_json()``/``hash_payload()``); Python never hashes the non-alias dump (``cond``, ``schema_``).
+ *  - errors: pydantic's (type, loc) entries, plus the error of any documented deviation the input hits
+ *    (see "SOFT" below). Their ORDER can differ when an input dict has integer-like keys ("7"), which JS
+ *    objects iterate first (e.g. two extra_forbidden errors).
  */
 (function (HX) {
   "use strict";
@@ -227,12 +232,24 @@
   }
 
   /* ---- validators ---- */
+  /* A value rejected only by a documented deviation (Python accepts it: non-JSON ``Any`` data, lone
+   * surrogates in ``str`` fields and map keys, integer-like map keys, integers beyond 2^53, non-finite
+   * floats) is a SOFT failure: the error is reported, but the value still takes part in validating its
+   * container, so the model validators pydantic would run still run and their errors are reported too.
+   * The overall result fails either way; the port's error list is a superset of pydantic's. */
+  class Soft {
+    constructor(value) { this.value = value; }
+  }
+  function soft(errs, type, loc, value, msg) {
+    push(errs, type, loc, msg);
+    return new Soft(value);
+  }
+
   function v_any(v, loc, errs) {
     try {
       HX.canonical.check_value(v);
     } catch (e) {
-      push(errs, "json_invalid", loc, MSG.json_invalid + ": " + e.message);
-      return FAIL;
+      return soft(errs, "json_invalid", loc, v, MSG.json_invalid + ": " + e.message);
     }
     return clone_json(v);
   }
@@ -241,7 +258,7 @@
     switch (d.k) {
       case "str":
         if (typeof v === "string") {
-          if (util.has_lone_surrogate(v)) { push(errs, "string_unicode", loc); return FAIL; }
+          if (util.has_lone_surrogate(v)) return soft(errs, "string_unicode", loc, v);
           return v;
         }
         push(errs, "string_type", loc);
@@ -252,11 +269,13 @@
         if (typeof v === "number") {
           if (!Number.isFinite(v)) r = "finite_number";
           else if (!Number.isInteger(v)) r = "int_from_float";
-          else if (!Number.isSafeInteger(v)) r = "int_unsafe";
+          else if (!Number.isSafeInteger(v)) return soft(errs, "int_unsafe", loc, v);
           else return v === 0 ? 0 : v;
         } else if (typeof v === "string") {
-          r = str_to_int(v);
+          /* pydantic-core reads the str as UTF-8 first: a lone surrogate is string_unicode */
+          r = util.has_lone_surrogate(v) ? "string_unicode" : str_to_int(v);
           if (typeof r === "number") return r;
+          if (r === "int_unsafe") return soft(errs, r, loc, v);
         } else r = "int_type";
         push(errs, r, loc);
         return FAIL;
@@ -266,10 +285,11 @@
         let r;
         if (typeof v === "number") {
           if (Number.isFinite(v)) return v === 0 ? 0 : v;
-          r = "finite_number";
+          return soft(errs, "finite_number", loc, v);
         } else if (typeof v === "string") {
-          r = str_to_float(v);
+          r = util.has_lone_surrogate(v) ? "string_unicode" : str_to_float(v);
           if (typeof r === "number") return r;
+          if (r === "finite_number") return soft(errs, r, loc, v);
         } else r = "float_type";
         push(errs, r, loc);
         return FAIL;
@@ -280,9 +300,10 @@
         if (typeof v === "number") {
           if (v === 0) return false;
           if (v === 1) return true;
-          r = Number.isInteger(v) ? "bool_parsing" : "bool_type";
+          /* pydantic-core reads the number as an int64: outside that range it is not even a candidate */
+          r = Number.isInteger(v) && v >= -9223372036854775808 && v < 9223372036854775808 ? "bool_parsing" : "bool_type";
         } else if (typeof v === "string") {
-          r = str_to_bool(v);
+          r = util.has_lone_surrogate(v) ? "string_unicode" : str_to_bool(v);
           if (typeof r === "boolean") return r;
         } else r = "bool_type";
         push(errs, r, loc);
@@ -292,40 +313,44 @@
         return v_any(v, loc, errs);
       case "dict": {
         if (!is_dict(v)) { push(errs, "dict_type", loc); return FAIL; }
-        let bad = false;
+        let softened = false;
         if (d.ordered) {
           for (const k of Object.keys(v)) {
-            if (is_index_key(k)) { push(errs, "dict_key_integer_like", loc.concat([k])); bad = true; }
+            if (is_index_key(k)) { push(errs, "dict_key_integer_like", loc.concat([k])); softened = true; }
           }
         }
         const out = v_any(v, loc, errs);
-        return bad ? FAIL : out;
+        return softened && !(out instanceof Soft) ? new Soft(out) : out;
       }
       case "list": {
         if (!Array.isArray(v)) { push(errs, "list_type", loc); return FAIL; }
         const out = new Array(v.length);
-        let bad = false;
+        let bad = false, softened = false;
         for (let i = 0; i < v.length; i++) {
           const x = v_type(d.of, v[i], loc.concat([i]), errs);
           if (x === FAIL) bad = true;
+          else if (x instanceof Soft) { out[i] = x.value; softened = true; }
           else out[i] = x;
         }
-        return bad ? FAIL : out;
+        return bad ? FAIL : softened ? new Soft(out) : out;
       }
       case "map": {
         if (!is_dict(v)) { push(errs, "dict_type", loc); return FAIL; }
         const out = Object.create(null);
-        let bad = false;
+        let bad = false, softened = false;
         for (const k of Object.keys(v)) {
-          if (util.has_lone_surrogate(k)) { push(errs, "string_unicode", loc.concat([k])); bad = true; continue; }
-          if (d.ordered && is_index_key(k)) { push(errs, "dict_key_integer_like", loc.concat([k])); bad = true; continue; }
+          /* Python accepts both keys (soft); the value is still validated */
+          if (util.has_lone_surrogate(k)) { push(errs, "string_unicode", loc.concat([k])); softened = true; }
+          else if (d.ordered && is_index_key(k)) { push(errs, "dict_key_integer_like", loc.concat([k])); softened = true; }
           const x = v_type(d.of, v[k], loc.concat([k]), errs);
           if (x === FAIL) bad = true;
+          else if (x instanceof Soft) { set_own(out, k, x.value); softened = true; }
           else set_own(out, k, x);
         }
-        return bad ? FAIL : out;
+        return bad ? FAIL : softened ? new Soft(out) : out;
       }
       case "lit":
+        if (typeof v === "string" && util.has_lone_surrogate(v)) { push(errs, "string_unicode", loc); return FAIL; }
         if (d.values.indexOf(v) >= 0) return v;
         push(errs, "literal_error", loc, lit_msg(d.values));
         return FAIL;
@@ -372,7 +397,6 @@
       push(errs, "model_type", loc, "Input should be a valid dictionary or instance of " + spec.name);
       return FAIL;
     }
-    const start = errs.length;
     if (spec.before) {
       try {
         v = spec.before(v);
@@ -382,32 +406,42 @@
         throw e;
       }
     }
+    /* pydantic-core reads every input key as UTF-8 before validating fields: one key with a lone
+       surrogate fails the whole model with a single string_unicode error at the model's loc */
+    for (const k of Object.keys(v)) {
+      if (util.has_lone_surrogate(k)) { push(errs, "string_unicode", loc); return FAIL; }
+    }
     const used = new Set();
     const vals = new Array(spec.fields.length);
+    let hard = false, softened = false;
     for (let i = 0; i < spec.fields.length; i++) {
       const f = spec.fields[i];
       let key = null;
       for (const k of f.lookup) if (hasOwn(v, k)) { key = k; break; }
       if (key === null) {
-        if (f.required) { push(errs, "missing", loc.concat([f.lookup[0]])); continue; }
+        if (f.required) { push(errs, "missing", loc.concat([f.lookup[0]])); hard = true; continue; }
         vals[i] = field_default(f);
         continue;
       }
       used.add(key);
       const x = v_type(f.type, v[key], loc.concat([key]), errs);
-      if (x !== FAIL) vals[i] = x;
+      if (x === FAIL) hard = true;
+      else if (x instanceof Soft) { vals[i] = x.value; softened = true; }
+      else vals[i] = x;
     }
     const extras = [];
     for (const k of Object.keys(v)) {
       if (used.has(k)) continue;
       if (spec.extra === "allow") {
         const x = v_any(v[k], loc.concat([k]), errs);
-        if (x !== FAIL) extras.push([k, x]);
+        if (x instanceof Soft) { extras.push([k, x.value]); softened = true; }
+        else extras.push([k, x]);
       } else {
         push(errs, "extra_forbidden", loc.concat([k]));
+        hard = true;
       }
     }
-    if (errs.length > start) return FAIL;
+    if (hard) return FAIL;
     const out = {};
     for (let i = 0; i < spec.fields.length; i++) out[spec.fields[i].key] = vals[i];
     for (const [k, x] of extras) set_own(out, k, x);
@@ -419,7 +453,7 @@
         throw e;
       }
     }
-    return out;
+    return softened ? new Soft(out) : out;
   }
 
   /** Validate ``value`` against a model spec. Returns ``{value, errors}``; ``value`` is the
@@ -527,19 +561,86 @@
     out.push("}");
   }
 
-  function model_obj(spec, v, out) {
+  function model_obj_types(spec) {
     if (!spec._by_key) {
       const m = Object.create(null);
       for (const f of spec.fields) m[f.key] = f.type;
       Object.defineProperty(spec, "_by_key", { value: m, enumerable: false });
     }
-    obj(v, (k) => spec._by_key[k], out);
+    return spec._by_key;
+  }
+
+  function model_obj(spec, v, out) {
+    const types = model_obj_types(spec);
+    obj(v, (k) => types[k], out);
+  }
+
+  /** ``HX.canonical.check_value`` with the model's float typing: a number in a float-typed position only
+   *  has to be finite. Python holds a float there and prints its repr (``1e+16``), so integral values
+   *  beyond 2^53 (e.g. ``max_spend_usd: "1e16"``) are fine; everywhere else the plain rules apply. */
+  function typed_check(d, v, depth) {
+    if (depth > HX.canonical.MAX_DEPTH) throw new HX.canonical.CanonicalError("nesting too deep");
+    if (d) {
+      switch (d.k) {
+        case "float":
+          if (typeof v === "number") {
+            if (!Number.isFinite(v)) throw new HX.canonical.CanonicalError("non-finite number");
+            return;
+          }
+          break;
+        case "opt":
+          if (v === null) return;
+          typed_check(d.of, v, depth);
+          return;
+        case "list":
+          if (Array.isArray(v)) {
+            for (const x of v) typed_check(d.of, x, depth + 1);
+            return;
+          }
+          break;
+        case "map":
+          if (is_dict(v)) {
+            obj_check(v, () => d.of, depth);
+            return;
+          }
+          break;
+        case "model":
+          if (is_dict(v)) {
+            model_check(resolve(d.m), v, depth);
+            return;
+          }
+          break;
+        case "union":
+          if (is_dict(v) && typeof v[d.disc] === "string" && hasOwn(d.members, v[d.disc])) {
+            model_check(resolve(d.members[v[d.disc]]), v, depth);
+            return;
+          }
+          break;
+        default:
+          break;
+      }
+    }
+    HX.canonical.check_value(v, depth);
+  }
+
+  function obj_check(v, type_of, depth) {
+    for (const k of Object.keys(v)) {
+      HX.canonical.check_value(k, depth + 1); /* key: string limits and lone surrogates */
+      typed_check(type_of(k), v[k], depth + 1);
+    }
+  }
+
+  function model_check(spec, v, depth) {
+    model_obj_types(spec);
+    obj_check(v, (k) => spec._by_key[k], depth);
   }
 
   /** Canonical JSON text of a model dump, byte-identical to Python's
-   *  ``canonical_bytes(model.model_dump(mode="json"))`` even for integral values of float fields. */
+   *  ``canonical_bytes(model.model_dump(mode="json", by_alias=True))`` (the dump the Python code hashes:
+   *  ``to_json()``/``hash_payload()``), even for integral values of float fields, including values beyond
+   *  2^53 (``1e+16``). Aliased fields use their alias (``if``, ``schema``). */
   pyd.canonical_text = function (type, value) {
-    HX.canonical.check_value(value);
+    typed_check(type, value, 0);
     const out = [];
     typed(type, value, out);
     return out.join("");
@@ -549,8 +650,9 @@
     return "sha256:" + HX.canonical.sha256_hex(pyd.canonical_text(type, value));
   };
 
-  /** Public model handle: ``Model.model_validate(obj)`` returns the normalized dump; ``Model.digest``
-   *  is ``digest(model_dump(mode="json"))`` with Python float typing. */
+  /** Public model handle: ``Model.model_validate(obj)`` returns the normalized dump; ``Model.digest`` /
+   *  ``Model.canonical_text`` are ``digest`` / ``canonical_bytes`` of ``model_dump(mode="json",
+   *  by_alias=True)`` with Python float typing (for models without aliases that equals the plain dump). */
   function model_api(spec, ErrCls) {
     return {
       name: spec.name,

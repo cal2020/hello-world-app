@@ -37,9 +37,22 @@
     assert.equal(CL.CRITICAL_MARK, H.critical_mark);
   });
 
-  test("clause refs validate as package ClauseRef models and non-strings are rejected", () => {
+  test("clause refs validate as package ClauseRef models; errors match Python (UnicodeEncodeError, AttributeError)", () => {
     for (const c of CL.index_clauses(HX.data.skill_md)) assert.deepEqual(plain(HX.pkg.ClauseRef.model_validate(c)), plain(c));
-    assert.throws(() => CL.index_clauses(null), TypeError);
-    assert.throws(() => CL.index_clauses("- \ud800 lone surrogate"), HX.canonical.CanonicalError);
+    const E = golden("clauses").errors;
+    assert.ok(E.length >= 8);
+    for (const c of E) {
+      const label = c.text_json;
+      let got, err;
+      try { got = CL.index_clauses(JSON.parse(c.text_json)); } catch (e) { err = e; }
+      if (c.result.exc === undefined) {
+        assert.ok(!err, `${label}: ${err && err.message}`);
+        assert.deepEqual(got.map((x) => x.id), c.result.ok, label);
+      } else {
+        assert.ok(err instanceof HX.HXError, `${label}: expected ${c.result.exc}`);
+        assert.equal(err.code, c.result.exc, label);
+        if (c.result.exc === "AttributeError") assert.equal(err.message, c.result.message, label);
+      }
+    }
   });
 })();

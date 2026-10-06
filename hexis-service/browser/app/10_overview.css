@@ -47,13 +47,15 @@
 .ov-check-ref .hx-digest-text { color: var(--ink-2); }
 .ov-diff-digest { align-items: flex-start; }
 .ov-diff { line-height: 1.5; }
-.ov-diff-mark { padding: 0 1px; border-radius: 2px; background: var(--crit-tint); color: var(--crit); box-shadow: inset 0 -1px 0 var(--crit); }
+.ov-diff-mark { padding: 0 1px; border-radius: 0; background: var(--crit-tint); color: var(--crit); box-shadow: inset 0 -1px 0 var(--crit); }
 .ov-missing { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; font-size: var(--fs-2); color: var(--ink-3); }
 .ov-missing-more { font-size: var(--fs-2); color: var(--ink-3); }
 .ov-parity-foot { font-size: var(--fs-1); line-height: 1.6; color: var(--ink-3); }
 .ov-parity-foot code.hx-inline { font-size: var(--fs-1); color: var(--ink-2); }
 
-@container ovparity (max-width: 46rem) {
+/* Four columns only when both digest columns can hold a short digest and its copy button (about 12rem each);
+   below that every check stacks: name and result, then this page, then the Python build. */
+@container ovparity (max-width: 56rem) {
   .ov-checks-head { display: none; }
   .ov-check {
     grid-template-columns: minmax(0, 1fr) auto;
@@ -74,7 +76,11 @@
   gap: var(--sp-6);
   align-items: start;
 }
-.ov-split > .ov-machine { padding-left: var(--sp-6); border-left: 1px solid var(--rule); align-self: stretch; }
+/* The machine panel is only as tall as its content (its rule ends with the graph). When the window can show
+   all of it (data-fit, measured by 10_overview.js), it stays in view beside the step being read, which the
+   guided demo relies on. */
+.ov-split > .ov-machine { padding-left: var(--sp-6); border-left: 1px solid var(--rule); }
+.ov-split[data-graph="ready"] > .ov-machine[data-fit="yes"] { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--sp-4)); }
 /* without a graph the demo takes the full width and the machine panel follows it */
 .ov-split:not([data-graph="ready"]):not([data-graph="pending"]) { grid-template-columns: minmax(0, 1fr); }
 .ov-split:not([data-graph="ready"]):not([data-graph="pending"]) > .ov-machine {
@@ -83,6 +89,7 @@
 @container ov (max-width: 54rem) {
   .ov-split { grid-template-columns: minmax(0, 1fr); }
   .ov-split > .ov-machine { padding-left: 0; border-left: 0; padding-top: var(--sp-6); border-top: 1px solid var(--rule); }
+  .ov-split[data-graph="ready"] > .ov-machine[data-fit] { position: static; }
 }
 
 .ov-demo { container: ovdemo / inline-size; }
@@ -117,11 +124,12 @@
 .ov-step-title { font-weight: 600; color: var(--ink); line-height: 1.35; }
 .ov-step-body { font-size: var(--fs-2); color: var(--ink-2); text-wrap: pretty; }
 .ov-step-link {
+  --ov-link-px: 0.45rem;
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
   margin-top: 0.15rem;
-  padding: 0.2rem 0.45rem;
+  padding: 0.2rem var(--ov-link-px);
   border-radius: var(--r-1);
   font-size: var(--fs-2);
   font-weight: 500;
@@ -137,12 +145,16 @@
 
 @container ovdemo (max-width: 30rem) {
   .ov-step { grid-template-columns: 1.75rem minmax(0, 1fr); }
-  .ov-step-link { grid-column: 2; justify-self: start; margin-top: 0.25rem; margin-left: -0.45rem; }
+  /* the link text lines up with the step text above it */
+  .ov-step-link { grid-column: 2; justify-self: start; margin-top: 0.25rem; margin-left: calc(-1 * var(--ov-link-px)); }
 }
 
 .ov-graph { min-width: 0; }
 .ov-graph-wait { color: var(--ink-3); font-size: var(--fs-2); }
-.ov-graph-caption { font-size: var(--fs-2); color: var(--ink-2); text-wrap: pretty; }
+
+@media (pointer: coarse) {
+  .ov-step-link { --ov-link-px: 0.6rem; min-height: 2.75rem; padding-block: 0; }
+}
 
 /* ------------------------------------------------------------------ what is simulated */
 .ov-sim-list {

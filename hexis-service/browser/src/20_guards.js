@@ -2,23 +2,26 @@
  * evaluation, and PROVEN / COUNTEREXAMPLE / UNKNOWN disjointness analysis.
  *
  * parse() accepts exactly the strings the Python reference accepts, i.e. CPython 3.12's
- * ast.parse(expr, mode="eval") followed by the allowlist and the size limits. It is built from
+ * ast.parse(expr, mode="eval") followed by the allowlist and the size limits, and rejects the others with
+ * Python's message. It is built from
  *   - a port of the CPython 3.12 tokenizer (indentation, blank and comment lines, backslash
  *     continuation, nesting limit of 200 brackets, number literals including the keyword-adjacent
- *     forms such as `1and x`, string prefixes and escapes, newline translation);
+ *     forms such as `1and x`, string prefixes and escapes, PEP 701 f-strings, newline translation);
  *   - identifiers checked against Python's own Unicode 15.0 XID tables (embedded below; JS engines
  *     ship newer Unicode data) and NFKC-normalized like CPython (keywords are recognized on the raw
  *     spelling, so `Ｔｒｕｅ` is the name `True`);
- *   - a recursive-descent parser that mirrors the PEG grammar's precedence and associativity and
- *     builds Python-shaped AST nodes, so node counts and depths are computed exactly like ast.walk
- *     and guards._depth (which count Expression, ctx Load nodes and operator nodes).
- * Constructs that can never pass the allowlist are rejected as soon as they are seen (f-strings,
- * bytes, complex literals, lambda, comprehensions, subscripts, ...). Every rejection is a GuardError.
+ *   - a recursive-descent parser for the whole expression grammar (first PEG pass) that builds
+ *     Python-shaped AST nodes for every construct, so node counts and depths are computed exactly like
+ *     ast.walk and guards._depth (which count Expression, ctx and operator nodes) and _check reports the
+ *     same first offending node as Python.
+ * Every rejection is a GuardError. Syntax error texts approximate CPython's (its second, error-reporting
+ * parser pass is not ported).
  *
  * Deliberate, conservative deviations (deviations/guards.md): integer literals above 2^53-1, string
- * escapes that produce surrogate code points and \N{...} escapes are rejected; a lone surrogate in the
- * guard text raises GuardError (Python raises UnicodeEncodeError); disjointness analysis reports
- * UNKNOWN when it would have to evaluate a representative value that no JS number can stand for.
+ * escapes that produce surrogate code points and \N{...} escapes are rejected when the guard would
+ * otherwise be accepted; inputs on which CPython raises a non-GuardError (lone surrogates, parser stack
+ * overflow, the f-string ValueError) raise GuardError; disjointness analysis reports UNKNOWN when it would
+ * have to evaluate a representative value that no JS number can stand for.
  */
 (function (HX) {
   "use strict";
@@ -64,7 +67,8 @@
   }
   function get_key(m, k) { return m instanceof Map ? m.get(k) : m[k]; }
   function is_predicate(id) { return id === "empty" || id === "nonempty"; }
-  function repr(v) { return HX.util.py_repr(v); }
+  /** Python repr() for message text: exact for str (Unicode 15.0 printable table), HX.util.py_repr otherwise. */
+  function repr(v) { return typeof v === "string" ? py_repr_str(v) : HX.util.py_repr(v); }
 
   /** Python truthiness of a JSON-like value. */
   function py_truthy(v) {
@@ -202,19 +206,130 @@
   guards._py_blank = py_blank;
 
   /* ------------------------------------------------------------------------------------------ */
-  /* Tokenizer (port of CPython 3.12 Parser/tokenizer.c, normal mode)                             */
+  /* Printable characters (str.isprintable, Unicode 15.0) and Python's repr                       */
+  /* ------------------------------------------------------------------------------------------ */
+
+  /* Code points str.isprintable() rejects (categories Cc Cf Cs Co Cn Zl Zp, and Zs except U+0020), encoded
+   * like the XID tables. Python's repr() escapes exactly these. */
+  const NONPRINT_DATA =
+    "0,1f,60,21,d,0,2cb,1,7,3,8,0,2,0,15,0,18e,0,27,1,33,1,4,0,38,7,1c,3,7,10,17,0,c1,0,31,1,3c,1,66,d,3c,1,32,1,10" +
+    ",0,1d,1,2,0,c,4,20,8,4b,0,a2,0,9,1,3,1,17,0,8,0,2,2,5,1,a,1,3,1,5,7,2,3,3,0,6,1,1a,1,4,0,7,3,3,1,17,0,8,0,3,0," +
+    "3,0,3,1,2,0,6,3,3,1,4,2,2,6,5,0,2,6,12,9,4,0,a,0,4,0,17,0,8,0,3,0,6,1,b,0,4,0,4,1,2,e,5,1,d,6,8,0,4,0,9,1,3,1," +
+    "17,0,8,0,3,0,6,1,a,1,3,1,4,6,4,3,3,0,6,1,13,9,3,0,7,2,4,0,5,2,3,0,2,0,3,2,3,2,4,2,d,3,6,2,4,0,5,1,2,5,2,d,16,4" +
+    ",e,0,4,0,18,0,11,1,a,0,4,0,5,6,3,0,4,1,2,1,5,1,b,6,17,0,4,0,18,0,b,0,6,1,a,0,4,0,5,6,3,5,3,0,5,1,b,0,4,b,e,0,4" +
+    ",0,34,0,4,0,7,3,11,1,1b,0,4,0,13,2,19,0,a,0,2,1,8,2,2,3,7,0,2,0,9,5,b,1,4,b,3b,3,1e,24,3,0,2,0,6,0,19,0,2,0,18" +
+    ",1,6,0,2,0,8,0,b,1,5,1f,49,0,25,3,28,0,25,0,10,0,e,24,c7,0,2,4,2,1,17a,0,5,1,8,0,2,0,5,1,2a,0,5,1,22,0,5,1,8,0" +
+    ",2,0,5,1,10,0,3a,0,5,1,44,1,21,2,1b,5,57,1,7,1,281,0,1d,2,5a,6,17,8,19,8,15,b,e,0,4,0,3,b,5f,1,b,5,b,5,f,0,c,5" +
+    ",5a,6,2c,4,47,9,20,0,d,3,d,3,2,2,2b,1,6,a,2d,3,1b,5,c,2,3f,1,42,0,1e,1,c,5,b,5,f,1,20,30,4e,2,30,0,75,7,3d,2,1" +
+    "0,2,3d,6,2c,1,c,7,2c,4,217,1,7,1,27,1,7,1,9,0,2,0,2,0,2,0,20,1,36,0,10,0,f,1,7,0,14,1,4,0,a,10,19,7,30,10,3,1," +
+    "1c,0,e,2,22,e,22,e,8d,3,298,18,c,14,715,1,21,0,15e,4,2e,0,2,4,2,1,39,6,3,d,19,8,8,0,8,0,8,0,8,0,8,0,8,0,8,0,8," +
+    "0,7f,21,1b,0,5a,b,d7,19,d,4,40,0,57,1,68,4,2c,0,5f,0,55,b,30,0,726e,2,38,8,15d,13,b9,7,cc,4,3,0,2,0,6,17,3c,2," +
+    "b,5,39,7,47,7,d,5,75,a,1f,2,4f,0,c,3,22,0,38,8,f,1,b,1,68,17,1d,9,7,1,7,1,7,8,8,0,8,0,3d,3,7f,1,b,5,2ba5,b,18," +
+    "3,32,2103,16f,1,6b,25,8,b,6,4,1b,0,6,0,2,0,3,0,3,0,7e,f,1be,1,37,6,2,1f,2b,5,34,0,14,0,5,3,6,0,88,3,bf,2,7,1,7" +
+    ",1,7,1,4,2,8,0,8,c,3,1,d,0,1b,0,14,0,3,0,10,1,f,21,7c,4,4,3,2e,2,59,0,e,2,2,2e,2f,81,1e,2,32,e,1d,3,25,8,1f,4," +
+    "2c,4,1f,0,26,3,f,29,9f,1,b,5,25,3,25,3,29,7,35,a,d,0,10,0,8,0,3,0,c,0,10,0,8,0,3,42,138,8,17,9,9,17,7,0,2b,0,a" +
+    ",44,7,1,2,0,2d,0,3,2,2,1,18,0,49,7,a,2f,14,0,3,4,22,2,1c,4,2,3f,39,3,15,1,33,0,3,4,9,0,4,0,1e,1,4,3,b,6,a,6,41" +
+    ",1f,28,3,d,8,37,2,1e,1,1c,4,1b,6,5,b,8,4f,4a,36,34,c,34,6,2f,7,b,125,20,0,2b,0,4,1,3,4a,2c,7,2b,15,1b,25,1d,13" +
+    ",18,8,4f,3,25,8,3f,0,6,c,1a,6,b,5,36,0,13,7,28,8,61,0,15,a,13,0,30,3d,8,0,2,0,5,0,10,0,c,5,3c,4,b,5,5,0,9,1,3," +
+    "1,17,0,8,0,3,0,6,0,b,1,3,1,4,1,2,5,2,4,8,1,8,2,6,8a,5d,0,6,1d,49,7,b,a5,37,1,27,21,46,a,b,5,e,12,3b,5,b,35,1c," +
+    "1,10,3,18,b8,3d,63,54,b,9,1,2,1,9,0,3,0,1f,0,3,1,d,8,b,45,9,1,2f,1,c,1a,49,7,54,c,4a,6,b,f5,a,0,2e,0,f,9,1e,2," +
+    "21,1,17,0,f,48,8,0,3,0,2d,2,2,0,3,0,a,7,b,5,7,0,3,0,26,0,3,0,7,6,b,135,1a,6,12,0,2a,2,1d,55,2,e,33,c,39c,65,70" +
+    ",0,6,a,c5,a4b,64,c,431,f,17,fa9,248,21b8,23a,6,20,0,b,3,52,0,b,5,1f,1,7,9,47,9,b,0,8,0,16,4,14,2af,5c,64,4c,3," +
+    "3a,6,12,3f,6,a,3,d,17f9,7,4d7,29,a,22e6,5,0,8,0,3,0,124,e,2,1c,4,1,2,d,5,7,18d,903,6c,4,e,2,a,6,b,1,5,125f,2f," +
+    "1,18,8,75,3b,f7,9,28,1,4b,7,71,14,47,79,15,b,15,b,58,8,1a,86,56,0,48,0,3,1,2,1,3,1,5,0,d,0,2,0,8,0,42,0,5,1,9," +
+    "0,8,0,1d,0,5,0,6,0,2,2,8,0,155,1,125,1,2bf,e,6,0,10,44f,20,5,7,d4,8,0,12,1,8,0,3,0,6,4,3f,20,2,6f,2e,2,f,1,b,3" +
+    ",3,13f,20,10,3b,4,2,1cf,2b,2e5,8,0,5,0,3,0,10,0,c6,1,11,28,4d,3,b,3,3,310,45,4b,3e,c1,5,0,1c,0,3,0,2,1,2,0,b,0" +
+    ",5,0,2,0,2,5,2,3,2,0,2,0,2,0,4,0,3,0,2,1,2,0,2,0,2,0,2,0,2,0,3,0,2,1,5,0,8,0,5,0,5,0,2,0,b,0,12,4,4,0,6,0,12,3" +
+    "3,3,10d,2d,3,65,b,10,1,10,0,10,0,26,9,af,37,1e,c,2d,3,a,6,3,d,7,99,3d9,3,12,2,e,2,78,3,60,5,d,3,2,e,d,3,39,7,b" +
+    ",5,29,7,1f,1,3,4d,155,b,f,1,e,2,a,6,2f,0,8,7,f,3,a,6,a,6,94,0,38,24,b,405,a6e1,1f,103b,5,df,1,1683,d,1d32,c1e," +
+    "21f,5e1,134c,4,1061,add4f,f1,2fe0f";
+  let _np = null;
+  /** Python's Py_UNICODE_ISPRINTABLE (Unicode 15.0). */
+  function is_printable(cp) {
+    if (!_np) _np = decode_ranges(NONPRINT_DATA);
+    return !in_ranges(_np, cp);
+  }
+  guards._is_printable = is_printable;
+  guards._nonprintable_ranges = function () {
+    if (!_np) _np = decode_ranges(NONPRINT_DATA);
+    return Array.from(_np);
+  };
+  const hexn = (c, w) => c.toString(16).padStart(w, "0");
+
+  /** Python's repr() of a str (unicode_repr): smart quotes; backslash, the quote, \t \n \r; \xhh for other ASCII
+   *  controls; \xhh, \uhhhh or \Uhhhhhhhh for every non-ASCII character str.isprintable() rejects. JS lone
+   *  surrogates are code points of category Cs, as in Python. */
+  function py_repr_str(s) {
+    const q = s.indexOf("'") >= 0 && s.indexOf('"') < 0 ? 0x22 : 0x27;
+    let out = String.fromCharCode(q);
+    for (let k = 0; k < s.length; k++) {
+      let c = s.charCodeAt(k);
+      if (c >= 0xd800 && c <= 0xdbff && k + 1 < s.length) {
+        const d = s.charCodeAt(k + 1);
+        if (d >= 0xdc00 && d <= 0xdfff) { c = 0x10000 + ((c - 0xd800) << 10) + (d - 0xdc00); k++; }
+      }
+      if (c === q || c === 0x5c) out += "\\" + String.fromCharCode(c);
+      else if (c === 0x09) out += "\\t";
+      else if (c === 0x0a) out += "\\n";
+      else if (c === 0x0d) out += "\\r";
+      else if (c < 0x20 || c === 0x7f) out += "\\x" + hexn(c, 2);
+      else if (c < 0x7f) out += String.fromCharCode(c);
+      else if (is_printable(c)) out += String.fromCodePoint(c);
+      else if (c <= 0xff) out += "\\x" + hexn(c, 2);
+      else if (c <= 0xffff) out += "\\u" + hexn(c, 4);
+      else out += "\\U" + hexn(c, 8);
+    }
+    return out + String.fromCharCode(q);
+  }
+  guards._py_repr_str = py_repr_str;
+
+  /** Python's repr() of bytes (a list of byte values). */
+  function py_repr_bytes(bs) {
+    const q = bs.indexOf(0x27) >= 0 && bs.indexOf(0x22) < 0 ? 0x22 : 0x27;
+    let out = "b" + String.fromCharCode(q);
+    for (const c of bs) {
+      if (c === q || c === 0x5c) out += "\\" + String.fromCharCode(c);
+      else if (c === 0x09) out += "\\t";
+      else if (c === 0x0a) out += "\\n";
+      else if (c === 0x0d) out += "\\r";
+      else if (c < 0x20 || c >= 0x7f) out += "\\x" + hexn(c, 2);
+      else out += String.fromCharCode(c);
+    }
+    return out + String.fromCharCode(q);
+  }
+  guards._py_repr_bytes = py_repr_bytes;
+
+  /** Python's repr() of an imaginary literal's value, complex(0.0, imag): repr of imag without ".0", then "j". */
+  function py_repr_imag(imag) {
+    let s;
+    if (Number.isNaN(imag)) s = "nan";
+    else if (!Number.isFinite(imag)) s = imag > 0 ? "inf" : "-inf";
+    else {
+      s = HX.canonical.py_float_repr(imag);
+      if (s.endsWith(".0")) s = s.slice(0, -2);
+    }
+    return s + "j";
+  }
+  guards._py_repr_imag = py_repr_imag;
+
+  /* ------------------------------------------------------------------------------------------ */
+  /* Tokenizer (port of CPython 3.12 Parser/tokenizer.c: normal mode and PEP 701 f-string mode)   */
   /* ------------------------------------------------------------------------------------------ */
 
   const EOF = -1;
   const MAXLEVEL = 200;
+  const MAX_EXPR_NESTING = 3;
+  const MAXFSTRINGLEVEL = 150;
   const TABSIZE = 8;
+  const REGULAR = 0, FSTRING = 1;
   const KEYWORDS = new Set(["False", "None", "True", "and", "as", "assert", "async", "await", "break", "class",
     "continue", "def", "del", "elif", "else", "except", "finally", "for", "from", "global", "if", "import", "in", "is",
     "lambda", "nonlocal", "not", "or", "pass", "raise", "return", "try", "while", "with", "yield"]);
   const TWO_CHAR = new Set(["!=", "%=", "&=", "**", "*=", "+=", "-=", "->", "//", "/=", ":=", "<<", "<=", "<>", "==",
     ">=", ">>", "@=", "^=", "|="]);
   const THREE_CHAR = new Set(["**=", "...", "//=", "<<=", ">>="]);
-  const ONE_CHAR = "%&()*+,-./:;<=>@[]^{|}~!";
+  const ONE_CHAR = "!%&()*+,-./:;<=>@[]^{|}~";
+  const MAX_SAFE_BIG = BigInt(Number.MAX_SAFE_INTEGER);
 
   function syntax_error(msg) { return new GuardError("guard syntax error: " + msg); }
   function hex4(c) { return c.toString(16).toUpperCase().padStart(4, "0"); }
@@ -222,8 +337,18 @@
   const isxdigit = (c) => isdigit(c) || (c >= 0x61 && c <= 0x66) || (c >= 0x41 && c <= 0x46);
   const is_id_start = (c) => (c >= 0x61 && c <= 0x7a) || (c >= 0x41 && c <= 0x5a) || c === 0x5f || c >= 128;
   const is_id_char = (c) => is_id_start(c) || isdigit(c);
+  const fromcps = (cps, a, b) => {
+    let s = "";
+    for (let k = a; k < b; k++) s += String.fromCodePoint(cps[k]);
+    return s;
+  };
 
-  /** Tokenize newline-translated source (array of code points). Throws GuardError. */
+  /** Tokenize newline-translated source (array of code points) into a token array ending with ENDMARKER.
+   *  Throws GuardError for tokenizer errors. Token shapes:
+   *    NAME {s, kw, id (NFKC), a, b}   NUMBER {kind: "int"|"float"|"complex", value, raw?}
+   *    STRING {bytes, raw, body}   FSTRING_START {raw}   FSTRING_MIDDLE {body}   FSTRING_END
+   *    OP {s, a, b, meta?}   NEWLINE   ENDMARKER
+   *  a/b are code point offsets; meta is the debug text CPython attaches to `}`, `!` and `:` of f-string fields. */
   function tokenize(cps) {
     const n = cps.length;
     let pos = 0;
@@ -231,10 +356,12 @@
     let level = 0;
     const parens = [];
     const toks = [];
+    /* tok_mode_stack: index 0 is the regular top level (curly_bracket_expr_start_depth starts at 0 there) */
+    const modes = [{ kind: REGULAR, depth: 0, expr_start: 0, debug: false }];
     const nextc = () => (pos < n ? cps[pos++] : EOF);
     const backup = (c) => { if (c !== EOF) pos--; };
-    const text = (a, b) => String.fromCodePoint(...cps.slice(a, b));
-    const lineno = () => { let l = 1; for (let k = 0; k < pos && k < n; k++) if (cps[k] === 0x0a) l++; return l; };
+    /* tok->lineno: the line of the last character read (a newline belongs to the line it ends) */
+    const lineno = () => { let l = 1; for (let k = 0; k < pos - 1 && k < n; k++) if (cps[k] === 0x0a) l++; return l; };
 
     function continuation() {
       let c = nextc();
@@ -288,29 +415,21 @@
     }
 
     function number_token(start) {
-      const raw = text(start, pos);
+      const raw = fromcps(cps, start, pos);
       const clean = raw.replace(/_/g, "");
       const last = clean.charCodeAt(clean.length - 1);
       if (last === 0x6a || last === 0x4a) {
-        throw new GuardError("constant not allowed: complex literal " + raw);
+        return { t: "NUMBER", kind: "complex", value: Number(clean.slice(0, -1)), a: start, b: pos };
       }
       const p2 = clean.slice(0, 2).toLowerCase();
       if (p2 === "0x" || p2 === "0o" || p2 === "0b" || !/[.eE]/.test(clean)) {
         const big = BigInt(p2 === "0x" || p2 === "0o" || p2 === "0b" ? p2 + clean.slice(2) : clean);
-        if (big > BigInt(guards.MAX_INT_LITERAL)) {
-          throw new GuardError("integer literal " + raw + " is outside the range supported by the JavaScript port " +
-            "(at most 2^53-1)");
-        }
-        return { t: "NUMBER", value: Number(big), py_type: "int" };
+        if (big > MAX_SAFE_BIG) return { t: "NUMBER", kind: "int", value: big, raw, a: start, b: pos };
+        return { t: "NUMBER", kind: "int", value: Number(big), a: start, b: pos };
       }
-      return { t: "NUMBER", value: Number(clean), py_type: "float" };
+      return { t: "NUMBER", kind: "float", value: Number(clean), a: start, b: pos };
     }
 
-    /* After the integer part of a decimal literal; c is the next character (consumed). */
-    function after_int(c, start) {
-      if (c === 0x2e) return fraction(nextc(), start);
-      return exponent_or_end(c, start);
-    }
     function fraction(c, start) {
       if (isdigit(c)) c = decimal_tail();
       return exponent_or_end(c, start);
@@ -330,9 +449,6 @@
         }
         c = decimal_tail();
       }
-      return imag_or_end(c, start);
-    }
-    function imag_or_end(c, start) {
       if (c === 0x6a || c === 0x4a) {
         c = nextc();
         verify_end_of_number(c, "imaginary");
@@ -342,7 +458,11 @@
     }
 
     function read_number(c, start) {
-      if (c !== 0x30) return after_int(decimal_tail(), start);
+      if (c !== 0x30) {
+        c = decimal_tail();
+        if (c === 0x2e) return fraction(nextc(), start);
+        return exponent_or_end(c, start);
+      }
       c = nextc();
       if (c === 0x78 || c === 0x58) { /* hex */
         c = nextc();
@@ -400,7 +520,7 @@
       if (isdigit(c)) { nonzero = true; c = decimal_tail(); }
       if (c === 0x2e) return fraction(nextc(), start);
       if (c === 0x65 || c === 0x45) return exponent_or_end(c, start);
-      if (c === 0x6a || c === 0x4a) return imag_or_end(c, start);
+      if (c === 0x6a || c === 0x4a) return exponent_or_end(c, start);
       if (nonzero) {
         backup(c);
         throw syntax_error("leading zeros in decimal integer literals are not permitted; use an 0o prefix for octal integers");
@@ -410,68 +530,8 @@
       return number_token(start);
     }
 
-    /* Python unicode-escape decoding of a non-raw string body (code points). */
-    function decode_escapes(body) {
-      let out = "";
-      const len = body.length;
-      for (let k = 0; k < len; k++) {
-        const c = body[k];
-        if (c !== 0x5c) { out += String.fromCodePoint(c); continue; }
-        const e = body[++k];
-        switch (e) {
-          case 0x0a: continue;
-          case 0x5c: out += "\\"; continue;
-          case 0x27: out += "'"; continue;
-          case 0x22: out += '"'; continue;
-          case 0x62: out += "\b"; continue;
-          case 0x66: out += "\f"; continue;
-          case 0x74: out += "\t"; continue;
-          case 0x6e: out += "\n"; continue;
-          case 0x72: out += "\r"; continue;
-          case 0x76: out += "\v"; continue;
-          case 0x61: out += "\x07"; continue;
-          case 0x4e:
-            throw new GuardError("\\N{...} escapes are not supported by the JavaScript port");
-          default:
-            break;
-        }
-        if (e >= 0x30 && e <= 0x37) {
-          let ch = e - 0x30;
-          if (k + 1 < len && body[k + 1] >= 0x30 && body[k + 1] <= 0x37) {
-            ch = (ch << 3) + body[++k] - 0x30;
-            if (k + 1 < len && body[k + 1] >= 0x30 && body[k + 1] <= 0x37) ch = (ch << 3) + body[++k] - 0x30;
-          }
-          out += String.fromCodePoint(ch);
-          continue;
-        }
-        if (e === 0x78 || e === 0x75 || e === 0x55) {
-          const count = e === 0x78 ? 2 : e === 0x75 ? 4 : 8;
-          let ch = 0;
-          for (let j = 0; j < count; j++) {
-            const d = k + 1 < len ? body[k + 1] : EOF;
-            if (!isxdigit(d)) {
-              const name = e === 0x78 ? "\\xXX" : e === 0x75 ? "\\uXXXX" : "\\UXXXXXXXX";
-              throw syntax_error("(unicode error) 'unicodeescape' codec can't decode bytes: truncated " + name + " escape");
-            }
-            ch = ch * 16 + parseInt(String.fromCharCode(d), 16);
-            k++;
-          }
-          if (ch > 0x10ffff) {
-            throw syntax_error("(unicode error) 'unicodeescape' codec can't decode bytes: illegal Unicode character");
-          }
-          if (ch >= 0xd800 && ch <= 0xdfff) {
-            throw new GuardError("string escapes producing surrogate code points are not supported by the JavaScript port");
-          }
-          out += String.fromCodePoint(ch);
-          continue;
-        }
-        /* unknown escape (SyntaxWarning in Python): kept verbatim */
-        out += "\\" + String.fromCodePoint(e);
-      }
-      return out;
-    }
-
-    function read_string(quote, raw) {
+    /* letter_quote: a str or bytes literal; the opening quote has been read */
+    function read_string(start, quote, is_bytes, is_raw) {
       let quote_size = 1, end_quote_size = 0;
       let c = nextc();
       if (c === quote) {
@@ -484,6 +544,10 @@
       while (end_quote_size !== quote_size) {
         c = nextc();
         if (c === EOF || (quote_size === 1 && c === 0x0a)) {
+          const m = modes[modes.length - 1];
+          if (modes.length > 1 && m.quote === quote && m.quote_size === quote_size) {
+            throw syntax_error("f-string: expecting '}'");
+          }
           throw syntax_error((quote_size === 3 ? "unterminated triple-quoted string literal" : "unterminated string literal") +
             " (detected at line " + lineno() + ")");
         }
@@ -493,8 +557,26 @@
           if (c === 0x5c) nextc(); /* skip the escaped character */
         }
       }
-      const body = cps.slice(body_start, Math.max(body_start, pos - quote_size));
-      return { t: "STRING", value: raw ? String.fromCodePoint(...body) : decode_escapes(body) };
+      return { t: "STRING", bytes: is_bytes, raw: is_raw, body: cps.slice(body_start, Math.max(body_start, pos - quote_size)),
+        a: start, b: pos };
+    }
+
+    /* f_string_quote: push an f-string tokenizer mode; the opening quote has been read */
+    function fstring_start(start, quote) {
+      let quote_size = 1;
+      const after = nextc();
+      if (after === quote) {
+        const after2 = nextc();
+        if (after2 === quote) quote_size = 3;
+        else { backup(after2); backup(after); }
+      }
+      if (after !== quote) backup(after);
+      if (modes.length >= MAXFSTRINGLEVEL) throw syntax_error("too many nested f-strings");
+      const first = cps[start];
+      const raw = first === 0x66 || first === 0x46 ? (cps[start + 1] | 0x20) === 0x72 : true;
+      modes.push({ kind: FSTRING, quote, quote_size, raw, depth: 0, expr_start: -1, last_expr_end: -1, buf_start: -1,
+        debug: false });
+      return { t: "FSTRING_START", raw, a: start, b: pos };
     }
 
     function verify_identifier(start) {
@@ -502,162 +584,439 @@
         const ch = cps[k];
         const ok = k === start ? ch === 0x5f || guards._is_xid_start(ch) : guards._is_xid_continue(ch);
         if (!ok) {
-          throw syntax_error(ch >= 0x20 && ch !== 0x7f
+          throw syntax_error(is_printable(ch)
             ? "invalid character '" + String.fromCodePoint(ch) + "' (U+" + hex4(ch) + ")"
             : "invalid non-printable character U+" + hex4(ch));
         }
       }
     }
 
-    for (;;) { /* one iteration per CPython tok_get call (label "nextline") */
-      let blankline = false;
-      if (atbol) {
-        atbol = false;
-        let col = 0, cont_line_col = 0, c;
-        for (;;) {
-          c = nextc();
-          if (c === 0x20) col++;
-          else if (c === 0x09) col = (Math.floor(col / TABSIZE) + 1) * TABSIZE;
-          else if (c === 0x0c) col = 0;
-          else if (c === 0x5c) {
-            cont_line_col = cont_line_col ? cont_line_col : col;
-            continuation();
-          } else break;
-        }
-        backup(c);
-        if (c === 0x23 || c === 0x0a) blankline = true; /* whitespace/comment-only line */
-        /* eval input never accepts INDENT: any indented logical line at level 0 is an error */
-        if (!blankline && level === 0 && (cont_line_col ? cont_line_col : col) !== 0) {
-          throw syntax_error("unexpected indent");
-        }
+    /* set_fstring_expr: the text of the field's expression (debug metadata), with '#' comments removed */
+    function debug_text(cur) {
+      const end = cur.last_expr_end, out = [];
+      for (let k = cur.buf_start; k < end; k++) {
+        if (cps[k] === 0x23) {
+          while (k < end && cps[k] !== 0x0a) k++;
+          if (k < end) out.push(0x0a);
+        } else out.push(cps[k]);
       }
-      let emitted = false;
-      while (!emitted) { /* label "again" */
-        let c;
-        do { c = nextc(); } while (c === 0x20 || c === 0x09 || c === 0x0c);
-        const start = c === EOF ? pos : pos - 1;
-        if (c === 0x23) { while (c !== EOF && c !== 0x0a) c = nextc(); }
-        if (c === EOF) {
-          if (level) throw syntax_error("'" + String.fromCharCode(parens[parens.length - 1]) + "' was never closed");
-          toks.push({ t: "ENDMARKER" });
-          return toks;
-        }
-        if (is_id_start(c)) {
-          let saw_b = false, saw_r = false, saw_u = false, saw_f = false, str = null;
+      return out;
+    }
+
+    /* tok_get_normal_mode */
+    function get_normal(cur) {
+      for (;;) { /* label "nextline" */
+        let blankline = false;
+        if (atbol) {
+          atbol = false;
+          let col = 0, cont_line_col = 0, c;
           for (;;) {
-            if (!(saw_b || saw_u || saw_f) && (c === 0x62 || c === 0x42)) saw_b = true;
-            else if (!(saw_b || saw_u || saw_r || saw_f) && (c === 0x75 || c === 0x55)) saw_u = true;
-            else if (!(saw_r || saw_u) && (c === 0x72 || c === 0x52)) saw_r = true;
-            else if (!(saw_f || saw_b || saw_u) && (c === 0x66 || c === 0x46)) saw_f = true;
-            else break;
             c = nextc();
-            if (c === 0x22 || c === 0x27) {
-              if (saw_f) throw new GuardError("syntax node not allowed: JoinedStr");
-              if (saw_b) throw new GuardError("constant not allowed: bytes literal");
-              str = read_string(c, saw_r);
-              break;
-            }
-          }
-          if (str) { toks.push(str); emitted = true; continue; }
-          let nonascii = false;
-          while (is_id_char(c)) {
-            if (c >= 128) nonascii = true;
-            c = nextc();
+            if (c === 0x20) col++;
+            else if (c === 0x09) col = (Math.floor(col / TABSIZE) + 1) * TABSIZE;
+            else if (c === 0x0c) col = 0;
+            else if (c === 0x5c) {
+              cont_line_col = cont_line_col ? cont_line_col : col;
+              continuation();
+            } else break;
           }
           backup(c);
-          if (nonascii) verify_identifier(start);
-          const s = text(start, pos);
-          toks.push({ t: "NAME", s, kw: !nonascii && KEYWORDS.has(s), id: nonascii ? s.normalize("NFKC") : s });
-          emitted = true;
-          continue;
+          if (c === 0x23 || c === 0x0a) blankline = true; /* whitespace/comment-only line */
+          /* eval input never accepts INDENT: any indented logical line at level 0 is an error */
+          if (!blankline && level === 0 && (cont_line_col ? cont_line_col : col) !== 0) {
+            throw syntax_error("unexpected indent");
+          }
         }
-        if (c === 0x0a) {
-          atbol = true;
-          if (blankline || level > 0) break; /* goto nextline */
-          toks.push({ t: "NEWLINE" });
-          emitted = true;
-          continue;
-        }
-        if (c === 0x2e) {
+        for (;;) { /* label "again" */
+          let c;
+          do { c = nextc(); } while (c === 0x20 || c === 0x09 || c === 0x0c);
+          const start = c === EOF ? pos : pos - 1;
+          if (c === 0x23) { while (c !== EOF && c !== 0x0a) c = nextc(); }
+          if (c === EOF) {
+            if (level) throw syntax_error("'" + String.fromCharCode(parens[parens.length - 1]) + "' was never closed");
+            return { t: "ENDMARKER" };
+          }
+          if (is_id_start(c)) {
+            let saw_b = false, saw_r = false, saw_u = false, saw_f = false;
+            for (;;) {
+              if (!(saw_b || saw_u || saw_f) && (c === 0x62 || c === 0x42)) saw_b = true;
+              else if (!(saw_b || saw_u || saw_r || saw_f) && (c === 0x75 || c === 0x55)) saw_u = true;
+              else if (!(saw_r || saw_u) && (c === 0x72 || c === 0x52)) saw_r = true;
+              else if (!(saw_f || saw_b || saw_u) && (c === 0x66 || c === 0x46)) saw_f = true;
+              else break;
+              c = nextc();
+              if (c === 0x22 || c === 0x27) return saw_f ? fstring_start(start, c) : read_string(start, c, saw_b, saw_r);
+            }
+            let nonascii = false;
+            while (is_id_char(c)) {
+              if (c >= 128) nonascii = true;
+              c = nextc();
+            }
+            backup(c);
+            if (nonascii) verify_identifier(start);
+            const s = fromcps(cps, start, pos);
+            return { t: "NAME", s, kw: !nonascii && KEYWORDS.has(s), id: nonascii ? s.normalize("NFKC") : s, a: start, b: pos };
+          }
+          if (c === 0x0a) {
+            atbol = true;
+            if (blankline || level > 0) break; /* goto nextline */
+            return { t: "NEWLINE" };
+          }
+          if (c === 0x2e) {
+            const c2 = nextc();
+            if (isdigit(c2)) return fraction(c2, start);
+            if (c2 === 0x2e) {
+              const c3 = nextc();
+              if (c3 === 0x2e) return { t: "OP", s: "...", a: start, b: pos };
+              backup(c3);
+            }
+            backup(c2);
+            return { t: "OP", s: ".", a: start, b: pos };
+          }
+          if (isdigit(c)) return read_number(c, start);
+          if (c === 0x22 || c === 0x27) return read_string(start, c, false, false);
+          if (c === 0x5c) { continuation(); continue; } /* goto again */
+
+          /* f-string expression bookkeeping for ':', '}', '!' and '{' */
+          let meta;
+          if ((c === 0x3a || c === 0x7d || c === 0x21 || c === 0x7b) && modes.length > 1 && cur.expr_start >= 0) {
+            const cursor = cur.depth - (c !== 0x7b ? 1 : 0);
+            if (cursor === 0) { /* update_fstring_expr */
+              if (c === 0x7b) { cur.buf_start = pos; cur.last_expr_end = -1; }
+              else if (cur.last_expr_end === -1) cur.last_expr_end = start;
+            }
+            if (cursor === 0 && c !== 0x7b && cur.debug) meta = debug_text(cur);
+            if (c === 0x3a && cursor === cur.expr_start) {
+              cur.kind = FSTRING; /* the format spec follows */
+              return { t: "OP", s: ":", a: start, b: pos, meta };
+            }
+          }
           const c2 = nextc();
-          if (isdigit(c2)) { toks.push(fraction(c2, start)); emitted = true; continue; }
-          if (c2 === 0x2e) {
+          if (c2 !== EOF && c2 < 128 && TWO_CHAR.has(String.fromCharCode(c, c2))) {
+            const two = String.fromCharCode(c, c2);
             const c3 = nextc();
-            if (c3 === 0x2e) { toks.push({ t: "OP", s: "..." }); emitted = true; continue; }
+            if (c3 !== EOF && c3 < 128 && THREE_CHAR.has(two + String.fromCharCode(c3))) {
+              return { t: "OP", s: two + String.fromCharCode(c3), a: start, b: pos, meta };
+            }
             backup(c3);
+            return { t: "OP", s: two, a: start, b: pos, meta };
           }
           backup(c2);
-          toks.push({ t: "OP", s: "." });
-          emitted = true;
-          continue;
-        }
-        if (isdigit(c)) { toks.push(read_number(c, start)); emitted = true; continue; }
-        if (c === 0x27 || c === 0x22) { toks.push(read_string(c, false)); emitted = true; continue; }
-        if (c === 0x5c) { continuation(); continue; } /* goto again */
-        const c2 = nextc();
-        if (c2 !== EOF && c2 < 128 && TWO_CHAR.has(String.fromCharCode(c, c2))) {
-          const two = String.fromCharCode(c, c2);
-          const c3 = nextc();
-          if (c3 !== EOF && c3 < 128 && THREE_CHAR.has(two + String.fromCharCode(c3))) {
-            toks.push({ t: "OP", s: two + String.fromCharCode(c3) });
-          } else {
-            backup(c3);
-            toks.push({ t: "OP", s: two });
+          if (c === 0x28 || c === 0x5b || c === 0x7b) {
+            if (level >= MAXLEVEL) throw syntax_error("too many nested parentheses");
+            parens.push(c);
+            level++;
+            if (modes.length > 1) cur.depth++;
+          } else if (c === 0x29 || c === 0x5d || c === 0x7d) {
+            if (modes.length > 1 && !cur.depth && c === 0x7d) throw syntax_error("f-string: single '}' is not allowed");
+            if (!level) throw syntax_error("unmatched '" + String.fromCharCode(c) + "'");
+            level--;
+            const opening = parens.pop();
+            if (!((opening === 0x28 && c === 0x29) || (opening === 0x5b && c === 0x5d) || (opening === 0x7b && c === 0x7d))) {
+              throw syntax_error("closing parenthesis '" + String.fromCharCode(c) + "' does not match opening parenthesis '" +
+                String.fromCharCode(opening) + "'");
+            }
+            if (modes.length > 1) {
+              cur.depth--;
+              if (c === 0x7d && cur.depth === cur.expr_start) {
+                cur.expr_start--;
+                cur.kind = FSTRING;
+                cur.debug = false;
+              }
+            }
           }
-          emitted = true;
-          continue;
+          if (c < 0x20 || c === 0x7f) throw syntax_error("invalid non-printable character U+" + hex4(c));
+          if (c === 0x3d && cur.expr_start >= 0) cur.debug = true;
+          if (ONE_CHAR.indexOf(String.fromCharCode(c)) < 0) throw syntax_error("invalid syntax");
+          return { t: "OP", s: String.fromCharCode(c), a: start, b: pos, meta };
         }
-        backup(c2);
-        if (c === 0x28 || c === 0x5b || c === 0x7b) {
-          if (level >= MAXLEVEL) throw syntax_error("too many nested parentheses");
-          parens.push(c);
-          level++;
-        } else if (c === 0x29 || c === 0x5d || c === 0x7d) {
-          if (!level) throw syntax_error("unmatched '" + String.fromCharCode(c) + "'");
-          level--;
-          const opening = parens.pop();
-          if (!((opening === 0x28 && c === 0x29) || (opening === 0x5b && c === 0x5d) || (opening === 0x7b && c === 0x7d))) {
-            throw syntax_error("closing parenthesis '" + String.fromCharCode(c) + "' does not match opening parenthesis '" +
-              String.fromCharCode(opening) + "'");
-          }
-        }
-        if (c < 0x20 || c === 0x7f) throw syntax_error("invalid non-printable character U+" + hex4(c));
-        if (ONE_CHAR.indexOf(String.fromCharCode(c)) < 0) throw syntax_error("invalid syntax");
-        toks.push({ t: "OP", s: String.fromCharCode(c) });
-        emitted = true;
       }
     }
+
+    /* tok_get_fstring_mode */
+    function get_fstring(cur) {
+      const start = pos;
+      const c0 = nextc();
+      if (c0 === 0x7b) {
+        const peek1 = nextc();
+        backup(peek1);
+        backup(c0);
+        if (peek1 !== 0x7b) {
+          cur.expr_start++;
+          if (cur.expr_start >= MAX_EXPR_NESTING) throw syntax_error("f-string: expressions nested too deeply");
+          cur.kind = REGULAR;
+          return get_normal(cur);
+        }
+      } else backup(c0);
+      let k = 0;
+      for (; k < cur.quote_size; k++) {
+        const q = nextc();
+        if (q !== cur.quote) { backup(q); break; }
+      }
+      if (k === cur.quote_size) {
+        modes.pop();
+        return { t: "FSTRING_END", a: start, b: pos };
+      }
+      let end_quote_size = 0, unicode_escape = false;
+      while (end_quote_size !== cur.quote_size) {
+        const c = nextc();
+        const in_format_spec = cur.last_expr_end !== -1 && cur.expr_start >= 0;
+        if (c === EOF || (cur.quote_size === 1 && c === 0x0a)) {
+          if (in_format_spec && c === 0x0a) {
+            backup(c);
+            cur.kind = REGULAR;
+            return { t: "FSTRING_MIDDLE", body: cps.slice(start, pos), a: start, b: pos };
+          }
+          throw syntax_error((cur.quote_size === 3 ? "unterminated triple-quoted f-string literal" : "unterminated f-string literal") +
+            " (detected at line " + lineno() + ")");
+        }
+        if (c === cur.quote) { end_quote_size += 1; continue; }
+        end_quote_size = 0;
+        if (c === 0x7b) {
+          const peek = nextc();
+          if (peek !== 0x7b || in_format_spec) {
+            backup(peek);
+            backup(c);
+            cur.expr_start++;
+            if (cur.expr_start >= MAX_EXPR_NESTING) throw syntax_error("f-string: expressions nested too deeply");
+            cur.kind = REGULAR;
+            return { t: "FSTRING_MIDDLE", body: cps.slice(start, pos), a: start, b: pos };
+          }
+          return { t: "FSTRING_MIDDLE", body: cps.slice(start, pos - 1), a: start, b: pos };
+        }
+        if (c === 0x7d) {
+          if (unicode_escape) return { t: "FSTRING_MIDDLE", body: cps.slice(start, pos), a: start, b: pos };
+          const peek = nextc();
+          if (peek === 0x7d && !in_format_spec) return { t: "FSTRING_MIDDLE", body: cps.slice(start, pos - 1), a: start, b: pos };
+          backup(peek);
+          backup(c);
+          cur.kind = REGULAR;
+          return { t: "FSTRING_MIDDLE", body: cps.slice(start, pos), a: start, b: pos };
+        }
+        if (c === 0x5c) {
+          let peek = nextc();
+          if (peek === 0x7b || peek === 0x7d) { backup(peek); continue; } /* (a SyntaxWarning in Python) */
+          if (!cur.raw && peek === 0x4e) {
+            peek = nextc();
+            if (peek === 0x7b) unicode_escape = true;
+            else backup(peek);
+          }
+        }
+      }
+      for (k = 0; k < cur.quote_size; k++) pos--; /* the closing quotes become FSTRING_END */
+      return { t: "FSTRING_MIDDLE", body: cps.slice(start, pos), a: start, b: pos };
+    }
+
+    for (;;) { /* one iteration per CPython tok_get call */
+      const m = modes[modes.length - 1];
+      const tk = m.kind === REGULAR ? get_normal(m) : get_fstring(m);
+      toks.push(tk);
+      if (tk.t === "ENDMARKER") return toks;
+    }
+  }
+  guards._tokenize = function (src) {
+    return tokenize(Array.from(src.replace(/\r\n?/g, "\n"), (ch) => ch.codePointAt(0)));
+  };
+
+  /* ------------------------------------------------------------------------------------------ */
+  /* String literal decoding (Parser/string_parser.c)                                             */
+  /* ------------------------------------------------------------------------------------------ */
+
+  /* Port-only marks on decoded str values: the exact value is unknown to the port (deviations/guards.md). */
+  const N_ESCAPE = 1; /* \N{name}: the port has no Unicode name database; one placeholder code point */
+  const SURROGATE = 2; /* an escape that produces a surrogate code point; one placeholder code point */
+  const PLACEHOLDER = "�";
+  const isalnum = (c) => isdigit(c) || (c >= 0x41 && c <= 0x5a) || (c >= 0x61 && c <= 0x7a);
+
+  /** decode_unicode_with_escapes for a str body (code points) -> {s, flags}. Like CPython, it first rewrites the
+   *  body into an ASCII buffer (every non-ASCII character becomes \Uxxxxxxxx, and a backslash before a non-ASCII
+   *  character or at the end gets "u005c" appended), then runs _PyUnicode_DecodeUnicodeEscapeInternal on it, so
+   *  values and error positions are CPython's. */
+  function decode_str(body) {
+    const buf = [];
+    const len = body.length;
+    for (let k = 0; k < len;) {
+      if (body[k] === 0x5c) {
+        buf.push(0x5c);
+        k++;
+        if (k >= len || body[k] >= 0x80) {
+          buf.push(0x75, 0x30, 0x30, 0x35, 0x63);
+          if (k >= len) break;
+        }
+      }
+      const c = body[k++];
+      if (c < 0x80) { buf.push(c); continue; }
+      buf.push(0x5c, 0x55);
+      const h = c.toString(16).padStart(8, "0");
+      for (let q = 0; q < 8; q++) buf.push(h.charCodeAt(q));
+    }
+    let out = "", flags = 0;
+    const n = buf.length;
+    const err = (start, end, message) => syntax_error("(unicode error) 'unicodeescape' codec can't decode " +
+      (end === start + 1 ? "byte 0x" + hexn(buf[start], 2) + " in position " + start : "bytes in position " + start + "-" +
+      (end - 1)) + ": " + message);
+    for (let s = 0; s < n;) {
+      let c = buf[s++];
+      if (c !== 0x5c) { out += String.fromCharCode(c); continue; }
+      const startinpos = s - 1;
+      if (s >= n) throw err(startinpos, s, "\\ at end of string");
+      c = buf[s++];
+      switch (c) {
+        case 0x0a: continue;
+        case 0x5c: out += "\\"; continue;
+        case 0x27: out += "'"; continue;
+        case 0x22: out += '"'; continue;
+        case 0x62: out += "\b"; continue;
+        case 0x66: out += "\f"; continue;
+        case 0x74: out += "\t"; continue;
+        case 0x6e: out += "\n"; continue;
+        case 0x72: out += "\r"; continue;
+        case 0x76: out += "\v"; continue;
+        case 0x61: out += "\x07"; continue;
+        case 0x78: case 0x75: case 0x55: {
+          let count = c === 0x78 ? 2 : c === 0x75 ? 4 : 8;
+          const message = "truncated " + (c === 0x78 ? "\\xXX" : c === 0x75 ? "\\uXXXX" : "\\UXXXXXXXX") + " escape";
+          let ch = 0;
+          for (; count; ++s, --count) {
+            if (s >= n || !isxdigit(buf[s])) throw err(startinpos, s, message);
+            ch = ch * 16 + parseInt(String.fromCharCode(buf[s]), 16);
+          }
+          if (ch > 0x10ffff) throw err(startinpos, s, "illegal Unicode character");
+          if (ch >= 0xd800 && ch <= 0xdfff) { out += PLACEHOLDER; flags |= SURROGATE; continue; }
+          out += String.fromCodePoint(ch);
+          continue;
+        }
+        case 0x4e: { /* \N{name}: the port has no name database (deviations/guards.md) */
+          const message = "malformed \\N character escape";
+          if (s >= n || buf[s] !== 0x7b) throw err(startinpos, s, message);
+          const name_start = ++s;
+          while (s < n && buf[s] !== 0x7d) s++;
+          if (s >= n || s === name_start) throw err(startinpos, s, message);
+          const name_end = s++;
+          for (let q = name_start; q < name_end; q++) { /* Unicode names use only A-Z, 0-9, space and hyphen (any case) */
+            const ch = buf[q];
+            if (!(isalnum(ch) || ch === 0x20 || ch === 0x2d)) throw err(startinpos, s, "unknown Unicode character name");
+          }
+          out += PLACEHOLDER;
+          flags |= N_ESCAPE;
+          continue;
+        }
+        default:
+          if (c >= 0x30 && c <= 0x37) {
+            let ch = c - 0x30;
+            if (s < n && buf[s] >= 0x30 && buf[s] <= 0x37) {
+              ch = (ch << 3) + buf[s++] - 0x30;
+              if (s < n && buf[s] >= 0x30 && buf[s] <= 0x37) ch = (ch << 3) + buf[s++] - 0x30;
+            }
+            out += String.fromCodePoint(ch);
+            continue;
+          }
+          out += "\\" + String.fromCharCode(c); /* an unknown escape keeps the backslash (a SyntaxWarning) */
+      }
+    }
+    return { s: out, flags };
+  }
+  guards._decode_str = function (s) { return decode_str(Array.from(s, (ch) => ch.codePointAt(0))); };
+
+  /** _PyBytes_DecodeEscape for a bytes body (ASCII code points) -> list of byte values. */
+  function decode_bytes(body) {
+    const out = [];
+    const len = body.length;
+    for (let k = 0; k < len; k++) {
+      const c = body[k];
+      if (c !== 0x5c) { out.push(c); continue; }
+      if (++k >= len) throw syntax_error("(value error) Trailing \\ in string");
+      const e = body[k];
+      switch (e) {
+        case 0x0a: break;
+        case 0x5c: out.push(0x5c); break;
+        case 0x27: out.push(0x27); break;
+        case 0x22: out.push(0x22); break;
+        case 0x62: out.push(0x08); break;
+        case 0x66: out.push(0x0c); break;
+        case 0x74: out.push(0x09); break;
+        case 0x6e: out.push(0x0a); break;
+        case 0x72: out.push(0x0d); break;
+        case 0x76: out.push(0x0b); break;
+        case 0x61: out.push(0x07); break;
+        case 0x78:
+          if (k + 2 < len && isxdigit(body[k + 1]) && isxdigit(body[k + 2])) {
+            out.push(parseInt(String.fromCharCode(body[k + 1], body[k + 2]), 16));
+            k += 2;
+            break;
+          }
+          throw syntax_error("(value error) invalid \\x escape at position " + (k - 1));
+        default:
+          if (e >= 0x30 && e <= 0x37) {
+            let ch = e - 0x30;
+            if (k + 1 < len && body[k + 1] >= 0x30 && body[k + 1] <= 0x37) {
+              ch = (ch << 3) + body[++k] - 0x30;
+              if (k + 1 < len && body[k + 1] >= 0x30 && body[k + 1] <= 0x37) ch = (ch << 3) + body[++k] - 0x30;
+            }
+            out.push(ch & 0xff);
+          } else {
+            out.push(0x5c); /* unknown escape: keep the backslash and reread the character */
+            k--;
+          }
+      }
+    }
+    return out;
   }
 
   /* ------------------------------------------------------------------------------------------ */
-  /* Parser (PEG grammar of CPython 3.12, expression subset)                                      */
+  /* Parser (CPython 3.12 PEG grammar, expression part, first pass)                               */
   /* ------------------------------------------------------------------------------------------ */
+  /* Builds Python-shaped nodes for every construct ast.parse(expr, mode="eval") accepts (see PORTING.md for
+   * the allowlisted ones). Additional node types mirror Python's ast fields: NamedExpr {target, value},
+   * Lambda {args, body}, arguments {posonlyargs, args, vararg, kwonlyargs, kw_defaults, kwarg, defaults},
+   * arg {arg}, Dict {keys, values}, Set {elts}, ListComp/SetComp/GeneratorExp {elt, generators},
+   * DictComp {key, value, generators}, comprehension {target, iter, ifs, is_async}, Await/Yield/YieldFrom
+   * {value}, Attribute {value, attr}, Subscript {value, slice}, Slice {lower, upper, step}, Starred {value},
+   * keyword {arg, value}, JoinedStr {values}, FormattedValue {value, conversion, format_spec}. Name, List,
+   * Tuple, Starred, Attribute and Subscript in a Store context carry ctx: "Store" (Load is implicit).
+   * Constant.py_type is "str", "int", "float", "bool", "NoneType", "ellipsis", "bytes" (value: byte list) or
+   * "complex" (value: the imaginary part). An int literal above 2^53-1 has a BigInt value.
+   *
+   * The parser is a deterministic recursive descent that commits where the PEG's ordered choice commits, so
+   * it accepts exactly the first-pass language. Recursion per bracket level is kept small (expression ->
+   * disjunction -> binary -> factor -> bracket form) so that the 200 nesting levels CPython's tokenizer
+   * allows fit in small JS stacks. */
 
-  const COMPARE_OPS = { "==": "Eq", "!=": "NotEq", "<": "Lt", "<=": "LtE", ">": "Gt", ">=": "GtE" };
-  const BIN_LEVELS = [
-    { "|": "BitOr" }, { "^": "BitXor" }, { "&": "BitAnd" }, { "<<": "LShift", ">>": "RShift" },
-    { "+": "Add", "-": "Sub" }, { "*": "Mult", "/": "Div", "//": "FloorDiv", "%": "Mod", "@": "MatMult" },
-  ];
-  const UNARY_OPS = { "-": "USub", "+": "UAdd", "~": "Invert" };
+  const COMPARE_OPS = new Map([["==", "Eq"], ["!=", "NotEq"], ["<", "Lt"], ["<=", "LtE"], [">", "Gt"], [">=", "GtE"]]);
+  const BINOPS = new Map([["|", ["BitOr", 1]], ["^", ["BitXor", 2]], ["&", ["BitAnd", 3]], ["<<", ["LShift", 4]],
+    [">>", ["RShift", 4]], ["+", ["Add", 5]], ["-", ["Sub", 5]], ["*", ["Mult", 6]], ["/", ["Div", 6]],
+    ["//", ["FloorDiv", 6]], ["%", ["Mod", 6]], ["@", ["MatMult", 6]]]);
+  const UNARY_OPS = new Map([["-", "USub"], ["+", "UAdd"], ["~", "Invert"]]);
   const EXPR_START_KW = new Set(["True", "False", "None", "not", "lambda", "await"]);
   const EXPR_START_OP = new Set(["(", "[", "{", "-", "+", "~", "..."]);
 
   function constant(value, py_type) { return { type: "Constant", value, py_type }; }
 
+  /* Deviation marks on Constant nodes (not part of the tree shape): message thrown by parse() if the guard would
+   * otherwise be accepted. */
+  const DEV = new WeakMap();
+
   function parse_tokens(toks) {
     let i = 0;
-    const peek = (k) => toks[Math.min(i + (k || 0), toks.length - 1)];
+    const last = toks.length - 1;
+    const peek = () => toks[i];
+    const peek1 = () => toks[i < last ? i + 1 : last];
     const is_op = (tk, s) => tk.t === "OP" && tk.s === s;
     const is_kw = (tk, s) => tk.t === "NAME" && tk.kw && tk.s === s;
-    const is_name = (tk) => tk.t === "NAME" && !tk.kw;
     const fail = (msg) => { throw syntax_error(msg || "invalid syntax"); };
-    const reject = (what) => { throw new GuardError("syntax node not allowed: " + what); };
-    const expect_op = (s) => { if (!is_op(peek(), s)) fail(); i++; };
-    const starts_expression = (tk) =>
-      tk.t === "NUMBER" || tk.t === "STRING" || (tk.t === "NAME" && (!tk.kw || EXPR_START_KW.has(tk.s))) ||
-      (tk.t === "OP" && EXPR_START_OP.has(tk.s));
-    const comprehension_follows = () => is_kw(peek(), "for") || is_kw(peek(), "async");
+    const expect = (s) => { if (!is_op(toks[i], s)) fail(); i++; };
+    function starts_expression(tk) {
+      switch (tk.t) {
+        case "NAME": return !tk.kw || EXPR_START_KW.has(tk.s);
+        case "NUMBER": case "STRING": case "FSTRING_START": return true;
+        case "OP": return EXPR_START_OP.has(tk.s);
+        default: return false;
+      }
+    }
+    const starts_star_expression = (tk) => starts_expression(tk) || is_op(tk, "*");
+    const comprehension_follows = () => is_kw(toks[i], "for") || (is_kw(toks[i], "async") && is_kw(peek1(), "for"));
 
+    /* expressions: expression (',' expression)* [','] */
     function expressions() {
       const first = expression();
       if (!is_op(peek(), ",")) return first;
@@ -669,179 +1028,681 @@
       }
       return { type: "Tuple", elts };
     }
+
+    /* expression: disjunction 'if' disjunction 'else' expression | disjunction | lambdef (else-chains iterate) */
     function expression() {
-      if (is_kw(peek(), "lambda")) reject("Lambda");
-      const body = disjunction();
-      if (!is_kw(peek(), "if")) return body;
-      i++;
-      const test = disjunction();
-      if (!is_kw(peek(), "else")) fail("expected 'else' after 'if' expression");
-      i++;
-      return { type: "IfExp", test, body, orelse: expression() };
+      let pairs = null, e;
+      for (;;) {
+        if (is_kw(peek(), "lambda")) { e = lambdef(); break; }
+        const body = disjunction();
+        if (!is_kw(peek(), "if")) { e = body; break; }
+        i++;
+        const test = disjunction();
+        if (!is_kw(peek(), "else")) fail("expected 'else' after 'if' expression");
+        i++;
+        (pairs || (pairs = [])).push(body, test);
+      }
+      if (pairs) {
+        for (let k = pairs.length - 2; k >= 0; k -= 2) e = { type: "IfExp", test: pairs[k + 1], body: pairs[k], orelse: e };
+      }
+      return e;
+    }
+
+    /* disjunction / conjunction / inversion / comparison in one frame */
+    function disjunction() {
+      let ors = null, ands = null;
+      for (;;) {
+        let nots = 0;
+        while (is_kw(peek(), "not")) { i++; nots++; }
+        const left = binary();
+        let e = left, ops = null, comps = null;
+        for (;;) {
+          const tk = peek();
+          let op = null;
+          if (tk.t === "OP") {
+            op = COMPARE_OPS.get(tk.s) || null;
+            if (op) i++;
+          } else if (tk.t === "NAME" && tk.kw) {
+            if (tk.s === "in") { op = "In"; i++; }
+            else if (tk.s === "not" && is_kw(peek1(), "in")) { op = "NotIn"; i += 2; }
+            else if (tk.s === "is") {
+              if (is_kw(peek1(), "not")) { op = "IsNot"; i += 2; } else { op = "Is"; i++; }
+            }
+          }
+          if (!op) break;
+          if (!ops) { ops = []; comps = []; }
+          ops.push(op);
+          comps.push(binary());
+        }
+        if (ops) e = { type: "Compare", left, ops, comparators: comps };
+        while (nots-- > 0) e = { type: "UnaryOp", op: "Not", operand: e };
+        if (is_kw(peek(), "and")) { i++; (ands || (ands = [])).push(e); continue; }
+        if (ands) { ands.push(e); e = { type: "BoolOp", op: "And", values: ands }; ands = null; }
+        if (is_kw(peek(), "or")) { i++; (ors || (ors = [])).push(e); continue; }
+        if (ors) { ors.push(e); e = { type: "BoolOp", op: "Or", values: ors }; }
+        return e;
+      }
+    }
+
+    /* bitwise_or .. term: left-associative binary operators by precedence climbing */
+    function binary() {
+      const first = factor();
+      let tk = peek();
+      if (tk.t !== "OP" || !BINOPS.has(tk.s)) return first;
+      const vals = [first], ops = [];
+      const reduce = () => {
+        const r = vals.pop(), l = vals.pop();
+        vals.push({ type: "BinOp", left: l, op: ops.pop()[0], right: r });
+      };
+      for (;;) {
+        tk = peek();
+        const info = tk.t === "OP" ? BINOPS.get(tk.s) : undefined;
+        if (!info) break;
+        i++;
+        while (ops.length && ops[ops.length - 1][1] >= info[1]) reduce();
+        ops.push(info);
+        vals.push(factor());
+      }
+      while (ops.length) reduce();
+      return vals[0];
+    }
+
+    /* factor / power / await_primary / primary / atom: unary prefixes, a right-associative '**' chain */
+    function factor() {
+      let segs = null, pre = null, base;
+      for (;;) {
+        pre = null;
+        for (;;) {
+          const tk = peek();
+          const u = tk.t === "OP" ? UNARY_OPS.get(tk.s) : undefined;
+          if (!u) break;
+          (pre || (pre = [])).push(u);
+          i++;
+        }
+        if (is_kw(peek(), "await")) { i++; base = { type: "Await", value: primary() }; }
+        else base = primary();
+        if (!is_op(peek(), "**")) break;
+        i++;
+        (segs || (segs = [])).push(pre, base);
+      }
+      let e = base;
+      if (pre) for (let p = pre.length - 1; p >= 0; p--) e = { type: "UnaryOp", op: pre[p], operand: e };
+      if (segs) {
+        for (let k = segs.length - 2; k >= 0; k -= 2) {
+          e = { type: "BinOp", left: segs[k + 1], op: "Pow", right: e };
+          const pk = segs[k];
+          if (pk) for (let p = pk.length - 1; p >= 0; p--) e = { type: "UnaryOp", op: pk[p], operand: e };
+        }
+      }
+      return e;
+    }
+
+    /* primary: atom followed by '.' NAME, call, subscript trailers (atom inlined: one frame less per bracket level) */
+    function primary() {
+      let e;
+      const t0 = peek();
+      switch (t0.t) {
+        case "NAME":
+          if (!t0.kw) { i++; e = { type: "Name", id: t0.id }; break; }
+          if (t0.s === "True" || t0.s === "False") { i++; e = constant(t0.s === "True", "bool"); break; }
+          if (t0.s === "None") { i++; e = constant(null, "NoneType"); break; }
+          return fail();
+        case "NUMBER":
+          i++;
+          if (t0.kind === "complex") e = constant(t0.value, "complex");
+          else if (t0.kind === "float") e = constant(t0.value, "float");
+          else {
+            e = constant(t0.value, "int");
+            if (t0.raw !== undefined) {
+              DEV.set(e, "integer literal " + t0.raw + " is outside the range supported by the JavaScript port (at most 2^53-1)");
+            }
+          }
+          break;
+        case "STRING": case "FSTRING_START":
+          e = strings();
+          break;
+        case "OP":
+          if (t0.s === "(") { e = paren(); break; }
+          if (t0.s === "[") { e = list_display(); break; }
+          if (t0.s === "{") { e = brace_display(); break; }
+          if (t0.s === "...") { i++; e = constant(null, "ellipsis"); break; }
+          return fail();
+        default:
+          return fail();
+      }
+      for (;;) {
+        const tk = peek();
+        if (tk.t !== "OP") return e;
+        if (tk.s === ".") {
+          i++;
+          const nm = peek();
+          if (nm.t !== "NAME" || nm.kw) fail();
+          i++;
+          e = { type: "Attribute", value: e, attr: nm.id };
+        } else if (tk.s === "(") e = call(e);
+        else if (tk.s === "[") {
+          i++;
+          const s = slices();
+          expect("]");
+          e = { type: "Subscript", value: e, slice: s };
+        } else return e;
+      }
+    }
+
+    /* named_expression: NAME ':=' expression | expression !':=' (bracket forms inline the second alternative) */
+    const walrus_follows = () => toks[i].t === "NAME" && !toks[i].kw && is_op(peek1(), ":=");
+    function walrus() {
+      const tk = peek();
+      i += 2;
+      return { type: "NamedExpr", target: { type: "Name", id: tk.id, ctx: "Store" }, value: expression() };
     }
     function named_expression() {
-      if (is_name(peek()) && is_op(peek(1), ":=")) reject("NamedExpr");
+      if (walrus_follows()) return walrus();
       const e = expression();
       if (is_op(peek(), ":=")) fail();
       return e;
     }
-    function bool_chain(word, next, op) {
-      const first = next();
-      if (!is_kw(peek(), word)) return first;
-      const values = [first];
-      while (is_kw(peek(), word)) { i++; values.push(next()); }
-      return { type: "BoolOp", op, values };
+    /* star_named_expression: '*' bitwise_or | named_expression */
+    function star_named_expression() {
+      if (is_op(peek(), "*")) { i++; return { type: "Starred", value: binary() }; }
+      return named_expression();
     }
-    function disjunction() { return bool_chain("or", conjunction, "Or"); }
-    function conjunction() { return bool_chain("and", inversion, "And"); }
-    function inversion() {
-      if (is_kw(peek(), "not")) { i++; return { type: "UnaryOp", op: "Not", operand: inversion() }; }
-      return comparison();
+    /* star_expressions (yield values, f-string fields) */
+    function star_expression() {
+      if (is_op(peek(), "*")) { i++; return { type: "Starred", value: binary() }; }
+      return expression();
     }
-    function comparison() {
-      const left = binary(0);
-      const ops = [], comparators = [];
-      for (;;) {
-        const tk = peek();
-        let op = null;
-        if (tk.t === "OP" && hasOwn.call(COMPARE_OPS, tk.s)) { op = COMPARE_OPS[tk.s]; i++; }
-        else if (is_kw(tk, "in")) { op = "In"; i++; }
-        else if (is_kw(tk, "not") && is_kw(peek(1), "in")) { op = "NotIn"; i += 2; }
-        else if (is_kw(tk, "is")) {
-          if (is_kw(peek(1), "not")) { op = "IsNot"; i += 2; } else { op = "Is"; i++; }
-        }
-        if (!op) break;
-        ops.push(op);
-        comparators.push(binary(0));
-      }
-      return ops.length ? { type: "Compare", left, ops, comparators } : left;
-    }
-    function binary(lvl) {
-      if (lvl === BIN_LEVELS.length) return factor();
-      const table = BIN_LEVELS[lvl];
-      let left = binary(lvl + 1);
-      for (;;) {
-        const tk = peek();
-        if (tk.t !== "OP" || !hasOwn.call(table, tk.s)) return left;
+    function star_expressions() {
+      const first = star_expression();
+      if (!is_op(peek(), ",")) return first;
+      const elts = [first];
+      while (is_op(peek(), ",")) {
         i++;
-        left = { type: "BinOp", left, op: table[tk.s], right: binary(lvl + 1) };
+        if (!starts_star_expression(peek())) break;
+        elts.push(star_expression());
       }
+      return { type: "Tuple", elts };
     }
-    function factor() {
-      const tk = peek();
-      if (tk.t === "OP" && hasOwn.call(UNARY_OPS, tk.s)) {
-        i++;
-        return { type: "UnaryOp", op: UNARY_OPS[tk.s], operand: factor() };
-      }
-      const base = await_primary();
-      if (is_op(peek(), "**")) { i++; return { type: "BinOp", left: base, op: "Pow", right: factor() }; }
-      return base;
+    /* yield_expr: 'yield' 'from' expression | 'yield' [star_expressions] */
+    function yield_expr() {
+      i++;
+      if (is_kw(peek(), "from")) { i++; return { type: "YieldFrom", value: expression() }; }
+      return { type: "Yield", value: starts_star_expression(peek()) ? star_expressions() : null };
     }
-    function await_primary() {
-      if (is_kw(peek(), "await")) reject("Await");
-      return primary();
-    }
-    function primary() {
-      let e = atom();
-      for (;;) {
-        const tk = peek();
-        if (is_op(tk, ".")) {
-          i++;
-          if (!is_name(peek())) fail();
-          e = { type: "Attribute", value: e, attr: peek().id };
-          i++;
-        } else if (is_op(tk, "(")) e = call(e);
-        else if (is_op(tk, "[")) reject("Subscript");
-        else return e;
-      }
-    }
-    function call(func) {
-      i++; /* ( */
-      const args = [];
-      if (is_op(peek(), ")")) { i++; return { type: "Call", func, args, keywords: [] }; }
-      for (;;) {
-        const tk = peek();
-        if (is_op(tk, "*")) reject("Starred");
-        if (is_op(tk, "**") || (is_name(tk) && is_op(peek(1), "="))) {
-          throw new GuardError(func.type === "Name" && is_predicate(func.id)
-            ? func.id + " takes exactly one variable argument" : "only empty(x) / nonempty(x) calls are allowed");
-        }
-        if (is_name(tk) && is_op(peek(1), ":=")) reject("NamedExpr");
-        const e = expression();
-        if (comprehension_follows()) reject("GeneratorExp");
-        if (is_op(peek(), "=") || is_op(peek(), ":=")) fail();
-        args.push(e);
-        if (is_op(peek(), ",")) {
-          i++;
-          if (is_op(peek(), ")")) break;
-          continue;
-        }
-        break;
-      }
-      expect_op(")");
-      return { type: "Call", func, args, keywords: [] };
-    }
-    function atom() {
-      const tk = peek();
-      if (tk.t === "NAME") {
-        if (!tk.kw) { i++; return { type: "Name", id: tk.id }; }
-        if (tk.s === "True" || tk.s === "False") { i++; return constant(tk.s === "True", "bool"); }
-        if (tk.s === "None") { i++; return constant(null, "NoneType"); }
-        fail();
-      }
-      if (tk.t === "NUMBER") { i++; return constant(tk.value, tk.py_type); }
-      if (tk.t === "STRING") {
-        let s = "";
-        while (peek().t === "STRING") { s += peek().value; i++; }
-        return constant(s, "str");
-      }
-      if (tk.t === "OP") {
-        if (tk.s === "(") return paren();
-        if (tk.s === "[") return list();
-        if (tk.s === "{") reject(is_op(peek(1), "}") ? "Dict" : "Dict/Set");
-        if (tk.s === "...") { i++; return constant(null, "ellipsis"); }
-      }
-      fail();
-    }
+
+    /* tuple | group | genexp */
     function paren() {
-      i++; /* ( */
-      if (is_op(peek(), ")")) { i++; return { type: "Tuple", elts: [] }; }
-      if (is_kw(peek(), "yield")) reject("Yield");
-      if (is_op(peek(), "*")) reject("Starred");
-      const first = named_expression();
-      if (comprehension_follows()) reject("GeneratorExp");
-      if (is_op(peek(), ")")) { i++; return first; }
-      if (!is_op(peek(), ",")) fail();
+      i++;
+      const tk = peek();
+      if (is_op(tk, ")")) { i++; return { type: "Tuple", elts: [] }; }
+      if (is_kw(tk, "yield")) { const y = yield_expr(); expect(")"); return y; }
+      let first;
+      if (is_op(tk, "*")) {
+        i++;
+        first = { type: "Starred", value: binary() };
+        if (!is_op(peek(), ",")) fail();
+      } else {
+        if (walrus_follows()) first = walrus();
+        else {
+          first = expression();
+          if (is_op(peek(), ":=")) fail();
+        }
+        if (comprehension_follows()) {
+          const gens = for_if_clauses();
+          expect(")");
+          return { type: "GeneratorExp", elt: first, generators: gens };
+        }
+        if (is_op(peek(), ")")) { i++; return first; }
+        if (!is_op(peek(), ",")) fail();
+      }
       const elts = [first];
       while (is_op(peek(), ",")) {
         i++;
         if (is_op(peek(), ")")) break;
-        if (is_op(peek(), "*")) reject("Starred");
-        elts.push(named_expression());
+        elts.push(star_named_expression());
       }
-      expect_op(")");
+      expect(")");
       return { type: "Tuple", elts };
     }
-    function list() {
-      i++; /* [ */
-      const elts = [];
-      if (is_op(peek(), "]")) { i++; return { type: "List", elts }; }
-      for (;;) {
-        if (is_op(peek(), "*")) reject("Starred");
-        const e = named_expression();
-        if (!elts.length && comprehension_follows()) reject("ListComp");
-        elts.push(e);
-        if (is_op(peek(), ",")) {
-          i++;
-          if (is_op(peek(), "]")) break;
-          continue;
-        }
-        break;
+
+    /* list | listcomp */
+    function list_display() {
+      i++;
+      if (is_op(peek(), "]")) { i++; return { type: "List", elts: [] }; }
+      const starred = is_op(peek(), "*");
+      let first;
+      if (starred || walrus_follows()) first = star_named_expression();
+      else {
+        first = expression();
+        if (is_op(peek(), ":=")) fail();
       }
-      expect_op("]");
+      if (!starred && comprehension_follows()) {
+        const gens = for_if_clauses();
+        expect("]");
+        return { type: "ListComp", elt: first, generators: gens };
+      }
+      const elts = [first];
+      while (is_op(peek(), ",")) {
+        i++;
+        if (is_op(peek(), "]")) break;
+        elts.push(star_named_expression());
+      }
+      expect("]");
       return { type: "List", elts };
     }
 
+    /* dict | set | dictcomp | setcomp */
+    function brace_display() {
+      i++;
+      const tk = peek();
+      if (is_op(tk, "}")) { i++; return { type: "Dict", keys: [], values: [] }; }
+      if (is_op(tk, "**")) { i++; return dict_rest([null], [binary()]); }
+      if (is_op(tk, "*")) { i++; return set_rest({ type: "Starred", value: binary() }); }
+      let first;
+      if (walrus_follows()) first = walrus();
+      else {
+        first = expression();
+        if (is_op(peek(), ":")) {
+          i++;
+          const v = expression();
+          if (comprehension_follows()) {
+            const gens = for_if_clauses();
+            expect("}");
+            return { type: "DictComp", key: first, value: v, generators: gens };
+          }
+          return dict_rest([first], [v]);
+        }
+        if (is_op(peek(), ":=")) fail();
+      }
+      if (comprehension_follows()) {
+        const gens = for_if_clauses();
+        expect("}");
+        return { type: "SetComp", elt: first, generators: gens };
+      }
+      return set_rest(first);
+    }
+    function dict_rest(keys, values) {
+      while (is_op(peek(), ",")) {
+        i++;
+        if (is_op(peek(), "}")) break;
+        if (is_op(peek(), "**")) { i++; keys.push(null); values.push(binary()); continue; }
+        keys.push(expression());
+        expect(":");
+        values.push(expression());
+      }
+      expect("}");
+      return { type: "Dict", keys, values };
+    }
+    function set_rest(first) {
+      const elts = [first];
+      while (is_op(peek(), ",")) {
+        i++;
+        if (is_op(peek(), "}")) break;
+        elts.push(star_named_expression());
+      }
+      expect("}");
+      return { type: "Set", elts };
+    }
+
+    /* for_if_clauses: (['async'] 'for' star_targets 'in' disjunction ('if' disjunction)*)+ */
+    function for_if_clauses() {
+      const gens = [];
+      for (;;) {
+        let is_async = 0;
+        if (is_kw(peek(), "async") && is_kw(peek1(), "for")) { i++; is_async = 1; }
+        else if (!is_kw(peek(), "for")) break;
+        i++;
+        const target = star_targets();
+        if (!is_kw(peek(), "in")) fail();
+        i++;
+        const iter = disjunction();
+        const ifs = [];
+        while (is_kw(peek(), "if")) { i++; ifs.push(disjunction()); }
+        gens.push({ type: "comprehension", target, iter, ifs, is_async });
+      }
+      if (!gens.length) fail();
+      return gens;
+    }
+
+    /* star_targets of a comprehension: the target is parsed as atom + trailers (t_primary) and then checked and
+       converted like CPython's star_atom / target_with_star_atom / _PyPegen_set_expr_context. */
+    function star_targets() {
+      const first = star_target();
+      if (!is_op(peek(), ",")) return first;
+      const elts = [first];
+      while (is_op(peek(), ",")) {
+        i++;
+        if (is_kw(peek(), "in")) break;
+        elts.push(star_target());
+      }
+      return { type: "Tuple", elts, ctx: "Store" };
+    }
+    function star_target() {
+      if (is_op(peek(), "*")) {
+        i++;
+        if (is_op(peek(), "*")) fail();
+        return { type: "Starred", value: star_target(), ctx: "Store" };
+      }
+      return to_target(primary(), false);
+    }
+    /* e was parsed as an expression (Load); return the Store target or fail. `elem` is true inside a
+       parenthesized or bracketed target sequence (where '*' targets are allowed). */
+    function to_target(e, elem) {
+      switch (e.type) {
+        case "Name": return { type: "Name", id: e.id, ctx: "Store" };
+        case "Attribute": return { type: "Attribute", value: e.value, attr: e.attr, ctx: "Store" };
+        case "Subscript": return { type: "Subscript", value: e.value, slice: e.slice, ctx: "Store" };
+        case "Tuple": case "List":
+          return { type: e.type, elts: e.elts.map((x) => to_target(x, true)), ctx: "Store" };
+        case "Starred":
+          if (!elem || e.value.type === "Starred") return fail();
+          return { type: "Starred", value: to_target(e.value, false), ctx: "Store" };
+        default:
+          return fail();
+      }
+    }
+
+    /* primary '(' [arguments] ')' and primary genexp */
+    function call(func) {
+      i++;
+      const args = [], keywords = [];
+      if (is_op(peek(), ")")) { i++; return { type: "Call", func, args, keywords }; }
+      let kw_phase = false, dstar = false, first = true;
+      for (;;) {
+        const tk = peek();
+        if (is_op(tk, "*")) {
+          i++;
+          if (dstar || !starts_expression(peek())) fail(dstar ? "iterable argument unpacking follows keyword argument unpacking" :
+            "Invalid star expression");
+          args.push({ type: "Starred", value: expression() });
+        } else if (is_op(tk, "**")) {
+          i++;
+          keywords.push({ type: "keyword", arg: null, value: expression() });
+          kw_phase = dstar = true;
+        } else if (tk.t === "NAME" && !tk.kw && is_op(peek1(), "=")) {
+          i += 2;
+          keywords.push({ type: "keyword", arg: tk.id, value: expression() });
+          kw_phase = true;
+        } else {
+          if (kw_phase) fail("positional argument follows keyword argument");
+          let e;
+          if (walrus_follows()) e = walrus();
+          else {
+            e = expression();
+            if (is_op(peek(), ":=")) fail();
+          }
+          if (first && comprehension_follows()) {
+            const gens = for_if_clauses();
+            expect(")");
+            return { type: "Call", func, args: [{ type: "GeneratorExp", elt: e, generators: gens }], keywords: [] };
+          }
+          if (is_op(peek(), "=")) fail();
+          args.push(e);
+        }
+        first = false;
+        if (!is_op(peek(), ",")) break;
+        i++;
+        if (is_op(peek(), ")")) break;
+      }
+      expect(")");
+      return { type: "Call", func, args, keywords };
+    }
+
+    /* slices: slice !',' | ','.(slice | starred_expression)+ [','] */
+    function slices() {
+      const first = slice_item();
+      if (!is_op(peek(), ",") && first.type !== "Starred") return first;
+      const elts = [first];
+      while (is_op(peek(), ",")) {
+        i++;
+        if (is_op(peek(), "]")) break;
+        elts.push(slice_item());
+      }
+      return { type: "Tuple", elts };
+    }
+    function slice_item() {
+      const tk = peek();
+      if (is_op(tk, "*")) {
+        i++;
+        if (!starts_expression(peek())) fail("Invalid star expression");
+        return { type: "Starred", value: expression() };
+      }
+      if (tk.t === "NAME" && !tk.kw && is_op(peek1(), ":=")) return named_expression();
+      let lower = null;
+      if (!is_op(tk, ":")) {
+        lower = expression();
+        if (!is_op(peek(), ":")) {
+          if (is_op(peek(), ":=")) fail();
+          return lower;
+        }
+      }
+      i++;
+      const upper = starts_expression(peek()) ? expression() : null;
+      let step = null;
+      if (is_op(peek(), ":")) {
+        i++;
+        if (starts_expression(peek())) step = expression();
+      }
+      return { type: "Slice", lower, upper, step };
+    }
+
+    /* lambdef: 'lambda' [lambda_params] ':' expression */
+    function lambdef() {
+      i++;
+      const args = lambda_params();
+      expect(":");
+      return { type: "Lambda", args, body: expression() };
+    }
+    /* lambda_parameters (all five PEG alternatives): positional parameters with a '/' marker and defaults
+       that, once started, continue up to '*'; then '*' [name] with keyword-only parameters (a bare '*'
+       needs at least one); then '**' name. Each parameter is followed by ',' or by the ':' of the lambda. */
+    function lambda_params() {
+      const pos = [], pos_defaults = [], kwonly = [], kw_defaults = [];
+      let slash = -1, vararg = null, kwarg = null, phase = 0, bare_star = false, seen_default = false;
+      const arg = (tk) => ({ type: "arg", arg: tk.id });
+      const sep = () => {
+        if (is_op(peek(), ",")) { i++; return; }
+        if (!is_op(peek(), ":")) fail();
+      };
+      while (!is_op(peek(), ":")) {
+        const tk = peek();
+        if (tk.t === "NAME" && !tk.kw && phase < 2) {
+          i++;
+          let d = null;
+          if (is_op(peek(), "=")) { i++; d = expression(); }
+          if (phase === 0) {
+            if (d === null && seen_default) fail("parameter without a default follows parameter with a default");
+            if (d !== null) { seen_default = true; pos_defaults.push(d); }
+            pos.push(arg(tk));
+          } else {
+            kwonly.push(arg(tk));
+            kw_defaults.push(d);
+          }
+          sep();
+        } else if (is_op(tk, "/") && phase === 0 && slash < 0 && pos.length) {
+          i++;
+          slash = pos.length;
+          sep();
+        } else if (is_op(tk, "*") && phase === 0) {
+          i++;
+          const nm = peek();
+          if (nm.t === "NAME" && !nm.kw) { i++; vararg = arg(nm); sep(); }
+          else if (is_op(nm, ",")) { i++; bare_star = true; }
+          else fail();
+          phase = 1;
+        } else if (is_op(tk, "**") && phase < 2) {
+          if (bare_star && !kwonly.length) fail("named arguments must follow bare *");
+          i++;
+          const nm = peek();
+          if (nm.t !== "NAME" || nm.kw) fail();
+          i++;
+          kwarg = arg(nm);
+          sep();
+          phase = 2;
+        } else fail();
+      }
+      if (bare_star && !kwonly.length) fail("named arguments must follow bare *");
+      const posonly = slash < 0 ? [] : pos.slice(0, slash);
+      return { type: "arguments", posonlyargs: posonly, args: slash < 0 ? pos : pos.slice(slash), vararg,
+        kwonlyargs: kwonly, kw_defaults, kwarg, defaults: pos_defaults };
+    }
+
+    /* ---- strings and f-strings -------------------------------------------------------------- */
+
+    function str_constant(s, flags) {
+      const c = constant(s, "str");
+      if (flags & N_ESCAPE) DEV.set(c, "\\N{...} escapes are not supported by the JavaScript port");
+      else if (flags & SURROGATE) DEV.set(c, "string escapes producing surrogate code points are not supported by the JavaScript port");
+      return c;
+    }
+    /* string: STRING (_PyPegen_parse_string) */
+    function string_constant(tk) {
+      const body = tk.body;
+      if (tk.bytes) {
+        for (const ch of body) if (ch >= 0x80) fail("bytes can only contain ASCII literal characters");
+        return constant(tk.raw || body.indexOf(0x5c) < 0 ? body.slice() : decode_bytes(body), "bytes");
+      }
+      if (tk.raw || body.indexOf(0x5c) < 0) return str_constant(fromcps(body, 0, body.length), 0);
+      const d = decode_str(body);
+      return str_constant(d.s, d.flags);
+    }
+    /* _PyPegen_decode_fstring_part / _PyPegen_decoded_constant_from_token */
+    function fstring_part(cps, is_raw) {
+      const n = cps.length === 2 && ((cps[0] === 0x7b && cps[1] === 0x7b) || (cps[0] === 0x7d && cps[1] === 0x7d)) ? 1 : cps.length;
+      const body = n === cps.length ? cps : cps.slice(0, n);
+      if (is_raw || body.indexOf(0x5c) < 0) return str_constant(fromcps(body, 0, body.length), 0);
+      const d = decode_str(body);
+      return str_constant(d.s, d.flags);
+    }
+    /* fstring: FSTRING_START fstring_middle* FSTRING_END (_PyPegen_joined_str) */
+    function fstring() {
+      const start = peek();
+      i++;
+      const items = [];
+      for (;;) {
+        const tk = peek();
+        if (tk.t === "FSTRING_END") { i++; break; }
+        if (tk.t === "FSTRING_MIDDLE") { i++; items.push({ raw_text: tk.body }); continue; }
+        if (is_op(tk, "{")) { items.push(replacement_field()); continue; }
+        fail();
+      }
+      const values = [];
+      for (const it of items) {
+        const parts = it.type === "JoinedStr" ? it.values : [it]; /* unpack_top_level_joined_strs */
+        for (const p of parts) {
+          if (p.raw_text !== undefined) {
+            const c = fstring_part(p.raw_text, start.raw);
+            if (c.value.length) values.push(c);
+          } else values.push(p);
+        }
+      }
+      return { type: "JoinedStr", values };
+    }
+    /* fstring_replacement_field: '{' (yield_expr | star_expressions) ['='] ['!' NAME] [':' spec*] '}' */
+    function replacement_field() {
+      i++;
+      const value = is_kw(peek(), "yield") ? yield_expr() : star_expressions();
+      let debug = false;
+      if (is_op(peek(), "=")) { debug = true; i++; }
+      let bang = null, conv = null;
+      if (is_op(peek(), "!")) {
+        bang = peek();
+        i++;
+        conv = peek();
+        if (conv.t !== "NAME" || conv.kw) fail();
+        i++;
+        if (bang.b !== conv.a) fail("f-string: conversion type must come right after the exclamanation mark");
+      }
+      let colon = null, spec = null;
+      if (is_op(peek(), ":")) {
+        colon = peek();
+        i++;
+        spec = [];
+        for (;;) {
+          const tk = peek();
+          if (tk.t === "FSTRING_MIDDLE") { i++; spec.push(fstring_part(tk.body, false)); continue; }
+          if (is_op(tk, "{")) { spec.push(replacement_field()); continue; }
+          break;
+        }
+        /* _PyPegen_setup_full_format_spec: a lone empty part means an empty spec */
+        if (spec.length === 1 && spec[0].type === "Constant" && spec[0].value === "") spec = [];
+      }
+      const rbrace = peek();
+      if (!is_op(rbrace, "}")) fail("f-string: expecting '}'");
+      i++;
+      /* _PyPegen_formatted_value */
+      let conversion = -1;
+      if (conv) {
+        const id = conv.id;
+        if (HX.util.codepoint_length(id) > 1 || !(id === "s" || id === "r" || id === "a")) {
+          fail("f-string: invalid conversion character " + py_repr_str(id) + ": expected 's', 'r', or 'a'");
+        }
+        conversion = id.charCodeAt(0);
+      } else if (debug && !spec) conversion = 0x72;
+      const fv = { type: "FormattedValue", value, conversion, format_spec: spec ? { type: "JoinedStr", values: spec } : null };
+      if (!debug) return fv;
+      const meta = bang ? bang.meta : colon ? colon.meta : rbrace.meta;
+      if (meta === undefined) {
+        /* CPython records the text only for fields at the top of an f-string. Inside a format specification the
+           debug Constant gets no value, and the node constructor raises ValueError right here, ending the parse
+           (deviations/guards.md) */
+        throw new GuardError("guard has an f-string '=' field inside a format specification (Python's parser raises " +
+          "ValueError: field 'value' is required for Constant)");
+      }
+      return { type: "JoinedStr", values: [{ raw_text: meta }, fv] };
+    }
+    /* strings: (fstring | string)+ (_PyPegen_concatenate_strings) */
+    function strings() {
+      const items = [];
+      let f = false, u = false, b = false;
+      for (;;) {
+        const tk = peek();
+        if (tk.t === "STRING") {
+          i++;
+          const c = string_constant(tk);
+          if (c.py_type === "bytes") b = true; else u = true;
+          items.push(c);
+        } else if (tk.t === "FSTRING_START") {
+          items.push(fstring());
+          f = true;
+        } else break;
+      }
+      if ((u || f) && b) fail("cannot mix bytes and nonbytes literals");
+      if (b) {
+        if (items.length === 1) return items[0];
+        let all = [];
+        for (const it of items) all = all.concat(it.value);
+        return constant(all, "bytes");
+      }
+      if (!f && items.length === 1) return items[0];
+      const flat = [];
+      for (const it of items) {
+        if (it.type === "Constant") flat.push(it);
+        else for (const v of it.values) flat.push(v);
+      }
+      const values = [];
+      for (let k = 0; k < flat.length; k++) {
+        let e = flat[k];
+        if (e.type === "Constant") {
+          if (k + 1 < flat.length && flat[k + 1].type === "Constant") {
+            let s = "", dev = null, j = k;
+            for (; j < flat.length && flat[j].type === "Constant"; j++) {
+              s += flat[j].value;
+              if (dev === null && DEV.has(flat[j])) dev = DEV.get(flat[j]);
+            }
+            k = j - 1;
+            e = constant(s, "str");
+            if (dev !== null) DEV.set(e, dev);
+          }
+          if (f && e.value.length === 0) continue;
+        }
+        values.push(e);
+      }
+      if (!f) return values[0];
+      return { type: "JoinedStr", values };
+    }
+
+    /* eval: expressions NEWLINE* ENDMARKER */
     const body = expressions();
     while (peek().t === "NEWLINE") i++;
     if (peek().t !== "ENDMARKER") fail();
@@ -852,19 +1713,40 @@
   /* AST metrics (ast.walk count and guards._depth, including ctx/op nodes)                       */
   /* ------------------------------------------------------------------------------------------ */
 
-  /** Child nodes in ast.iter_child_nodes order; ctx and operator nodes appear as {type: <op name>}. */
+  const ctx_node = (node) => ({ type: node.ctx || "Load" });
+  const push_all = (out, xs) => { for (const x of xs) if (x) out.push(x); return out; };
+
+  /** Child nodes in ast.iter_child_nodes order; ctx and operator nodes appear as {type: <class name>}. */
   function children(node) {
     switch (node.type) {
       case "Expression": return [node.body];
       case "BoolOp": return [{ type: node.op }, ...node.values];
-      case "UnaryOp": return [{ type: node.op }, node.operand];
+      case "NamedExpr": return [node.target, node.value];
       case "BinOp": return [node.left, { type: node.op }, node.right];
+      case "UnaryOp": return [{ type: node.op }, node.operand];
+      case "Lambda": return [node.args, node.body];
+      case "IfExp": return [node.test, node.body, node.orelse];
+      case "Dict": return push_all(push_all([], node.keys), node.values);
+      case "Set": return node.elts.slice();
+      case "ListComp": case "SetComp": case "GeneratorExp": return [node.elt, ...node.generators];
+      case "DictComp": return [node.key, node.value, ...node.generators];
+      case "Await": case "YieldFrom": return [node.value];
+      case "Yield": return node.value ? [node.value] : [];
       case "Compare": return [node.left, ...node.ops.map((o) => ({ type: o })), ...node.comparators];
       case "Call": return [node.func, ...node.args, ...node.keywords];
-      case "IfExp": return [node.test, node.body, node.orelse];
-      case "Attribute": return [node.value, { type: "Load" }];
-      case "List": case "Tuple": return [...node.elts, { type: "Load" }];
-      case "Name": return [{ type: "Load" }];
+      case "FormattedValue": return node.format_spec ? [node.value, node.format_spec] : [node.value];
+      case "JoinedStr": return node.values.slice();
+      case "Attribute": return [node.value, ctx_node(node)];
+      case "Subscript": return [node.value, node.slice, ctx_node(node)];
+      case "Starred": return [node.value, ctx_node(node)];
+      case "Name": return [ctx_node(node)];
+      case "List": case "Tuple": return [...node.elts, ctx_node(node)];
+      case "Slice": return push_all([], [node.lower, node.upper, node.step]);
+      case "comprehension": return [node.target, node.iter, ...node.ifs];
+      case "arguments":
+        return push_all(push_all([...node.posonlyargs, ...node.args], [node.vararg]).concat(node.kwonlyargs),
+          [...node.kw_defaults, node.kwarg, ...node.defaults]);
+      case "keyword": return [node.value];
       default: return [];
     }
   }
@@ -878,11 +1760,16 @@
   }
   guards._walk = walk;
   guards._node_count = function (tree) { return walk(tree).length; };
-  /** guards._depth: 1 + max depth of the children. */
-  function _depth(node) {
-    let m = 0;
-    for (const c of children(node)) { const d = _depth(c); if (d > m) m = d; }
-    return 1 + m;
+  /** guards._depth: 1 + max depth of the children (computed without recursion). */
+  function _depth(tree) {
+    let best = 0;
+    const stack = [[tree, 1]];
+    while (stack.length) {
+      const [node, d] = stack.pop();
+      if (d > best) best = d;
+      for (const c of children(node)) stack.push([c, d + 1]);
+    }
+    return best;
   }
   guards._depth = _depth;
 
@@ -898,25 +1785,48 @@
   /* parse / _check / vars_of                                                                     */
   /* ------------------------------------------------------------------------------------------ */
 
-  /** Syntax only: the Python-shaped tree of ast.parse(expr, mode="eval") (no limits, no allowlist).
-   *  Throws GuardError for syntax errors and for constructs the port never builds. */
+  /** True for the engine's stack-overflow error (V8/JavaScriptCore RangeError "Maximum call stack size exceeded",
+   *  SpiderMonkey InternalError "too much recursion"). Kept free of calls: it runs right after an overflow. */
+  function is_stack_overflow(e) {
+    if (e === null || typeof e !== "object" || e instanceof GuardError) return false;
+    const msg = typeof e.message === "string" ? e.message : "";
+    return e.name === "InternalError" || (e.name === "RangeError" && msg.indexOf("call stack") >= 0) ||
+      msg.indexOf("too much recursion") >= 0;
+  }
+  guards._is_stack_overflow = is_stack_overflow;
+  /* Built in advance so that reporting an overflow needs no further stack (deviations/guards.md). */
+  const STACK_ERROR = new GuardError("guard is nested too deeply for this JavaScript engine's stack (JavaScript port limitation)");
+
+  /** ast.parse(expr, mode="eval") without limits or allowlist: the Python-shaped tree, or GuardError for every
+   *  input CPython rejects (syntax errors, and the encode/ValueError cases listed in deviations/guards.md). */
   guards._parse_raw = function (expr) {
     if (typeof expr !== "string") throw new GuardError("guard is not a string");
-    if (HX.util.has_lone_surrogate(expr)) {
-      throw new GuardError("guard text contains a lone surrogate (not encodable as UTF-8)");
+    let tree;
+    try {
+      if (HX.util.has_lone_surrogate(expr)) {
+        throw new GuardError("guard text contains a lone surrogate (not encodable as UTF-8)");
+      }
+      if (expr.indexOf("\u0000") >= 0) throw syntax_error("source code string cannot contain null bytes");
+      const cps = Array.from(expr.replace(/\r\n?/g, "\n"), (ch) => ch.codePointAt(0));
+      tree = parse_tokens(tokenize(cps));
+    } catch (e) {
+      if (is_stack_overflow(e)) throw STACK_ERROR;
+      throw e;
     }
-    if (expr.indexOf("\u0000") >= 0) throw syntax_error("source code string cannot contain null bytes");
-    const src = expr.replace(/\r\n?/g, "\n");
-    const cps = [];
-    for (const ch of src) cps.push(ch.codePointAt(0));
-    return parse_tokens(tokenize(cps));
+    return tree;
   };
 
   function const_repr(node) {
-    if (node.py_type === "NoneType") return "None";
-    if (node.py_type === "ellipsis") return "Ellipsis";
-    return repr(node.value);
+    switch (node.py_type) {
+      case "NoneType": return "None";
+      case "ellipsis": return "Ellipsis";
+      case "bytes": return py_repr_bytes(node.value);
+      case "complex": return py_repr_imag(node.value);
+      case "str": return py_repr_str(node.value);
+      default: return HX.util.py_repr(node.value);
+    }
   }
+  guards._const_repr = const_repr;
 
   function _check(node) {
     switch (node.type) {
@@ -986,11 +1896,15 @@
       throw new GuardError("guard longer than " + guards.MAX_LEN + " characters");
     }
     const tree = guards._parse_raw(expr);
-    if (walk(tree).length > guards.MAX_NODES) {
+    const nodes = walk(tree);
+    if (nodes.length > guards.MAX_NODES) {
       throw new GuardError("guard has more than " + guards.MAX_NODES + " syntax nodes");
     }
     if (_depth(tree) > guards.MAX_DEPTH) throw new GuardError("guard AST deeper than " + guards.MAX_DEPTH);
     _check(tree.body);
+    /* JS-only rejections of guards Python accepts (deviations/guards.md), decided after Python's own checks so
+       that every guard Python rejects gets Python's message */
+    for (const n of nodes) if (DEV.has(n)) throw new GuardError(DEV.get(n));
     deep_freeze(tree);
     _cache.set(expr, tree);
     if (_cache.size > CACHE_SIZE) _cache.delete(_cache.keys().next().value);

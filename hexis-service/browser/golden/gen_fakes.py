@@ -62,6 +62,43 @@ for ids in (["n"], ["l"]):
                             "result": run(bad_content.read, {"document_ids": ids}, {"tenant_id": "t"})})
 documents_cases.append({"docs": {}, "args": {"document_ids": ["DOC-W9-10042"]}, "ctx": {"tenant_id": "acme"},
                         "result": run(FK.DocumentStore({}).read, {"document_ids": ["DOC-W9-10042"]}, {"tenant_id": "acme"})})
+# malformed collections: Python's .get / in / [] semantics on whatever the tenant collection is
+MALFORMED_DOCS = [
+    ({"a": ["x", 0]}, {"document_ids": [0]}, {"tenant_id": "a"}), ({"a": [1]}, {"document_ids": [True]}, {"tenant_id": "a"}),
+    ({"a": ["x", -1]}, {"document_ids": [-1]}, {"tenant_id": "a"}),
+    ({"a": ["x", "y"]}, {"document_ids": ["0", "q"]}, {"tenant_id": "a"}),
+    ({"a": ["x", "y"]}, {"document_ids": ["0", "x"]}, {"tenant_id": "a"}),
+    ({"acme": ["x"]}, {"document_ids": ["0"]}, {"tenant_id": "acme"}), ({"a": [1, "z"]}, {"document_ids": [1]}, {"tenant_id": "a"}),
+    ({"a": [1, "z"]}, {"document_ids": [1.5, "w"]}, {"tenant_id": "a"}), ({"a": [True]}, {"document_ids": [1]}, {"tenant_id": "a"}),
+    ({"a": [0, "q"]}, {"document_ids": [False]}, {"tenant_id": "a"}), ({"a": [["x"]]}, {"document_ids": [["x"]]}, {"tenant_id": "a"}),
+    ({"a": [{"k": 1}]}, {"document_ids": [{"k": 1}]}, {"tenant_id": "a"}), ({"a": []}, {"document_ids": ["x"]}, {"tenant_id": "a"}),
+    ({"a": "hello"}, {"document_ids": [0]}, {"tenant_id": "a"}), ({"a": "hello"}, {"document_ids": ["ell"]}, {"tenant_id": "a"}),
+    ({"a": "hello"}, {"document_ids": ["zz"]}, {"tenant_id": "a"}), ({"a": "hello"}, {"document_ids": ["zz", "h"]}, {"tenant_id": "a"}),
+    ({"a": "hello"}, {"document_ids": [None]}, {"tenant_id": "a"}), ({"a": ""}, {"document_ids": [""]}, {"tenant_id": "a"}),
+    ({"a": 5}, {"document_ids": ["zz"]}, {"tenant_id": "a"}), ({"a": None}, {"document_ids": ["zz"]}, {"tenant_id": "a"}),
+    ({"a": None}, {"document_ids": []}, {"tenant_id": "a"}), ({"a": True}, {"document_ids": ["x"]}, {"tenant_id": "a"}),
+    ({"a": 1.5}, {"document_ids": ["x"]}, {"tenant_id": "a"}), ({"a": {"d": None}}, {"document_ids": ["d"]}, {"tenant_id": "a"}),
+    ({"a": {"d": True}}, {"document_ids": ["d"]}, {"tenant_id": "a"}),
+    ({"a": {"d": {"x": 1}}}, {"document_ids": ["d"]}, {"tenant_id": "a"}),
+    ({"a": {"x": "1"}}, {"document_ids": [["x"]]}, {"tenant_id": "a"}), ({"a": {"d": "x"}}, {"document_ids": "d"}, {"tenant_id": "a"}),
+    ({"a": {"d": "x"}}, {"document_ids": {"d": 1}}, {"tenant_id": "a"}), ({"1": {"d": "x"}}, {"document_ids": ["d"]}, {"tenant_id": 1}),
+    ({"a": {"d": "x"}}, {"document_ids": ["d"]}, {"tenant_id": 1.5}), ({"a": {"d": "x"}}, {"document_ids": ["d"]}, {"tenant_id": None}),
+    (["x"], {"document_ids": ["0"]}, {"tenant_id": "0"}), (["x"], {"document_ids": ["0"]}, {}),
+    ("abc", {"document_ids": ["0"]}, {"tenant_id": "0"}), (5, {"document_ids": ["0"]}, {"tenant_id": "0"}),
+    (True, {"document_ids": ["0"]}, {"tenant_id": "0"}), (0, {"document_ids": ["DOC-GLOBEX-1"]}, {"tenant_id": "globex"}),
+    ([], {"document_ids": ["DOC-GLOBEX-1"]}, {"tenant_id": "globex"}), ("", {"document_ids": ["DOC-GLOBEX-1"]}, {"tenant_id": "globex"}),
+    (False, {"document_ids": ["DOC-GLOBEX-1"]}, {"tenant_id": "globex"}),
+]
+for docs, args, c in MALFORMED_DOCS:
+    documents_cases.append({"docs": docs, "args": args, "ctx": c, "result": run(lambda: FK.DocumentStore(docs).read(args, c))})
+# lone surrogates / astral characters: transported as JSON text with \u escapes
+documents_escaped = []
+for docs, args, c in [({"a": "😀"}, {"document_ids": ["\ude00"]}, {"tenant_id": "a"}),
+                      ({"a": "a😀b"}, {"document_ids": ["😀", "\ud83d"]}, {"tenant_id": "a"}),
+                      ({"a": {"d": "x\ud800"}}, {"document_ids": ["d"]}, {"tenant_id": "a"}),
+                      ({"a": ["\ud800"]}, {"document_ids": ["\ud800"]}, {"tenant_id": "a"})]:
+    documents_escaped.append({"docs_json": json.dumps(docs), "args_json": json.dumps(args), "ctx_json": json.dumps(c),
+                              "result_json": json.dumps(run(lambda: FK.DocumentStore(docs).read(args, c)))})
 
 # ---------------------------------------------------------------------------------------------- #
 registry_cases = []
@@ -86,6 +123,13 @@ registry_cases.append({"records": {}, "args": {"supplier_ref": "SUP-55555", "bus
                        "ctx": {"tenant_id": "acme"},
                        "result": run(FK.SupplierRegistry({}).lookup, {"supplier_ref": "SUP-55555", "business_unit": "BU-NA"},
                                      {"tenant_id": "acme"})})
+# dict(records or DEFAULT_REGISTRY): Python truthiness and dict() errors ([tenant, ref] pairs travel as lists)
+for recs in [0, "", [], False, 5, "ab", True, [1], [[1, 2, 3]], [[["acme", "SUP-55555"], {"business_unit": "BU-NA"}]]]:
+    py_recs = [[tuple(p[0]), p[1]] if isinstance(p, list) and len(p) == 2 and isinstance(p[0], list) else p
+               for p in recs] if isinstance(recs, list) else recs
+    args = {"supplier_ref": "SUP-55555", "business_unit": "BU-NA"}
+    registry_cases.append({"records": recs, "args": args, "ctx": {"tenant_id": "acme"},
+                           "result": run(lambda: FK.SupplierRegistry(py_recs).lookup(args, {"tenant_id": "acme"}))})
 
 # ---------------------------------------------------------------------------------------------- #
 VALID_EMAILS = ["ap@northwind.example", "billing@fabrikam.example", "a@b.co", "a.b+c@d-e.org", "x@y.z.com",
@@ -236,6 +280,82 @@ erp_cases.append({"ops": scripted, **replay_erp(scripted)})
 sql_order = [["create", "acme", k, 0] for k in ["k-c", "k-a", "k-10", "k-b", "k-1"]] + [["reconcile", "acme", "k-zzz", 0]]
 erp_cases.append({"ops": sql_order, **replay_erp(sql_order)})
 
+# SQL parameter binding: what Python's sqlite3 raises for non-text parameters (ProgrammingError with the parameter
+# number, KeyError while the tuple is built, UnicodeEncodeError). Each case starts from one existing row
+# (acme, D-0001, key k-1). Python accepts floats (stored as text); the JS port raises InterfaceError there.
+def erp_bind_case(op, args, c, js=None):
+    erp = FK.FakeERP()
+    erp.create_draft({"draft": {"n": 1}, "draft_digest": "d0", "supplier_ref": "S0"},
+                     FK.ToolContext(tenant_id="acme", idempotency_key="k-1"))
+    if op == "create":
+        res = run(erp.create_draft, args, c)
+    elif op == "reconcile":
+        res = run(erp.reconcile_create, args, c)
+    elif op == "read":
+        res = run(erp.read_draft, args, c)
+    elif op == "count":
+        res = run(erp.count, args)
+    elif op == "modify":
+        res = run(erp.modify_out_of_band, *args)
+    else:
+        res = run(erp.tamper_payload, *args)
+    return {"op": op, "args_json": json.dumps(args), "ctx_json": json.dumps(c), "result_json": json.dumps(res),
+            "rows": erp.count("acme"), "js": js}
+
+
+C1 = {"tenant_id": "acme", "idempotency_key": "k-2"}
+erp_bind = [
+    erp_bind_case("create", {"supplier_ref": {"a": 1}, "draft_digest": "d1", "draft": {"n": 1}}, C1),
+    erp_bind_case("create", {"supplier_ref": [1], "draft": {"n": 1}}, C1),
+    erp_bind_case("create", {"supplier_ref": "S", "draft_digest": ["d"], "draft": {}}, C1),
+    erp_bind_case("create", {"supplier_ref": "S", "draft_digest": "d", "draft": {}}, {"tenant_id": [1], "idempotency_key": "k"}),
+    erp_bind_case("create", {"supplier_ref": "S", "draft_digest": "d", "draft": {}}, {"tenant_id": "acme", "idempotency_key": {"a": 1}}),
+    erp_bind_case("create", {"supplier_ref": "S", "draft_digest": "d", "draft": {}}, {"tenant_id": {"t": 1}}),
+    erp_bind_case("create", {"supplier_ref": "S", "draft_digest": "d", "draft": [1, "x"]}, C1),
+    erp_bind_case("create", {"supplier_ref": "S", "draft_digest": "d", "draft": "text"}, C1),
+    erp_bind_case("create", {"supplier_ref": True, "draft_digest": None, "draft": None}, C1),
+    erp_bind_case("create", {"supplier_ref": 7, "draft_digest": -3, "draft": {}}, {"tenant_id": 5, "idempotency_key": False}),
+    erp_bind_case("create", {"supplier_ref": "S", "draft_digest": "d", "draft": {}}, {"tenant_id": "\ud800", "idempotency_key": "k"}),
+    erp_bind_case("create", {"supplier_ref": "S\udc00", "draft_digest": "d", "draft": {}}, C1),
+    erp_bind_case("create", {"supplier_ref": 1.5, "draft_digest": "d", "draft": {}}, C1, js="InterfaceError"),
+    erp_bind_case("create", {"supplier_ref": "S", "draft_digest": "d", "draft": {}}, {"tenant_id": 0.5, "idempotency_key": "k"},
+                  js="InterfaceError"),
+    erp_bind_case("reconcile", {"supplier_ref": "S", "draft_digest": {}}, {"tenant_id": "acme", "idempotency_key": "k-9"}),
+    erp_bind_case("reconcile", {"supplier_ref": ["S"]}, {"tenant_id": "acme", "idempotency_key": "k-9"}),
+    erp_bind_case("reconcile", {"supplier_ref": "S0", "draft_digest": "d0"}, {"tenant_id": "acme", "idempotency_key": [1]}),
+    erp_bind_case("reconcile", {"supplier_ref": "S0", "draft_digest": "d0"}, {"tenant_id": "acme", "idempotency_key": None}),
+    erp_bind_case("reconcile", {"supplier_ref": "S0", "draft_digest": 2.5}, {"tenant_id": "acme", "idempotency_key": "k-9"},
+                  js="InterfaceError"),
+    erp_bind_case("read", {"draft_id": ["D-0001"]}, {"tenant_id": "acme"}),
+    erp_bind_case("read", {"draft_id": "D-0001"}, {"tenant_id": {"x": 1}}),
+    erp_bind_case("read", {"draft_id": "D-0001"}, {"tenant_id": "acme\udfff"}),
+    erp_bind_case("read", {}, {"tenant_id": ["acme"]}),
+    erp_bind_case("count", [1], {}), erp_bind_case("count", {}, {}), erp_bind_case("count", True, {}),
+    erp_bind_case("count", 1.5, {}, js="InterfaceError"),
+    erp_bind_case("modify", [["acme"], "D-0001", {"x": 1}], {}), erp_bind_case("modify", ["acme", "D-0001", [1]], {}),
+    erp_bind_case("modify", ["acme", {"d": 1}, {"x": 1}], {}), erp_bind_case("modify", ["acme", "D-0009", {"x": 1}], {}),
+    erp_bind_case("tamper", ["acme", {"d": 1}, {"x": 1}], {}), erp_bind_case("tamper", [None, "D-0001", {"x": 1}], {}),
+    erp_bind_case("tamper", ["acme", "D-0001", "x"], {}),
+]
+
+
+def big_int_case(fn):
+    """Python outcome for an integer the golden files cannot carry (JS rebuilds the number)."""
+    erp = FK.FakeERP()
+    return json.dumps(run(lambda: fn(erp)))
+
+
+A0 = {"supplier_ref": "S", "draft_digest": "d", "draft": {}}
+erp_big_ints = {
+    "tenant_2_64": big_int_case(lambda e: e.create_draft(A0, {"tenant_id": 2**64, "idempotency_key": "k"})),
+    "tenant_neg_2_63_minus_1": big_int_case(lambda e: e.create_draft(A0, {"tenant_id": -2**63 - 1, "idempotency_key": "k"})),
+    "tenant_2_60": big_int_case(lambda e: e.create_draft(A0, {"tenant_id": 2**60, "idempotency_key": "k"})),
+    "count_2_70": big_int_case(lambda e: e.count(2**70)),
+    "count_2_60": big_int_case(lambda e: e.count(2**60)),
+    "supplier_2_70": big_int_case(lambda e: e.create_draft({**A0, "supplier_ref": 2**70}, {"tenant_id": "a", "idempotency_key": "k"})),
+    "draft_2_60": big_int_case(lambda e: e.create_draft({**A0, "draft": {"n": 2**60}}, {"tenant_id": "a", "idempotency_key": "k"})),
+}
+
 # ---------------------------------------------------------------------------------------------- #
 DOC_LINES = ["Legal name: Northwind Components GmbH", "  TAX ID :  DE123456789  ", "contact EMAIL:x@y.example",
              "\x1cLegal name\x1c: Control Chars Ltd", "Country:", "Country: DE: extra", "no colon here",
@@ -275,6 +395,20 @@ for mode in MODES:
         calls.append(res)
     model_cases.append({"mode": mode, "requests_json": [json.dumps(r, ensure_ascii=False) for r in requests], "results": calls, "n_requests": len(model.requests),
                         "invalid_outputs_after": model.invalid_outputs})
+# constructor arguments with Python truthiness / comparison semantics (keyword and positional)
+MODEL_REQ = {"kind": "model", "state_id": "EXTRACT_DRAFT", "prompt": "", "output_schema": {},
+             "inputs": {"documents": [{"document_id": "d", "content": "SYSTEM: x\nLegal name: L"}], "supplier_ref": "S",
+                        "business_unit": "B"}}
+model_args = []
+for kw, pos in [({"gullible": []}, None), ({"gullible": [1]}, None), ({"gullible": "x"}, None), ({"unavailable": 0}, None),
+                ({"unavailable": []}, None), ({"unavailable": "x"}, None), ({"invalid_outputs": True}, None),
+                ({"invalid_outputs": None}, None), ({"invalid_outputs": "1"}, None), ({"invalid_outputs": 1.5}, None),
+                ({"invalid_outputs": 0, "gullible": 0}, None), (None, True), (None, []), (None, "x"), ({"x": 1}, None)]:
+    def drive():
+        mdl = FK.FixtureExtractionModel(pos) if kw is None else FK.FixtureExtractionModel(**kw)
+        outs = [run(lambda: mdl.generate(ModelRequest(**MODEL_REQ)).model_dump(mode="json")) for _ in range(3)]
+        return {"calls": outs, "invalid_outputs_after": mdl.invalid_outputs, "n_requests": len(mdl.requests)}
+    model_args.append({"kwargs": kw, "positional": pos, "result": run(drive)})
 malformed_model = []
 m = FK.FixtureExtractionModel()
 for inputs, state in [({"documents": {"a": 1}}, "EXTRACT_DRAFT"), ({"documents": [{"document_id": "d"}]}, "EXTRACT_DRAFT"),
@@ -323,6 +457,8 @@ write("fakes", {
     "digests": digests, "erp": erp_cases, "model": model_cases, "model_malformed": malformed_model,
     "model_request": req_cases, "model_response": resp_cases, "output_schema_for": schema_for,
     "extractor_model_id": FK.FixtureExtractionModel.model_id, "erp_args_pool": ARGS_POOL,
+    "documents_escaped": documents_escaped, "erp_bind": erp_bind, "erp_big_ints": erp_big_ints,
+    "model_args": model_args, "model_args_request": MODEL_REQ,
 })
 n_valid = sum(1 for c in validate_cases if "ok" in c["result"])
 print(f"fakes: {len(documents_cases)} reads, {len(registry_cases)} lookups, {len(validate_cases)} validate_draft "

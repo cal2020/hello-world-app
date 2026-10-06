@@ -216,6 +216,119 @@
     assert.ok(stricter >= strict.length);
   });
 
+  test("Python re acceptance: py_regex_check agrees with CPython 3.12 re.compile (accept/reject and exception class)", () => {
+    const G = golden("models_regex");
+    assert.ok(G.patterns.length >= 10000);
+    let accepted = 0, stricter = 0;
+    for (const [p, kind, mayBeStricter] of G.patterns) {
+      const r = C.py_regex_check(p);
+      const label = JSON.stringify(p.length > 80 ? p.slice(0, 80) + "..." : p);
+      if (kind !== null) {
+        assert.ok(r !== null, `${label}: Python raises ${kind}, the port accepts`);
+        if (!mayBeStricter) assert.equal(r.kind, kind, `${label}: exception class (${r.message})`);
+      } else if (r !== null) {
+        assert.ok(mayBeStricter, `${label}: Python accepts, the port says ${r.kind}: ${r.message}`);
+        stricter++;
+      } else {
+        accepted++;
+      }
+    }
+    assert.ok(accepted >= 3000, `only ${accepted} accepted`);
+    assert.ok(stricter > 0 && stricter <= 400);
+    /* the documented stricter classes */
+    assert.equal(C.py_regex_check("\\N{DIGIT ONE}").kind, "error");
+    assert.equal(C.py_regex_check("(?P<é>a)").kind, "error");
+    assert.equal(C.py_regex_check("(".repeat(C.PY_RE_MAX_NESTING) + ")".repeat(C.PY_RE_MAX_NESTING)), null);
+    assert.equal(C.py_regex_check("(".repeat(C.PY_RE_MAX_NESTING + 1) + ")".repeat(C.PY_RE_MAX_NESTING + 1)).kind, "RecursionError");
+    assert.equal(C.py_regex_check("((((".repeat(5000)).kind, "RecursionError", "deep nesting never overflows the JS stack");
+    assert.equal(C.py_regex_check("(?(1)".repeat(5000)).kind, "RecursionError");
+  });
+
+  test("check_schemas is never more lenient than python-jsonschema: every pattern as pattern and patternProperties key", () => {
+    const G = golden("models_regex");
+    let both = 0;
+    for (const [p, kind, mayBeStricter] of G.patterns) {
+      const cat = { catalog_id: "c", version: "1", tools: { t: { name: "t", version: "1", effect: "read", capability: "x",
+        input_schema: { type: "string", pattern: p }, output_schema: { type: "object", patternProperties: { [p]: {} } } } } };
+      const names = C.check_schemas(cat).map((e) => e.split(" invalid:")[0]);
+      const label = JSON.stringify(p.length > 80 ? p.slice(0, 80) + "..." : p);
+      if (kind !== null) {
+        assert.deepEqual(names, ["t.input_schema", "t.output_schema"], `${label}: Python rejects (${kind})`);
+      } else if (names.length) {
+        /* JS-only (stricter): the JS engine cannot compile it (u flag), or a documented stricter class */
+        for (const e of C.check_schemas(cat)) assert.match(e, /regular expression/, label);
+        assert.deepEqual(names, ["t.input_schema", "t.output_schema"], label);
+        let js = true;
+        try { new RegExp(p, "u"); } catch (e) { js = false; }
+        assert.ok(!js || mayBeStricter, `${label}: JS-only rejection of a pattern both engines accept: ${C.check_schemas(cat)}`);
+      } else {
+        both++;
+      }
+    }
+    assert.ok(both >= 1000, `only ${both} patterns accepted by both`);
+  });
+
+  test("check_schemas on random Draft 2020-12 schemas: never more lenient than Python, JS-only findings documented", () => {
+    const G = golden("models_regex");
+    let pyInvalid = 0, same = 0, jsOnly = 0;
+    for (const [inText, outText, invalid] of G.schemas) {
+      const cat = { catalog_id: "c", version: "1", tools: { t: { name: "t", version: "1", effect: "read", capability: "x",
+        input_schema: parse(inText), output_schema: parse(outText) } } };
+      const errs = C.check_schemas(cat);
+      const names = errs.map((e) => e.split(" invalid:")[0]);
+      for (const n of invalid) assert.ok(names.indexOf(n) >= 0, `${inText} / ${outText}: JS misses invalid ${n}`);
+      assert.deepEqual(names.filter((n) => invalid.indexOf(n) >= 0), invalid, "order");
+      for (const e of errs) {
+        if (invalid.indexOf(e.split(" invalid:")[0]) >= 0) continue;
+        const msgs = e.replace(/^t\.(in|out)put_schema invalid: /, "").split("; ");
+        for (const m of msgs) assert.match(m, /unsupported keyword|regular expression/, `${inText} / ${outText}: undocumented JS-only finding ${m}`);
+        jsOnly++;
+      }
+      if (invalid.length) pyInvalid++;
+      if (names.length === invalid.length) same++;
+    }
+    assert.ok(G.schemas.length >= 2000 && pyInvalid >= 500 && same >= 1500, `${pyInvalid} ${same} ${jsOnly}`);
+    /* $id: "$" in the metaschema pattern also matches before a final newline (re.search) */
+    const one = (s) => C.check_schemas({ catalog_id: "c", version: "1", tools: { t: { name: "t", version: "1", effect: "read",
+      capability: "x", input_schema: s, output_schema: {} } } });
+    assert.deepEqual(one({ type: "string", $id: "abc#\n" }), []);
+    assert.deepEqual(one({ $id: "abc\n" }), []);
+    assert.equal(one({ $id: "a#\n\n" }).length, 1);
+    assert.equal(one({ $id: "a#b" }).length, 1);
+  });
+
+  test("float fields beyond 2^53 (max_spend_usd \"1e16\", thresholds, judge error_rate): hashes equal Python", () => {
+    const G = golden("models_pkg");
+    assert.ok(G.float_big.length >= 6);
+    for (const c of G.float_big) {
+      const doc = parse(c.input_json);
+      const n = P.normalize_package(doc);
+      assert.equal(P.compute_hash(doc), c.compute_hash, c.name);
+      assert.equal(P.verify_hash(doc), c.verify_hash, c.name);
+      const s = P.sealed(doc);
+      assert.equal(s.artifact_hash, c.sealed_hash, c.name);
+      assert.equal(P.verify_hash(s), c.sealed_verify, c.name);
+      assert.equal(sha(P.MachinePackage.canonical_text(n)), c.canonical_sha, c.name);
+      assert.equal(HX.efsm.machine_digest(n.machine), c.machine_digest, c.name);
+      assert.equal(P.ExecutionPolicy.digest(n.execution_policy), c.policy_digest, c.name);
+    }
+    for (const c of G.float_big_models) {
+      const handle = c.model === "ModelResponse" ? HX.fakes.ModelResponse : P[c.model];
+      assert.equal(handle.canonical_text(c.input), c.canonical, `${c.model} ${JSON.stringify(c.input)}`);
+      assert.equal(handle.digest(c.input), c.digest, `${c.model} ${JSON.stringify(c.input)}`);
+    }
+    /* the verifier's case: Budgets.digest({max_spend_usd: "1e16"}) */
+    assert.equal(P.Budgets.digest({ max_spend_usd: "1e16" }),
+      "sha256:b3c29c92cc6bffd6f1827c0754fe808a89df0ab3d5b9155067ef89392b9f5151");
+    /* typed checking still rejects what Python cannot hash */
+    const b = P.Budgets.model_validate({});
+    b.max_spend_usd = Infinity;
+    assert.throws(() => HX.efsm.pyd.canonical_text({ k: "model", m: P.MODELS.Budgets }, b), HX.canonical.CanonicalError);
+    b.max_spend_usd = null;
+    b.max_steps = 2 ** 60;
+    assert.throws(() => HX.efsm.pyd.canonical_text({ k: "model", m: P.MODELS.Budgets }, b), HX.canonical.CanonicalError);
+  });
+
   test("inputs are never mutated: deep-frozen packages, machines, records and catalogs", () => {
     const freeze = (o) => { if (o && typeof o === "object") { Object.values(o).forEach(freeze); Object.freeze(o); } return o; };
     const raw = freeze(parse(golden("models_pkg").base.initial));
@@ -249,5 +362,16 @@
     const cat = JSON.parse(JSON.stringify(HX.data.tool_catalog));
     cat.tools["42"] = cat.tools["erp.read_draft"];
     assert.throws(() => C.load_catalog(cat), C.CatalogError);
+  });
+
+  test("documented deviation: error order with integer-like input keys (same entries, integer-like keys first)", () => {
+    const c = golden("models_pkg").error_order;
+    let err;
+    try { P.ExecutionPolicy.model_validate(parse(c.input_json)); } catch (e) { err = e; }
+    assert.ok(err instanceof P.PackageError);
+    const got = err.errors.map((e) => [e.type, e.loc]);
+    assert.deepEqual(sortErrs(got), sortErrs(c.errors_in_order), "same entries");
+    assert.deepEqual(c.errors_in_order.map((e) => e[1][1]), ["1e3", "7", "b"], "Python: insertion order");
+    assert.deepEqual(got.map((e) => e[1][1]), ["7", "1e3", "b"], "JS: integer-like key first");
   });
 })();

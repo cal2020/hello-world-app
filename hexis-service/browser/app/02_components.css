@@ -86,6 +86,17 @@
 .hx-icon-btn .hx-icon { width: 0.9375rem; height: 0.9375rem; }
 .hx-copy[data-state="copied"] { color: var(--ok); }
 .hx-copy[data-state="selected"] { color: var(--warn); }
+/* shown under a digest while copying is blocked and its full value is selected */
+.hx-copy-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  max-width: 44ch;
+  font: var(--fs-2) / 1.45 var(--font-sans);
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.hx-copy-note .hx-icon { margin-top: 0.2em; color: var(--warn); }
 
 /* top bar specifics */
 .hx-theme-toggle { min-width: 2rem; }
@@ -100,6 +111,8 @@
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
+/* a short digest never paints outside its box: in a narrow cell it ends in an ellipsis (title has the value) */
+.hx-digest-text:not(.is-expanded) { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .hx-digest-text.is-expanded { white-space: normal; word-break: break-all; }
 .hx-digest.is-empty .hx-digest-text { color: var(--ink-3); }
 
@@ -136,14 +149,44 @@
 .hx-field.has-error .hx-input, .hx-field.has-error .hx-select, .hx-field.has-error .hx-textarea { border-color: var(--crit); }
 .hx-input:disabled, .hx-select:disabled, .hx-textarea:disabled { background: var(--surface-2); color: var(--ink-3); cursor: not-allowed; }
 
-/* ------------------------------------------------------------------ tables */
+/* ------------------------------------------------------------------ tables
+   .hx-table-wrap (border) > .hx-table-sizer (zero height, measured) + .hx-table-scroll (scrolls sideways) > table.
+   While the table is wider than its wrapper, foldable columns move under the first column (is-folded); if it is
+   still too wide, it scrolls and the side with more content fades out. */
 .hx-table-wrap {
   max-width: 100%;
-  overflow-x: auto;
+  min-width: 0;
   border: 1px solid var(--rule);
   border-radius: var(--r-1);
   background: var(--surface);
 }
+.hx-table-sizer { height: 0; }
+.hx-table-scroll {
+  position: relative;
+  overflow-x: auto;
+  border-radius: calc(var(--r-1) - 1px);
+  overscroll-behavior-x: contain;
+}
+.hx-table-scroll.is-overflowing > .hx-table {
+  -webkit-mask-image: linear-gradient(to right,
+    transparent var(--hx-sl, 0px), var(--ink) calc(var(--hx-sl, 0px) + var(--hx-fl, 0px)),
+    var(--ink) calc(var(--hx-sl, 0px) + var(--hx-cw, 100%) - var(--hx-fr, 0px)), transparent calc(var(--hx-sl, 0px) + var(--hx-cw, 100%)));
+  mask-image: linear-gradient(to right,
+    transparent var(--hx-sl, 0px), var(--ink) calc(var(--hx-sl, 0px) + var(--hx-fl, 0px)),
+    var(--ink) calc(var(--hx-sl, 0px) + var(--hx-cw, 100%) - var(--hx-fr, 0px)), transparent calc(var(--hx-sl, 0px) + var(--hx-cw, 100%)));
+}
+.hx-fold { display: none; }
+.hx-table-wrap.is-folded .hx-col-fold { display: none; }
+.hx-table-wrap.is-folded .hx-fold {
+  display: block;
+  padding-top: 0.2rem;
+  font: var(--fs-2) / 1.45 var(--font-sans);
+  color: var(--ink-3);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.hx-fold-item.is-mono { font-family: var(--font-mono); font-size: var(--fs-1); }
+.hx-fold-label { font-family: var(--font-sans); font-size: var(--fs-2); }
 .hx-table { width: 100%; font-size: var(--fs-2); font-variant-numeric: tabular-nums; }
 .hx-table caption {
   padding: 0.55rem 0.75rem;
@@ -167,8 +210,7 @@
 .hx-table td { padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--rule); vertical-align: top; color: var(--ink); }
 .hx-table tbody tr:last-child td { border-bottom: 0; }
 .hx-table tbody tr:hover td { background: color-mix(in srgb, var(--surface-3) 55%, transparent); }
-.hx-table .is-mono { font-family: var(--font-mono); }
-.hx-table td.is-mono { overflow-wrap: normal; }
+.hx-table td.is-mono { font-family: var(--font-mono); overflow-wrap: normal; }
 .hx-table .is-nowrap { white-space: nowrap; }
 .hx-al-left { text-align: left; }
 .hx-al-right { text-align: right; }
@@ -283,6 +325,7 @@
 .hx-about { display: grid; gap: var(--sp-3); }
 .hx-about-list { display: grid; gap: var(--sp-2); padding: 0; list-style: none; max-width: 72ch; }
 .hx-about-list li { position: relative; padding-left: 1.15rem; color: var(--ink); text-wrap: pretty; }
+/* a quiet square bullet: the accent stays reserved for things you can operate */
 .hx-about-list li::before {
   content: "";
   position: absolute;
@@ -290,8 +333,8 @@
   top: 0.62em;
   width: 0.4rem;
   height: 0.4rem;
-  border: 1.5px solid var(--accent);
-  border-radius: 1px;
+  border: 1.5px solid var(--ink-3);
+  border-radius: 0;
 }
 
 /* ------------------------------------------------------------------ panels, stacks, cards */
@@ -346,7 +389,7 @@
 
 /* ------------------------------------------------------------------ module meter */
 .hx-meter { display: flex; gap: 2px; height: 0.5rem; max-width: 18rem; }
-.hx-meter-cell { flex: 1 1 0; min-width: 2px; border-radius: 1px; background: var(--rule); }
+.hx-meter-cell { flex: 1 1 0; min-width: 2px; border-radius: 0; background: var(--rule); }
 .hx-meter-cell[data-status="loaded"] { background: var(--ok); }
 .hx-meter-cell[data-status="failed"] { background: var(--crit); }
 
@@ -365,3 +408,12 @@
 .st-meter { height: 0.625rem; max-width: 28rem; }
 .st-module code { color: var(--ink-3); margin-right: 0.15rem; }
 .st-extras { font-size: var(--fs-2); color: var(--ink-3); }
+
+/* ------------------------------------------------------------------ touch: larger targets for fingers */
+@media (pointer: coarse) {
+  .hx-icon-btn { width: 2.5rem; height: 2.5rem; }
+  .hx-btn, .hx-btn--sm { min-height: 2.75rem; }
+  .hx-theme-toggle { min-width: 2.75rem; }
+  .hx-input, .hx-select { min-height: 2.75rem; }
+  .hx-tab { min-height: 2.75rem; }
+}

@@ -91,16 +91,57 @@
   }
   const unhashable = (v) => Array.isArray(v) || is_dict(v);
 
-  /** Python ``obj[key]`` for JSON values. */
+  /** Python ``obj[key]`` for JSON values (lists and strings take int/bool indices, negative from the end). */
   function item(obj, key) {
     if (is_dict(obj)) {
       if (unhashable(key)) throw pyerr("TypeError", "unhashable type: '" + type_name(key) + "'");
       if (typeof key !== "string" || !hasOwn(obj, key)) throw pyerr("KeyError", R(key));
       return obj[key];
     }
-    if (Array.isArray(obj)) throw pyerr("TypeError", "list indices must be integers or slices, not " + type_name(key));
-    if (typeof obj === "string") throw pyerr("TypeError", "string indices must be integers, not '" + type_name(key) + "'");
+    const index = typeof key === "boolean" ? (key ? 1 : 0)
+      : typeof key === "number" && Number.isInteger(key) ? key : null;
+    if (Array.isArray(obj)) {
+      if (index === null) throw pyerr("TypeError", "list indices must be integers or slices, not " + type_name(key));
+      const i = index < 0 ? index + obj.length : index;
+      if (i < 0 || i >= obj.length) throw pyerr("IndexError", "list index out of range");
+      return obj[i];
+    }
+    if (typeof obj === "string") {
+      if (index === null) throw pyerr("TypeError", "string indices must be integers, not '" + type_name(key) + "'");
+      const cps = Array.from(obj);
+      const i = index < 0 ? index + cps.length : index;
+      if (i < 0 || i >= cps.length) throw pyerr("IndexError", "string index out of range");
+      return cps[i];
+    }
     throw pyerr("TypeError", "'" + type_name(obj) + "' object is not subscriptable");
+  }
+
+  /** Python ``x in container`` for JSON values. */
+  function py_contains(container, x) {
+    if (is_dict(container)) return py_has(container, x);
+    if (Array.isArray(container)) return container.some((e) => py_eq(e, x));
+    if (typeof container === "string") {
+      if (typeof x !== "string") throw pyerr("TypeError", "'in <string>' requires string as left operand, not " + type_name(x));
+      if (!/[\ud800-\udfff]/.test(container + x)) return container.indexOf(x) >= 0;
+      /* code-point substring search (a lone surrogate never matches half of a pair) */
+      const c = Array.from(container), s = Array.from(x);
+      for (let i = 0; i + s.length <= c.length; i++) {
+        let k = 0;
+        while (k < s.length && c[i + k] === s[k]) k++;
+        if (k === s.length) return true;
+      }
+      return false;
+    }
+    throw pyerr("TypeError", "argument of type '" + type_name(container) + "' is not iterable");
+  }
+
+  /** canonical.py ``sha256_hex(data)`` for a str (anything else is not a buffer in Python). */
+  function py_sha256_hex(data) {
+    if (typeof data !== "string") throw pyerr("TypeError", "object supporting the buffer API required");
+    if (HX.util.has_lone_surrogate(data)) {
+      throw pyerr("UnicodeEncodeError", "'utf-8' codec can't encode character: surrogates not allowed");
+    }
+    return HX.canonical.sha256_hex(data);
   }
 
   /** Python ``obj.get(key)`` (None when missing). */
@@ -235,14 +276,20 @@
     F("cost_usd", T.opt(T.float), { default: null }),
   ] };
   function api(spec) {
+    const type = { k: "model", m: spec };
     return {
       name: spec.name,
       spec,
       model_fields: spec.fields.map((f) => f.name),
       model_validate(value) { return HX.efsm.pyd.model_validate(spec, value, ValidationError); },
+      /** canonical text / digest of ``model_dump(mode="json")`` (no aliases here) with Python float typing
+       *  (``cost_usd: "1e16"`` prints ``1e+16``) */
+      canonical_text(value) { return HX.efsm.pyd.canonical_text(type, HX.efsm.pyd.model_validate(spec, value, ValidationError)); },
+      digest(value) { return HX.efsm.pyd.digest(type, HX.efsm.pyd.model_validate(spec, value, ValidationError)); },
     };
   }
-  /** ``ModelRequest.model_validate(obj)`` / ``ModelResponse.model_validate(obj)`` -> normalized dumps. */
+  /** ``ModelRequest.model_validate(obj)`` / ``ModelResponse.model_validate(obj)`` -> normalized dumps;
+   *  ``.canonical_text(obj)`` / ``.digest(obj)`` hash the dump with Python float typing. */
   fakes.ModelRequest = models.ModelRequest = models.ModelRequest || api(MODELS.ModelRequest);
   fakes.ModelResponse = models.ModelResponse = models.ModelResponse || api(MODELS.ModelResponse);
 
@@ -292,21 +339,25 @@
   };
 
   class DocumentStore {
-    /** ``DocumentStore(docs=None)``: ``{tenant: {document_id: content}}`` (JSON-copied). */
+    /** ``DocumentStore(docs=None)``: ``{tenant: {document_id: content}}`` (JSON-copied). Malformed
+     *  collections behave like Python's: ``docs`` must be a dict (``.get``), and a tenant's collection
+     *  is used with Python's ``in`` and ``[]`` (a list matches elements and takes int indices, a str
+     *  matches substrings and then fails to index). */
     constructor(docs) {
       this.docs = clone_json(py_truthy(docs) ? docs : fakes.DEFAULT_DOCUMENTS);
     }
 
     read(args, ctx) {
+      /* self.docs.get(ctx["tenant_id"], {}): the attribute lookup comes first */
+      if (!is_dict(this.docs)) throw pyerr("AttributeError", "'" + type_name(this.docs) + "' object has no attribute 'get'");
       const tenant = item(ctx, "tenant_id");
       if (unhashable(tenant)) throw pyerr("TypeError", "unhashable type: '" + type_name(tenant) + "'");
       const tenant_docs = typeof tenant === "string" && hasOwn(this.docs, tenant) ? this.docs[tenant] : {};
       const found = [], missing = [];
       for (const d of py_iter(item(args, "document_ids"))) {
-        if (py_has(tenant_docs, d)) { /* other tenants' documents are indistinguishable from missing */
-          const content = tenant_docs[d];
-          if (typeof content !== "string") throw pyerr("TypeError", "object supporting the buffer API required");
-          found.push({ document_id: d, sha256: HX.canonical.sha256_hex(content), content });
+        if (py_contains(tenant_docs, d)) { /* other tenants' documents are indistinguishable from missing */
+          const sha256 = py_sha256_hex(item(tenant_docs, d));
+          found.push({ document_id: d, sha256, content: item(tenant_docs, d) });
         } else {
           missing.push(d);
         }
@@ -316,6 +367,8 @@
   }
   fakes.DocumentStore = DocumentStore;
 
+  /** Python ``dict(records)`` for the registry: a dict (``"tenant|ref"`` keys), a Map, or a list of
+   *  ``[[tenant, ref], record]`` pairs; anything else fails like Python's ``dict()``. */
   function registry_entries(records) {
     const out = new Map();
     const add = (key, rec) => {
@@ -329,19 +382,34 @@
       if (typeof k !== "string" || k.indexOf("|") < 0) throw new TypeError("registry keys must be 'tenant|supplier_ref'");
       out.set(k, rec);
     };
-    if (records instanceof Map) for (const [k, v] of records) add(k, v);
-    else if (Array.isArray(records)) for (const [k, v] of records) add(k, v);
-    else for (const k of Object.keys(records)) add(k, records[k]);
+    if (records instanceof Map) {
+      for (const [k, v] of records) add(k, v);
+    } else if (Array.isArray(records)) {
+      records.forEach((pair, i) => {
+        if (!Array.isArray(pair) && typeof pair !== "string") {
+          throw pyerr("TypeError", "cannot convert dictionary update sequence element #" + i + " to a sequence");
+        }
+        const n = Array.isArray(pair) ? pair.length : Array.from(pair).length;
+        if (n !== 2) throw pyerr("ValueError", "dictionary update sequence element #" + i + " has length " + n + "; 2 is required");
+        add(Array.isArray(pair) ? pair[0] : Array.from(pair)[0], Array.isArray(pair) ? pair[1] : Array.from(pair)[1]);
+      });
+    } else if (is_dict(records)) {
+      for (const k of Object.keys(records)) add(k, records[k]);
+    } else if (typeof records === "string") {
+      /* dict("ab"): element #0 is the one-character string "a" */
+      throw pyerr("ValueError", "dictionary update sequence element #0 has length 1; 2 is required");
+    } else {
+      throw pyerr("TypeError", "'" + type_name(records) + "' object is not iterable");
+    }
     return out;
   }
 
   class SupplierRegistry {
-    /** ``SupplierRegistry(records=None)``: ``{"tenant|ref": record_or_null}`` (object, Map, or
-     *  ``[[tenant, ref], record]`` entries). ``this.records`` is a Map keyed ``"tenant|ref"``. */
+    /** ``SupplierRegistry(records=None)``: ``dict(records or DEFAULT_REGISTRY)`` with Python truthiness.
+     *  ``records``: ``{"tenant|ref": record_or_null}``, a Map, or ``[[tenant, ref], record]`` entries.
+     *  ``this.records`` is a Map keyed ``"tenant|ref"``. */
     constructor(records) {
-      const empty = records === undefined || records === null ||
-        (records instanceof Map ? records.size === 0 : Array.isArray(records) ? records.length === 0
-          : is_dict(records) && Object.keys(records).length === 0);
+      const empty = records instanceof Map ? records.size === 0 : !py_truthy(records);
       this.records = registry_entries(empty ? fakes.DEFAULT_REGISTRY : records);
     }
 
@@ -424,13 +492,38 @@
   /* ---------------------------------------------------------------------------------------- */
   const SHARED_ERP = new Map(); /* path -> rows (emulates reopening the same SQLite file) */
 
-  /** SQLite parameter binding into a TEXT column: strings, NULL, and ints/bools (TEXT affinity). */
-  function sql_text(v) {
-    if (v === null || v === undefined) return null;
-    if (typeof v === "string") return v;
-    if (typeof v === "boolean") return v ? "1" : "0";
-    if (typeof v === "number" && Number.isSafeInteger(v)) return String(v);
-    throw pyerr("InterfaceError", "unsupported parameter type " + type_name(v) + " for the fake ERP");
+  const INT64_LIMIT = 9223372036854775808; /* 2^63, exact as a double */
+
+  /** Bind SQL parameters (evaluated beforehand, as Python builds the tuple first) into the TEXT columns of
+   *  ``erp_drafts``, in order, raising what Python's sqlite3 raises for the first bad one:
+   *  ``ProgrammingError`` for lists/dicts ("Error binding parameter N"), ``OverflowError`` for ints wider
+   *  than 64 bits, ``UnicodeEncodeError`` for strings with lone surrogates. Strings, NULL, bools and safe
+   *  ints become their TEXT form (TEXT affinity). Floats and integers beyond +/-(2^53-1) that still fit in
+   *  64 bits are stored by Python (as SQLite's text form); the JS port raises ``InterfaceError`` for them
+   *  (stricter: it cannot reproduce SQLite's REAL-to-TEXT conversion or the exact integer). */
+  function sql_bind(values) {
+    return values.map((v, i) => {
+      if (v === null || v === undefined) return null;
+      if (typeof v === "string") {
+        if (HX.util.has_lone_surrogate(v)) {
+          throw pyerr("UnicodeEncodeError", "'utf-8' codec can't encode character: surrogates not allowed");
+        }
+        return v;
+      }
+      if (typeof v === "boolean") return v ? "1" : "0";
+      if (typeof v === "number") {
+        if (Number.isSafeInteger(v)) return String(v);
+        if (Number.isInteger(v) && (v >= INT64_LIMIT || v < -INT64_LIMIT)) {
+          throw pyerr("OverflowError", "Python int too large to convert to SQLite INTEGER");
+        }
+        throw pyerr("InterfaceError", "parameter " + (i + 1) + ": " + (Number.isInteger(v) ? "integer beyond +/-(2^53-1)"
+          : "float") + " values are not supported by the JS fake ERP");
+      }
+      if (Array.isArray(v) || is_dict(v)) {
+        throw pyerr("ProgrammingError", "Error binding parameter " + (i + 1) + ": type '" + type_name(v) + "' is not supported");
+      }
+      throw pyerr("InterfaceError", "parameter " + (i + 1) + ": unsupported type " + type_name(v));
+    });
   }
   const sql_eq = (a, b) => a !== null && b !== null && a === b;
 
@@ -469,12 +562,12 @@
     }
 
     count(tenant_id) {
-      const t = sql_text(tenant_id);
+      const [t] = sql_bind([tenant_id]);
       return this._rows.filter((r) => sql_eq(r.tenant_id, t)).length;
     }
 
     _row(tenant_id, draft_id) {
-      const t = sql_text(tenant_id), d = sql_text(draft_id);
+      const [t, d] = sql_bind([tenant_id, draft_id]);
       return this._rows.find((r) => sql_eq(r.tenant_id, t) && sql_eq(r.draft_id, d)) || null;
     }
 
@@ -482,8 +575,7 @@
       this.calls.push(["create", item(ctx, "idempotency_key")]);
       if (this._take("timeout_before_commit")) throw new errors.ToolTimeout("timed out before commit");
       const adig = HX.canonical.digest(args);
-      const t = sql_text(item(ctx, "tenant_id"));
-      const key = sql_text(item(ctx, "idempotency_key"));
+      const [t, key] = sql_bind([item(ctx, "tenant_id"), item(ctx, "idempotency_key")]);
       const row = this._rows.find((r) => sql_eq(r.tenant_id, t) && sql_eq(r.idempotency_key, key));
       if (row) {
         if (row.args_digest !== adig) throw new errors.ToolFailure("idempotency key reused with different arguments");
@@ -491,12 +583,11 @@
       }
       const n = this._rows.length + 1;
       const draft_id = "D-" + String(n).padStart(4, "0");
-      const rec = {
-        tenant_id: t, draft_id, supplier_ref: sql_text(item(args, "supplier_ref")),
-        draft_digest: sql_text(item(args, "draft_digest")), idempotency_key: key, args_digest: adig,
-        payload: py_json_dumps(item(args, "draft"), true), version: 1, rowid: n,
-      };
-      this._rows.push(rec);
+      /* INSERT ... VALUES(?,?,?,?,?,?,?,1): Python builds the whole tuple, then binds in order */
+      const p = sql_bind([item(ctx, "tenant_id"), draft_id, item(args, "supplier_ref"), item(args, "draft_digest"),
+        item(ctx, "idempotency_key"), adig, py_json_dumps(item(args, "draft"), true)]);
+      this._rows.push({ tenant_id: p[0], draft_id, supplier_ref: p[2], draft_digest: p[3], idempotency_key: p[4],
+        args_digest: adig, payload: p[6], version: 1, rowid: n });
       if (this._take("timeout_after_commit")) throw new errors.ToolTimeout("timed out after the ERP committed");
       return { status: "created", draft_id, version: 1 };
     }
@@ -504,10 +595,8 @@
     /** Lookup by idempotency key OR (supplier_ref, draft_digest); the first match in SQLite's scan order
      *  over the (tenant_id, idempotency_key) index, i.e. by idempotency key, then insertion. */
     reconcile_create(args, ctx) {
-      const t = sql_text(item(ctx, "tenant_id"));
-      const key = sql_text(item(ctx, "idempotency_key"));
-      const s = sql_text(item(args, "supplier_ref"));
-      const dg = sql_text(item(args, "draft_digest"));
+      const [t, key, s, dg] = sql_bind([item(ctx, "tenant_id"), item(ctx, "idempotency_key"), item(args, "supplier_ref"),
+        item(args, "draft_digest")]);
       const hits = this._rows.filter((r) => sql_eq(r.tenant_id, t) &&
         (sql_eq(r.idempotency_key, key) || (sql_eq(r.supplier_ref, s) && sql_eq(r.draft_digest, dg))));
       if (!hits.length) return null;
@@ -578,16 +667,38 @@
     return [vals, links];
   }
 
+  const MODEL_KW = ["gullible", "invalid_outputs", "unavailable"];
+
+  /** Python ``n > 0`` for ``invalid_outputs`` (numbers and bools compare; anything else is a TypeError). */
+  function py_gt0(n) {
+    if (typeof n === "boolean") return n;
+    if (typeof n === "number") return n > 0;
+    throw pyerr("TypeError", "'>' not supported between instances of '" + type_name(n) + "' and 'int'");
+  }
+
   class FixtureExtractionModel {
     /** Deterministic stand-in for the extraction/repair model. ``gullible`` obeys instructions embedded
      *  in documents (emits authority fields); ``invalid_outputs: N`` returns N schema-invalid responses
-     *  first; ``unavailable`` raises ModelUnavailable. */
+     *  first; ``unavailable`` raises ModelUnavailable.
+     *  ``new FixtureExtractionModel({gullible, invalid_outputs, unavailable})`` is the keyword call (an unknown
+     *  key is a TypeError, as in Python); a non-object argument is the positional ``gullible``. The values are
+     *  kept as given and tested with Python truthiness (``[]`` and ``0`` are false), like the Python attributes. */
     constructor(opts) {
-      opts = opts || {};
+      let o = {};
+      if (is_dict(opts)) {
+        for (const k of Object.keys(opts)) {
+          if (MODEL_KW.indexOf(k) < 0) {
+            throw pyerr("TypeError", "FixtureExtractionModel.__init__() got an unexpected keyword argument '" + k + "'");
+          }
+        }
+        o = opts;
+      } else if (opts !== undefined) {
+        o = { gullible: opts };
+      }
       this.model_id = FixtureExtractionModel.model_id;
-      this.gullible = !!opts.gullible;
-      this.invalid_outputs = opts.invalid_outputs || 0;
-      this.unavailable = !!opts.unavailable;
+      this.gullible = hasOwn(o, "gullible") ? o.gullible : false;
+      this.invalid_outputs = hasOwn(o, "invalid_outputs") ? o.invalid_outputs : 0;
+      this.unavailable = hasOwn(o, "unavailable") ? o.unavailable : false;
       this.requests = [];
     }
 
@@ -595,10 +706,10 @@
     generate(request) {
       const req = fakes.ModelRequest.model_validate(request);
       this.requests.push(req);
-      if (this.unavailable) throw new models.ModelUnavailable("fixture model configured unavailable");
+      if (py_truthy(this.unavailable)) throw new models.ModelUnavailable("fixture model configured unavailable");
       const inputs = req.inputs;
       const tokens_in = Math.floor(py_json_dumps(inputs).length / 4);
-      if (this.invalid_outputs > 0) {
+      if (py_gt0(this.invalid_outputs)) {
         this.invalid_outputs -= 1;
         return fakes.ModelResponse.model_validate({ output: { draft: { legal_name: 42 } }, raw_text: "",
           model_id: this.model_id, input_tokens: tokens_in, output_tokens: 12 });
@@ -614,7 +725,7 @@
         for (const k of Object.keys(vals)) set_own(draft, k, vals[k]);
         set_own(draft, "source_links", links);
         out = { draft };
-        if (this.gullible && py_iter(docs).some((d) => item(d, "content").indexOf("SYSTEM:") >= 0)) {
+        if (py_truthy(this.gullible) && py_iter(docs).some((d) => py_contains(item(d, "content"), "SYSTEM:"))) {
           out.approved = true;
           out.tenant_id = "globex";
         }

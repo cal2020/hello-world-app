@@ -1,10 +1,64 @@
 // The page shell: boot, navigation (rail clicks, #hash deep links, history, keyboard), the theme toggle,
 // Reset lab, the states shown for engine modules missing from the build, the HXUI component API, reduced
-// motion, and the boot failure panel. Runs at 1280px and 400px, light and dark.
+// motion, and the boot failure panel. Also the layout guarantees found in review: the parity grid never
+// paints one cell over the next, the top bar title never runs under its actions, a focused tab or control is
+// never hidden under a fade or the sticky strip, and blocked copying says what to do. Runs at 1280px and 400px,
+// light and dark.
 const SECTIONS = ["overview", "compile", "run", "learn", "break", "selftest"];
 
 async function booted(page) {
   await page.waitForFunction(() => document.getElementById("app")?.dataset.boot !== "pending", null, { timeout: 15000 });
+}
+
+function frames(page) {
+  return page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(r, 30)))));
+}
+
+/* Parity rows: no cell's content intersects another cell's content; in the four-column grid no cell's content
+   passes the left edge of the next cell; no digest paints outside its own cell. */
+function parity_geometry(page) {
+  return page.evaluate(() => {
+    const out = { grid: getComputedStyle(document.querySelector(".ov-checks-head")).display !== "none", problems: [] };
+    for (const li of document.querySelectorAll(".ov-check")) {
+      const cells = [".ov-check-name", ".ov-check-this", ".ov-check-ref", ".ov-check-result"].map((s) => li.querySelector(s));
+      const ext = cells.map((c) => {
+        let l = Infinity, r = -Infinity, t = Infinity, b = -Infinity;
+        for (const d of c.querySelectorAll("*")) {
+          const x = d.getBoundingClientRect();
+          if (!x.width || !x.height || d.closest(".ov-cell-label")) continue;
+          l = Math.min(l, x.left); r = Math.max(r, x.right); t = Math.min(t, x.top); b = Math.max(b, x.bottom);
+        }
+        return { l, r, t, b };
+      });
+      for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) {
+        const a = ext[i], c = ext[j];
+        if (a.l < c.r - 0.5 && c.l < a.r - 0.5 && a.t < c.b - 0.5 && c.t < a.b - 0.5) out.problems.push(`${li.dataset.check}: cell ${i} overlaps cell ${j}`);
+      }
+      if (out.grid) {
+        for (let i = 0; i < 3; i++) {
+          const next = cells[i + 1].getBoundingClientRect().left;
+          if (ext[i].r > next + 0.5) out.problems.push(`${li.dataset.check}: cell ${i} passes the left edge of cell ${i + 1} by ${Math.round(ext[i].r - next)}px`);
+        }
+      }
+      for (const code of li.querySelectorAll(".hx-digest-text")) {
+        const cell = code.closest(".ov-check-cell").getBoundingClientRect();
+        const x = code.getBoundingClientRect();
+        if (x.right > cell.right + 0.5) out.problems.push(`${li.dataset.check}: a digest paints ${Math.round(x.right - cell.right)}px outside its cell`);
+      }
+    }
+    return out;
+  });
+}
+
+/* The title's glyphs and the top bar actions never intersect. */
+function topbar_clear(page) {
+  return page.evaluate(() => {
+    const range = document.createRange();
+    range.selectNodeContents(document.querySelector(".hx-brand-name"));
+    const t = range.getBoundingClientRect();
+    const a = document.querySelector(".hx-top-actions").getBoundingClientRect();
+    return !(t.left < a.right && a.left < t.right && t.top < a.bottom && a.top < t.bottom);
+  });
 }
 
 async function expect_active(t, id) {
@@ -57,6 +111,28 @@ export default async function (t) {
   assert.equal(await page.locator("main#hx-main").count(), 1, "main landmark");
   assert.equal(await page.getAttribute("#hx-live", "aria-live"), "polite", "polite live region");
   await expect_active(t, "overview");
+  assert.equal(await page.evaluate(() => location.hash), "#overview", "the URL names the section on screen");
+
+  /* ---- top bar: the title never runs under Reset lab or the theme toggle; the toggle says what it sets */
+  const toggle = () => page.evaluate(() => {
+    const label = document.querySelector("#hx-theme-toggle .hx-theme-label");
+    return { text: label.textContent, shown: getComputedStyle(label).display !== "none", aria: document.getElementById("hx-theme-toggle").getAttribute("aria-label") };
+  });
+  if (t.viewport.width < 600) {
+    for (const w of [400, 389, 360]) {
+      await page.setViewportSize({ width: w, height: t.viewport.height });
+      await frames(page);
+      assert.ok(await topbar_clear(page), `at ${w}px the title and the top bar actions do not overlap`);
+    }
+    await page.setViewportSize(t.viewport);
+    await frames(page);
+    const tg = await toggle();
+    assert.ok(!tg.shown && /^Theme: System\./.test(tg.aria), "phones show the theme icon only, with the full name for assistive technology");
+  } else {
+    assert.ok(await topbar_clear(page), "the title and the top bar actions do not overlap");
+    const tg = await toggle();
+    assert.deepEqual([tg.text, tg.shown], ["Theme: System", true], "the theme toggle's visible label says what it controls");
+  }
 
   /* ---- the rail: click every section (at 400px the rail is a horizontal tab strip) */
   const strip = await page.evaluate(() => {
@@ -69,6 +145,31 @@ export default async function (t) {
     await page.click(`.hx-rail-link[data-section="${id}"]`);
     await expect_active(t, id);
     assert.equal(await page.evaluate(() => location.hash), "#" + id, "the hash follows the rail");
+  }
+  if (t.viewport.width < 600) {
+    /* a tab reached with the keyboard is scrolled clear of the strip's faded edges */
+    const strip_state = () => page.evaluate(() => {
+      const l = document.querySelector(".hx-rail-list");
+      const a = document.activeElement;
+      const lb = l.getBoundingClientRect();
+      const ab = a.getBoundingClientRect();
+      const fade = 40;
+      return {
+        section: a.dataset.section, start: l.dataset.scrollStart, end: l.dataset.scrollEnd, wide: l.scrollWidth > l.clientWidth + 1,
+        clear_left: ab.left >= lb.left + (l.dataset.scrollStart === "more" ? fade : 0) - 0.5,
+        clear_right: ab.right <= lb.right - (l.dataset.scrollEnd === "more" ? fade : 0) + 0.5,
+      };
+    });
+    await page.focus('.hx-rail-link[data-section="break"]');
+    await page.keyboard.press("Tab");
+    let s = await strip_state();
+    assert.equal(s.section, "selftest");
+    assert.ok(s.clear_left && s.clear_right, `the focused last tab is clear of the faded edges: ${JSON.stringify(s)}`);
+    for (let i = 0; i < 5; i++) await page.keyboard.press("Shift+Tab");
+    s = await strip_state();
+    assert.equal(s.section, "overview");
+    assert.ok(s.clear_left && s.clear_right, `the focused first tab is clear of the faded edges: ${JSON.stringify(s)}`);
+    if (!s.wide) assert.deepEqual([s.start, s.end], ["edge", "edge"], "no fade when every tab fits");
   }
 
   /* ---- #hash deep links: fresh loads, in-place hash changes, unknown hashes */
@@ -88,6 +189,11 @@ export default async function (t) {
   await page.goto(url + "#no-such-section");
   await booted(page);
   await expect_active(t, "overview");
+  assert.equal(await page.evaluate(() => location.hash), "#overview", "an unknown hash at boot is replaced by the section shown");
+  await page.evaluate(() => HXUI.go("run"));
+  await page.evaluate(() => { location.hash = "nope"; });
+  await page.waitForFunction(() => location.hash === "#run");
+  await expect_active(t, "run");
 
   /* ---- keyboard: Tab reaches the rail, focus is visibly outlined, Enter activates */
   await page.goto("about:blank");
@@ -163,6 +269,14 @@ export default async function (t) {
   }));
   await page.click("#hx-reset");
   assert.deepEqual(await pop(), { hidden: false, expanded: "true", focus: "hx-reset-cancel", resets: 0, runs: 1 }, "confirmation opens");
+  if (t.viewport.width < 600) {
+    const edges = await page.evaluate(() => {
+      const p = document.getElementById("hx-reset-pop").getBoundingClientRect();
+      const top = document.querySelector(".hx-top").getBoundingClientRect();
+      return [Math.round(p.left - top.left), Math.round(top.right - p.right)];
+    });
+    assert.deepEqual(edges, [0, 0], "on a phone the confirmation spans the top bar, edge to edge with the content column");
+  }
   await page.keyboard.press("Escape");
   assert.deepEqual(await pop(), { hidden: true, expanded: "false", focus: "hx-reset", resets: 0, runs: 1 }, "Escape keeps the lab");
   await page.click("#hx-reset");
@@ -195,12 +309,18 @@ export default async function (t) {
     const shown = await page.evaluate((id) => {
       const sec = document.querySelector(`.hx-section[data-section="${id}"]`);
       const box = sec.querySelector(".hx-unavailable");
-      return { state: sec.dataset.state, text: box ? box.textContent : "", about: sec.querySelectorAll(".hx-about-list li").length };
+      return {
+        state: sec.dataset.state, text: box ? box.textContent : "", about: sec.querySelectorAll(".hx-about-list li").length,
+        title: box ? box.querySelector(".hx-unavailable-title").textContent : null,
+        about_level: sec.querySelector(".hx-about .hx-label") ? sec.querySelector(".hx-about .hx-label").tagName : null,
+      };
     }, s.id);
     if (s.missing.length) {
       assert.equal(shown.state, "unavailable", `${s.id} shows the unavailable state`);
       for (const name of s.missing) assert.ok(shown.text.includes(name), `${s.id} names the missing ${name}`);
       assert.ok(shown.about >= 2, `${s.id} still says what it lets you do`);
+      assert.ok(["Not in this build", "Failed to load in this build"].includes(shown.title), `${s.id} unavailable title: ${shown.title}`);
+      assert.equal(shown.about_level, "H3", `${s.id}: "What you can do here" sits one level under the section title`);
     } else {
       assert.equal(shown.state, "ready", `${s.id} mounts when its modules are present`);
     }
@@ -227,6 +347,62 @@ export default async function (t) {
   if (!ov.has_compile || !ov.has_graph) assert.equal(ov.graph, "unavailable", "graph panel shows its unavailable state");
   else assert.equal(ov.graph, "ready", "the compiled machine is drawn");
   if (ov.demo_disabled === "true") assert.ok(ov.demo_reason && ov.demo_reason.length > 10, "disabled control explains why");
+
+  /* ---- parity rows never paint one cell over the next (the review found overlaps at 770-860 and 1070-1215px) */
+  const widths = t.viewport.width < 600 ? [t.viewport.width, 360] : [1100, 1180, 1240, 1300, 860, t.viewport.width];
+  for (const w of widths) {
+    await page.setViewportSize({ width: w, height: t.viewport.height });
+    await frames(page);
+    const g = await parity_geometry(page);
+    assert.deepEqual(g.problems, [], `parity rows at ${w}px (${g.grid ? "four columns" : "stacked"})`);
+  }
+  await page.setViewportSize(t.viewport);
+  await frames(page);
+
+  /* ---- blocked clipboard: the full value is selected and a visible note says what to do */
+  await page.evaluate(() => Object.defineProperty(navigator, "clipboard", { value: { writeText: () => Promise.reject(new Error("blocked")) }, configurable: true }));
+  await page.click("#ov-initial-ref-copy");
+  await page.waitForSelector(".hx-copy-note");
+  const note = await page.evaluate(() => {
+    const n = document.querySelector(".hx-copy-note");
+    const b = document.getElementById("ov-initial-ref-copy");
+    const r = n.getBoundingClientRect();
+    const code = document.getElementById("ov-initial-ref");
+    return {
+      text: n.textContent, shown: r.width > 0 && r.height > 0, described: b.getAttribute("aria-describedby") === n.id, state: b.dataset.state,
+      selected: String(getSelection()) === code.textContent && code.textContent.length > 64,
+    };
+  });
+  assert.ok(note.shown && /Ctrl\+C or Cmd\+C/.test(note.text) && note.described && note.state === "selected" && note.selected,
+    `blocked copy shows a visible note and selects the full value: ${JSON.stringify(note)}`);
+  await page.evaluate(() => getSelection().removeAllRanges());
+  await page.waitForFunction(() => !document.querySelector(".hx-copy-note") && !document.getElementById("ov-initial-ref-copy").dataset.state);
+
+  /* ---- phones: Shift+Tab never leaves the focused control under the sticky section strip (WCAG 2.4.11) */
+  if (t.viewport.width < 600) {
+    await page.evaluate(() => {
+      const main = document.getElementById("hx-main");
+      const all = [...main.querySelectorAll("a[href], button, [tabindex='0'], input, select, textarea, summary")]
+        .filter((e) => !e.closest("[hidden]") && e.getBoundingClientRect().width > 0);
+      scrollTo(0, document.documentElement.scrollHeight);
+      all[all.length - 1].focus({ preventScroll: true });
+    });
+    const covered = [];
+    for (let i = 0; i < 80; i++) {
+      await page.keyboard.press("Shift+Tab");
+      const r = await page.evaluate(() => {
+        const el = document.activeElement;
+        if (!el || !document.getElementById("hx-main").contains(el)) return null;
+        const b = el.getBoundingClientRect();
+        const strip = document.querySelector(".hx-rail").getBoundingClientRect();
+        return { name: el.id || el.getAttribute("aria-label") || el.textContent.trim().slice(0, 40), px: Math.round(Math.max(0, Math.min(b.bottom, strip.bottom) - Math.max(b.top, strip.top))) };
+      });
+      if (!r) break;
+      if (r.px > 0) covered.push(r);
+    }
+    assert.deepEqual(covered, [], "no control focused with Shift+Tab sits under the sticky section strip");
+  }
+
   await page.evaluate(() => HXUI.go("selftest"));
   const inv = await page.evaluate(() => ({
     rows: [...document.querySelectorAll(".st-modules tbody tr")].map((tr) => ({ module: tr.dataset.module, status: tr.dataset.status })),
@@ -235,6 +411,19 @@ export default async function (t) {
   }));
   assert.deepEqual(inv.rows, inv.expected, "Self-test lists every engine module with its status");
   assert.equal(inv.canonical, "loaded");
+  await frames(page);
+  const st = await page.evaluate(() => {
+    const wrap = document.querySelector(".st-modules").closest(".hx-table-wrap");
+    const sc = wrap.querySelector(".hx-table-scroll");
+    return {
+      folded: wrap.classList.contains("is-folded"), overflow: sc.scrollWidth - sc.clientWidth,
+      about_level: document.querySelector("#sec-selftest .hx-about .hx-label").tagName,
+      caption_hidden: document.querySelector(".st-modules caption").classList.contains("hx-visually-hidden"),
+    };
+  });
+  assert.equal(st.about_level, "H4", "the runner list label sits one level under its panel title");
+  assert.ok(st.caption_hidden, "the panel heading labels the module table; its caption is kept for assistive technology");
+  if (t.viewport.width < 600) assert.ok(st.folded && st.overflow <= 1, `on a phone the module table folds its detail columns and fits: ${JSON.stringify(st)}`);
   const junk = await page.evaluate(() => /\b(undefined|NaN)\b|\[object Object\]/.exec(document.getElementById("app").innerText));
   assert.equal(junk, null, "no undefined, NaN or [object Object] in the page text");
 
@@ -250,6 +439,23 @@ export default async function (t) {
     el.click();
     out.h = { cls: el.className, k: el.dataset.k, mt: el.style.marginTop, x: el.style.getPropertyValue("--x"), aria: el.getAttribute("aria-hidden"), text: el.textContent, clicks };
     try { h("div", { html: "<b>no</b>" }); out.html = "allowed"; } catch (e) { out.html = "refused"; }
+    /* markup strings, inline handlers and script URLs never reach the DOM; a string style gets a clear error */
+    const refuse = (fn) => { try { fn(); return "allowed"; } catch (e) { return e.message; } };
+    globalThis.__fired = 0;
+    out.refusals = {
+      onclick: refuse(() => h("button", { onclick: "globalThis.__fired = 1" })),
+      onMouseOver: refuse(() => h("div", { onMouseOver: "x" })),
+      innerHTML: refuse(() => h("div", { innerHTML: "<b>x</b>" })),
+      outerHTML: refuse(() => h("div", { outerHTML: "<b>x</b>" })),
+      srcdoc: refuse(() => h("div", { srcdoc: "<b>x</b>" })),
+      href_js: refuse(() => h("a", { href: "javascript:void(0)" })),
+      href_js_tab: refuse(() => h("a", { href: " java\tscript:void(0)" })),
+      svg_href_js: refuse(() => HXUI.s("a", { href: "JavaScript:void(0)" })),
+      style_string: refuse(() => h("div", { style: "color: red" })),
+      href_ok: refuse(() => h("a", { href: "#compile" })),
+      on_ok: refuse(() => h("button", { on: { click: () => {} } })),
+    };
+    out.fired = globalThis.__fired;
     const sel = HXUI.select("e2e-sel", [{ value: "a", label: "A" }, { value: "b", label: "B" }], { value: "b", on_change: (v) => { out.changed = v; } });
     host.appendChild(HXUI.field("Pick one", sel, { hint: "A hint", error: "An error" }));
     sel.value = "a";
@@ -299,6 +505,13 @@ export default async function (t) {
   });
   assert.deepEqual(api.h, { cls: "a b", k: "v", mt: "3px", x: "1", aria: "false", text: "x2yz", clicks: 1 });
   assert.equal(api.html, "refused", "h() refuses an html attribute");
+  const refused = api.refusals;
+  assert.match(refused.onclick, /on: \{click: fn\}/, "h() refuses an inline onclick and points to on: {click}");
+  assert.match(refused.onMouseOver, /not allowed/, "h() refuses inline handlers in any case");
+  for (const k of ["innerHTML", "outerHTML", "srcdoc"]) assert.match(refused[k], /not supported/, `h() refuses ${k}`);
+  for (const k of ["href_js", "href_js_tab", "svg_href_js"]) assert.match(refused[k], /javascript:/, `h() refuses a script URL (${k})`);
+  assert.match(refused.style_string, /style takes an object/, "a string style gets a clear error");
+  assert.deepEqual([refused.href_ok, refused.on_ok, api.fired], ["allowed", "allowed", 0]);
   assert.equal(api.changed, "a", "select on_change");
   assert.equal(api.field.for, "e2e-sel");
   assert.equal(api.field.described, "e2e-sel-hint e2e-sel-error");
@@ -336,6 +549,11 @@ export default async function (t) {
   await page.keyboard.press("ArrowLeft");
   assert.deepEqual((await tabs()).panels, ["third"]);
   assert.equal(await page.evaluate(() => globalThis.__tab_changed), "three", "on_change reports the selected tab");
+  /* a horizontal tablist leaves ArrowUp / ArrowDown to the page */
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowUp");
+  assert.deepEqual((await tabs()).selected, ["three"], "ArrowUp and ArrowDown do not switch horizontal tabs");
+  assert.equal(await page.getAttribute("#e2e-tabs [role=tablist]", "aria-orientation"), "horizontal");
   await page.evaluate(() => document.getElementById("e2e-host").remove());
 
   /* ---- reduced motion disables transitions */

@@ -5,6 +5,7 @@
   "use strict";
   globalThis.HXUI = globalThis.HXUI || {};
   const HXUI = globalThis.HXUI;
+  if (typeof HXUI.register_section !== "function") return; /* the UI core is missing: boot reports it */
 
   /* Engine namespaces each part needs. The first entries name the module that does the work. */
   const BASE = ["data", "canonical", "jsonschema"];
@@ -13,24 +14,25 @@
   const CATALOG_NEEDS = ["catalog"].concat(BASE);
   const DEMO_NEEDS = ["env", "service", "registry", "update", "reference", "traces", "compile"];
 
+  /* Copy is plain data: strings, and {code: "id"} for identifiers, which HXUI.rich() sets in mono. */
   const CHECKS = [
     {
       id: "initial", label: "Initial artifact hash",
-      how: "Compile SKILL.md with the fixture compiler model and hash the package.",
+      how: ["Compile ", { code: "SKILL.md" }, " with the fixture compiler model and hash the package."],
       needs: COMPILE_NEEDS, primary: 1,
       expected: (pb) => pb.initial_artifact_hash,
       compute: compute_initial,
     },
     {
       id: "refined", label: "Refined artifact hash",
-      how: "Apply the refinement learned from the missing-documents trace and hash the candidate.",
+      how: ["Apply the refinement learned from the missing-documents trace and hash the candidate."],
       needs: REFINE_NEEDS, primary: 1, after: "initial",
       expected: (pb) => pb.refined_artifact_hash,
       compute: compute_refined,
     },
     {
       id: "catalog", label: "Tool catalog digest",
-      how: "Load the trusted tool catalog with every default filled in and hash it.",
+      how: ["Load the trusted tool catalog with every default filled in and hash it."],
       needs: CATALOG_NEEDS, primary: 1,
       expected: (pb) => pb.catalog_digest,
       compute: compute_catalog,
@@ -39,18 +41,21 @@
 
   const STEPS = [
     { title: "Compile the skill", section: "compile",
-      body: "The fixture compiler drafts a state machine from SKILL.md. Validation rejects a draft that writes to the ERP before validating, the repaired draft passes, and user:dana admits it." },
+      body: ["The fixture compiler drafts a state machine from ", { code: "SKILL.md" }, ". Validation rejects a draft that writes to the ERP before validating, the repaired draft passes, and ", { code: "user:dana" }, " admits it."] },
     { title: "Run a clean intake", section: "run",
-      body: "The run reads the documents, looks up the supplier, extracts a draft and validates it with one bounded repair. Then it stops and asks for approval of the exact write." },
+      body: ["The run reads the documents, looks up the supplier, extracts a draft and validates it with one bounded repair. Then it stops and asks for approval of the exact write."] },
     { title: "Restart the worker and approve", section: "run",
-      body: "The worker restarts and resumes from stored state. The initiator cannot approve their own run, so user:bob approves it." },
+      body: ["The worker restarts and resumes from stored state. The initiator cannot approve their own run, so ", { code: "user:bob" }, " approves it."] },
     { title: "Time out after the ERP commits", section: "run",
-      body: "The fake ERP commits the draft, then the call times out. The broker reconciles the write by its idempotency key, and the ERP still holds one draft." },
+      body: ["The fake ERP commits the draft, then the call times out. The broker reconciles the write by its idempotency key, and the ERP still holds one draft."] },
     { title: "Read the evidence-linked record", section: "run",
-      body: "The run reports success only after the draft read back from the ERP matches the approved payload. The record links every receipt to that evidence." },
+      body: ["The run reports success only after the draft read back from the ERP matches the approved payload. The record links every receipt to that evidence."] },
     { title: "Learn from a trace and refuse a shortcut", section: "learn",
-      body: "A missing-documents trace yields a refined machine that passes every gate and is admitted against its parent. A shortcut that skips validation fails the gates, and the active version stays the same." },
+      body: ["A missing-documents trace yields a refined machine that passes every gate and is admitted against its parent. A shortcut that skips validation fails the gates, and the active version stays the same."] },
   ];
+
+  /* parity digests show "sha256:" and 12 hex characters, which fits a grid column with its copy button */
+  const SHORT = 19;
 
   /* ---------------------------------------------------------------- engine calls */
   function compute_initial(ctx) {
@@ -144,6 +149,7 @@
 
   /* ---------------------------------------------------------------- small builders */
   function h(...a) { return HXUI.h(...a); }
+  function code(text) { return h("code", { class: "hx-inline" }, text); }
 
   function ms_text(ms) { return ms < 1 ? "under 1 ms" : ms < 1000 ? Math.round(ms) + " ms" : (ms / 1000).toFixed(1) + " s"; }
 
@@ -158,10 +164,17 @@
       rest > 0 ? h("span", { class: "ov-missing-more" }, "and " + rest + " more") : null);
   }
 
-  /** "HX.a, HX.b and 3 more" */
-  function names_sentence(list, max) {
-    if (list.length <= max) return list.length > 1 ? list.slice(0, -1).join(", ") + " and " + list[list.length - 1] : list.join("");
-    return list.slice(0, max).join(", ") + " and " + (list.length - max) + " more";
+  /** ["HX.a", "HX.b", "HX.c", "HX.d"] -> "HX.a, HX.b, HX.c and 1 more" as text, or as nodes with mono names */
+  function names_list(list, max, as_nodes) {
+    const shown = list.slice(0, max);
+    const rest = list.length - shown.length;
+    const out = [];
+    shown.forEach((n, i) => {
+      if (i) out.push(i === shown.length - 1 && !rest ? " and " : ", ");
+      out.push(as_nodes ? code(n) : n);
+    });
+    if (rest) out.push(" and " + rest + " more");
+    return as_nodes ? out : out.join("");
   }
 
   function first_difference(a, b) {
@@ -171,17 +184,17 @@
   }
 
   /** Full digest with the part after the first difference marked. */
-  function diff_digest(value, at, label) {
-    const code = h("code", { class: "hx-digest-text is-expanded ov-diff", title: value },
+  function diff_digest(value, at, label, id) {
+    const text = h("code", { class: "hx-digest-text is-expanded ov-diff", title: value, id },
       value.slice(0, at), h("mark", { class: "ov-diff-mark" }, value.slice(at)));
-    return h("span", { class: "hx-digest ov-diff-digest" }, code, HXUI.copy_button(value, { label, target: code }));
+    return h("span", { class: "hx-digest ov-diff-digest" }, text, HXUI.copy_button(value, { label, target: text, id: id + "-copy" }));
   }
 
   const RESULT_CHIPS = {
     match: ["Match", "ok", "check"],
     mismatch: ["Differs", "crit", "cross"],
     error: ["Error", "crit", "stop"],
-    unavailable: ["Not in build", "neutral", null],
+    unavailable: ["Not in this build", "neutral", null],
     blocked: ["Skipped", "neutral", null],
     pending: ["Computing", "neutral", null],
   };
@@ -195,12 +208,12 @@
   function thesis() {
     return h("div", { class: "ov-thesis" },
       h("p", { class: "hx-lead" },
-        "HEXIS compiles a written skill (a SKILL.md file) into a state machine, admits it only after it passes static gates, " +
+        "HEXIS compiles a written skill (a ", code("SKILL.md"), " file) into a state machine, admits it only after it passes static gates, " +
         "and runs it with a deterministic kernel. A broker stands in front of every external write, so the ERP sees a write " +
         "only after policy, approval and evidence checks pass."),
       h("p", { class: "hx-prose" },
-        "This page runs the JavaScript port of that engine in your browser. Every status and digest below is computed here, " +
-        "and the Python reference values are shown next to them for comparison."));
+        "This page runs the JavaScript port of that engine in your browser. It computes every status and digest below, " +
+        "and shows the Python reference values next to them for comparison."));
   }
 
   /* ---------------------------------------------------------------- parity panel */
@@ -222,12 +235,13 @@
     const list = h("ul", { class: "ov-checks", role: "list" });
     for (const c of CHECKS) {
       const this_body = h("div", { class: "ov-cell-body" });
-      const ref_body = h("div", { class: "ov-cell-body" }, HXUI.digest(c.expected(pb), { short: 23, label: "Python " + c.label.toLowerCase() }));
+      const ref_body = h("div", { class: "ov-cell-body" },
+        HXUI.digest(c.expected(pb), { short: SHORT, label: "Python " + c.label.toLowerCase(), id: "ov-" + c.id + "-ref" }));
       const result = h("div", { class: "ov-check-result" });
       const li = h("li", { class: "ov-check", dataset: { check: c.id, state: "pending" } },
         h("div", { class: "ov-check-name" },
           h("p", { class: "ov-check-label" }, c.label),
-          h("p", { class: "ov-check-how" }, c.how)),
+          h("p", { class: "ov-check-how" }, HXUI.rich(c.how))),
         h("div", { class: "ov-check-cell ov-check-this" }, h("p", { class: "hx-label ov-cell-label" }, "This page"), this_body),
         h("div", { class: "ov-check-cell ov-check-ref" }, h("p", { class: "hx-label ov-cell-label" }, "Python build"), ref_body),
         result);
@@ -240,7 +254,7 @@
     const foot = h("p", { class: "ov-parity-foot" },
       "Python values come from the reference build at hexis-service commit ",
       h("code", { class: "hx-inline", title: commit }, commit.slice(0, 7) || "unknown"),
-      ". The efsm-v1 format follows upstream HEXIS ",
+      ". The ", code("efsm-v1"), " format follows upstream HEXIS ",
       h("code", { class: "hx-inline", title: String(pb.upstream_commit || "") }, String(pb.upstream_commit || "").slice(0, 7) || "unknown"),
       ".");
     panel.append(h("div", { class: "ov-checks-wrap" }, head, list), foot);
@@ -254,15 +268,15 @@
       row.result.replaceChildren(result_chip(r.state));
       if (r.state === "match") {
         row.this_body.replaceChildren(
-          HXUI.digest(r.value, { short: 23, label: "computed " + c.label.toLowerCase() }),
+          HXUI.digest(r.value, { short: SHORT, label: "computed " + c.label.toLowerCase(), id: "ov-" + c.id + "-this" }),
           h("p", { class: "ov-check-note", title: r.note || null }, "Computed in this page in " + ms_text(r.ms)));
       } else if (r.state === "mismatch") {
         const at = first_difference(String(r.value), String(r.expected));
         row.this_body.replaceChildren(
-          diff_digest(String(r.value), at, "computed " + c.label.toLowerCase()),
+          diff_digest(String(r.value), at, "computed " + c.label.toLowerCase(), "ov-" + c.id + "-this"),
           h("p", { class: "ov-check-error" }, "Differs from the Python value at character " + (at + 1) + "."),
           h("p", { class: "ov-check-note", title: r.note || null }, "Computed in this page in " + ms_text(r.ms)));
-        row.ref_body.replaceChildren(diff_digest(String(r.expected), at, "Python " + c.label.toLowerCase()));
+        row.ref_body.replaceChildren(diff_digest(String(r.expected), at, "Python " + c.label.toLowerCase(), "ov-" + c.id + "-ref"));
       } else if (r.state === "unavailable") {
         row.this_body.replaceChildren(missing_summary(c, r.missing));
       } else if (r.state === "error") {
@@ -302,18 +316,47 @@
     return [states.length + " states", transitions + " transitions", outcomes + " outcomes"];
   }
 
+  /** The title of the machine panel's "not in this build" box names what is missing or broken. */
+  function machine_unavailable_title(missing) {
+    const failed = missing.filter((n) => HXUI.namespace_status(n) === "failed");
+    if (failed.indexOf("HXUI.graph") >= 0) return "The graph failed to load";
+    if (failed.length) return "The compiler failed to load";
+    const no_graph = missing.indexOf("HXUI.graph") >= 0;
+    const no_engine = missing.some((n) => n !== "HXUI.graph");
+    if (no_graph && no_engine) return "The compiler and the graph view are not in this build";
+    return no_graph ? "The graph view is not in this build" : "The compiler is not in this build";
+  }
+
   function machine_panel() {
     const meta = h("div", { class: "hx-panel-meta" });
+    /* one line above the figure says where the machine comes from; the figure keeps its own caption line */
+    const lead = h("p", { class: "hx-panel-lead ov-machine-lead", hidden: true },
+      "Compiled from ", code("SKILL.md"), " in this page. The run workbench drives this machine one step at a time. ",
+      h("a", { class: "hx-link", href: "#run" }, "Open the run workbench"));
     const stage = h("div", { class: "ov-graph" });
-    const caption = h("p", { class: "ov-graph-caption" });
     const panel = h("section", { class: "hx-panel ov-machine", "aria-labelledby": "ov-machine-title", dataset: { graph: "pending" } },
       h("div", { class: "hx-panel-head" }, h("h3", { class: "hx-panel-title", id: "ov-machine-title" }, "The compiled machine"), meta),
-      stage, caption);
+      lead, stage);
     let view = null;
+    let fit_observer = null;
 
     function set_state(st) {
       panel.dataset.graph = st;
       if (panel.parentNode && panel.parentNode.classList.contains("ov-split")) panel.parentNode.dataset.graph = st;
+    }
+
+    /* The panel may stay in view beside the steps (CSS makes it sticky) only while all of it fits in the
+       window with 16px above and below; otherwise its lower part would stay out of reach. */
+    function sync_fit() {
+      const height = panel.getBoundingClientRect().height;
+      if (!height) return;
+      panel.dataset.fit = height + 32 <= (globalThis.innerHeight || 0) ? "yes" : "no";
+    }
+    function watch_fit() {
+      if (fit_observer || typeof ResizeObserver !== "function") return;
+      fit_observer = new ResizeObserver(sync_fit);
+      fit_observer.observe(panel);
+      globalThis.addEventListener("resize", sync_fit, { passive: true });
     }
 
     function paint() {
@@ -322,22 +365,22 @@
       if (missing.length) {
         set_state("unavailable");
         stage.replaceChildren(HXUI.unavailable(missing, {
-          compact: true, title: "The graph is not in this build",
+          compact: true, title: machine_unavailable_title(missing),
           lead: "The compiled state machine is drawn here when the compiler and the graph view are in the build. Missing:",
         }));
-        caption.hidden = true;
+        lead.hidden = true;
         return;
       }
       const r = results.initial;
       if (!r || r.state === "pending") {
-        stage.replaceChildren(h("p", { class: "ov-graph-wait" }, "Compiling SKILL.md in this page…"));
-        caption.hidden = true;
+        stage.replaceChildren(h("p", { class: "ov-graph-wait" }, "Compiling ", code("SKILL.md"), " in this page…"));
+        lead.hidden = true;
         return;
       }
       if (!ctx.compiled) {
         set_state("error");
         stage.replaceChildren(HXUI.notice("crit", "The machine could not be compiled", r.error || "The compiler returned no package."));
-        caption.hidden = true;
+        lead.hidden = true;
         return;
       }
       if (view) return;
@@ -348,16 +391,17 @@
         /* no title: the panel heading names the graph, so the compact view needs no header of its own */
         view = HXUI.graph.create(stage, machine, { compact: true });
         set_state("ready");
+        lead.hidden = false;
+        watch_fit();
       } catch (err) {
         set_state("error");
+        lead.hidden = true;
         stage.replaceChildren(HXUI.notice("crit", "The graph could not be drawn", String((err && err.message) || err)));
       }
-      caption.hidden = false;
-      caption.replaceChildren("Compiled from SKILL.md in this page. The run workbench drives this machine one step at a time. ",
-        h("a", { class: "hx-link", href: "#run" }, "Open the run workbench"));
     }
     paint();
     panel.hx_update = paint;
+    panel.hx_view = () => view;
     return panel;
   }
 
@@ -365,9 +409,9 @@
   function demo_panel() {
     const missing = HXUI.engine_missing(DEMO_NEEDS);
     const tour = HXUI.tour && typeof HXUI.tour.start === "function" ? HXUI.tour : null;
-    const reason = missing.length
-      ? "The guided demo needs engine modules that are not in this build: " + names_sentence(missing, 3) + "."
-      : !tour ? "The guided demo is not in this build yet. You can still do each step yourself in the section it links to." : "";
+    const lead_in = "The guided demo needs engine modules that are not in this build: ";
+    const no_tour = "The guided demo is not in this build yet. You can still do each step yourself in the section it links to.";
+    const reason = missing.length ? lead_in + names_list(missing, 3, false) + "." : !tour ? no_tour : "";
     const start = HXUI.button("Start guided demo", {
       id: "ov-demo-start", variant: "primary", icon: "play", disabled: !!reason, disabled_reason: reason,
       on_click: () => { if (tour) tour.start(); },
@@ -379,19 +423,21 @@
         h("span", { class: "ov-step-num", "aria-hidden": "true" }, String(i + 1)),
         h("div", { class: "ov-step-main" },
           h("p", { class: "ov-step-title" }, h("span", { class: "hx-visually-hidden" }, "Step " + (i + 1) + ": "), s.title),
-          h("p", { class: "ov-step-body" }, s.body)),
+          h("p", { class: "ov-step-body" }, HXUI.rich(s.body))),
         h("a", { class: "ov-step-link", href: "#" + s.section, "aria-label": "Open " + name + " for step " + (i + 1) },
           h("span", null, name), HXUI.icon("arrow")));
     }));
+    /* the visible reason sets module names in mono; the button's tooltip and description carry the same text */
+    const reason_el = !reason ? null
+      : h("p", { class: "hx-reason", id: "ov-demo-reason", title: missing.length ? "Not in this build: " + missing.join(", ") : null },
+        HXUI.icon("info"), h("span", null, missing.length ? [lead_in, names_list(missing, 3, true), "."] : no_tour));
     return h("section", { class: "hx-panel ov-demo", "aria-labelledby": "ov-demo-title" },
       h("div", { class: "hx-panel-head" },
         h("h3", { class: "hx-panel-title", id: "ov-demo-title" }, "Guided demo"),
         h("div", { class: "hx-panel-meta" }, HXUI.chip(STEPS.length + " steps", "neutral"))),
       h("p", { class: "hx-panel-lead" },
         "Follow the supplier-onboarding story from the command-line demo. The guide runs each step in the section it links to, then explains what happened and why it matters."),
-      h("div", { class: "ov-demo-actions" }, start,
-        reason ? h("p", { class: "hx-reason", id: "ov-demo-reason", title: missing.length ? "Not in this build: " + missing.join(", ") : null },
-          HXUI.icon("info"), h("span", null, reason)) : null),
+      h("div", { class: "ov-demo-actions" }, start, reason_el),
       steps);
   }
 
@@ -400,16 +446,21 @@
     const policy = globalThis.HX && HX.data && HX.data.policy ? HX.data.policy : null;
     if (!policy || !policy.principals) return null;
     const rows = Object.keys(policy.principals).map((id) => Object.assign({ id }, policy.principals[id]));
+    /* each unit stays on one line ("BU-EMEA" never breaks at its hyphen) */
+    const units = (r) => (r.business_units || []).length
+      ? r.business_units.map((u, i) => [i ? ", " : "", h("span", { class: "hx-nowrap" }, u)]) : null;
     return HXUI.table({
       caption: "Principals in the onboarding policy",
       class: "ov-ids",
       columns: [
-        { key: "id", label: "Principal", mono: true },
+        { key: "id", label: "Principal", mono: true, nowrap: true },
         { key: "roles", label: "Roles", render: (r) => (r.roles || []).length
           ? h("span", { class: "ov-roles" }, r.roles.map((x) => HXUI.chip(x, x === policy.approver_role ? "accent" : "neutral", { mono: true })))
           : h("span", { class: "hx-faint" }, "none") },
-        { key: "tenant_id", label: "Tenant", mono: true },
-        { key: "business_units", label: "Business units", render: (r) => (r.business_units || []).length ? r.business_units.join(", ") : h("span", { class: "hx-faint" }, "none") },
+        /* on a narrow screen tenant and units move under the principal */
+        { key: "tenant_id", label: "Tenant", mono: true, fold: true, fold_label: "Tenant" },
+        { key: "business_units", label: "Business units", render: (r) => units(r) || h("span", { class: "hx-faint" }, "none"),
+          fold: (r) => units(r) || "no business units" },
       ],
       rows,
     });
@@ -464,6 +515,8 @@
     /** parity results by check id: {state, value, expected, ms, note, missing, error} */
     parity: () => JSON.parse(JSON.stringify(results)),
     parity_done,
+    /** the compact graph view on the Overview (null until it is drawn), for the guided demo */
+    graph: () => (parts ? parts.machine.hx_view() : null),
   };
 
   HXUI.register_section({

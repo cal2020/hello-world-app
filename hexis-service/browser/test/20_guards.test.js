@@ -2,20 +2,24 @@
 (function () {
   const G = HX.guards;
   const P = () => golden("guards_parse");
+  const F = () => golden("guards_fuzz");
   const S = () => golden("guards_semantics");
   const D = () => golden("guards_disjoint");
   const U = () => golden("guards_unicode");
 
   const expr_of = (c) => (c.e16 ? String.fromCharCode(...c.e16) : c.e);
   const show = (s) => JSON.stringify(s).slice(0, 160);
-  /** JS AST -> the golden's JSON shape (float constants as Python repr strings). */
+  const SYN = "guard syntax error: ";
+  /** JS AST -> the golden's JSON shape (float/complex values as Python repr strings, BigInt as {$int}). */
   function norm(node) {
+    if (typeof node === "bigint") return { $int: node.toString() };
     if (Array.isArray(node)) return node.map(norm);
     if (node && typeof node === "object") {
       const out = {};
       for (const k of Object.keys(node)) out[k] = norm(node[k]);
-      if (node.type === "Constant" && node.py_type === "float") {
-        out.value = Number.isFinite(node.value) ? HX.canonical.py_float_repr(node.value) : node.value > 0 ? "inf" : "-inf";
+      if (node.type === "Constant" && (node.py_type === "float" || node.py_type === "complex")) {
+        const v = node.value;
+        out.value = Number.isFinite(v) ? HX.canonical.py_float_repr(v) : Number.isNaN(v) ? "nan" : v > 0 ? "inf" : "-inf";
       }
       return out;
     }
@@ -40,52 +44,83 @@
     }
     assert.deepEqual(bad.slice(0, 8), [], `${bad.length} mismatches`);
   }
+  const DEV_RE = /outside the range supported by the JavaScript port|\\N\{\.\.\.\} escapes are not supported|surrogate code points are not supported/;
 
   /* ---------------------------------------------------------------------------------------- */
   /* parse                                                                                      */
   /* ---------------------------------------------------------------------------------------- */
 
-  test("guards.parse accepts and rejects exactly like Python (hand-written corpus + random/mutated)", () => {
-    assert.ok(P().cases.length >= 3250, "golden too small");
-    collect(P().cases, (c) => {
-      const e = expr_of(c);
-      const r = attempt(() => G.parse(e));
-      if (!r.ok && !(r.err instanceof G.GuardError)) return `${show(e)}: non-GuardError ${r.err}`;
-      if (c.r === "ok" && !c.dev) {
-        if (!r.ok) return `${show(e)}: JS rejects (${r.err.message}), Python accepts`;
-        if (!HX.util.deep_equal(norm(r.value), c.ast)) return `${show(e)}: AST differs ${show(norm(r.value))}`;
-        const vars = [...G.vars_of(e)];
-        if (!HX.util.deep_equal(vars, c.vars)) return `${show(e)}: vars ${show(vars)} != ${show(c.vars)}`;
-        return null;
-      }
-      if (r.ok) return `${show(e)}: JS accepts, Python ${c.r === "ok" ? "accepts but this is a documented deviation" : "rejects: " + (c.m || c.x)}`;
-      if (c.r === "err" && c.bld && r.err.message !== c.m) return `${show(e)}: message ${show(r.err.message)} != ${show(c.m)}`;
-      return null;
-    });
-  });
-
-  test("guards: Python-shaped trees, node counts and depths match ast.walk/_depth for every buildable parse", () => {
-    let n = 0;
-    collect(P().cases.filter((c) => c.parsed && c.bld), (c) => {
-      const e = expr_of(c);
-      const r = attempt(() => G._parse_raw(e));
-      if (!r.ok) return `${show(e)}: _parse_raw fails: ${r.err.message}`;
-      n++;
-      if (!HX.util.deep_equal(norm(r.value), c.ast)) return `${show(e)}: tree ${show(norm(r.value))}`;
-      const cnt = G._node_count(r.value), dep = G._depth(r.value);
+  /** One golden parse record against G.parse (result and message) and G._parse_raw (tree, node count, depth). */
+  function check_parse(c) {
+    const e = expr_of(c);
+    const r = attempt(() => G.parse(e));
+    if (!r.ok && !(r.err instanceof G.GuardError)) return `${show(e)}: non-GuardError ${r.err}`;
+    if (c.r === "ok" && !c.dev) {
+      if (!r.ok) return `${show(e)}: JS rejects (${r.err.message}), Python accepts`;
+      const vars = [...G.vars_of(e)];
+      if (!HX.util.deep_equal(vars, c.vars)) return `${show(e)}: vars ${show(vars)} != ${show(c.vars)}`;
+    } else if (c.r === "ok") {
+      if (r.ok) return `${show(e)}: JS accepts a documented deviation`;
+      if (!DEV_RE.test(r.err.message)) return `${show(e)}: deviation rejected with ${r.err.message}`;
+    } else if (c.r === "err") {
+      if (r.ok) return `${show(e)}: JS accepts, Python rejects: ${c.m}`;
+      const m = r.err.message;
+      /* Python's exact message, except syntax error texts (approximated) and texts with a \N escape, whose name
+         validity the port cannot check */
+      if (c.m.startsWith(SYN)) {
+        if (!m.startsWith(SYN) && !c.nesc) return `${show(e)}: Python syntax error (${c.m}), JS: ${m}`;
+      } else if (m !== c.m && !c.nesc) return `${show(e)}: message ${show(m)} != ${show(c.m)}`;
+    } else if (r.ok) return `${show(e)}: JS accepts, Python raises ${c.x}`;
+    /* the syntax level: the same parse success, tree, node count and depth as ast.parse */
+    if (G._py_blank(e) || HX.util.codepoint_length(e) > G.MAX_LEN) return null; /* Python never parses these */
+    const raw = attempt(() => G._parse_raw(e));
+    if (!raw.ok && !(raw.err instanceof G.GuardError)) return `${show(e)}: _parse_raw non-GuardError ${raw.err}`;
+    if (c.parsed) {
+      if (!raw.ok) return `${show(e)}: _parse_raw fails (${raw.err.message}), Python parses`;
+      const cnt = G._node_count(raw.value), dep = G._depth(raw.value);
       if (cnt !== c.nodes || dep !== c.depth) return `${show(e)}: nodes/depth ${cnt}/${dep} != ${c.nodes}/${c.depth}`;
-      return null;
-    });
-    assert.ok(n > 1500, `only ${n} buildable trees compared`);
+      if (c.ast !== undefined && !HX.util.deep_equal(norm(raw.value), JSON.parse(c.ast))) {
+        return `${show(e)}: tree ${show(norm(raw.value))}`;
+      }
+    } else if (raw.ok && !c.nesc) return `${show(e)}: JS parses text Python rejects (${c.m || c.x})`;
+    return null;
+  }
+
+  test("guards.parse: results, messages, trees, node counts and depths equal Python on the hand-written corpus", () => {
+    const cases = P().cases;
+    assert.ok(cases.length >= 1250, "corpus too small");
+    collect(cases, check_parse);
+    const kinds = new Set(cases.map((c) => c.note));
+    for (const k of ["f-string", "lambda", "comprehension", "subscript", "call", "display", "bytes and complex",
+      "message order", "maximal depth", "repr probe", "deviation after Python's checks"]) assert.ok(kinds.has(k), k);
   });
 
-  test("guards: the port never builds a tree for text CPython's parser rejects", () => {
-    collect(P().cases.filter((c) => !c.parsed), (c) => {
-      const e = expr_of(c);
-      if (G._py_blank(e) || HX.util.codepoint_length(e) > G.MAX_LEN) return null; /* Python never parsed it */
-      const r = attempt(() => G._parse_raw(e));
-      return r.ok ? `${show(e)}: JS parses text Python rejects as a syntax error` : null;
-    });
+  test("guards.parse: results, messages, trees, node counts and depths equal Python on 5000 random inputs", () => {
+    const cases = F().cases;
+    assert.ok(cases.length >= 5000);
+    collect(cases, check_parse);
+    const parsed = cases.filter((c) => c.parsed).length, accepted = cases.filter((c) => c.r === "ok").length;
+    assert.ok(parsed > 1500 && accepted > 600, `coverage: ${parsed} parsed, ${accepted} accepted`);
+  });
+
+  test("guards: messages of rejected guards are Python's exact text (typecheck result, verifier's cases)", () => {
+    /* typecheck returns [str(exc)] for a guard parse rejects */
+    for (const c of P().cases.filter((c) => c.r === "err" && !c.m.startsWith(SYN) && !c.nesc)) {
+      assert.deepEqual(G.typecheck(expr_of(c), {}), [c.m], expr_of(c));
+    }
+    const want = {
+      "x == 1j": "constant not allowed: 1j", "x == b'a'": "constant not allowed: b'a'",
+      "x in [*y]": "list literals may only contain constants", "empty(x for x in y)": "empty takes exactly one variable argument",
+      "{1}": "syntax node not allowed: Set", "-{x}": "the only unary operator allowed is 'not'",
+      "x == 1e400j": "constant not allowed: infj", "x == 1e16j": "constant not allowed: 1e+16j",
+      "x == 1e15j": "constant not allowed: 1000000000000000j", "x == b'\\'\"'": "constant not allowed: b'\\'\"'",
+      "x == b\"'\"": "constant not allowed: b\"'\"", "x in [f'a']": "list literals may only contain constants",
+      "[9007199254740993, x]": "list literals may only contain constants",
+    };
+    for (const [e, m] of Object.entries(want)) assert.deepEqual(G.typecheck(e, { x: "number" }), [m], e);
+    const big = ["x == 1"].concat(Array(11).fill("y == 2")).join(" and ") + " and x[0]";
+    assert.deepEqual(G.typecheck(big, {}), ["guard has more than 64 syntax nodes"]);
+    assert.equal(G.analyze_disjoint(["x == 1j", "x == 1"], { x: "number" }).detail, "unparseable guard: constant not allowed: 1j");
   });
 
   test("guards: corpus covers limit boundaries exactly (nodes 63/64/65, depth 12/13, list 32/33, str 256/257, len 512/513, 200/201 brackets)", () => {
@@ -100,6 +135,10 @@
       "512 code points, astral": "ok", "513 code points, astral": "guard longer than 512 characters",
       "199 nested parentheses": "ok", "200 nested parentheses": "ok",
       "201 nested parentheses": "guard syntax error: too many nested parentheses",
+      "lambda over 64 nodes": "guard has more than 64 syntax nodes", "f-string over 64 nodes": "guard has more than 64 syntax nodes",
+      "nested f-strings, depth 12": "syntax node not allowed: JoinedStr",
+      "nested f-strings deeper than 12": "guard AST deeper than 12", "33 complex items": "literal list longer than 32",
+      "32 bytes items": "constant not allowed: b'a'",
     };
     for (const [note, want] of Object.entries(expect)) {
       const c = by.get(note);
@@ -112,21 +151,79 @@
     assert.equal(G._depth(G.parse(by.get("depth 12").e)), 12);
   });
 
-  test("guards: documented deviations are exactly big integer literals, \\N escapes, surrogate escapes and lone surrogates", () => {
-    const dev = P().cases.filter((c) => c.dev || c.r === "exc");
+  test("guards: documented deviations are exactly big integer literals, \\N escapes, surrogate escapes and non-GuardError exceptions", () => {
+    const all = P().cases.concat(F().cases);
+    const dev = all.filter((c) => c.dev);
     assert.ok(dev.length >= 9);
-    for (const c of dev) {
+    for (const c of dev) { /* Python accepts; the port rejects, after Python's own checks passed */
+      const r = attempt(() => G.parse(expr_of(c)));
+      assert.ok(!r.ok && r.err instanceof G.GuardError && DEV_RE.test(r.err.message), `${show(expr_of(c))}: ${r.ok || r.err.message}`);
+    }
+    assert.equal(P().cases.filter((c) => c.note === "JS deviation").length, 9);
+    /* Python raises a non-GuardError from parse (and so from typecheck, evaluate, analyze_disjoint); the port
+       raises GuardError: lone surrogates (UnicodeEncodeError), parser stack overflow in CPython's error pass on
+       deeply nested invalid text (MemoryError), an f-string '=' field inside a format spec (ValueError), and an
+       invalid escape in the text of an f-string format spec (UnicodeDecodeError) */
+    const exc = all.filter((c) => c.r === "exc");
+    const classes = new Set(exc.map((c) => c.x));
+    assert.deepEqual([...classes].sort(), ["MemoryError", "UnicodeDecodeError", "UnicodeEncodeError", "ValueError"]);
+    for (const c of exc) {
       const e = expr_of(c);
       const r = attempt(() => G.parse(e));
       assert.ok(!r.ok && r.err instanceof G.GuardError, `${show(e)} must be rejected with GuardError`);
       const m = r.err.message;
-      const known = /outside the range supported by the JavaScript port|\\N\{\.\.\.\} escapes are not supported|surrogate code points are not supported|lone surrogate/.test(m);
-      assert.ok(known, `${show(e)}: unexpected rejection reason ${m}`);
-      if (c.r === "exc") assert.equal(c.x, "UnicodeEncodeError"); /* Python crashes instead of raising GuardError */
+      if (c.x === "UnicodeEncodeError") assert.match(m, /lone surrogate/);
+      if (c.x === "ValueError") assert.ok(/f-string '=' field inside a format specification/.test(m) || m.startsWith(SYN), m);
+      if (c.x === "UnicodeDecodeError") assert.ok(m.startsWith(SYN) || c.nesc, m);
+      if (c.x === "MemoryError") {
+        assert.ok(m.startsWith(SYN), m); /* the text is invalid: the port reports the syntax error */
+        let depth = 0, max = 0;
+        for (const ch of e) { if ("([{".includes(ch)) max = Math.max(max, ++depth); else if (")]}".includes(ch)) depth--; }
+        assert.ok(max >= 190, `MemoryError only at deep nesting, got ${max}`);
+      }
+      assert.deepEqual(G.typecheck(e, {}), [m]);
+      assert.equal(G.analyze_disjoint([e, "x == 1"], { x: "integer" }).status, "UNKNOWN");
     }
-    /* and nothing else deviates: every other JS-buildable Python acceptance is a JS acceptance (checked above) */
-    const corpus_dev = P().cases.filter((c) => c.note === "JS deviation").map((c) => expr_of(c));
-    assert.equal(corpus_dev.length, 9);
+    assert.ok(exc.some((c) => c.x === "MemoryError" && c.e.startsWith("[".repeat(193) + "x")), "verifier's MemoryError case");
+    /* nothing CPython parses at maximal depth is rejected by the port */
+    for (const c of P().cases.filter((c) => c.note === "maximal depth")) {
+      assert.ok(c.parsed, `${show(c.e)} should parse in Python`);
+      assert.ok(G._parse_raw(c.e), c.e.slice(0, 40));
+    }
+  });
+
+  test("guards: deep nesting never escapes as RangeError; a small stack rejects with GuardError (child processes)", () => {
+    const get = typeof process === "object" && process.getBuiltinModule;
+    if (!get) return; /* Node < 22.3: no child process access from a classic script */
+    const cp = process.getBuiltinModule("node:child_process");
+    const script = `
+      const fs = require("fs"), path = require("path"), vm = require("vm");
+      const dir = path.join(process.env.HX_ROOT, "src");
+      globalThis.HX = {};
+      for (const f of fs.readdirSync(dir).filter((f) => /^\\d\\d_.*\\.js$/.test(f)).sort()) vm.runInThisContext(fs.readFileSync(path.join(dir, f), "utf8"));
+      const G = HX.guards, out = {};
+      const cases = { paren200: "(".repeat(200) + "x" + ")".repeat(200), list200: "[".repeat(200) + "x" + "]".repeat(200),
+        inlist: "x in [" + "(".repeat(199) + "1" + ")".repeat(199) + "]", empty: "empty(" + "(".repeat(199) + "x" + ")".repeat(199) + ")",
+        fstr: "f'{" + "(".repeat(199) + "x" + ")".repeat(199) + "}'", shallow: "x == 1 and not b" };
+      for (const [k, e] of Object.entries(cases)) {
+        try { G._parse_raw(e); out[k] = "ok"; } catch (x) { out[k] = x instanceof G.GuardError ? "GuardError" : x.name; }
+        try { out[k + "_typecheck"] = G.typecheck(e, { x: "integer", b: "boolean" }).length; } catch (x) { out[k + "_typecheck"] = x.name; }
+      }
+      process.stdout.write(JSON.stringify(out));`;
+    const run = (kb) => JSON.parse(cp.execFileSync(process.execPath, ["--stack-size=" + kb, "-e", script],
+      { encoding: "utf8", env: Object.assign({}, process.env, { HX_ROOT: ROOT }) }));
+    const normal = run(984);
+    for (const k of ["paren200", "list200", "inlist", "empty", "fstr", "shallow"]) assert.equal(normal[k], "ok", `${k} at 984 KB`);
+    const small = run(120); /* less than the ~250 KB the deepest guards need */
+    for (const [k, v] of Object.entries(small)) {
+      assert.ok(v === "ok" || v === "GuardError" || typeof v === "number", `${k}: ${v} at 120 KB`);
+    }
+    assert.equal(small.shallow, "ok");
+    assert.equal(small.paren200, "GuardError");
+    assert.equal(small.paren200_typecheck, 1);
+    assert.ok(G._is_stack_overflow(new RangeError("Maximum call stack size exceeded")));
+    assert.ok(!G._is_stack_overflow(new RangeError("Invalid array length")));
+    assert.ok(!G._is_stack_overflow(new G.GuardError("x")));
   });
 
   /* ---------------------------------------------------------------------------------------- */
@@ -175,10 +272,15 @@
   test("guards.analyze_disjoint: status, edges, detail and counterexample match Python; counterexamples are real", () => {
     const cases = D().cases;
     assert.ok(cases.length >= 400);
-    const stats = { same: 0, rep: 0, port_unknown: 0, literal_dev: 0 };
+    const stats = { same: 0, rep: 0, port_unknown: 0, literal_dev: 0, exc: 0, repr: 0 };
     collect(cases, (c) => {
       const an = G.analyze_disjoint(c.guards, c.types);
       if (Object.keys(an).sort().join() !== "counterexample,detail,edges,status") return `bad Analysis shape ${show(an)}`;
+      if (c.x !== undefined) { /* Python raises a non-GuardError (deviations/guards.md); the port reports UNKNOWN */
+        if (an.status !== "UNKNOWN" || !an.detail.startsWith("unparseable guard: ")) return `${show(c.guards)}: ${an.status} ${an.detail}`;
+        stats.exc++;
+        return null;
+      }
       /* documented deviations: always UNKNOWN (conservative), never a different PROVEN/COUNTEREXAMPLE */
       if (an.status === "UNKNOWN" && /JavaScript port limitation/.test(an.detail)) {
         if (!c.big) return `${show(c.guards)}: port-limitation UNKNOWN without a big domain value`;
@@ -191,7 +293,11 @@
       }
       if (an.status !== c.status) return `${show(c.guards)}: status ${an.status} (${an.detail}) != ${c.status} (${c.detail})`;
       if (!HX.util.deep_equal(an.edges, c.edges)) return `${show(c.guards)}: edges ${show(an.edges)} != ${show(c.edges)}`;
-      if (an.detail !== c.detail) return `${show(c.guards)}: detail ${show(an.detail)} != ${show(c.detail)}`;
+      const syn = "unparseable guard: " + SYN;
+      if (c.detail.startsWith(syn) ? !an.detail.startsWith(syn) : an.detail !== c.detail) {
+        return `${show(c.guards)}: detail ${show(an.detail)} != ${show(c.detail)}`;
+      }
+      if (/^repr:/.test(c.note || "")) stats.repr++;
       if (an.status === "COUNTEREXAMPLE") {
         for (const i of an.edges) {
           if (G.evaluate(c.guards[i], an.counterexample) !== true) return `${show(c.guards)}: counterexample does not satisfy guard ${i}`;
@@ -207,7 +313,8 @@
       return null;
     });
     assert.ok(stats.same > 380, JSON.stringify(stats));
-    assert.ok(stats.literal_dev >= 5 && stats.port_unknown >= 1, `deviations exercised: ${JSON.stringify(stats)}`);
+    assert.ok(stats.literal_dev >= 5 && stats.port_unknown >= 1 && stats.exc >= 1, `deviations exercised: ${JSON.stringify(stats)}`);
+    assert.ok(stats.repr >= 90, `repr probes: ${JSON.stringify(stats)}`);
   });
 
   test("guards.analyze_disjoint: review fixes (array membership UNKNOWN, exact probing near large constants)", () => {
@@ -257,7 +364,7 @@
   });
 
   /* ---------------------------------------------------------------------------------------- */
-  /* Unicode facts, API contract                                                               */
+  /* Unicode facts, repr, API contract                                                         */
   /* ---------------------------------------------------------------------------------------- */
 
   test("guards: identifier tables, whitespace set and NFKC normalization equal CPython 3.12 (Unicode 15.0)", () => {
@@ -280,6 +387,24 @@
     }
     assert.equal(changed, u.nfkc_changed);
     assert.equal(HX.canonical.sha256_hex(parts.join("")), u.nfkc_sha256);
+  });
+
+  test("guards: Python repr (str.isprintable table of Unicode 15.0, quotes, escapes) for message text", () => {
+    const u = U();
+    assert.deepEqual(G._nonprintable_ranges(), u.nonprintable);
+    assert.ok(u.repr.length > 150);
+    for (const s of u.repr) {
+      const v = s.e16 ? String.fromCharCode(...s.e16) : s.e;
+      assert.equal(G._py_repr_str(v), s.repr, JSON.stringify(v));
+    }
+    /* the verifier's case: U+3000 in a string literal of a guard quoted in an analysis detail */
+    const an = G.analyze_disjoint(["x == y and s == '\u3000'", "x == 1"], { x: "integer", y: "integer", s: "string" });
+    assert.equal(an.detail, "guard \"x == y and s == '\\u3000'\" compares two variables or tests membership in an array " +
+      "variable; outside the enumerable fragment");
+    assert.equal(G._py_repr_str("\ud800"), "'\\ud800'"); /* a lone surrogate is a Cs code point, as in Python */
+    assert.equal(G._py_repr_bytes([0x27, 0x22, 0x5c, 0, 0x7f, 0x80, 0x41]), "b'\\'\"\\\\\\x00\\x7f\\x80A'");
+    assert.deepEqual([1, 0, Infinity, 1e16, 1e15, 0.5, 1e-5].map(G._py_repr_imag),
+      ["1j", "0j", "infj", "1e+16j", "1000000000000000j", "0.5j", "1e-05j"]);
   });
 
   test("guards: AST contract of PORTING.md (shapes, op names, py_type, frozen, cached)", () => {
@@ -307,6 +432,12 @@
     assert.deepEqual([G.MAX_LEN, G.MAX_DEPTH, G.MAX_NODES, G.MAX_LIST, G.MAX_STR, G.MAX_CONFIGS], [512, 12, 64, 32, 256, 20000]);
     assert.deepEqual([...G.PREDICATES], ["empty", "nonempty"]);
     assert.deepEqual([...G.NUMERIC], ["integer", "number"]);
+    /* trees of rejected constructs (from _parse_raw): Python's node types, Store contexts explicit */
+    const comp = G._parse_raw("[a for a, *b in c if d]").body;
+    assert.equal(comp.type, "ListComp");
+    assert.deepEqual(comp.generators[0].target, { type: "Tuple", ctx: "Store", elts: [{ type: "Name", id: "a", ctx: "Store" },
+      { type: "Starred", ctx: "Store", value: { type: "Name", id: "b", ctx: "Store" } }] });
+    assert.equal(G._parse_raw("f'{x!r:>{w}}'").body.values[0].conversion, 114);
   });
 
   test("guards: GuardError, UNKNOWN, vars_of, Map inputs and Python truthiness edge cases", () => {
@@ -315,7 +446,7 @@
     assert.equal(r.err.name, "GuardError");
     assert.equal(r.err.code, "GUARD");
     assert.match(r.err.message, /^guard syntax error: /);
-    for (const bad of [null, undefined, 5, [], {}, "   ", "　 "]) {
+    for (const bad of [null, undefined, 5, [], {}, "   ", "　 "]) {
       assert.throws(() => G.parse(bad), (e) => e instanceof G.GuardError && /empty guard/.test(e.message));
     }
     assert.equal(String(G.UNKNOWN), "UNKNOWN");

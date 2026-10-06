@@ -107,6 +107,19 @@ helpers = {
     "critical_mark": CRITICAL_MARK,
 }
 
-write("clauses", {"cases": cases, "helpers": helpers})
+# errors (lone surrogates travel JSON-escaped in text_json): which inputs raise, and the exception class
+import json  # noqa: E402
+
+errors = []
+for t in ["- \ud800 lone surrogate", "\ud800\n\n- a", "# \ud800 title\n- a\n", "## H\n\n\udc00\n", "a\n\n## \ud800\n\nb",
+          "  \n\ud800  \n", None, 5, ["- a"]]:
+    try:
+        out = index_clauses(t)
+        r = {"ok": [c.model_dump(mode="json")["id"] for c in out]}
+    except Exception as exc:  # noqa: BLE001
+        r = {"exc": type(exc).__name__, "message": str(exc)}
+    errors.append({"text_json": json.dumps(t), "result": r})
+
+write("clauses", {"cases": cases, "helpers": helpers, "errors": errors})
 print(f"clauses: {len(cases)} documents, {sum(len(c['clauses']) for c in cases)} clauses; "
       f"SKILL.md has {len(cases[0]['clauses'])} clauses")

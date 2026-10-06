@@ -69,7 +69,36 @@
       assert.equal(out.machine.states.REPAIR_DRAFT.transitions[0].to === "REQUEST_APPROVAL", d.defect);
     }
     assert.equal(g.bad_diagnostic, "AttributeError");
-    assert.throws(() => model.draft({}, ["not a dict"], 1), TypeError);
-    assert.throws(() => model.draft({}, null, 1), TypeError);
+    assert.throws(() => model.draft({}, ["not a dict"], 1), (e) => e instanceof HX.HXError && e.code === "AttributeError");
+    assert.throws(() => model.draft({}, null, 1), (e) => e instanceof HX.HXError && e.code === "TypeError");
+  });
+
+  /** Where the REPAIR_DRAFT edge goes, or {exc, message} (Python class name as HXError code). */
+  function repairEdge(fn) {
+    let out;
+    try { out = fn(); } catch (e) {
+      assert.ok(e instanceof HX.HXError, `native ${e && e.name}: ${e && e.message}`);
+      return { exc: e.code, message: e.message };
+    }
+    const m = out.machine || out;
+    return { to: m.states.REPAIR_DRAFT.transitions[0].to };
+  }
+
+  test("Python truthiness and iteration: machine_dict(x), machine_dict({defect: x}) and draft() diagnostics", () => {
+    const g = G();
+    for (const c of g.machine_dict_truthiness.positional) {
+      assert.deepEqual(repairEdge(() => FX.machine_dict(c.arg)), c.result, `machine_dict(${JSON.stringify(c.arg)})`);
+    }
+    for (const c of g.machine_dict_truthiness.keyword) {
+      assert.deepEqual(repairEdge(() => FX.machine_dict(c.kwargs)), c.result, `machine_dict(**${JSON.stringify(c.kwargs)})`);
+    }
+    const model = new FX.FixtureCompilerModel();
+    for (const c of g.compiler_model.diagnostics_iteration) {
+      assert.deepEqual(repairEdge(() => model.draft({}, c.diagnostics, 1)), c.result, `draft({}, ${JSON.stringify(c.diagnostics)}, 1)`);
+    }
+    /* the verifier's cases */
+    assert.equal(FX.machine_dict({ defect: [] }).states.REPAIR_DRAFT.transitions[0].to, "VALIDATE_DRAFT");
+    assert.equal(FX.machine_dict([1]).states.REPAIR_DRAFT.transitions[0].to, "REQUEST_APPROVAL");
+    assert.equal(model.draft({}, {}, 1).machine.states.REPAIR_DRAFT.transitions[0].to, "REQUEST_APPROVAL");
   });
 })();

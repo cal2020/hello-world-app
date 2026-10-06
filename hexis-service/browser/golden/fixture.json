@@ -536,6 +536,137 @@
  ],
  "compiler_model": {
   "bad_diagnostic": "AttributeError",
+  "diagnostics_iteration": [
+   {
+    "diagnostics": {},
+    "result": {
+     "to": "REQUEST_APPROVAL"
+    }
+   },
+   {
+    "diagnostics": {
+     "a": 1
+    },
+    "result": {
+     "exc": "AttributeError",
+     "message": "'str' object has no attribute 'get'"
+    }
+   },
+   {
+    "diagnostics": {
+     "code": "ORDERING_VIOLATION"
+    },
+    "result": {
+     "exc": "AttributeError",
+     "message": "'str' object has no attribute 'get'"
+    }
+   },
+   {
+    "diagnostics": "",
+    "result": {
+     "to": "REQUEST_APPROVAL"
+    }
+   },
+   {
+    "diagnostics": "ab",
+    "result": {
+     "exc": "AttributeError",
+     "message": "'str' object has no attribute 'get'"
+    }
+   },
+   {
+    "diagnostics": 1,
+    "result": {
+     "exc": "TypeError",
+     "message": "'int' object is not iterable"
+    }
+   },
+   {
+    "diagnostics": null,
+    "result": {
+     "exc": "TypeError",
+     "message": "'NoneType' object is not iterable"
+    }
+   },
+   {
+    "diagnostics": true,
+    "result": {
+     "exc": "TypeError",
+     "message": "'bool' object is not iterable"
+    }
+   },
+   {
+    "diagnostics": 0.5,
+    "result": {
+     "exc": "TypeError",
+     "message": "'float' object is not iterable"
+    }
+   },
+   {
+    "diagnostics": [],
+    "result": {
+     "to": "REQUEST_APPROVAL"
+    }
+   },
+   {
+    "diagnostics": [
+     []
+    ],
+    "result": {
+     "exc": "AttributeError",
+     "message": "'list' object has no attribute 'get'"
+    }
+   },
+   {
+    "diagnostics": [
+     {
+      "code": "ORDERING_VIOLATION"
+     },
+     5
+    ],
+    "result": {
+     "to": "VALIDATE_DRAFT"
+    }
+   },
+   {
+    "diagnostics": [
+     5,
+     {
+      "code": "ORDERING_VIOLATION"
+     }
+    ],
+    "result": {
+     "exc": "AttributeError",
+     "message": "'int' object has no attribute 'get'"
+    }
+   },
+   {
+    "diagnostics": [
+     {
+      "code": "X"
+     },
+     "s",
+     {
+      "code": "ORDERING_VIOLATION"
+     }
+    ],
+    "result": {
+     "exc": "AttributeError",
+     "message": "'str' object has no attribute 'get'"
+    }
+   },
+   {
+    "diagnostics": [
+     {},
+     {
+      "code": "ORDERING_VIOLATION"
+     }
+    ],
+    "result": {
+     "to": "VALIDATE_DRAFT"
+    }
+   }
+  ],
   "drafts": [
    {
     "defect": true,
@@ -9986,5 +10117,218 @@
     "verification_receipt"
    ]
   }
+ },
+ "machine_dict_truthiness": {
+  "keyword": [
+   {
+    "kwargs": {},
+    "result": {
+     "to": "VALIDATE_DRAFT"
+    }
+   },
+   {
+    "kwargs": {
+     "defect": []
+    },
+    "result": {
+     "to": "VALIDATE_DRAFT"
+    }
+   },
+   {
+    "kwargs": {
+     "defect": [
+      1
+     ]
+    },
+    "result": {
+     "to": "REQUEST_APPROVAL"
+    }
+   },
+   {
+    "kwargs": {
+     "defect": {}
+    },
+    "result": {
+     "to": "VALIDATE_DRAFT"
+    }
+   },
+   {
+    "kwargs": {
+     "defect": {
+      "a": 1
+     }
+    },
+    "result": {
+     "to": "REQUEST_APPROVAL"
+    }
+   },
+   {
+    "kwargs": {
+     "defect": ""
+    },
+    "result": {
+     "to": "VALIDATE_DRAFT"
+    }
+   },
+   {
+    "kwargs": {
+     "defect": "x"
+    },
+    "result": {
+     "to": "REQUEST_APPROVAL"
+    }
+   },
+   {
+    "kwargs": {
+     "defect": 0
+    },
+    "result": {
+     "to": "VALIDATE_DRAFT"
+    }
+   },
+   {
+    "kwargs": {
+     "defect": 1
+    },
+    "result": {
+     "to": "REQUEST_APPROVAL"
+    }
+   },
+   {
+    "kwargs": {
+     "defect": null
+    },
+    "result": {
+     "to": "VALIDATE_DRAFT"
+    }
+   },
+   {
+    "kwargs": {
+     "defect": true
+    },
+    "result": {
+     "to": "REQUEST_APPROVAL"
+    }
+   },
+   {
+    "kwargs": {
+     "defect": false
+    },
+    "result": {
+     "to": "VALIDATE_DRAFT"
+    }
+   },
+   {
+    "kwargs": {
+     "x": 1
+    },
+    "result": {
+     "exc": "TypeError",
+     "message": "machine_dict() got an unexpected keyword argument 'x'"
+    }
+   },
+   {
+    "kwargs": {
+     "defect": true,
+     "x": 1
+    },
+    "result": {
+     "exc": "TypeError",
+     "message": "machine_dict() got an unexpected keyword argument 'x'"
+    }
+   }
+  ],
+  "positional": [
+   {
+    "arg": [],
+    "result": {
+     "to": "VALIDATE_DRAFT"
+    }
+   },
+   {
+    "arg": [
+     1
+    ],
+    "result": {
+     "to": "REQUEST_APPROVAL"
+    }
+   },
+   {
+    "arg": "",
+    "result": {
+     "to": "VALIDATE_DRAFT"
+    }
+   },
+   {
+    "arg": "x",
+    "result": {
+     "to": "REQUEST_APPROVAL"
+    }
+   },
+   {
+    "arg": 0,
+    "result": {
+     "to": "VALIDATE_DRAFT"
+    }
+   },
+   {
+    "arg": 1,
+    "result": {
+     "to": "REQUEST_APPROVAL"
+    }
+   },
+   {
+    "arg": 2,
+    "result": {
+     "to": "REQUEST_APPROVAL"
+    }
+   },
+   {
+    "arg": -1,
+    "result": {
+     "to": "REQUEST_APPROVAL"
+    }
+   },
+   {
+    "arg": 0.5,
+    "result": {
+     "to": "REQUEST_APPROVAL"
+    }
+   },
+   {
+    "arg": null,
+    "result": {
+     "to": "VALIDATE_DRAFT"
+    }
+   },
+   {
+    "arg": true,
+    "result": {
+     "to": "REQUEST_APPROVAL"
+    }
+   },
+   {
+    "arg": false,
+    "result": {
+     "to": "VALIDATE_DRAFT"
+    }
+   },
+   {
+    "arg": [
+     []
+    ],
+    "result": {
+     "to": "REQUEST_APPROVAL"
+    }
+   },
+   {
+    "arg": [
+     0
+    ],
+    "result": {
+     "to": "REQUEST_APPROVAL"
+    }
+   }
+  ]
  }
 }

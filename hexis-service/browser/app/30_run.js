@@ -3,6 +3,7 @@
   "use strict";
   globalThis.HXUI = globalThis.HXUI || {};
   const HXUI = globalThis.HXUI;
+  if (typeof HXUI.register_section !== "function") return; /* the UI core is missing: boot reports it */
   const h = (...a) => HXUI.h(...a);
 
   const ABOUT = [

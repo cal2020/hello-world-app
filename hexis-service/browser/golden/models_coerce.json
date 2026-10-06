@@ -1943,6 +1943,52 @@
    "value": true
   }
  ],
+ "bool_big": [
+  [
+   "2**63",
+   "bool_type"
+  ],
+  [
+   "-(2**63)",
+   "bool_parsing"
+  ],
+  [
+   "2**64",
+   "bool_type"
+  ],
+  [
+   "-(2**64)",
+   "bool_type"
+  ],
+  [
+   "2**53 + 2",
+   "bool_parsing"
+  ],
+  [
+   "-(2**53) - 2",
+   "bool_parsing"
+  ],
+  [
+   "2**62",
+   "bool_parsing"
+  ],
+  [
+   "1e300",
+   "bool_type"
+  ],
+  [
+   "-1e300",
+   "bool_type"
+  ],
+  [
+   "2.0**63",
+   "bool_type"
+  ],
+  [
+   "2.5e18",
+   "bool_parsing"
+  ]
+ ],
  "float": [
   {
    "deviation": null,

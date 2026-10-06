@@ -1,16 +1,26 @@
 """Golden vectors for HX.guards (port of hexis_service/guards.py).
 
-Writes golden/guards_parse.json, guards_semantics.json, guards_disjoint.json and guards_unicode.json by running
-the real Python reference (CPython 3.12 ast + hexis_service.guards).
+Writes, by running the real Python reference (CPython 3.12 ast + hexis_service.guards):
+  guards_parse.json      hand-written corpus: parse result, message, Python tree, node count, depth
+  guards_fuzz.json       seeded random grammar expressions, character mutations and short random strings
+  guards_semantics.json  typecheck / evaluate / evaluate3 of every accepted guard on several environments
+  guards_disjoint.json   analyze_disjoint on hand-written and random guard sets
+  guards_unicode.json    Unicode 15.0 tables (XID, whitespace, printable), NFKC of identifiers, repr samples
 
-    python gen_guards.py                              # committed golden files
-    python gen_guards.py --out DIR --seed 7 --scale 20  # large local differential run (same format)
+    python gen_guards.py                                   # committed golden files
+    python gen_guards.py --out DIR --seed 7 --scale 20     # large local differential run (same format)
+
+Parse records ("cases"): e (or e16), note, r ("ok" | "err" | "exc"), m (GuardError text), x (class of a non-GuardError
+exception), vars (accepted), parsed (ast.parse succeeded), nodes and depth (ast.walk count and guards._depth), ast
+(the tree in the JS port's shape as compact JSON text, when the port can represent its values), dev (Python accepts,
+the port rejects by design), nesc (the text contains a \\N escape, whose name the port cannot check).
 
 Encodings (JSON cannot carry these Python values):
   * an expression containing a lone surrogate is stored as "e16": [UTF-16 code units] instead of "e";
   * UNKNOWN in an environment is {"$unknown": true};
-  * an integer outside +/-(2**53-1) in a counterexample is {"$int": "<decimal>"};
-  * float constants in ASTs are their Python repr string ("2.0", "1e+20", "inf").
+  * an integer outside +/-(2**53-1) is {"$int": "<decimal>"};
+  * float constants in trees are their Python repr string ("2.0", "1e+20", "inf"); complex constants carry the repr
+    of their imaginary part; bytes constants are lists of byte values.
 """
 
 from __future__ import annotations
@@ -35,51 +45,19 @@ from hexis_service import guards as G
 warnings.simplefilter("ignore")  # SyntaxWarnings (e.g. `1and x`, invalid escapes) are not errors by default
 SAFE = 2**53 - 1
 
+
 # --------------------------------------------------------------------------------------------- #
 # Python AST -> JS port node shape
 # --------------------------------------------------------------------------------------------- #
-BUILDABLE = {"Expression", "BoolOp", "UnaryOp", "BinOp", "Compare", "Call", "IfExp", "Attribute", "List", "Tuple",
-             "Name", "Constant"}
-
-
-class NotBuildable(Exception):
-    pass
+class NotComparable(Exception):
+    """The port stands for this value with a placeholder (surrogate code points, \\N escapes)."""
 
 
 def has_surrogate(s: str) -> bool:
     return any(0xD800 <= ord(ch) <= 0xDFFF for ch in s)
 
 
-def js_ast(node):
-    """The JS port's node shape for a Python AST, or NotBuildable for constructs the port never builds
-    (it rejects them while parsing: comprehensions, lambda, subscripts, f-strings, bytes, ...)."""
-    t = type(node).__name__
-    if t not in BUILDABLE:
-        raise NotBuildable(t)
-    if t == "Expression":
-        return {"type": t, "body": js_ast(node.body)}
-    if t == "BoolOp":
-        return {"type": t, "op": type(node.op).__name__, "values": [js_ast(v) for v in node.values]}
-    if t == "UnaryOp":
-        return {"type": t, "op": type(node.op).__name__, "operand": js_ast(node.operand)}
-    if t == "BinOp":
-        return {"type": t, "left": js_ast(node.left), "op": type(node.op).__name__, "right": js_ast(node.right)}
-    if t == "Compare":
-        return {"type": t, "left": js_ast(node.left), "ops": [type(o).__name__ for o in node.ops],
-                "comparators": [js_ast(c) for c in node.comparators]}
-    if t == "Call":
-        if node.keywords or any(type(a).__name__ == "Starred" for a in node.args):
-            raise NotBuildable("Call with keywords/starred")
-        return {"type": t, "func": js_ast(node.func), "args": [js_ast(a) for a in node.args], "keywords": []}
-    if t == "IfExp":
-        return {"type": t, "test": js_ast(node.test), "body": js_ast(node.body), "orelse": js_ast(node.orelse)}
-    if t == "Attribute":
-        return {"type": t, "value": js_ast(node.value), "attr": node.attr}
-    if t in ("List", "Tuple"):
-        return {"type": t, "elts": [js_ast(e) for e in node.elts]}
-    if t == "Name":
-        return {"type": t, "id": node.id}
-    v = node.value
+def js_const(v):
     if v is None:
         return {"type": "Constant", "value": None, "py_type": "NoneType"}
     if v is Ellipsis:
@@ -87,20 +65,54 @@ def js_ast(node):
     if isinstance(v, bool):
         return {"type": "Constant", "value": v, "py_type": "bool"}
     if isinstance(v, int):
-        if v > SAFE:
-            raise NotBuildable("integer literal beyond 2**53-1 (JS deviation)")
-        return {"type": "Constant", "value": v, "py_type": "int"}
+        return {"type": "Constant", "value": v if v <= SAFE else {"$int": str(v)}, "py_type": "int"}
     if isinstance(v, float):
         return {"type": "Constant", "value": repr(v), "py_type": "float"}
+    if isinstance(v, complex):
+        return {"type": "Constant", "value": repr(v.imag), "py_type": "complex"}
+    if isinstance(v, bytes):
+        return {"type": "Constant", "value": list(v), "py_type": "bytes"}
     if isinstance(v, str):
         if has_surrogate(v):
-            raise NotBuildable("surrogate code point in str constant (JS deviation)")
+            raise NotComparable("surrogate code point")
         return {"type": "Constant", "value": v, "py_type": "str"}
-    raise NotBuildable(type(v).__name__)
+    raise TypeError(type(v).__name__)
+
+
+def js_ast(node):
+    """The JS port's shape of a Python AST: the node's _fields, operators and contexts as class names, Load
+    contexts implicit, annotations/type comments/string kinds dropped (always None or irrelevant here)."""
+    if isinstance(node, ast.Constant):
+        return js_const(node.value)
+    out = {"type": type(node).__name__}
+    for f in node._fields:
+        v = getattr(node, f, None)
+        if f == "ctx":
+            if type(v).__name__ != "Load":
+                out["ctx"] = type(v).__name__
+        elif f == "op":
+            out[f] = type(v).__name__
+        elif f == "ops":
+            out[f] = [type(o).__name__ for o in v]
+        elif f in ("annotation", "type_comment", "kind"):
+            continue
+        else:
+            out[f] = _conv(v)
+    return out
+
+
+def _conv(v):
+    if isinstance(v, ast.AST):
+        return js_ast(v)
+    if isinstance(v, list):
+        return [_conv(x) for x in v]
+    if v is None or isinstance(v, (str, int)):
+        return v
+    raise TypeError(type(v).__name__)
 
 
 def uses_N_escape(expr: str) -> bool:
-    """True if a non-raw string literal of the expression contains a \\N{...} escape (JS deviation)."""
+    """True if a non-raw str literal of the expression contains a \\N{...} escape (JS deviation)."""
     src = expr.replace("\r\n", "\n").replace("\r", "\n")
     try:
         toks = list(tokenize.generate_tokens(io.StringIO(src).readline))
@@ -111,7 +123,7 @@ def uses_N_escape(expr: str) -> bool:
             continue
         s = tk.string
         prefix = s[:len(s) - len(s.lstrip("rRbBuUfF"))]
-        if "r" in prefix.lower():
+        if "r" in prefix.lower() or "b" in prefix.lower():
             continue
         body = s[len(prefix):]
         i = 0
@@ -123,6 +135,18 @@ def uses_N_escape(expr: str) -> bool:
             else:
                 i += 1
     return False
+
+
+def deviation(tree, expr) -> bool:
+    """True if the port rejects this guard although Python accepts it (deviations/guards.md #1-#3)."""
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Constant):
+            v = n.value
+            if isinstance(v, int) and not isinstance(v, bool) and v > SAFE:
+                return True
+            if isinstance(v, str) and has_surrogate(v):
+                return True
+    return uses_N_escape(expr)
 
 
 def enc_expr(e: str) -> dict:
@@ -137,6 +161,7 @@ def parse_record(expr: str, note: str = "") -> dict:
     rec = enc_expr(expr)
     if note:
         rec["note"] = note
+    tree = None
     try:
         G.parse(expr)
         rec["r"] = "ok"
@@ -144,28 +169,27 @@ def parse_record(expr: str, note: str = "") -> dict:
     except G.GuardError as exc:
         rec["r"] = "err"
         rec["m"] = str(exc)
-    except BaseException as exc:  # noqa: BLE001 - e.g. UnicodeEncodeError for lone surrogates
+    except BaseException as exc:  # noqa: BLE001 - UnicodeEncodeError, MemoryError, ValueError escape from parse
         rec["r"] = "exc"
         rec["x"] = type(exc).__name__
-    tree = None
     if expr.strip() and len(expr) <= G.MAX_LEN:
         try:
             tree = ast.parse(expr, mode="eval")
         except BaseException:  # noqa: BLE001
             tree = None
-    rec["parsed"] = tree is not None
     if tree is not None:
+        rec["parsed"] = True
         rec["nodes"] = len(list(ast.walk(tree)))
         rec["depth"] = G._depth(tree)
-        try:
-            rec["ast"] = js_ast(tree)
-            rec["bld"] = not uses_N_escape(expr)
-        except NotBuildable as nb:
-            rec["bld"] = False
-            rec["nb"] = str(nb)
-    rec["dev"] = rec["r"] == "ok" and not rec.get("bld")  # Python accepts, the JS port rejects (documented)
-    if not rec.get("bld"):
-        rec.pop("ast", None)
+        if "\\N" not in expr:
+            try:
+                rec["ast"] = json.dumps(js_ast(tree), ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+            except NotComparable:
+                pass
+        if rec["r"] == "ok" and deviation(tree, expr):
+            rec["dev"] = True
+    if "\\N" in expr:
+        rec["nesc"] = True
     return rec
 
 
@@ -183,59 +207,85 @@ def C(expr, note=""):
     CORPUS.append((expr, note))
 
 
+def CS(exprs, note):
+    for e in exprs:
+        C(e, note)
+
+
 # accepted constructs
-for e in ["x", "b", "True", "False", "1", "0", "2.5", "'s'", "x == 1", "x != 1", "x < 1", "x <= 1", "x > 1", "x >= 1",
-          "s == 'a'", "s != \"b\"", "s in ['a', 'b']", "s not in ['a', 'b']", "n in (1, 2)", "n in (1,)", "n in [1,]",
-          "n in []", "n in ()", "x in [1.5, 2]", "b == True", "b != False", "empty(s)", "nonempty(arr)", "empty(x,)",
-          "empty((x))", "empty((x),)", "(empty)(x)", "((nonempty))(x)", "empty(empty)", "empty(__x)",
-          "not b", "not not b", "not (x == 1)", "b and c", "b or c", "b and c or not b", "(b or c) and b",
-          "b and (c and b)", "(b and c) and b", "b or c or b", "1 < n < 4", "0 <= x <= 5 < 100", "x == y == z",
-          "x == 1 and s in ['a'] or empty(arr)", "(x == 1) == (y == 2)", "empty(x) == True", "1, 2", "1,", "()", "[]",
-          "[1, 'a']", "x == (1)", "(x) == 1", "((x)) == ((1))", "x in [(1)]", "x in ((1, 2))", "s == 'a' 'b'",
-          "s == u'a'", "s == U'a' r'b'", "s == R'\\d'", "s == r'\\''", "s == '''tri'''", 's == """tri"""',
-          "s == '''a\nb'''", "s == 'a\\\nb'", "s == r'a\\\nb'", "s == '\\x41\\u00e9\\U0001F600'", "s == '\\777'",
-          "s == '\\0'", "s == '\\d'", "s == '\\t\\n\\r\\a\\b\\f\\v'", "s == '\\''", "s == \"\\\"\"", "s == '#'",
-          "s == 'é\U0001F600'", "s == ''", "n == 0x1F", "n == 0X1f", "n == 0o17", "n == 0b101", "n == 0b1_0",
-          "n == 1_000", "n == 00", "n == 0_0", "x == 0e0", "x == 1e3", "x == 1E3", "x == 1.", "x == .5", "x == 1.e2",
-          "x == 0_1.5", "x == 09.5", "x == 1e-400", "x == 1e20", "x == 2.0", "x == 0.10000000000000003",
-          "x == 1.7976931348623157e308", "n == 9007199254740991", "x == 1and y", "x == 1or y", "x==1in[1]",
-          "x==1not in[2]", "x == 0x1for y", "x == 1.and y", "x == 0b1or y", "n == 1if b else 2",
-          "Ｔｒｕｅ", "ｅｍｐｔｙ(x)", "K == 1", "µ == 1", "ﬁx == 1",
-          "é == 1", "é == 1", "π > 3", "日本 == 'x'", "_ == 1", "match == 1", "type == 1",
-          "case and b", "print == 1", "rb == 1", "f == 1", "u in [1]", "br and b", "x # comment", "x == 1 # c",
-          "# c\nx == 1", "x == 1\n", "x == 1\n\n", "\nx == 1", "x == 1\n#c", "x == 1\n  #c", "x == 1\n  #c\n",
-          "x == 1\n\x0c", "\x0cx == 1", "  \x0cx == 1", "x == \\\n1", "\\\nx == 1", "(x\n== 1)", "(\nx == 1\n)",
-          "[1,\n2] == x", "x == 1\r\n", "x == 1\r", "x\r\n== 1" if False else "(x\r\n== 1)", "x\x0c== 1",
-          "x ==\t1", "x == 1 ", "x == 1\t", "s == 'a' \\\n 'b'", "(s == 'a'\n 'b')", "x == 1 #", "x == 1 # it's \\",
-          "s in ['a', # c\n 'b']", "empty(__proto__)", "nonempty(constructor) and toString", "hasOwnProperty == 1"]:
-    C(e, "accepted construct")
+CS(["x", "b", "True", "False", "1", "0", "2.5", "'s'", "x == 1", "x != 1", "x < 1", "x <= 1", "x > 1", "x >= 1",
+    "s == 'a'", "s != \"b\"", "s in ['a', 'b']", "s not in ['a', 'b']", "n in (1, 2)", "n in (1,)", "n in [1,]",
+    "n in []", "n in ()", "x in [1.5, 2]", "b == True", "b != False", "empty(s)", "nonempty(arr)", "empty(x,)",
+    "empty((x))", "empty((x),)", "(empty)(x)", "((nonempty))(x)", "empty(empty)", "empty(__x)",
+    "not b", "not not b", "not (x == 1)", "b and c", "b or c", "b and c or not b", "(b or c) and b",
+    "b and (c and b)", "(b and c) and b", "b or c or b", "1 < n < 4", "0 <= x <= 5 < 100", "x == y == z",
+    "x == 1 and s in ['a'] or empty(arr)", "(x == 1) == (y == 2)", "empty(x) == True", "1, 2", "1,", "()", "[]",
+    "[1, 'a']", "x == (1)", "(x) == 1", "((x)) == ((1))", "x in [(1)]", "x in ((1, 2))", "s == 'a' 'b'",
+    "s == u'a'", "s == U'a' r'b'", "s == R'\\d'", "s == r'\\''", "s == '''tri'''", 's == """tri"""',
+    "s == '''a\nb'''", "s == 'a\\\nb'", "s == r'a\\\nb'", "s == '\\x41\\u00e9\\U0001F600'", "s == '\\777'",
+    "s == '\\0'", "s == '\\d'", "s == '\\t\\n\\r\\a\\b\\f\\v'", "s == '\\''", "s == \"\\\"\"", "s == '#'",
+    "s == 'é\U0001F600'", "s == ''", "n == 0x1F", "n == 0X1f", "n == 0o17", "n == 0b101", "n == 0b1_0",
+    "n == 1_000", "n == 00", "n == 0_0", "x == 0e0", "x == 1e3", "x == 1E3", "x == 1.", "x == .5", "x == 1.e2",
+    "x == 0_1.5", "x == 09.5", "x == 1e-400", "x == 1e20", "x == 2.0", "x == 0.10000000000000003",
+    "x == 1.7976931348623157e308", "n == 9007199254740991", "x == 1and y", "x == 1or y", "x==1in[1]",
+    "x==1not in[2]", "x == 0x1for y", "x == 1.and y", "x == 0b1or y", "n == 1if b else 2",
+    "Ｔｒｕｅ", "ｅｍｐｔｙ(x)", "K == 1", "µ == 1", "ﬁx == 1",
+    "é == 1", "é == 1", "π > 3", "日本 == 'x'", "_ == 1", "match == 1", "type == 1",
+    "case and b", "print == 1", "rb == 1", "f == 1", "u in [1]", "br and b", "x # comment", "x == 1 # c",
+    "# c\nx == 1", "x == 1\n", "x == 1\n\n", "\nx == 1", "x == 1\n#c", "x == 1\n  #c", "x == 1\n  #c\n",
+    "x == 1\n\x0c", "\x0cx == 1", "  \x0cx == 1", "x == \\\n1", "\\\nx == 1", "(x\n== 1)", "(\nx == 1\n)",
+    "[1,\n2] == x", "x == 1\r\n", "x == 1\r", "(x\r\n== 1)", "x\x0c== 1",
+    "x ==\t1", "x == 1 ", "x == 1\t", "s == 'a' \\\n 'b'", "(s == 'a'\n 'b')", "x == 1 #", "x == 1 # it's \\",
+    "s in ['a', # c\n 'b']", "empty(__proto__)", "nonempty(constructor) and toString", "hasOwnProperty == 1",
+    "s == '\u3000'", "s == '\u200b' # \u2028", "s == '\x85\xa0\xad'", "s == 'a\U000E0001'",
+    "s == '\\U0010FFFF'", "s == '\uFEFF'", "s == '\u061c\u2066'"], "accepted construct")
 
 # rejections: syntax
-for e in ["", " ", "\t", "\n", "\x0c", " ", "　", " ", "\x1c\x85", "﻿", "x ==", "== 1", "x = 1",
-          "x === 1", "x <> 1", "x == not y", "x not y", "x in not y", "not", "x and", "and x", "(x", "x)", "[x", "x]",
-          "(x]", "x == 1 1", "x y", "x;", "x\n;", "x\ny", " x", "\tx", "\x0c  x", "\n x", "x\n ", "x\n\t", "x \\\n",
-          "x \\", "x\\y", " \\\nx", "\\\n x", "x\n\\\n", "x\x00", "x\x0b", "x == 1", "x‌ == 1", "＿ == 1",
-          "́ == 1", "x == 01", "x == 1_", "x == 1__0", "x == 0x", "x == 0x_", "x == 0b2", "x == 0o8", "x == 08",
-          "x == 0_1", "x == 1x", "x == 1.else", "x == 1e", "x == 1e+", "x == 1e_5", "x == 0x1and y", "s == 'abc",
-          "s == '''abc", "s == 'a\nb'", "s == '\\x4'", "s == '\\u12'", "s == '\\U00110000'", "s == ur'x'",
-          "s == bu'x'", "s == 'a' b'b'", "s == b'é'", "x if y", "lambda", "x == lambda: 1", "await", "x.if",
-          "x == $", "x == ?", "x == `", "x == !", "x := 1", "*x", "x, *y", "(yield", "{1:}", "x[", "f(x=)",
-          "f(x for x in y, z)", "print x", "x == 1\nx == 2", "# only a comment", "x == 1 if", "1 < < 2",
-          "x not in", "x is not", "x in [1,,2]", "x in [,]", "empty(,)", "()()" if False else "x == ()(", "((x)"]:
-    C(e, "syntax error")
+CS(["", " ", "\t", "\n", "\x0c", " ", "　", " ", "\x1c\x85", "﻿", "x ==", "== 1", "x = 1",
+    "x === 1", "x <> 1", "x == not y", "x not y", "x in not y", "not", "x and", "and x", "(x", "x)", "[x", "x]",
+    "(x]", "x == 1 1", "x y", "x;", "x\n;", "x\ny", " x", "\tx", "\x0c  x", "\n x", "x\n ", "x\n\t", "x \\\n",
+    "x \\", "x\\y", " \\\nx", "\\\n x", "x\n\\\n", "x\x00", "x\x0b", "x == 1", "x‌ == 1", "＿ == 1",
+    "́ == 1", "x == 01", "x == 1_", "x == 1__0", "x == 0x", "x == 0x_", "x == 0b2", "x == 0o8", "x == 08",
+    "x == 0_1", "x == 1x", "x == 1.else", "x == 1e", "x == 1e+", "x == 1e_5", "x == 0x1and y", "s == 'abc",
+    "s == '''abc", "s == 'a\nb'", "s == '\\x4'", "s == '\\u12'", "s == '\\U00110000'", "s == ur'x'",
+    "s == bu'x'", "s == 'a' b'b'", "s == b'é'", "x if y", "lambda", "x == lambda: 1", "await", "x.if",
+    "x == $", "x == ?", "x == `", "x == !", "x := 1", "*x", "x, *y", "(yield", "{1:}", "x[", "f(x=)",
+    "f(x for x in y, z)", "print x", "x == 1\nx == 2", "# only a comment", "x == 1 if", "1 < < 2",
+    "x not in", "x is not", "x in [1,,2]", "x in [,]", "empty(,)", "x == ()(", "((x)", "x == 0x1j",
+    "x == 1.real", "x == 1jx", "x == 1j_", "s == '\\N'", "s == '\\N{}'", "s == '\\N{x'"], "syntax error")
 
 # rejections: allowlist and limits
-for e in ["x + 1", "x == 1 + 2", "-x", "x == -1", "+x", "~x", "x in [-1]", "x is None", "x is not y", "x == None",
-          "x == ...", "x == b'a'", "x == rb'a'", "x == 1j", "x == 2.5J", "x == f'a'", "x == F'{x}'", "x == rf'a'",
-          "x == 'a' f'b'", "x == 1e400", "foo(x)", "empty()", "empty(x, y)", "empty(x=1)", "empty(*x)", "empty(**x)",
-          "empty('a')", "empty(1)", "empty([x])", "empty((x,))", "empty(x)(y)", "empty(x).y", "empty(x)[0]",
-          "empty(x for x in y)", "x(1)", "True(x)", "'a'(x)", "x in [y]", "[x]", "x, y", "[1, [2]]", "x in [(1, 2)]",
-          "x in [x == 1]", "empty == 1", "nonempty", "__x == 1", "__ == 1", "_＿_x == 1", "x.__class__",
-          "x.y == 1", "x if y else z", "x == 1 if b else 2", "lambda: 1", "lambda x: x", "await x", "(yield)",
-          "(yield x)", "{}", "{1}", "{1: 2}", "{**x}", "x[0]", "x[0:1]", "x[::2]", "[x for x in y]", "{x for x in y}",
-          "{x: 1 for x in y}", "(x for x in y)", "(x := 1)", "[*x]", "(*x,)", "f(*x)", "x @ y", "x ** 2",
-          "x // 2", "x % 2", "x << 1", "x & y", "x | y", "x ^ y", "-x ** 2", "x == 'a' * 3"]:
-    C(e, "allowlist rejection")
+CS(["x + 1", "x == 1 + 2", "-x", "x == -1", "+x", "~x", "x in [-1]", "x is None", "x is not y", "x == None",
+    "x == ...", "x == b'a'", "x == rb'a'", "x == 1j", "x == 2.5J", "x == f'a'", "x == F'{x}'", "x == rf'a'",
+    "x == 'a' f'b'", "x == 1e400", "foo(x)", "empty()", "empty(x, y)", "empty(x=1)", "empty(*x)", "empty(**x)",
+    "empty('a')", "empty(1)", "empty([x])", "empty((x,))", "empty(x)(y)", "empty(x).y", "empty(x)[0]",
+    "empty(x for x in y)", "x(1)", "True(x)", "'a'(x)", "x in [y]", "[x]", "x, y", "[1, [2]]", "x in [(1, 2)]",
+    "x in [x == 1]", "empty == 1", "nonempty", "__x == 1", "__ == 1", "_＿_x == 1", "x.__class__",
+    "x.y == 1", "x if y else z", "x == 1 if b else 2", "lambda: 1", "lambda x: x", "await x", "(yield)",
+    "(yield x)", "{}", "{1}", "{1: 2}", "{**x}", "x[0]", "x[0:1]", "x[::2]", "[x for x in y]", "{x for x in y}",
+    "{x: 1 for x in y}", "(x for x in y)", "(x := 1)", "[*x]", "(*x,)", "f(*x)", "x @ y", "x ** 2",
+    "x // 2", "x % 2", "x << 1", "x & y", "x | y", "x ^ y", "-x ** 2", "x == 'a' * 3"], "allowlist rejection")
+
+# the verifier's message cases and other constructs the port rejects while parsing in earlier versions
+CS(["x == 1j", "x == b'a'", "x in [*y]", "empty(x for x in y)", "{1}", "-{x}", "x == 0j", "x == 1e400j",
+    "x == 1e16j", "x == 1e15j", "x == 123456789012345678j", "x == 1_0j", "x == 0_1j", "x == .5j", "x == 1.j",
+    "x == 1e-5j", "x == 2.5e-324j", "[1j]", "x in [b'a', x]", "x in [x, b'a']", "x in [1j, x]", "x in [f'a']",
+    "x in [f'{x}']", "[x := 1]", "[(x := 1)]", "x in [(x := 1)]", "x in [lambda: 1]", "x in [await y]",
+    "x in [(yield)]", "x in [x for x in y]", "x in [{1}]", "x in [{}]", "x in [...]", "x in [None]",
+    "x in [1, None]", "x in [-1, 1]", "x in [b'']", "x == b''", "x == b'\\x00\\x7f\\x80\\xff\\t\\n\\r'",
+    "x == b'\\''", "x == b'\"'", "x == b'\\'\"'", "x == b\"'\"", "x == b'\\\\'", "x == rb'\\x'", "x == br'\\x'",
+    "x == Rb'a' rB'b'", "x == b'a' b'b'", "x == b'\\777'", "x == b'\\8'", "x == b'\\x4'", "x == b'\\\n'",
+    "x == b'a' 'b'", "x == 'a' b'b'", "x == f'a' b'b'", "x == b'é'", "x == rb'é'", "s == 'a' + 1",
+    "empty(*x for x in y)", "empty(x, *y)", "empty(x, **y)", "empty(**x, y=1)", "empty(x=1, *y)",
+    "empty(a:=1)", "empty((a:=1))", "nonempty(x,)", "empty.x(y)", "empty[0](x)", "x.empty(y)",
+    "empty(x)(y) == 1", "not -x", "not ~x", "not +x", "-(x == 1)", "x == -(1)", "x in [-(1)]",
+    "x is y", "x is not None", "x in y is z", "x == y is z", "x < lambda: 1", "x == (lambda: 1)",
+    "x == [i for i in y]", "x == {i: 1 for i in y}", "x == (i for i in y)", "x == {i for i in y}",
+    "x == await y", "x == (yield)", "x == y[0]", "x == y.z", "x == y()", "x == y(z)", "x == {}", "x == {1}",
+    "x == [1]", "x == ()", "x == (1, 2)", "x in {1, 2}", "x in {1: 2}", "b and await x", "b and (yield)",
+    "b and lambda: 1", "b and (x := 1)", "b and x[0]", "b and [x]", "b and {x}", "b and f'x'", "b and b'x'",
+    "b and 1j", "b and ...", "b and None", "b or -x", "not (x := 1)", "not lambda: 1", "not await x",
+    "(not x) + 1", "[x] + [y]", "x in [1] + [2]"], "message order")
 
 # limit boundaries
 nodes63 = and_chain(["x == 1"] * 12)
@@ -267,23 +317,205 @@ for k in (199, 200, 201):
 C("[" + "(" * 199 + "1" + ")" * 199 + "]", "list + 199 parentheses = 200 levels")
 C("[" + "(" * 200 + "1" + ")" * 200 + "]", "201 levels")
 C("not(" * 100 + "x" + ")" * 100, "not( nesting")
+# limits reached through constructs the allowlist rejects: the limit message comes first
+C(and_chain(["x == 1"] * 11) + " and (lambda a, b, c, d, e, f, g, h: 1)", "lambda over 64 nodes")
+C(and_chain(["x == 1"] * 12) + " and f'{x}'", "f-string over 64 nodes")
+C(and_chain(["x == 1"] * 12) + " and x[0]", "subscript over 64 nodes")
+C(and_chain(["x == 1"] * 12) + " and {1: 2}", "dict over 64 nodes")
+C(and_chain(["x == 1"] * 12) + " and 9007199254740993", "big literal over 64 nodes")
+C("f'{f'{f'{f'{x}'}'}'}' == s", "nested f-strings, depth 12")
+C("f'{f'{f'{f'{f'{x}'}'}'}'}' == s", "nested f-strings deeper than 12")
+C("x == [[[[[[[[[[[1]]]]]]]]]]]", "nested lists deeper than 12")
+C("x == (lambda: (lambda: (lambda: (lambda: 1))))", "nested lambdas")
+C("x in [" + ", ".join(["1j"] * 33) + "]", "33 complex items")
+C("x in [" + ", ".join(["b'a'"] * 32) + "]", "32 bytes items")
 
 # documented JS deviations (Python accepts, the port rejects)
 for e in ["n == 9007199254740992", "n == 9007199254740993", "n > " + "9" * 400, "n == 0x20000000000000",
           "s == '\\N{BULLET}'", "s == '\\ud83d\\ude00'", "s == '\\udc00'", "s == '\\U0000d800'", "x == '\ud800'"]:
     C(e, "JS deviation")
+# ... decided after Python's own checks, so a guard Python rejects keeps Python's message
+CS(["[9007199254740993, x]", "x in [9007199254740993, y]", "9007199254740993 + 1", "n == 9007199254740993 or x.y",
+    "n == 9007199254740993 and", "s == '\\N{BULLET}' + 1", "s == '\\ud800' and x.y", "[9007199254740993] * 2",
+    "s == '\\N{bullet}' and f'x'", "s == '\\N{NO SUCH NAME}'", "s == '\\N{BULLET }'", "s in ['\\N{BULLET}', x]",
+    "x in [0x20000000000000, -1]", "s == '\\udc00' 'a' and y", "n == 9007199254740993 or x == 1j"],
+   "deviation after Python's checks")
+
+# f-strings (PEP 701 tokenizer and AST)
+CS(["f''", "f'a'", "F'a'", "rf'\\d'", "fr'\\d'", "Rf'x'", "fR'x'", "f\"x\"", "f'''x'''", 'f"""x"""', "f'{x}'",
+    "f'{x!r}'", "f'{x!s}'", "f'{x!a}'", "f'{x!z}'", "f'{x! r}'", "f'{x!r }'", "f'{x!ｒ}'", "f'{x!rr}'",
+    "f'{x!}'", "f'{x!r:}'", "f'{x=}'", "f'{x = }'", "f'{x=!r}'", "f'{x=:>10}'", "f'{x=!s:>10}'", "f'{x:>10}'",
+    "f'{x:{y}}'", "f'{x:{y:{z}}}'", "f'{x:{y:{z:{w}}}}'", "f'{x:{y=}}'", "f'{x:{y=!r}}'", "f'{x:{y=:z}}'",
+    "f'{{}}'", "f'{{x}}'", "f'a{{b'", "f'}}'", "f'}'", "f'{'", "f'{}'", "f'{x}}'", "f'{x'", "f'{x:}'",
+    "f'{x:}}'", "f'{x:{{}}}'", "f'{{{x}}}'", "f'\\{x}'", "rf'\\{x}'", "f'\\N{BULLET}'", "f'\\N{BULLET}{x}'",
+    "f'\\N{bullet}'", "f'\\N{NOPE}'", "f'\\N{x{y}'", "f'\\x41{x}'", "f'\\x4{x}'", "f'{x}' f'{y}'",
+    "'a' f'{x}' 'b'", "f'{x}' '' 'a'", "'a' '' f'{x}'", "'' f'{x}'", "f'{x}' ''", "'a' f'' 'b'",
+    "f'{x}' b'a'", "b'a' f'{x}'", "f'{f'{x}'}'", "f'{f\"{x}\"}'", "f'{\"a\"}'", "f'{'a'}'",
+    "f'{x:{\"a\"}}'", "f'''{x\n}'''", "f'{x\n}'", "f'{x:\n}'", "f'''{x:\n}'''", "f'{x#}'",
+    "f'''{x # c\n}'''", "f'''{x # c\n=}'''", "f'{lambda x: 1}'", "f'{(lambda x: 1)}'", "f'{x:=1}'",
+    "f'{(x:=1)}'", "f'{x!=y}'", "f'{x!=y=}'", "f'{yield}'", "f'{yield x}'", "f'{*x}'", "f'{*x, y}'",
+    "f'{x, y}'", "f'{x for x in y}'", "f'{[x for x in y]}'", "f'{x:{y}{z}}'", "f'{x:a{y}b}'", "f'{x}{y}'",
+    "f'{x}a{y}'", "f'{f'{f'{x}'}'}'", "f'{'\\n'}'", "f'{\"\\\\N{BULLET}\"}'", "f'{r\"\\x\"=}'",
+    "f'{\"#\"=}'", "f'''{x = # c\n}'''", "f'{x:\\x41}'", "rf'{x:\\x41}'", "f'{x:\\x4}'", "f'{x:\\N{BULLET}}'",
+    "f'\\\n{x}'", "f'''a\nb{x}'''", "f'''{x}\n'''", "f'{x}\\\n'", "f'{ x }'", "f'{\nx\n}'", "f'{x\\\n}'",
+    "f'{x}' f''", "f'' f''", "f'{x=}' 'a'", "'a' f'{x=}'", "f'a{x=}'", "f'{x=}{y=}'", "f'{x}' == s",
+    "s == f'{x}'", "s in [f'a', 'b']", "empty(f'{x}')", "f'{x}'.y", "f'{x}'[0]", "f'{x}'(y)", "-f'a'",
+    "not f'a'", "f'a' and b", "f'{x:{y:{z}}}' == s", "f'{x!r:>{y}}'", "f'{x=!r:>{y}}'", "f'{{'", "f'}}{{'",
+    "f'{x:{{'", "f'{x:}}}'", "f'{x:{y}}}'", "f'{x!r=}'", "f'{x=!}'", "f'{=x}'", "f'{!r}'", "f'{:x}'",
+    "f'{x:{}}'", "f'{x:{y!z}}'", "f'{x:{y: {z}}}'", "f'{\"a\" \"b\"}'", "f'{b\"a\"}'", "f'{1j}'",
+    "f'{x[0]:>{w}.{p}f}'", "f'{x:%Y-%m-%d}'", "f'{x!r:^{w}}'", "f'{x}' f'{y}' f'{z}'", "u'a' f'{x}'",
+    "f'{x}' u'a'", "f'{f'{f'{f'{f'{x}'}'}'}'}'", "f'{x:{y}' '}'", "f\"{x:{'a'}}\"", "f'{x:\\{y}}'",
+    "f'\\{{x}}'", "f'{{\\}}'", "f'{x}\\'", "f'\\'{x}'", "rf'\\'{x}'", "f'{x!a}' == s", "f'{x!s:{y!r}}'",
+    "f'{\"\\\\\"}'", "f'{x:{y:{z!r}}}'", "f'{x:{y:{z=}}}'", "f'{x,}'", "f'{x,=}'", "f'{(x,)=}'",
+    "f'{x:\\u12}'", "f'{x:\\N}'", "f'{x:\\U00110000}'", "f'{x:\\N{NOPE}}'", "rf'{x:\\x4}'", "f'{x:{y:\\x4}}'",
+    "f'{x:\\x4}' f'{'", "f'{x:\\x4}' and (", "f'{x:\\x41}' and b'é'",
+    "f'{await x}'", "f'{x if y else z}'", "f'{x if y else z=}'", "f'{lambda: 1=}'", "f'{(lambda: 1)=}'",
+    "f'{x:=}'", "f'{x:!r}'", "f'{x!r!s}'", "f'{x!r:{y}:z}'", "f'{# c\n}'", "f'''{# c\nx}'''"],
+   "f-string")
+
+# bytes and complex literals
+CS(["b'a'", "B'a'", "rb'\\x'", "br'\\x'", "Rb'x'", "bR'x'", "b'\\x41'", "b'\\x4'", "b'\\777'", "b'\\8'",
+    "b'é'", "b'a' b'b'", "b'a' 'b'", "b'\\n\\t\\r\\\\\\''", "b'\"'", "b\"'\"", "b'\\'\"'",
+    "b'\\x00\\x7f\\x80\\xff'", "b''", "b''''''", "b'''a\nb'''", "b'\\\nx'", "b'\\N{BULLET}'", "b'\\u0041'",
+    "rb''", "b'a' rb'b' Rb'c'", "1j", "1J", "0j", "2.5j", "1e400j", "1_0j", "0_1j", ".5j", "1.j", "1e3j",
+    "1e16j", "1e15j", "123456789012345678j", "0x1j", "0o1j", "0b1j", "1jif x else y", "1jor x",
+    "00j", "09j", "1e5_0j", "1_j", "1__0j"], "bytes and complex")
+
+# lambda
+CS(["lambda: 1", "lambda x: x", "lambda x, y: x", "lambda *a: 1", "lambda **k: 1", "lambda *, k: 1", "lambda *: 1",
+    "lambda x=1: x", "lambda x=1, y: 1", "lambda x, /, y: 1", "lambda /: 1", "lambda x, /: 1", "lambda x,: 1",
+    "lambda x, *, y=1, z: 1", "lambda *a, b=1, **c: 1", "lambda **k, a: 1", "lambda (x): 1", "lambda x: lambda y: x",
+    "lambda: (yield)", "lambda x=lambda: 1: x", "(lambda: 1)()", "[lambda: 1]", "{lambda: 1}", "{lambda: 1: 2}",
+    "lambda a, /, b=1, *c, d, e=2, **f: 0", "lambda *, **k: 1", "lambda *a, *b: 1", "lambda a, a: 1",
+    "lambda print: 1", "lambda if: 1", "lambda *a=1: 0", "lambda **k=1: 0", "lambda a, **b, : 0",
+    "lambda a, /, : 0", "lambda a, /, *, b: 0", "lambda a, *, /: 0", "lambda a, /, /: 0", "lambda a=1, /, b: 0",
+    "lambda a=1, /, b=2: 0", "lambda a, b=1, /, c=2: 0", "lambda *,: 0", "lambda *a,: 0", "lambda **k,: 0",
+    "lambda a b: 0", "lambda a,, : 0", "lambda x: x if x else y", "lambda: lambda: lambda: 1",
+    "lambda x=(yield): x", "lambda x=y if z else w: x", "lambda ｘ: ｘ", "lambda match, case, type: 0",
+    "lambda: *x", "lambda: x, y", "(lambda: x, y)", "lambda *a, b, c=1, d: 0", "lambda a=1, *b, c: 0",
+    "lambda a, *b=1: 0", "lambda a: (yield from b)", "lambda: await x", "lambda: [x async for x in y]"],
+   "lambda")
+
+# comprehensions
+CS(["[x for x in y]", "[x for x in y if z]", "[x for x in y if a if b]", "[x for x in y for z in w]",
+    "[x async for x in y]", "(x for x in y)", "{x for x in y}", "{x: y for x in z}", "[x for x, in y]",
+    "[x for x, y in z]", "[x for (x, y) in z]", "[x for [x, y] in z]", "[x for *x, y in z]", "[x for x.y in z]",
+    "[x for x[0] in z]", "[x for x() in z]", "[x for 1 in z]", "[x for x in y if lambda: 1]",
+    "[x for x in lambda: y]", "[x for x in y, z]", "[*x for x in y]", "{**x for x in y}", "[x for x in *y]",
+    "[x for (x) in y]", "[x for ((x)) in y]", "[x for (x := 1) in y]", "[(x := 1) for y in z]",
+    "[x for x in y if (z := 1)]", "[x for f(x).y in z]", "[x for \"s\".y in z]", "[x for None.x in z]",
+    "[x for (a, b)[0] in z]", "[x for a, in b]", "[x for a, b, in c]", "[x for in y]", "[x for x y]",
+    "[x for x in]", "[x for *x in y]", "[x for (*x,) in y]", "[x for [*x] in y]", "[x for (*x) in y]",
+    "[x for **x in y]", "[x for * *x in y]", "[x for x, *y, z in w]", "[x for [a, [b, c]] in d]",
+    "[x for (a.b, c[0]) in d]", "[x for (a.b(), c) in d]", "[x for a.b() in d]", "[x for [a for a in b][0] in c]",
+    "[x for (x for x in y).a in z]", "[x for await x in y]", "[x for -x in y]", "[x for True in y]",
+    "[x for x in y if a else b]", "[x if y else z for x in w]", "[x if y for z in w]", "[x, y for y in z]",
+    "[x for x in (yield)]", "[x for x in await y]", "[x for x in y async for z in w]", "[x async]",
+    "[x for x in y if await z]", "(x for x in y if z)", "(x for x in y)(z)", "{x: y for x, y in z}",
+    "{x: y for x in z if w}", "{(x := 1) for y in z}", "{x := 1 for y in z}", "[x := 1 for y in z]",
+    "(x := 1 for y in z)", "[x for x in y for]", "[for x in y]", "[x for x in y if]", "[x for x in not y]",
+    "[x for x in y or z]", "[x for x in y if z or w]", "[x for x in y == z]", "[x for x in y if z == w]",
+    "[x for x in y if not z]", "[x for x in y if lambda: z]", "[x for x.y.z in w]", "[x for x[0][1] in w]",
+    "[x for x[0].y in w]", "[x for ([x]) in w]", "[x for ([x], y) in w]", "[x for ((x), (y)) in w]",
+    "[x for x[*a] in w]", "[x for x[a:b] in w]", "[x for 'a' in w]", "[x for (1).x in w]",
+    "[x for [1][0] in w]", "[x for {}.x in w]", "[x for x in y][0]", "[ｘ for ｘ in ｙ]"],
+   "comprehension")
+
+# subscripts and slices
+CS(["x[0]", "x[1:2]", "x[:]", "x[::]", "x[1:2:3]", "x[::2]", "x[a, b]", "x[a:b, c]", "x[*a]", "x[*a, b]", "x[a,]",
+    "x[]", "x[a:=1]", "x[(a:=1):2]", "x[a:=1:2]", "x[lambda: 1]", "x[lambda: 1:2]", "x[1:2:3:4]", "x[*]",
+    "x[:,:]", "x[...]", "x[None]", "x[a][b]", "x[a](b)", "x[a].b", "x[1:]", "x[:2]", "x[::-1]", "x[a, *b, c]",
+    "x[*a:b]", "x[a:*b]", "x[*a, *b]", "x[a if b else c]", "x[a if b else c:d]", "x[yield]", "x[(yield)]",
+    "x[await y]", "x[x for x in y]", "x[(x for x in y)]", "x[[x for x in y]]", "x[:=1]", "x[a:b:]", "x[a::]",
+    "x[::c]", "x[:b:c]", "x[a, b:c:d, *e]", "x[(a, b)]", "x[()]", "x[[]]", "x[{}]", "x['a']", "x[1j]",
+    "x[b'a']", "x[f'{y}']", "x[not a]", "x[a and b]", "x[a < b]", "x[-a]", "x[a,,]", "x[,]"], "subscript")
+
+# calls
+CS(["f()", "f(x)", "f(x,)", "f(x, y)", "f(*x)", "f(**x)", "f(a=1)", "f(a=1, *b)", "f(**a, b=1)", "f(**a, *b)",
+    "f(a=1, b)", "f(x for x in y)", "f(x for x in y, z)", "f(z, x for x in y)", "f((x for x in y), z)",
+    "f(a:=1)", "f(a.b=1)", "f(1=2)", "f(*)", "f(,)", "f(x=)", "f(**)", "f(*a, b)", "f(*a, *b)", "f(**a, **b)",
+    "f(a=1, b=2)", "f(a, b=1, *c, d=2, **e)", "f(a=1, **b, c=2)", "f(*a, **b, c)", "f(**a, b)",
+    "f(x for x in y)(z)", "f(x)(y)", "f.g(x)", "f(lambda: 1)", "f(lambda x: x, y)", "f(x if y else z)",
+    "f(*x if y else z)", "f(**x if y else z)", "f(a=lambda: 1)", "f(a=*b)", "f(a=**b)", "f(*a=1)", "f(a==1)",
+    "f(a=1==2)", "f((a)=1)", "f(a, (b)=1)", "f(not x)", "f(-x)", "f(await x)", "f((yield))", "f(yield)",
+    "f(a:=1, b)", "f(a, b:=1)", "f(*a:=1)", "f(x for x in y if z)", "f(x async for x in y)",
+    "f(*(x for x in y))", "f(**{})", "f(**{}, **{})", "f(match=1)", "f(if=1)", "f(ｋ=1)", "f(a=1, a=2)",
+    "f(a, *b, c=1, *d, e=2, **f)", "f(x,,)", "f(,x)", "f(x y)", "f(x)y", "empty(x)", "empty(x=1, y=2)",
+    "nonempty(x, )", "empty( x )", "empty(\nx\n)", "empty(x # c\n)"], "call")
+
+# dict and set displays
+CS(["{}", "{1}", "{1, 2}", "{1: 2}", "{1: 2, 3: 4}", "{**x}", "{**x, 1: 2}", "{1: 2, **x}", "{*x}", "{*x, 1}",
+    "{1: 2, 3}", "{1, 2: 3}", "{x := 1}", "{(x := 1): 2}", "{x: y for x in z}", "{x for x in y}",
+    "{**x for x in y}", "{*x for x in y}", "{1: 2,}", "{1,}", "{,}", "{1:}", "{:1}", "{lambda: 1}",
+    "{lambda: 1: 2}", "{1: lambda: 2}", "{a: b: c}", "{**a or b}", "x in {1}", "x == {}", "[{}]",
+    "x in [{1: 2}]", "{**a, **b}", "{*a, *b}", "{**a, *b}", "{*a, **b}", "{**a: b}", "{a: *b}", "{a: **b}",
+    "{a, *b, c}", "{a: b, **c, d: e}", "{a: b, c}", "{(a, b): c}", "{a: (b, c)}", "{a: b, c: d, }",
+    "{x := 1, 2}", "{1, x := 2}", "{(x := 1)}", "{x: (y := 1)}", "{x: y := 1}", "{x if y else z: w}",
+    "{x: y if z else w}", "{yield}", "{(yield)}", "{await x}", "{await x: y}", "{**await x}", "{*await x}",
+    "{x for x in y if z}", "{x: y for x in z for w in v}", "{{}}", "{{1}}", "{{1: 2}: 3}", "{a: {b: c}}",
+    "{1: 2 for x in y}", "{**x, }", "{*x, }", "{* x}", "{** x}"], "display")
+
+# await, yield, starred, walrus, attribute, ellipsis, None
+CS(["await x", "await", "await await x", "-await x", "await x ** 2", "x == await y", "await -x", "await (x)",
+    "await x.y", "await x[0]", "await x()", "await f'x'", "(await x)", "not await x", "await x and y",
+    "(yield)", "(yield x)", "(yield x, y)", "(yield *x, y)", "(yield from x)", "(yield from)", "yield x",
+    "x == (yield)", "[(yield)]", "(yield x,)", "(yield *x)", "(yield *x,)", "(yield from x, y)",
+    "(yield from *x)", "((yield))", "((yield), 1)", "(1, (yield))", "*x,", "(*x,)", "[*x]", "[*x, *y]", "(*x)",
+    "x == *y", "x in (*y,)", "{*x}", "f'{*x}'", "*x, y", "x, *y,", "(x := 1)", "x := 1", "(x.y := 1)",
+    "((x) := 1)", "[x := 1]", "[(x := 1)]", "f(x := 1)", "(x := y := 1)", "(x := (y := 1))", "x[y := 1]",
+    "(x := 1, y := 2)", "(x := lambda: 1)", "(x := yield)", "(x := *y)", "(ｘ := 1)", "(x:=1)", "(x :=1)",
+    "x.y", "x.y.z", "x.if", "x.match", "x .y", "1 .real", "1..real", "\"s\".upper", "x.__class__", "().x",
+    "[].x", "{}.x", "x.ｙ", "x.y()", "x.(y)", "x..y", "x.1", "x. y", "x.\ny", "(x\n.y)", "None", "...",
+    "Ellipsis", "x == ...", "... == x", "x in [..., 1]", "x is ...", "x is None", "x is not None",
+    "not x is y", "x if y else z", "x if y else z if w else v", "(x if y else z) if w else v",
+    "x if (y if z else w) else v", "lambda: x if y else z", "x if lambda: y else z", "x if y else lambda: z",
+    "x if not y else z", "x if y or z else w", "x if y and z else w", "x if y == z else w", "x or y if z else w",
+    "not x if y else z", "x if y else not z", "x < y if z else w", "-x if y else z", "x if -y else z",
+    "x in y not in z", "x is y is not z", "x < y > z", "x == y != z <= w", "x not in y in z"],
+   "await yield starred walrus attribute")
+
+# deep nesting: CPython's parser stack (MAXSTACK 6000) overflows during its second, error-reporting pass on some
+# invalid inputs; valid inputs never reach it within the 200-bracket tokenizer limit
+for k in (150, 180, 190, 192, 193, 195, 198, 199, 200):
+    C("[" * k + "x" + "]" * k + " x", f"{k} brackets then an error")
+    C("(" * k + "x +" + ")" * k, f"{k} parentheses, error inside")
+    C("(" * k + "x" + ")" * k + " +", f"{k} parentheses, error after")
+for k in (193, 196, 200):
+    C("{" * k + "1" + "}" * k + " x", f"{k} braces then an error")
+    C("(" * k + "x" + ")" * k + " x", f"{k} parentheses then an error")
+    C("f(" * min(k, 120) + "x" + ")" * min(k, 120) + " x", f"{min(k, 120)} calls then an error")
+# maximal-depth inputs Python accepts (the port must accept the guards among them)
+for e in ["(" * 200 + "x" + ")" * 200, "(" * 199 + "x == 1" + ")" * 199, "x == " + "(" * 200 + "1" + ")" * 200,
+          "x in [" + "(" * 199 + "1" + ")" * 199 + "]", "empty(" + "(" * 199 + "x" + ")" * 199 + ")",
+          "(" * 100 + "b and " + "(" * 99 + "c" + ")" * 99 + ")" * 100, "not " + "(" * 200 + "b" + ")" * 200,
+          "(" * 100 + "not " + "(" * 100 + "b" + ")" * 100 + ")" * 100,
+          "x == 1 and (" + "(" * 198 + "y < 2" + ")" * 198 + ")", "(" * 200 + "s" + ")" * 200 + " in ['a']",
+          "[" * 200 + "x" + "]" * 200, "{" * 200 + "1" + "}" * 200, "f(" * 120 + "x" + ")" * 120,
+          "x[" * 120 + "0" + "]" * 120, "(" * 199 + "x for x in y" + ")" * 199, "f'{" + "(" * 199 + "x" + ")" * 199 + "}'",
+          "(" * 50 + "lambda: " * 30 + "x" + ")" * 50, "[" * 100 + "(" * 100 + "x" + ")" * 100 + "]" * 100,
+          "(" * 66 + "x if y else " * 30 + "z" + ")" * 66, "-(" * 150 + "x" + ")" * 150,
+          "(" * 150 + "x" + ")" * 150 + " == " + "(" * 50 + "1" + ")" * 50]:
+    C(e, "maximal depth")
+
+# repr of non-printable characters in messages
+for ch in ["\u3000", "\u1680", "\u2028", "\u2029", "\u200b", "\ufeff", "\u061c", "\u2066", "\U000E0001", "\ue000",
+           "\u0378", "\U0010FFFD", "\x85", "\xa0", "\xad", "\x7f", "\u00e9", "\U0001F600", "\u0300", "\uFFFF"]:
+    C("x == y and s == '" + ch + "'", "repr probe")
 
 
 # --------------------------------------------------------------------------------------------- #
 # Random expressions
 # --------------------------------------------------------------------------------------------- #
 NAMES = ["x", "y", "n", "m", "s", "t", "b", "c", "arr", "tags", "obj", "status", "empty", "nonempty", "__x", "_",
-         "match", "ｘ", "é", "ﬁx", "K", "µ", "π", "a1", "x_y", "print"]
+         "match", "ｘ", "é", "ﬁx", "K", "µ", "π", "a1", "x_y", "print"]
 NUMBERS = ["0", "1", "2", "3", "10", "2.5", "0.5", "1e3", "0x1F", "0o17", "0b101", "1_000", "00", "1.", ".5", "1e20",
-           "1e400", "1j", "9007199254740991", "9007199254740993", "0e0", "007", "1_", "0x", "08", "0_1"]
+           "1e400", "1j", "9007199254740991", "9007199254740993", "0e0", "007", "1_", "0x", "08", "0_1", "2.5J",
+           "1e400j", "0j"]
 STRINGS = ["'a'", '"b"', "''", "'pass'", "'repairable'", "r'\\d'", "u'x'", "b'x'", "f'x'", "'''t'''", "'a' 'b'",
            "'\\x41'", "'\\u00e9'", "'\\N{BULLET}'", "'\\ud800'", "'\\777'", "'\\d'", "'\\x4'", "'unterminated",
-           "'" + "z" * 257 + "'"]
+           "'" + "z" * 257 + "'", "f'{x}'", "f'{x!r}'", "f'{x=}'", "f'{x:>3}'", "f'{x:{y}}'", "rf'\\d{x}'",
+           "f'{{}}'", "f'{x}' 'a'", "b'\\x41'", "rb'\\x'", "b''", "f''", "f'{x:{y=}}'", "f'{'a'}'", "'a' f'b'",
+           "b'a' 'b'", "f'{x!z}'", "f'{'", "f'}'"]
 CMP = ["==", "!=", "<", "<=", ">", ">=", "in", "not in", "is", "is not", "<>"]
 BINOPS = ["+", "-", "*", "/", "//", "%", "**", "@", "<<", ">>", "&", "|", "^"]
 WS = [" ", "  ", "\t", "\x0c", " \\\n", "\n", " # c\n", "\r\n"]
@@ -302,17 +534,17 @@ class Gen:
 
     def atom(self, d):
         r = self.r.random()
-        if r < 0.38:
+        if r < 0.36:
             return self.pick(NAMES, 12)
-        if r < 0.55:
+        if r < 0.52:
             return self.pick(NUMBERS, 10)
-        if r < 0.68:
+        if r < 0.66:
             return self.pick(STRINGS, 6)
-        if r < 0.73:
+        if r < 0.71:
             return self.r.choice(["True", "False", "None", "..."])
-        if r < 0.84:
+        if r < 0.82:
             return self.lst(d)
-        if r < 0.9:
+        if r < 0.88:
             return "(" + self.expr(d + 1) + ")"
         return self.call(d)
 
@@ -330,8 +562,9 @@ class Gen:
     def call(self, d):
         f = self.r.choice(["empty", "nonempty", "empty", "nonempty", "foo", "(empty)", "ｅｍｐｔｙ"])
         r = self.r.random()
-        arg = (self.pick(NAMES, 12) if r < 0.7 else self.pick(NAMES, 12) + "," if r < 0.78 else "" if r < 0.84
-               else "x, y" if r < 0.9 else "x=1" if r < 0.95 else self.atom(d + 1))
+        arg = (self.pick(NAMES, 12) if r < 0.65 else self.pick(NAMES, 12) + "," if r < 0.72 else "" if r < 0.77
+               else "x, y" if r < 0.81 else "x=1" if r < 0.85 else self.r.choice(["*x", "**x", "x for x in y", "a:=1"])
+               if r < 0.9 else self.atom(d + 1))
         return f + "(" + arg + ")"
 
     def comparison(self, d):
@@ -367,7 +600,7 @@ class Gen:
             return "not " + self.expr(d + 1)
         if r < 0.45:
             return "(" + self.expr(d + 1) + ")"
-        if r < 0.51:
+        if r < 0.53:
             return self.forbidden(d)
         return self.term(d)
 
@@ -376,13 +609,20 @@ class Gen:
         forms = ["{a} if {t} else {t}", "lambda: {a}", "{a}.attr", "{a}[0]", "{a}[1:2]", "{{{a}}}", "{{{a}: 1}}",
                  "[{a} for x in y]", "({a} for x in y)", "(x := {a})", "await {a}", "(yield {a})", "[*{a}]",
                  "f(*{a})", "f(k={a})", "{a}(x)", "{a} is {a}", "{a} not {a}", "f'{{{a}}}'", "{a}, {a}", "{a},",
-                 "{a} = 1", "x if y", "{a} and", "({a}", "{a}]"]
+                 "{a} = 1", "x if y", "{a} and", "({a}", "{a}]", "lambda x, *y, z=1, **k: {a}", "lambda {a}: 1",
+                 "[{a} for x, y in z if {t}]", "{{x: {a} for x in y}}", "{{{a} for x in y}}", "{a}[{a}:{a}:{a}]",
+                 "{a}[*{a}]", "{a}[{a}, {a}]", "f({a}, *{a}, k={a}, **{a})", "f({a} for x in y)",
+                 "f'{{{a}!r:>{{{a}}}}}'", "f'{{{a}=}}'", "f'{{{a}:{{{a}=}}}}'", "f'a{{{a}}}b' 'c'",
+                 "b'x' {a}", "{a} b'x'", "{{**{a}}}", "{{*{a}}}", "({a}, *{a})", "(yield from {a})",
+                 "[x for {a} in y]", "[x for x in {a} if {a}]", "-{a} ** -{a}", "{a}.y.z", "{a}()",
+                 "not {a} in {a}", "{a} if not {a} else {a}", "({a} := 1)", "[{a} async for x in y]"]
         return self.r.choice(forms).format(a=a, t=self.term(d + 1))
 
 
-ALPHABET = list("xyns_ab0129.eE+-*<>=!()[],:'\"#\\ \t\n\r\x0c\x0bjJ") + [
-    "and", "or", "not", "in", "is", "if", "else", "None", "True", "empty", "é", " ", "‌", "́",
-    "\U0001F600", "ｘ", "\x00", "\ud800", "r'", "b'", "f'", "'''", "\\\n", "0x", "1e", "__"]
+ALPHABET = list("xyns_ab0129.eE+-*<>=!()[],:'\"#\\ \t\n\r\x0c\x0bjJ{}") + [
+    "and", "or", "not", "in", "is", "if", "else", "None", "True", "empty", "é", " ", "‌", "́",
+    "\U0001F600", "ｘ", "\x00", "\ud800", "r'", "b'", "f'", "rb'", "'''", "\\\n", "0x", "1e", "__", "lambda",
+    "for", ":=", "**", "f'{", "}'", "!r", "=}", "await", "yield", "\u3000", "\u200b"]
 
 
 def mutate(rng, s):
@@ -403,7 +643,7 @@ def mutate(rng, s):
 
 def lexical(rng):
     core = rng.choice(["x == 1", "s in ['a', 'b']", "empty(x)", "not b", "x < 2.5 and y", "(x\n== 1)", "[1,\n2]",
-                       "s == 'a' 'b'", "n >= 0x1f", "b"])
+                       "s == 'a' 'b'", "n >= 0x1f", "b", "f'{x}'", "f'''{x\n}'''", "lambda: 1", "b'a'"])
     pre = "".join(rng.choice(["", " ", "\t", "\n", "\x0c", "# c\n", "\\\n", "\r\n", "\r", "  \n"])
                   for _ in range(rng.randint(0, 3)))
     post = "".join(rng.choice(["", " ", "\t", "\n", "\x0c", " # c", "\\\n", "\r\n", "\r", "\n  ", "\n#c", "\n\x0c",
@@ -411,12 +651,22 @@ def lexical(rng):
     return pre + core + post
 
 
-def random_exprs(rng, n_grammar, n_mut, n_lex):
+SHORT = list("xyfbrj01.e_+-*/%@&|^~<>=!(),[]{}:;'\"#\\ \n\t") + ["and", "or", "not", "in", "is", "if", "else",
+                                                                    "lambda", "for", "None", "True", "await",
+                                                                    "yield", "é", "\u3000", "f'", "b'", "'''"]
+
+
+def short_string(rng):
+    return "".join(rng.choice(SHORT) for _ in range(rng.randint(1, 6)))
+
+
+def random_exprs(rng, n_grammar, n_mut, n_lex, n_short):
     g = Gen(rng)
     grammar = [g.expr() for _ in range(n_grammar)]
     muts = [mutate(rng, rng.choice(grammar)) for _ in range(n_mut)]
     lex = [lexical(rng) for _ in range(n_lex)]
-    return grammar + muts + lex
+    short = [short_string(rng) for _ in range(n_short)]
+    return grammar + muts + lex + short
 
 
 # --------------------------------------------------------------------------------------------- #
@@ -450,7 +700,7 @@ VALUE_ENVS = {
     "some_unknown": {"x": UNK, "y": 2, "n": 1, "m": UNK, "s": "a", "t": UNK, "b": UNK, "c": False, "arr": UNK,
                      "tags": ["a"], "obj": {}, "status": "pass", "z": True},
     "all_unknown": {k: UNK for k in ["x", "y", "n", "m", "s", "t", "b", "c", "arr", "tags", "obj", "status", "z"]},
-    "numbers": {"x": 9007199254740991, "y": 1e-300, "n": -5, "m": 0.1, "s": "\U0001F600", "t": "á",
+    "numbers": {"x": 9007199254740991, "y": 1e-300, "n": -5, "m": 0.1, "s": "\U0001F600", "t": "á",
                 "b": True, "c": True, "arr": [0.1, 2.5, "x", None, [1]], "tags": ["\U0001F600"], "obj": {"": None}},
     "boolint": {"x": True, "y": False, "n": 1, "m": 0, "s": "1", "t": "True", "b": 0, "c": 1, "arr": [True, 1],
                 "tags": [False, 0], "obj": {"a": True}, "status": "x"},
@@ -563,7 +813,13 @@ def not_double(v: int) -> bool:
 
 
 def disjoint_record(guards, types, note=""):
-    an = G.analyze_disjoint(list(guards), types)
+    try:
+        an = G.analyze_disjoint(list(guards), types)
+    except BaseException as exc:  # noqa: BLE001 - a non-GuardError escaping from parse (deviations/guards.md)
+        rec = {"guards": list(guards), "types": types, "x": type(exc).__name__}
+        if note:
+            rec["note"] = note
+        return rec
     rec = {"guards": list(guards), "types": types, "status": an.status, "detail": an.detail,
            "edges": list(an.edges), "counterexample": enc_value(an.counterexample)}
     if note:
@@ -645,7 +901,7 @@ DISJOINT_HAND = [
     (["x in (1, 2)", "x not in (1, 2)"], {"x": "integer"}, "list partition"),
     (["s in ['a', 'b']", "s not in ['a', 'b']"], {"s": "string"}, "string list partition"),
     (["s == 'a'", "s == 'b'", "s == 'a'"], {"s": "string"}, "triple overlap first and last"),
-    (["s == 'é'", "s == 'é'"], {"s": "string"}, "unnormalized strings"),
+    (["s == 'é'", "s == 'é'"], {"s": "string"}, "unnormalized strings"),
     (["s < 'b'", "s == 'a'"], {"s": "string"}, "string ordering error"),
     (["x == 2.0", "x == 2"], {"x": "number"}, "float/int same value"),
     (["n == 2.0", "n == 2"], {"n": "integer"}, "float/int same value, integer"),
@@ -658,14 +914,36 @@ DISJOINT_HAND = [
     (["x == 1", "x == 2"], {"x": "array"}, "equality on array evaluation error"),
     (["x in [1]", "x in [2]"], {"x": "boolean"}, "in on boolean evaluation error"),
     (["é > 1", "é < 3"], {"é": "integer"}, "unicode variable"),
-    (["K > 1", "K < 3"], {"K": "integer"}, "NFKC-normalized variable"),
+    (["K > 1", "K < 3"], {"K": "integer"}, "NFKC-normalized variable"),
     (["empty(empty)", "nonempty(empty)"], {"empty": "string"}, "predicate name as argument"),
     (["x == 1", "x == 1"], {"x": "integer"}, "identical guards"),
     (["empty(__proto__)", "nonempty(__proto__)"], {"__proto__": "array"}, "__proto__ as a variable name"),
     (["empty(__proto__)", "empty(__proto__) or nonempty(__proto__)"], {"__proto__": "string"},
      "__proto__ in a counterexample"),
     (["constructor == 'a'", "constructor != 'b'"], {"constructor": "string"}, "constructor as a variable name"),
+    (["x == 1j", "x == 1"], {"x": "number"}, "complex literal message"),
+    (["x == b'a'", "x == 1"], {"x": "string"}, "bytes literal message"),
+    (["x in [*y]", "x == 1"], {"x": "integer"}, "starred list message"),
+    (["empty(x for x in y)", "x == 1"], {"x": "integer"}, "generator argument message"),
+    (["{1}", "x == 1"], {"x": "integer"}, "set display message"),
+    (["-{x}", "x == 1"], {"x": "integer"}, "unary minus before a display"),
+    (["x == f'{y}'", "x == 1"], {"x": "string"}, "f-string message"),
+    (["x == 1", "f'{x:{y=}}' == s"], {"x": "integer", "s": "string"}, "f-string ValueError (JS GuardError)"),
 ]
+
+# repr in details: a guard text with non-printable characters in a string literal, a comment, or an array membership
+REPR_CHARS = ["\u3000", "\u1680", "\u2028", "\u2029", "\u200b", "\ufeff", "\u061c", "\u2066", "\U000E0001", "\ue000",
+              "\u0378", "\U0010FFFD", "\x85", "\xa0", "\xad", "\x7f", "\x01", "\u00e9", "\U0001F600", "\u0300",
+              "\uFFFF", "\U000F0000", "\u180e", "\u2000", "\u202f", "\u205f", "\U0001D173", "\u00a7", "'", '"', "\\"]
+for ch in REPR_CHARS:
+    # the raw character inside the guard text (a literal quote or backslash is written the way Python needs it)
+    lit = {"'": "\"'\"", "\\": "'\\\\'"}.get(ch, "'" + ch + "'")
+    DISJOINT_HAND.append((["x == y and s == " + lit, "x == 1"], {"x": "integer", "y": "integer", "s": "string"},
+                          "repr: string literal"))
+    DISJOINT_HAND.append((["x == y # " + ch, "x == 1"], {"x": "integer", "y": "integer"}, "repr: comment"))
+    DISJOINT_HAND.append(([lit + " in tags", "x == 1"], {"x": "integer", "tags": "array"}, "repr: membership"))
+DISJOINT_HAND.append((["x == y and s == '\\' \"'", "x == 1"], {"x": "integer", "y": "integer", "s": "string"},
+                      "repr: both quotes"))
 
 
 def random_disjoint(rng, n):
@@ -743,8 +1021,9 @@ def random_disjoint(rng, n):
             gs = partition()
         else:
             gs = [guard() for _ in range(rng.choice([2, 2, 3]))]
-        if rng.random() < 0.04:
-            gs.append(rng.choice(["x =", "y + 1 == 2", "zz == 1"]))
+        if rng.random() < 0.06:
+            gs.append(rng.choice(["x =", "y + 1 == 2", "zz == 1", "x == 1j", "x in [*y]", "f'{x}'", "x == b'a'",
+                                  "lambda: 1", "x[0] == 1", "{1}"]))
         used = set()
         for g in gs:
             try:
@@ -759,10 +1038,10 @@ def random_disjoint(rng, n):
 # --------------------------------------------------------------------------------------------- #
 # Unicode facts
 # --------------------------------------------------------------------------------------------- #
-def ranges(pred):
+def ranges(pred, include_surrogates=False):
     out, start = [], None
     for cp in range(0x110000):
-        ok = not (0xD800 <= cp <= 0xDFFF) and pred(chr(cp))
+        ok = (include_surrogates or not (0xD800 <= cp <= 0xDFFF)) and pred(chr(cp))
         if ok and start is None:
             start = cp
         elif not ok and start is not None:
@@ -773,10 +1052,28 @@ def ranges(pred):
     return out
 
 
-def unicode_facts():
+def repr_samples(rng):
+    """repr() of strings built from code points around every printable/non-printable boundary, plus quotes."""
+    np = ranges(lambda c: not c.isprintable(), include_surrogates=True)
+    cps = set()
+    for a, b in zip(np[::2], np[1::2]):
+        for cp in (a - 1, a, b, b + 1):
+            if 0 <= cp <= 0x10FFFF:
+                cps.add(cp)
+    cps = sorted(cps)
+    out = []
+    for k in range(0, len(cps), 7):
+        chunk = cps[k:k + 7]
+        s = "".join(chr(c) for c in chunk) + rng.choice(["", "'", '"', "'\"", "\\", "a"])
+        out.append({**enc_expr(s), "repr": repr(s)})
+    return out
+
+
+def unicode_facts(rng):
     xs = ranges(lambda c: c != "_" and c.isidentifier())
     xc = ranges(lambda c: ("a" + c).isidentifier())
     space = [cp for cp in range(0x110000) if not (0xD800 <= cp <= 0xDFFF) and chr(cp).isspace()]
+    nonprint = ranges(lambda c: not c.isprintable(), include_surrogates=True)
     # NFKC of every non-ASCII identifier character, as CPython's parser normalizes it
     h = hashlib.sha256()
     changed = 0
@@ -788,7 +1085,8 @@ def unicode_facts():
             changed += norm != s
             h.update(f"{cp:x}={norm}\n".encode("utf-8", "surrogatepass"))
     return {"unidata_version": unicodedata.unidata_version, "xid_start": xs, "xid_continue": xc, "space": space,
-            "nfkc_sha256": h.hexdigest(), "nfkc_changed": changed}
+            "nonprintable": nonprint, "nfkc_sha256": h.hexdigest(), "nfkc_changed": changed,
+            "repr": repr_samples(rng)}
 
 
 # --------------------------------------------------------------------------------------------- #
@@ -811,37 +1109,39 @@ def main():
         return p
 
     # ---- parse ---------------------------------------------------------------------------- #
-    exprs = list(CORPUS) if S == 1 else []
-    corpus_n = len(exprs)
-    exprs += [(e, "") for e in random_exprs(rng, 1800 * S, 1400 * S, 300 * S)]
-    parse_recs = [parse_record(e, n) for e, n in exprs]
+    corpus = [parse_record(e, n) for e, n in CORPUS] if S == 1 else []
+    fuzz = [parse_record(e) for e in random_exprs(rng, 1800 * S, 1400 * S, 300 * S, 1500 * S)]
 
     # ---- semantics (accepted, non-deviation guards; corpus first, then random) ------------- #
     accepted = []
     seen = set()
-    for r in parse_recs:
-        if r["r"] == "ok" and not r["dev"] and r["e"] not in seen:
+    for r in corpus + fuzz:
+        if r["r"] == "ok" and not r.get("dev") and r["e"] not in seen:
             seen.add(r["e"])
             accepted.append(r["e"])
     sem = [semantics_record(e) for e in accepted]
 
     # ---- disjointness ------------------------------------------------------------------------ #
-    dis = [disjoint_record(g, t, n) for g, t, n in DISJOINT_HAND]
+    dis = [disjoint_record(g, t, n) for g, t, n in DISJOINT_HAND] if S == 1 else []
     dis += [disjoint_record(g, t) for g, t in random_disjoint(rng, 450 * S)]
 
-    p1 = save("guards_parse", {"python": sys.version.split()[0], "cases": parse_recs})
-    p2 = save("guards_semantics", {"type_envs": TYPE_ENVS, "value_envs": VALUE_ENVS, "cases": sem})
-    p3 = save("guards_disjoint", {"cases": dis})
-    msg = (f"guards: {len(parse_recs)} parse cases ({corpus_n} hand-written, "
-           f"{sum(r['r'] == 'ok' for r in parse_recs)} accepted, {sum(r['dev'] for r in parse_recs)} JS deviations), "
-           f"{len(sem)} semantic cases, {len(dis)} disjointness cases "
-           f"({sum(1 for d in dis if d['status'] == 'COUNTEREXAMPLE')} counterexamples, "
-           f"{sum(1 for d in dis if d['status'] == 'PROVEN')} proven)")
+    paths = []
+    if corpus:
+        paths.append(save("guards_parse", {"python": sys.version.split()[0], "cases": corpus}))
+    paths.append(save("guards_fuzz", {"python": sys.version.split()[0], "cases": fuzz}))
+    paths.append(save("guards_semantics", {"type_envs": TYPE_ENVS, "value_envs": VALUE_ENVS, "cases": sem}))
+    paths.append(save("guards_disjoint", {"cases": dis}))
+    allp = corpus + fuzz
+    msg = (f"guards: {len(corpus)} corpus + {len(fuzz)} fuzz parse cases "
+           f"({sum(r['r'] == 'ok' for r in allp)} accepted, {sum(r['r'] == 'exc' for r in allp)} non-GuardError, "
+           f"{sum(bool(r.get('dev')) for r in allp)} JS deviations), {len(sem)} semantic cases, "
+           f"{len(dis)} disjointness cases ({sum(1 for d in dis if d.get('status') == 'COUNTEREXAMPLE')} counterexamples, "
+           f"{sum(1 for d in dis if d.get('status') == 'PROVEN')} proven)")
     if not args.no_unicode:
-        p4 = save("guards_unicode", unicode_facts())
+        p4 = save("guards_unicode", unicode_facts(rng))
         msg += f"; unicode facts -> {p4.name}"
     print(msg)
-    for p in (p1, p2, p3):
+    for p in paths:
         print(f"  {p.name}: {p.stat().st_size // 1024} KiB")
 
 

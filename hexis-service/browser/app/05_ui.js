@@ -37,12 +37,31 @@
     }
   }
 
+  /* Keys and values h() refuses: markup strings, inline handlers and script URLs never reach the DOM. */
+  const MARKUP_KEYS = /^(html|innerhtml|outerhtml|srcdoc)$/i;
+  const HANDLER_KEY = /^on[a-z]/i;
+  const URL_KEYS = /^(href|src|xlink:href|action|formaction|data|poster|background)$/i;
+  function is_script_url(v) {
+    /* the URL parser ignores ASCII whitespace and control characters, so "java\tscript:" counts too */
+    return /^(javascript|vbscript):/i.test(String(v).replace(/[\u0000- \u007f]/g, ""));
+  }
+
   function apply_attrs(el, attrs, svg) {
     let value;
     let has_value = false;
     for (const key of Object.keys(attrs)) {
       const v = attrs[key];
       if (v === undefined || v === null) continue;
+      if (MARKUP_KEYS.test(key)) {
+        throw new Error("HXUI.h: the " + key + " attribute is not supported. Build DOM nodes instead.");
+      }
+      if (key !== "on" && HANDLER_KEY.test(key)) {
+        throw new Error("HXUI.h: inline handler attributes such as " + key + " are not allowed. Pass on: {" +
+          key.slice(2).toLowerCase() + ": fn} instead.");
+      }
+      if (URL_KEYS.test(key) && is_script_url(v)) {
+        throw new Error("HXUI.h: " + key + " must not be a javascript: or vbscript: URL.");
+      }
       switch (key) {
         case "class":
         case "className": {
@@ -53,12 +72,13 @@
         case "text":
           el.textContent = String(v);
           break;
-        case "html":
-          throw new Error("HXUI.h: the html attribute is not supported. Build DOM nodes instead.");
         case "on":
           for (const ev of Object.keys(v)) if (typeof v[ev] === "function") el.addEventListener(ev, v[ev]);
           break;
         case "style":
+          if (typeof v !== "object" || Array.isArray(v)) {
+            throw new TypeError("HXUI.h: style takes an object of properties, such as {marginTop: \"4px\"}, not a " + typeof v + ".");
+          }
           for (const p of Object.keys(v)) {
             const sv = v[p];
             if (sv === null || sv === undefined || sv === false) continue;
@@ -174,27 +194,60 @@
     } catch (e) { /* selection unsupported: the text is still visible */ }
   }
 
-  /** copy_button(text, {label, target}) -> button that copies text, falling back to selecting `target`. */
+  function selection_covers(el) {
+    try {
+      const sel = globalThis.getSelection();
+      if (!sel || sel.isCollapsed || !sel.rangeCount) return false;
+      return el.contains(sel.anchorNode) && el.contains(sel.focusNode);
+    } catch (e) { return false; }
+  }
+
+  const COPY_BLOCKED = "Copy is blocked here. Press Ctrl+C or Cmd+C to copy the selected value.";
+
+  /** copy_button(text, {label, target, id}) -> button that copies text. When the clipboard is blocked (the
+      normal case in a sandboxed viewer) it expands and selects `target` and shows a visible one-line note
+      after the digest that says what to do; the note goes away after 6 s or once the selection moves. */
   HXUI.copy_button = function (text, opts) {
     const o = opts || {};
     const full = String(text);
     const name = o.label ? "Copy " + o.label : "Copy the full value";
-    const btn = h("button", { type: "button", class: "hx-icon-btn hx-copy", "aria-label": name, title: name }, HXUI.icon("copy"));
+    const btn = h("button", { type: "button", id: o.id || HXUI.uid("hx-copy"), class: "hx-icon-btn hx-copy", "aria-label": name, title: name }, HXUI.icon("copy"));
     let timer = 0;
-    function settle(state) {
+    let note = null;
+    let watch = null;
+    function drop_note() {
+      if (watch) { doc.removeEventListener("selectionchange", watch); watch = null; }
+      if (note) { note.remove(); note = null; btn.removeAttribute("aria-describedby"); }
+    }
+    function rest() {
+      clearTimeout(timer);
+      drop_note();
+      delete btn.dataset.state;
+      btn.replaceChildren(HXUI.icon("copy"));
+      btn.setAttribute("aria-label", name);
+      btn.title = name;
+    }
+    function show_note(target) {
+      drop_note();
+      note = h("span", { class: "hx-copy-note", id: btn.id + "-note" }, HXUI.icon("info"), h("span", null, COPY_BLOCKED));
+      const anchor = btn.closest(".hx-digest") || btn;
+      anchor.insertAdjacentElement("afterend", note);
+      btn.setAttribute("aria-describedby", note.id);
+      if (target) {
+        watch = () => { if (!selection_covers(target)) rest(); };
+        doc.addEventListener("selectionchange", watch);
+      }
+    }
+    function settle(state, target) {
       clearTimeout(timer);
       btn.dataset.state = state;
       btn.replaceChildren(HXUI.icon(state === "copied" ? "check" : "copy"));
-      const msg = state === "copied" ? "Copied" : "Copy is blocked here. The full value is selected, so press Ctrl+C or Cmd+C.";
+      const msg = state === "copied" ? "Copied" : COPY_BLOCKED;
       btn.setAttribute("aria-label", msg);
       btn.title = msg;
+      if (state === "selected") show_note(target); else drop_note();
       HXUI.announce(state === "copied" ? "Copied to the clipboard." : msg);
-      timer = setTimeout(() => {
-        delete btn.dataset.state;
-        btn.replaceChildren(HXUI.icon("copy"));
-        btn.setAttribute("aria-label", name);
-        btn.title = name;
-      }, state === "copied" ? 1600 : 6000);
+      timer = setTimeout(rest, state === "copied" ? 1600 : 6000);
     }
     function fallback() {
       const target = o.target || null;
@@ -203,7 +256,7 @@
         target.classList.add("is-expanded");
         select_contents(target);
       }
-      settle("selected");
+      settle("selected", target);
     }
     btn.addEventListener("click", () => {
       let p = null;
@@ -218,15 +271,16 @@
     return btn;
   };
 
-  /** digest(text, {short=14, copy=true, label}) -> mono, truncated, full value in title, copy button */
+  /** digest(text, {short=14, copy=true, label, id}) -> mono, truncated, full value in title, copy button.
+      With an id, the digest text gets that id and its copy button gets id + "-copy". */
   HXUI.digest = function (text, opts) {
     const o = Object.assign({ short: 14, copy: true }, opts || {});
     const full = text === null || text === undefined ? "" : String(text);
-    if (!full) return h("span", { class: "hx-digest is-empty" }, h("code", { class: "hx-digest-text" }, "none"));
+    if (!full) return h("span", { class: "hx-digest is-empty" }, h("code", { class: "hx-digest-text", id: o.id || null }, "none"));
     const shown = full.length > o.short ? full.slice(0, o.short) + "…" : full;
-    const code = h("code", { class: "hx-digest-text", title: full }, shown);
+    const code = h("code", { class: "hx-digest-text", title: full, id: o.id || null }, shown);
     const wrap = h("span", { class: "hx-digest", dataset: { full } }, code);
-    if (o.copy) wrap.appendChild(HXUI.copy_button(full, { label: o.label || "full digest", target: code }));
+    if (o.copy) wrap.appendChild(HXUI.copy_button(full, { label: o.label || "full digest", target: code, id: o.id ? o.id + "-copy" : null }));
     return wrap;
   };
 
@@ -325,9 +379,38 @@
   };
 
   /* ------------------------------------------------------------------ scroll containers */
-  /* A wrapper that scrolls sideways becomes a focusable, labelled region only while it overflows. */
+  /* A wrapper that scrolls sideways becomes a focusable, labelled region only while it overflows. Table
+     scrollers also fold their foldable columns into the first column when the table does not fit, and fade
+     the side that has more content behind it (the fade is a mask on the table, so the scroller's own focus
+     ring is never faded). */
   let overflow_observer = null;
+  function sync_fold(el) {
+    const wrap = el.parentElement;
+    if (!wrap || !wrap.classList.contains("has-fold")) return;
+    if (!wrap.classList.contains("is-folded")) {
+      if (el.scrollWidth > el.clientWidth + 1) {
+        wrap.dataset.hxNatural = String(el.scrollWidth);
+        wrap.classList.add("is-folded");
+      }
+    } else if (el.clientWidth >= Number(wrap.dataset.hxNatural || Infinity)) {
+      wrap.classList.remove("is-folded");
+      if (el.scrollWidth > el.clientWidth + 1) wrap.classList.add("is-folded");
+    }
+  }
+  function sync_fade(el) {
+    const max = el.scrollWidth - el.clientWidth;
+    const over = max > 1;
+    const start = over && el.scrollLeft > 2;
+    const end = over && el.scrollLeft < max - 2;
+    el.dataset.scrollStart = start ? "more" : "edge";
+    el.dataset.scrollEnd = end ? "more" : "edge";
+    el.style.setProperty("--hx-sl", Math.round(el.scrollLeft) + "px");
+    el.style.setProperty("--hx-cw", el.clientWidth + "px");
+    el.style.setProperty("--hx-fl", start ? "2.5rem" : "0px");
+    el.style.setProperty("--hx-fr", end ? "2.5rem" : "0px");
+  }
   function sync_overflow(el) {
+    sync_fold(el);
     const over = el.scrollWidth > el.clientWidth + 1;
     if (over) {
       if (el.getAttribute("tabindex") !== "0") el.setAttribute("tabindex", "0");
@@ -340,14 +423,29 @@
       el.removeAttribute("aria-label");
       el.classList.remove("is-overflowing");
     }
+    if (el.dataset.hxFade === "1") sync_fade(el);
   }
-  HXUI.watch_overflow = function (el, label) {
+  /* observed element -> the scroller it measures (a table observes a zero-height sizer, so folding the table,
+     which changes its height, never re-triggers the observer inside its own callback) */
+  const observed = new WeakMap();
+
+  /** watch_overflow(el, label, {fade, sizer}) -> el, a labelled, focusable region while it scrolls sideways */
+  HXUI.watch_overflow = function (el, label, opts) {
+    const o = opts || {};
     el.dataset.hxLabel = label || "";
+    if (o.fade) {
+      el.dataset.hxFade = "1";
+      el.addEventListener("scroll", () => sync_fade(el), { passive: true });
+    }
     if (typeof ResizeObserver !== "function") return el;
     if (!overflow_observer) {
-      overflow_observer = new ResizeObserver((entries) => { for (const en of entries) sync_overflow(en.target); });
+      overflow_observer = new ResizeObserver((entries) => {
+        for (const en of entries) { const target = observed.get(en.target); if (target) sync_overflow(target); }
+      });
     }
-    overflow_observer.observe(el);
+    const probe = o.sizer || el;
+    observed.set(probe, el);
+    overflow_observer.observe(probe);
     return el;
   };
 
@@ -357,24 +455,59 @@
     return v === null || v === undefined ? "" : v;
   }
 
-  /** table({columns:[{key,label,align,mono,nowrap,render(row)}], rows, caption, empty, row_attrs(row,i), class}) */
+  /* A copy of a rendered cell for the folded line: same text and styling, no ids, no listeners. */
+  function fold_copy(v) {
+    if (Array.isArray(v)) return v.map(fold_copy);
+    if (!(v instanceof Node)) return v;
+    const c = v.cloneNode(true);
+    if (c instanceof Element) {
+      c.removeAttribute("id");
+      for (const x of c.querySelectorAll("[id]")) x.removeAttribute("id");
+    }
+    return c;
+  }
+
+  function fold_line(cols, row, i) {
+    const parts = [];
+    for (const c of cols) {
+      const v = typeof c.fold === "function" ? c.fold(row, i) : fold_copy(cell_value(c, row, i));
+      if (v === null || v === undefined || v === "" || (Array.isArray(v) && !v.length)) continue;
+      /* a no-break space before the dot: a wrapped line never starts with the separator */
+      if (parts.length) parts.push(h("span", { class: "hx-fold-sep", "aria-hidden": "true" }, " · "));
+      parts.push(h("span", { class: ["hx-fold-item", c.mono ? "is-mono" : null] },
+        c.fold_label ? h("span", { class: "hx-fold-label" }, c.fold_label + " ") : null, v));
+    }
+    return parts.length ? h("span", { class: "hx-fold" }, parts) : null;
+  }
+
+  /** table({columns:[{key, label, align, mono, nowrap, render(row), fold, fold_label}], rows, caption,
+             caption_hidden, empty, row_attrs(row,i), class})
+      fold: true (or a function (row, i) -> content) marks a column that, while the table is too wide for its
+      container, is hidden and shown as a second line in the first column instead. The table scrolls sideways
+      inside its own wrapper when it still does not fit, with a fade on the side that has more. */
   HXUI.table = function (spec) {
     const cols = spec.columns || [];
     const rows = spec.rows || [];
-    const cls = (c) => ["hx-al-" + (c.align || "left"), c.mono ? "is-mono" : null, c.nowrap ? "is-nowrap" : null, c.class || null];
+    const folded = cols.filter((c, i) => i > 0 && c.fold);
+    const cls = (c) => ["hx-al-" + (c.align || "left"), c.mono ? "is-mono" : null, c.nowrap ? "is-nowrap" : null, c.fold ? "hx-col-fold" : null, c.class || null];
     const head = h("thead", null, h("tr", null, cols.map((c) => h("th", { scope: "col", class: cls(c) }, c.label === undefined ? c.key : c.label))));
     const body = h("tbody", null, rows.length
       ? rows.map((row, i) => h("tr", typeof spec.row_attrs === "function" ? spec.row_attrs(row, i) : null,
-        cols.map((c) => h("td", { class: cls(c) }, cell_value(c, row, i)))))
+        cols.map((c, ci) => h("td", { class: cls(c) }, cell_value(c, row, i), ci === 0 && folded.length ? fold_line(folded, row, i) : null))))
       : h("tr", { class: "hx-table-empty" }, h("td", { colspan: Math.max(1, cols.length) }, spec.empty || "Nothing to show yet.")));
-    const table = h("table", { class: ["hx-table", spec.class] }, spec.caption ? h("caption", null, spec.caption) : null, head, body);
-    const wrap = h("div", { class: "hx-table-wrap" }, table);
-    HXUI.watch_overflow(wrap, typeof spec.caption === "string" ? spec.caption : "Table");
+    const caption = spec.caption ? h("caption", { class: spec.caption_hidden ? "hx-visually-hidden" : null }, spec.caption) : null;
+    const table = h("table", { class: ["hx-table", spec.class] }, caption, head, body);
+    const scroller = h("div", { class: "hx-table-scroll" }, table);
+    const sizer = h("div", { class: "hx-table-sizer", "aria-hidden": "true" });
+    const wrap = h("div", { class: ["hx-table-wrap", folded.length ? "has-fold" : null] }, sizer, scroller);
+    HXUI.watch_overflow(scroller, typeof spec.caption === "string" ? spec.caption : "Table", { fade: true, sizer });
     return wrap;
   };
 
   /* ------------------------------------------------------------------ tabs */
-  /** tabs(id, [{id, label, render() -> Element}], {selected, on_change(tab_id), label}) -> Element
+  /** tabs(id, [{id, label, render() -> Element}], {selected, on_change(tab_id), label, orientation}) -> Element
+      Horizontal by default: ArrowLeft / ArrowRight / Home / End move between tabs, and ArrowUp / ArrowDown keep
+      scrolling the page. orientation: "vertical" uses ArrowUp / ArrowDown instead.
       The returned element carries el.hx = {select(id), refresh(), selected(), tab(id), panel(id)}. */
   HXUI.tabs = function (id, items, opts) {
     const o = opts || {};
@@ -382,7 +515,13 @@
     const tabs = {};
     const panels = {};
     let selected = null;
-    const tablist = h("div", { role: "tablist", class: "hx-tablist", "aria-label": o.label || null });
+    const vertical = o.orientation === "vertical";
+    const prev_key = vertical ? "ArrowUp" : "ArrowLeft";
+    const next_key = vertical ? "ArrowDown" : "ArrowRight";
+    const tablist = h("div", {
+      role: "tablist", class: ["hx-tablist", vertical ? "is-vertical" : null], "aria-label": o.label || null,
+      "aria-orientation": vertical ? "vertical" : "horizontal",
+    });
     for (const it of list) {
       const tab = h("button", {
         type: "button", role: "tab", id: id + "-tab-" + it.id, class: "hx-tab", "aria-selected": "false",
@@ -397,8 +536,8 @@
       const ids = list.map((t) => t.id);
       const at = ids.indexOf(selected);
       let next = null;
-      if (e.key === "ArrowRight" || e.key === "ArrowDown") next = ids[(at + 1) % ids.length];
-      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") next = ids[(at - 1 + ids.length) % ids.length];
+      if (e.key === next_key) next = ids[(at + 1) % ids.length];
+      else if (e.key === prev_key) next = ids[(at - 1 + ids.length) % ids.length];
       else if (e.key === "Home") next = ids[0];
       else if (e.key === "End") next = ids[ids.length - 1];
       if (next === null || next === undefined) return;
@@ -682,31 +821,58 @@
     return h("div", { class: ["hx-unavailable", o.compact ? "is-compact" : null], dataset: { missing: names.join(" ") } },
       h("span", { class: "hx-unavailable-icon" }, HXUI.icon("unavailable")),
       h("div", { class: "hx-unavailable-main" },
-        h("p", { class: "hx-unavailable-title" }, o.title || (failed.length && !absent.length ? "Failed to load in this build" : "Not available in this build")),
+        h("p", { class: "hx-unavailable-title" }, o.title || (failed.length && !absent.length ? "Failed to load in this build" : "Not in this build")),
         parts, hint));
   };
 
-  /** about_list(items, {title}) -> "What you can do here" list */
+  /** about_list(items, {title, level=3}) -> "What you can do here" list. level is the heading level of its
+      label (2 to 6): 3 under a section title, 4 inside a panel whose title is an h3. */
   HXUI.about_list = function (items, opts) {
     const o = opts || {};
     const title_id = HXUI.uid("hx-about");
+    const level = Math.min(6, Math.max(2, Math.round(Number(o.level) || 3)));
     return h("div", { class: "hx-about" },
-      h("h3", { class: "hx-label", id: title_id }, o.title || "What you can do here"),
-      h("ul", { class: "hx-about-list", "aria-labelledby": title_id }, (items || []).map((t) => h("li", null, t))));
+      h("h" + level, { class: "hx-label", id: title_id }, o.title || "What you can do here"),
+      h("ul", { class: "hx-about-list", "aria-labelledby": title_id }, (items || []).map((t) => h("li", null, HXUI.rich(t)))));
+  };
+
+  function rich_part(p) {
+    if (Array.isArray(p)) return p.map(rich_part);
+    if (p && typeof p === "object" && !(p instanceof Node)) {
+      if (typeof p.code === "string") return h("code", { class: "hx-inline" }, p.code);
+      if (typeof p.strong === "string") return h("strong", null, p.strong);
+      return String(p);
+    }
+    return p;
+  }
+
+  /** rich(parts) -> children for h(): strings stay text, {code: "x"} becomes an inline mono identifier and
+      {strong: "x"} bold text. Section copy can then keep ids such as user:dana or SKILL.md in mono while staying
+      plain data at load time. */
+  HXUI.rich = function (parts) {
+    return Array.isArray(parts) ? parts.map(rich_part) : [rich_part(parts)];
   };
 
   /* ------------------------------------------------------------------ sections and router */
   const SECTION_ORDER = ["overview", "compile", "run", "learn", "break", "selftest"];
   const DEFAULT_TITLES = { overview: "Overview", compile: "Compile", run: "Run workbench", learn: "Learn from traces", break: "Break it", selftest: "Self-test" };
+  /* A few words under each title in the wide rail. The section header shows the full summary. */
+  const DEFAULT_BLURBS = {
+    overview: "Parity check and demo", compile: "Skill to state machine", run: "Approvals, faults, recovery",
+    learn: "Gated machine updates", break: "Mutations and guards", selftest: "Checks run in this page",
+  };
   HXUI.SECTION_ORDER = SECTION_ORDER.slice();
   HXUI.DEFAULT_TITLES = Object.assign({}, DEFAULT_TITLES);
+  HXUI.DEFAULT_BLURBS = Object.assign({}, DEFAULT_BLURBS);
 
   const registry = new Map();
   let registered = 0;
   let shell = null;
   let current = null;
 
-  /** register_section({id, title, summary, nav, needs, about, mount(el), on_show()}) */
+  /** register_section({id, title, summary, nav, blurb, needs, about, mount(el), on_show()})
+      summary: one sentence under the section title. nav: the short tab label on phones. blurb: a few words
+      under the title in the wide rail (defaults per section id; "" for none). */
   HXUI.register_section = function (spec) {
     if (!spec || typeof spec.id !== "string" || !/^[a-z][a-z0-9_-]*$/.test(spec.id)) {
       throw new Error("register_section: id must be a bare lowercase token such as \"compile\"");
@@ -718,6 +884,7 @@
       id: spec.id,
       title: spec.title || DEFAULT_TITLES[spec.id] || spec.id,
       summary: spec.summary || "",
+      blurb: typeof spec.blurb === "string" ? spec.blurb : DEFAULT_BLURBS[spec.id] || "",
       nav: spec.nav || spec.title || DEFAULT_TITLES[spec.id] || spec.id,
       needs: Array.isArray(spec.needs) ? spec.needs.slice() : [],
       about: Array.isArray(spec.about) ? spec.about.slice() : [],
@@ -739,9 +906,9 @@
     return Array.from(registry.values()).sort((a, b) => rank(a) - rank(b));
   }
 
-  /** sections() -> [{id, title, summary, nav, needs, state}] in navigation order */
+  /** sections() -> [{id, title, summary, blurb, nav, needs, state}] in navigation order */
   HXUI.sections = function () {
-    return ordered().map((r) => ({ id: r.id, title: r.title, summary: r.summary, nav: r.nav, needs: r.needs.slice(), state: r.state }));
+    return ordered().map((r) => ({ id: r.id, title: r.title, summary: r.summary, blurb: r.blurb, nav: r.nav, needs: r.needs.slice(), state: r.state }));
   };
   HXUI.has_section = function (id) { return registry.has(id); };
   HXUI.current = function () { return current; };
@@ -824,6 +991,13 @@
     try { return decodeURIComponent(raw); } catch (e) { return raw; }
   }
 
+  /* The URL always names the section on screen: a hash that names no section is replaced (no new history
+     entry) by the current one. */
+  function correct_hash() {
+    if (!current || hash_id() === current) return;
+    try { history.replaceState(history.state, "", "#" + current); } catch (e) { /* sandboxed: the view is still right */ }
+  }
+
   /** go(section_id, {focus}) -> true if routed. Updates location.hash with the bare token. */
   HXUI.go = function (section_id, opts) {
     const id = String(section_id || "").replace(/^#/, "");
@@ -840,7 +1014,8 @@
     shell = s;
     globalThis.addEventListener("hashchange", () => {
       const id = hash_id();
-      if (registry.has(id) && id !== current) show(id, {});
+      if (!registry.has(id)) correct_hash();
+      else if (id !== current) show(id, {});
     });
     /* in-page links to a section (href="#compile") route without leaving focus on a hidden element */
     shell.main.addEventListener("click", (e) => {
@@ -858,7 +1033,10 @@
   HXUI.route_initial = function () {
     const id = hash_id();
     const target = registry.has(id) ? id : registry.has("overview") ? "overview" : (ordered()[0] || {}).id;
-    if (target) show(target, {});
+    if (target) {
+      show(target, {});
+      correct_hash();
+    }
     return target;
   };
 
@@ -882,7 +1060,8 @@
     const mode = theme_mode;
     const next = next_mode(mode);
     btn.dataset.mode = mode;
-    btn.replaceChildren(HXUI.icon(THEME_ICONS[mode]), h("span", { class: "hx-theme-label" }, THEME_LABELS[mode]));
+    /* the visible label says what the control sets ("Theme: System"); phones show the icon only */
+    btn.replaceChildren(HXUI.icon(THEME_ICONS[mode]), h("span", { class: "hx-theme-label" }, "Theme: " + THEME_LABELS[mode]));
     btn.setAttribute("aria-label", "Theme: " + THEME_LABELS[mode] + ". Switch to " + THEME_LABELS[next] + ".");
     btn.title = (mode === "system" ? "Theme follows your device." : "Theme: " + THEME_LABELS[mode] + ".") + " Click for " + THEME_LABELS[next].toLowerCase() + ".";
   }

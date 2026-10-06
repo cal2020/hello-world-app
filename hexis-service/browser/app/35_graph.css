@@ -1,8 +1,12 @@
 /* HEXIS Runtime Lab: the state graph (app/35_graph.js).
    Colors come only from app/00_tokens.css; shades are derived with color-mix(). Text sizes inside the SVG are
-   pixels on purpose: the layout measures labels in pixels (mono advance 0.6em) and must match what is drawn. */
+   pixels on purpose: the layout measures labels in pixels (mono advance 0.6em, a measured table for sans) and
+   must match what is drawn. */
 
 .hxg {
+  /* "not taken" during a run and "not highlighted": about 2.6:1 on the canvas in light, 3.6:1 in dark, so the rest
+     of the machine stays readable while the accent path (7:1 and more) stands out */
+  --hxg-edge-dim: color-mix(in srgb, var(--graph-edge) 80%, var(--graph-bg));
   display: grid;
   gap: var(--sp-3);
   width: fit-content; /* the figure hugs its drawing and never grows past its container */
@@ -32,6 +36,8 @@
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
+.hxg-meta .hxg-code { color: var(--ink-2); }
+/* the legend explains run marks, so it is shown only while a run is on the graph */
 .hxg-legend {
   display: flex;
   flex-wrap: wrap;
@@ -42,6 +48,7 @@
   font: 400 var(--fs-2) / var(--lh-tight) var(--font-sans);
   color: var(--ink-2);
 }
+.hxg-legend[hidden] { display: none; }
 .hxg-legend li { display: inline-flex; align-items: center; gap: 0.45rem; white-space: nowrap; }
 .hxg-sw { display: inline-block; flex: none; }
 .hxg-sw--current {
@@ -62,25 +69,48 @@
   font: 600 var(--fs-1) / 1 var(--font-sans);
   font-variant-numeric: tabular-nums;
 }
-.hxg-sw--faint { width: 1.25rem; height: 0; border-top: 2px solid var(--graph-edge-faint); }
+.hxg-sw--faint { width: 1.25rem; height: 0; border-top: 2px solid var(--hxg-edge-dim); }
 
-/* ------------------------------------------------------------------ canvas */
-.hxg-canvas {
+/* ------------------------------------------------------------------ frame and canvas */
+/* the frame draws the border and fill; the canvas inside it scrolls sideways when the drawing is wider */
+.hxg-frame {
   min-width: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  overscroll-behavior-x: contain;
   border: 1px solid var(--rule);
   border-radius: var(--r-2);
   background: var(--graph-bg);
 }
-.hxg-canvas:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.hxg-canvas {
+  position: relative; /* the containing block of the visually hidden text alternative */
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  border-radius: calc(var(--r-2) - 1px);
+}
+/* while the drawing overflows, the side that has more fades out (the same cue as the section tab strip) */
+.hxg-canvas[data-scroll-end="more"] {
+  -webkit-mask-image: linear-gradient(to right, var(--ink) calc(100% - 2rem), transparent);
+  mask-image: linear-gradient(to right, var(--ink) calc(100% - 2rem), transparent);
+}
+.hxg-canvas[data-scroll-start="more"][data-scroll-end="more"] {
+  -webkit-mask-image: linear-gradient(to right, transparent, var(--ink) 2rem, var(--ink) calc(100% - 2rem), transparent);
+  mask-image: linear-gradient(to right, transparent, var(--ink) 2rem, var(--ink) calc(100% - 2rem), transparent);
+}
+.hxg-canvas[data-scroll-start="more"][data-scroll-end="edge"] {
+  -webkit-mask-image: linear-gradient(to right, transparent, var(--ink) 2rem);
+  mask-image: linear-gradient(to right, transparent, var(--ink) 2rem);
+}
+/* the canvas is a Tab stop only while it overflows; its focus ring sits on the frame, outside the fades */
+.hxg-canvas:focus { outline: none; }
+.hxg-frame:has(> .hxg-canvas:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
 .hxg .hxg-svg {
   display: block;
   max-width: none; /* the drawing keeps its natural size and scrolls; it never shrinks into unreadable text */
   margin-inline: auto;
   font-family: var(--font-sans);
   overflow: visible;
+  /* glyphs keep their exact advances when the compact drawing is scaled (no hinting snap past the box edge) */
+  text-rendering: geometricPrecision;
 }
 .hxg-dot { fill: var(--graph-grid); }
 .hxg-bg { pointer-events: none; }
@@ -97,12 +127,11 @@
 .hxg-edge.is-main .hxg-line { stroke-width: 1.6; }
 .hxg-hit { fill: none; stroke: transparent; stroke-width: 12; pointer-events: stroke; }
 .hxg-marker path { fill: var(--graph-edge); stroke: none; }
-.hxg-marker--faint path { fill: var(--graph-edge-faint); }
+.hxg-marker--faint path { fill: var(--hxg-edge-dim); }
 .hxg-marker--visited path { fill: var(--accent); }
-.hxg.is-active .hxg-line { stroke: var(--graph-edge-faint); }
-.hxg.is-active .hxg-edge.is-visited .hxg-line { stroke: var(--accent); stroke-width: 2.25; }
-.hxg-edge.is-hover .hxg-line { stroke: var(--ink-2); }
-.hxg.is-active .hxg-edge.is-hover:not(.is-visited) .hxg-line { stroke: var(--graph-edge); }
+.hxg-marker--jump path { fill: var(--crit); }
+/* a fallback jump (kernel FALLBACK_ENTERED): not an edge of the machine, so it is dashed and red */
+.hxg-jump-line { fill: none; stroke: var(--crit); stroke-width: 2; stroke-dasharray: 5 4; stroke-linecap: round; }
 
 .hxg-start circle { fill: var(--graph-edge); }
 .hxg-start-line { fill: none; stroke: var(--graph-edge); stroke-width: 1.25; }
@@ -112,9 +141,6 @@
 .hxg-label-bg { fill: var(--graph-bg); }
 .hxg-label-text { font: 400 12px var(--font-mono); fill: var(--graph-label); transition: fill 0.15s ease; }
 .hxg-label-aux { fill: var(--ink-3); }
-.hxg.is-active .hxg-label-text, .hxg.is-active .hxg-label-aux { fill: var(--ink-3); }
-.hxg.is-active .hxg-label.is-visited .hxg-label-text { fill: var(--ink); }
-.hxg.is-active .hxg-label.is-visited .hxg-label-aux { fill: var(--ink-2); }
 .hxg.is-compact .hxg-label { visibility: hidden; }
 .hxg.is-compact .hxg-label.is-shown { visibility: visible; }
 
@@ -125,6 +151,8 @@
   fill: var(--accent-ink);
   font-variant-numeric: tabular-nums;
 }
+.hxg-badge.is-jump rect { fill: var(--crit); }
+.hxg-badge.is-jump text { fill: var(--surface); }
 
 /* ------------------------------------------------------------------ states */
 .hxg-box {
@@ -133,8 +161,8 @@
   stroke-width: 1;
   transition: fill 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease;
 }
-.hxg-node.is-spine:not(.hxg-term) .hxg-box { stroke-width: 1.25; }
 .hxg-id { font: 500 13px var(--font-mono); fill: var(--ink); transition: fill 0.15s ease; }
+.hxg.is-compact .hxg-id { font-size: 12px; } /* SIZES.compact.fs_id */
 .hxg-sub { font: 400 12px var(--font-sans); fill: var(--ink-3); }
 .hxg-kind { fill: var(--ink-3); }
 .hxg-detail { fill: var(--ink-2); }
@@ -149,24 +177,47 @@
 .hxg-term[data-tone="ok"] { --hxg-tone: var(--ok); --hxg-tint: var(--ok-tint); }
 .hxg-term[data-tone="warn"] { --hxg-tone: var(--warn); --hxg-tint: var(--warn-tint); }
 .hxg-term[data-tone="crit"] { --hxg-tone: var(--crit); --hxg-tint: var(--crit-tint); }
-.hxg-term .hxg-box { fill: var(--hxg-tint); stroke: color-mix(in srgb, var(--hxg-tone) 50%, transparent); }
+.hxg-term .hxg-box { fill: var(--hxg-tint); stroke: color-mix(in srgb, var(--hxg-tone) 55%, var(--graph-bg)); }
 .hxg-term .hxg-cat { font: 500 12px var(--font-sans); fill: var(--hxg-tone); transition: fill 0.15s ease; }
 .hxg-term .hxg-id { fill: var(--ink); }
 .hxg-missing .hxg-box { fill: var(--crit-tint); stroke: var(--crit); stroke-dasharray: 4 3; }
 .hxg-missing .hxg-kind, .hxg-missing .hxg-detail { fill: var(--crit); }
 
-/* a run is shown: the path taken is solid, the rest recedes */
-.hxg.is-active .hxg-node.is-faint .hxg-box { stroke: var(--graph-edge-faint); }
-.hxg.is-active .hxg-node.is-faint:not(.hxg-term) .hxg-id { fill: var(--ink-2); }
-.hxg.is-active .hxg-term.is-faint .hxg-box { fill: color-mix(in srgb, var(--hxg-tint) 55%, transparent); stroke: color-mix(in srgb, var(--hxg-tone) 28%, transparent); }
-.hxg.is-active .hxg-node.is-visited:not(.hxg-term) .hxg-box { stroke: var(--graph-node-stroke); }
-.hxg-node.is-current .hxg-box { fill: var(--accent-tint); stroke: var(--accent); stroke-width: 2; }
-.hxg-node.is-current .hxg-id { fill: var(--ink); }
-.hxg-node.is-stopped .hxg-box { stroke: var(--crit); stroke-width: 2; }
-.hxg-node.is-stopped[data-status="CANCELLED"] .hxg-box { stroke: var(--ink-2); }
-.hxg-node.is-failed-out .hxg-box { stroke: var(--crit); stroke-dasharray: 5 3; }
-.hxg-term.is-reached .hxg-box { fill: var(--hxg-tone); stroke: var(--hxg-tone); stroke-width: 2; }
-.hxg-term.is-reached .hxg-cat, .hxg-term.is-reached .hxg-id { fill: var(--surface); }
+/* selectable states answer the pointer (the highlight and focus rings below take precedence) */
+.hxg-node.is-interactive:hover .hxg-ring { stroke: color-mix(in srgb, var(--accent) 40%, transparent); }
+.hxg-node.is-interactive:hover .hxg-box { stroke: var(--ink-2); }
+.hxg-edge.is-hover .hxg-line { stroke: var(--ink-2); }
+
+/* highlight(): states covering a hovered clause get a dashed accent ring; the rest steps back in color only, so
+   every text keeps 4.5:1 or better (ids in ink-2, sublabels and guards in ink-3) */
+.hxg .hxg-node.is-highlight .hxg-ring { stroke: var(--accent); stroke-dasharray: 4 3; }
+.hxg.has-highlight .hxg-node:not(.is-highlight) .hxg-box { stroke: var(--hxg-edge-dim); }
+.hxg.has-highlight .hxg-node:not(.is-highlight) .hxg-id { fill: var(--ink-2); }
+.hxg.has-highlight .hxg-node:not(.is-highlight) .hxg-detail { fill: var(--ink-3); }
+.hxg.has-highlight .hxg-edge:not(.is-visited) .hxg-line { stroke: var(--hxg-edge-dim); }
+.hxg.has-highlight .hxg-marker--base path { fill: var(--hxg-edge-dim); }
+.hxg.has-highlight .hxg-label:not(.is-visited) .hxg-label-text { fill: var(--ink-3); }
+
+/* a run is shown: the path taken keeps its ink, the rest recedes (one tier: .hxg + one state class) */
+.hxg.is-active .hxg-line { stroke: var(--hxg-edge-dim); }
+.hxg.is-active .hxg-edge.is-visited .hxg-line { stroke: var(--accent); stroke-width: 2.25; }
+.hxg.is-active .hxg-edge.is-hover:not(.is-visited) .hxg-line { stroke: var(--graph-edge); }
+.hxg.is-active .hxg-label-text, .hxg.is-active .hxg-label-aux { fill: var(--ink-3); }
+.hxg.is-active .hxg-label.is-visited .hxg-label-text { fill: var(--ink); }
+.hxg.is-active .hxg-label.is-visited .hxg-label-aux { fill: var(--ink-2); }
+.hxg.is-active .hxg-node.is-faint .hxg-box { stroke: var(--hxg-edge-dim); }
+.hxg.is-active .hxg-node.is-faint .hxg-id { fill: var(--ink-2); }
+.hxg.is-active .hxg-term.is-faint .hxg-box {
+  fill: color-mix(in srgb, var(--hxg-tint) 55%, transparent);
+  stroke: var(--hxg-edge-dim);
+}
+.hxg.is-active .hxg-node.is-current .hxg-box { fill: var(--accent-tint); stroke: var(--accent); stroke-width: 2; }
+.hxg.is-active .hxg-node.is-current .hxg-id { fill: var(--ink); }
+.hxg.is-active .hxg-node.is-stopped .hxg-box { stroke: var(--crit); stroke-width: 2; }
+.hxg.is-active .hxg-node.is-stopped[data-status="CANCELLED"] .hxg-box { stroke: var(--ink-2); }
+.hxg.is-active .hxg-node.is-failed-out .hxg-box { stroke: var(--crit); stroke-dasharray: 5 3; }
+.hxg.is-active .hxg-term.is-reached .hxg-box { fill: var(--hxg-tone); stroke: var(--hxg-tone); stroke-width: 2; }
+.hxg.is-active .hxg-term.is-reached .hxg-cat, .hxg.is-active .hxg-term.is-reached .hxg-id { fill: var(--surface); }
 
 /* status tag on the current state */
 .hxg-tag rect { fill: var(--accent); }
@@ -177,18 +228,14 @@
 .hxg-tag[data-tone="neutral"] rect { fill: var(--ink-2); }
 .hxg-tag:not([data-tone="accent"]) text { fill: var(--surface); }
 
-/* highlight(): states covering a hovered clause */
-.hxg-node.is-highlight .hxg-ring { stroke: var(--accent); stroke-dasharray: 4 3; }
-.hxg-node.is-highlight .hxg-box { stroke: var(--accent); }
-.hxg.has-highlight .hxg-node:not(.is-highlight), .hxg.has-highlight .hxg-edge { opacity: 0.45; }
-.hxg-node, .hxg-edge { transition: opacity 0.15s ease; }
-
-/* keyboard focus: a solid ring outside the state */
-.hxg-node:focus-visible .hxg-ring { stroke: var(--focus); stroke-dasharray: none; }
+/* keyboard focus: a solid ring outside the state (wins over the highlight ring) */
+.hxg .hxg-node:focus-visible .hxg-ring { stroke: var(--focus); stroke-dasharray: none; }
 
 /* text alternative: read by assistive technology, never shown */
 .hxg-sr {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 1px;
   height: 1px;
   margin: -1px;
@@ -200,15 +247,17 @@
   white-space: nowrap;
 }
 
-/* compact (Overview): tighter header, and one caption line for whatever is hovered or focused */
+/* compact: tighter header, and one caption line for whatever is hovered or focused, or the run status */
 .hxg.is-compact { gap: var(--sp-2); }
 .hxg-caption {
   margin: 0;
   min-height: calc(var(--fs-2) * var(--lh-body));
-  font: 400 var(--fs-2) / var(--lh-body) var(--font-mono);
+  font: 400 var(--fs-2) / var(--lh-body) var(--font-sans);
   color: var(--ink-2);
   overflow-wrap: anywhere;
 }
+.hxg-caption[hidden] { display: none; }
+.hxg-code { font-family: var(--font-mono); font-size: var(--fs-1); color: var(--ink); }
 
 @media (prefers-reduced-motion: reduce) {
   .hxg *, .hxg *::before, .hxg *::after { transition: none !important; animation: none !important; }

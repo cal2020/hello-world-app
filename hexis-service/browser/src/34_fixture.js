@@ -14,6 +14,36 @@
   const fixture = (HX.fixture = HX.fixture || {});
 
   const clone = (v) => JSON.parse(JSON.stringify(v));
+  const is_dict = (v) => HX.util.is_plain_object(v);
+  const pyerr = (type, msg) => {
+    const e = new HX.HXError(type, msg);
+    e.message = msg;
+    return e;
+  };
+  function type_name(v) {
+    if (v === null || v === undefined) return "NoneType";
+    if (typeof v === "boolean") return "bool";
+    if (typeof v === "number") return Number.isInteger(v) ? "int" : "float";
+    if (typeof v === "string") return "str";
+    if (Array.isArray(v)) return "list";
+    if (is_dict(v)) return "dict";
+    return typeof v;
+  }
+  /** Python ``bool(v)`` for JSON-like values. */
+  function py_truthy(v) {
+    if (v === null || v === undefined || v === false) return false;
+    if (typeof v === "number") return v !== 0;
+    if (typeof v === "string" || Array.isArray(v)) return v.length > 0;
+    if (is_dict(v)) return Object.keys(v).length > 0;
+    return true;
+  }
+  /** Python ``iter(v)`` as an array (TypeError, as an HXError coded "TypeError", when not iterable). */
+  function py_iter(v) {
+    if (Array.isArray(v)) return v;
+    if (typeof v === "string") return Array.from(v);
+    if (is_dict(v)) return Object.keys(v);
+    throw pyerr("TypeError", "'" + type_name(v) + "' object is not iterable");
+  }
 
   fixture.CAPABILITIES = ["documents:read", "supplier:read", "draft:validate", "erp:draft:create", "erp:draft:read",
     "draft:verify"];
@@ -109,9 +139,20 @@
     return { if: cond === undefined ? "" : cond, to, inc: inc === undefined ? null : inc, support: 0, origin: "document" };
   }
 
-  /** ``machine_dict(defect=False)``: the raw efsm-v1 dict. Accepts a boolean or ``{defect}``. */
+  /** ``machine_dict(defect=False)``: the raw efsm-v1 dict. ``machine_dict(x)`` is the positional call and
+   *  ``machine_dict({defect: x})`` the keyword call; ``x`` is tested with Python truthiness (``[]``, ``{}``,
+   *  ``""`` and ``0`` are false). A plain object is always the keyword-options object, and an unknown key
+   *  raises TypeError like Python's unexpected keyword argument. */
   fixture.machine_dict = function (opts) {
-    const defect = typeof opts === "object" && opts !== null ? !!opts.defect : !!opts;
+    let defect;
+    if (is_dict(opts)) {
+      for (const k of Object.keys(opts)) {
+        if (k !== "defect") throw pyerr("TypeError", "machine_dict() got an unexpected keyword argument '" + k + "'");
+      }
+      defect = py_truthy(opts.defect);
+    } else {
+      defect = py_truthy(opts);
+    }
     const states = [
       _state("READ_INTAKE", "S1.1", {
         kind: "tool", name: "documents.read",
@@ -278,11 +319,15 @@
       this.settings = { mode: "fixture", deterministic: true };
     }
 
-    /** ``draft(context, diagnostics, attempt)`` -> ``{machine, contracts}`` (raw dicts). */
+    /** ``draft(context, diagnostics, attempt)`` -> ``{machine, contracts}`` (raw dicts).
+     *  ``defect = not any(d.get("code") == "ORDERING_VIOLATION" for d in diagnostics)`` with Python's
+     *  iteration (a dict yields its keys, a str its characters) and short-circuit: a non-dict item raises
+     *  AttributeError (``.get``) unless an earlier item already matched; a non-iterable raises TypeError.
+     *  Both are HX.HXError with the Python class name as ``code``. */
     draft(context, diagnostics, attempt) {
       let defect = true;
-      for (const d of diagnostics) {
-        if (!HX.util.is_plain_object(d)) throw new TypeError("diagnostics must be dicts");
+      for (const d of py_iter(diagnostics)) {
+        if (!is_dict(d)) throw pyerr("AttributeError", "'" + type_name(d) + "' object has no attribute 'get'");
         if (Object.prototype.hasOwnProperty.call(d, "code") && d.code === "ORDERING_VIOLATION") { defect = false; break; }
       }
       return { machine: fixture.machine_dict(defect), contracts: clone(fixture.contracts_dict()) };

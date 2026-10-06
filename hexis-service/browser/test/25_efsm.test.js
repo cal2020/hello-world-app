@@ -112,6 +112,57 @@
     }
   });
 
+  test("lone surrogates: pydantic's string_unicode (non-str fields, input keys) matches; str/dict/Any fields stricter", () => {
+    const G = golden("models_efsm");
+    const handle = (name) => { const [ns, model] = name.split("."); return HX[ns][model]; };
+    /* Python accepts lone surrogates in str, dict and Any fields and in dict keys; the port refuses them there
+       (string_unicode / json_invalid), so it may report those errors in addition to pydantic's */
+    const documented = (e) => e[0] === "string_unicode" || e[0] === "json_invalid";
+    let exact = 0, extra = 0, stricter = 0;
+    for (const c of G.surrogates) {
+      const input = JSON.parse(c.input_ascii); /* strict_loads would refuse the lone surrogates */
+      let err;
+      try { handle(c.model).model_validate(input); } catch (e) { err = e; }
+      const label = `${c.model} ${c.input_ascii}`;
+      assert.ok(err && Array.isArray(err.errors), `${label}: should reject`);
+      const got = sortErrs(err.errors.map((e) => [e.type, e.loc]));
+      if (c.py === "error") {
+        const py = sortErrs(c.errors);
+        for (const e of py) assert.ok(got.some((g) => errKey(g) === errKey(e)), `${label}: missing ${JSON.stringify(e)} in ${JSON.stringify(got)}`);
+        const more = got.filter((g) => !py.some((e) => errKey(e) === errKey(g)));
+        assert.ok(more.every(documented), `${label}: ${JSON.stringify(more)}`);
+        if (more.length) extra++;
+        else exact++;
+      } else {
+        assert.ok(got.every(documented), `${label}: ${JSON.stringify(got)}`);
+        stricter++;
+      }
+    }
+    assert.ok(exact >= 30 && stricter >= 8, `${exact} ${extra} ${stricter}`);
+    /* the verifier's three cases */
+    const one = (fn) => { try { fn(); } catch (e) { return e.errors.map((x) => [x.type, x.loc]); } return null; };
+    assert.deepEqual(one(() => E.Variable.model_validate({ name: "v", type: "x\ud800" })), [["string_unicode", ["type"]]]);
+    assert.deepEqual(one(() => E.Transition.model_validate({ to: "B", support: "1\ud800" })), [["string_unicode", ["support"]]]);
+    assert.deepEqual(one(() => HX.pkg.Budgets.model_validate({ max_spend_usd: "1\ud800" })), [["string_unicode", ["max_spend_usd"]]]);
+  });
+
+  test("values rejected only by a documented deviation still feed their model's validators (errors ⊇ pydantic's)", () => {
+    const G = golden("models_efsm");
+    const handle = (name) => { const [ns, model] = name.split("."); return HX[ns][model]; };
+    const DEV = ["json_invalid", "dict_key_integer_like", "string_unicode", "int_unsafe", "finite_number"];
+    assert.ok(G.soft.length >= 10);
+    for (const c of G.soft) {
+      let err;
+      try { handle(c.model).model_validate(JSON.parse(c.input_json)); } catch (e) { err = e; }
+      const label = `${c.model} ${c.input_json.slice(0, 120)}`;
+      assert.ok(err && Array.isArray(err.errors), `${label}: should reject`);
+      const got = err.errors.map((e) => [e.type, e.loc]);
+      for (const e of c.errors) assert.ok(got.some((g) => errKey(g) === errKey(e)), `${label}: missing pydantic error ${JSON.stringify(e)} in ${JSON.stringify(got)}`);
+      const extra = got.filter((g) => !c.errors.some((e) => errKey(e) === errKey(g)));
+      assert.ok(extra.length > 0 && extra.every((e) => DEV.indexOf(e[0]) >= 0), `${label}: ${JSON.stringify(extra)}`);
+    }
+  });
+
   test("lax coercions agree with pydantic-core (int/float/bool), deviations only where documented", () => {
     const G = golden("models_coerce");
     const dev = { int: {}, float: {}, bool: {} };
@@ -133,6 +184,13 @@
       }
     }
     assert.deepEqual(Object.keys(dev.bool), []);
+    /* integers beyond int64 (and huge floats) are bool_type, inside it bool_parsing */
+    assert.ok(G.bool_big.length >= 10);
+    for (const [expr, type] of G.bool_big) {
+      const value = Function("return " + expr)(); /* fixed literals such as "2**63" */
+      const r = E.pyd.validate_type({ k: "bool" }, value);
+      assert.deepEqual(r.errors.map((e) => e.type), [type], `bool ${expr}`);
+    }
     assert.deepEqual(Object.keys(dev.float).sort(), ["nonfinite"]);
     assert.ok(Object.keys(dev.int).every((k) => k === "quirk" || k === "unsafe"));
     assert.ok(G.int.length + G.float.length + G.bool.length > 3000);
