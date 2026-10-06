@@ -87,7 +87,7 @@
     // Compact (Overview, phones): one line per state in 12px mono (the action is in the tooltip, the caption and the
     // text alternative), tight spacing, edge labels only on hover or focus. Both fixture machines fit about 360px.
     compact: {
-      fs_id: 12, nh: 30, gap_y: 28, gap_x: 10, pad: 6, slack: 3, min_w: 64, max_w: 260, sh: 20, sgap: 28, spad: 6,
+      fs_id: 12, nh: 30, gap_y: 30, gap_x: 10, pad: 6, slack: 3, min_w: 64, max_w: 260, sh: 20, sgap: 28, spad: 6,
       stack: 4, port_v: 12, port_h: 36, loop: 36, radius: 8, margin: 4, start: 22, base1: 19.2, base2: 19.2, lh: 15,
       lpad_x: 5, lpad_y: 3, badge_first: 11, badge_step: 20, tag_w: 0, sub: false,
     },
@@ -384,9 +384,20 @@
   function sublabel_of(d) { return d.detail ? d.kind + " · " + d.lead + d.detail : d.kind; }
 
   /* ================================================================== layout */
+  /** Compact edge labels are shown one state at a time, but each must still have a spot: when the tight row gap leaves
+      a label without one, the rows open up a little (deterministically) until every label is placed. */
+  const COMPACT_GAPS = [30, 36, 44, 56];
   function layout(machine, opts) {
     opts = opts || {};
-    const Z = opts.compact ? SIZES.compact : SIZES.normal;
+    if (!opts.compact) return layout_at(machine, opts, SIZES.normal);
+    let L = null;
+    for (const gap_y of COMPACT_GAPS) {
+      L = layout_at(machine, opts, Object.assign({}, SIZES.compact, { gap_y }));
+      if (!L.unlabelled) break;
+    }
+    return L;
+  }
+  function layout_at(machine, opts, Z) {
     const M = read_machine(machine);
     const S = M.S;
     const order = bfs_order(S, M.initial);
@@ -808,13 +819,16 @@
       for (const q of e.samples) { const d = box_dist(bx, q); if (d < best) best = d; }
       return best;
     }
+    let may_grow = false;
     function score(bx, e, anchor, pen, on_line) {
       for (const b of node_list) if (overlaps(bx, b, 4)) return Infinity;
       for (const b of reserved) if (overlaps(bx, b, 4)) return Infinity;
       for (const l of placed) if ((!opts.compact || l.from === e.from) && overlaps(bx, l, 4)) return Infinity;
       if (start && overlaps(bx, start.box, 2)) return Infinity;
-      const out = Math.max(0, core.x0 - bx.x) + Math.max(0, bx.x + bx.w - core.x1) + Math.max(0, core.y0 - bx.y) + Math.max(0, bx.y + bx.h - core.y1);
-      if (opts.compact && out > 0.5) return Infinity; // compact labels never widen the drawing
+      const out_x = Math.max(0, core.x0 - bx.x) + Math.max(0, bx.x + bx.w - core.x1);
+      const out = out_x + Math.max(0, core.y0 - bx.y) + Math.max(0, bx.y + bx.h - core.y1);
+      // compact labels never widen the drawing; as a last resort one may make it a little taller
+      if (opts.compact && out > 0.5 && (!may_grow || out_x > 0.5)) return Infinity;
       if (own_dist(bx, e) > LABEL_REACH) return Infinity;
       let s = pen + 0.15 * out;
       for (const o of edges) {
@@ -916,6 +930,7 @@
       }
       return out;
     }
+    let unlabelled = 0;
     const label_rank = { down: 0, drop: 1, self: 2, rise: 3, across: 3, cside: 3, channel: 4, stub: 5 };
     const labelled = edges.slice().sort((a, b) => (label_rank[a.kind] - label_rank[b.kind]) || (rank.get(a.from) - rank.get(b.from)) || (a.index - b.index));
     for (const e of labelled) {
@@ -924,7 +939,9 @@
       const w = label_w(lines);
       const h = lines.length * Z.lh + 2 * Z.lpad_y;
       let best = null, best_s = Infinity;
-      for (const pass of [candidates, dense_candidates]) {
+      const passes = opts.compact ? [[candidates, false], [dense_candidates, false], [candidates, true], [dense_candidates, true]] : [[candidates, false], [dense_candidates, false]];
+      for (const [pass, grow_ok] of passes) {
+        may_grow = grow_ok;
         for (const c of pass(e, w, h)) {
           const bx = { x: c.x, y: c.y, w, h };
           const s = score(bx, e, c.anchor, c.pen, c.on_line);
@@ -933,7 +950,7 @@
         if (best) break;
       }
       // no spot near the edge: leave the label out (its tooltip, the caption and the text alternative carry it)
-      if (!best) { e.label = null; continue; }
+      if (!best) { e.label = null; unlabelled++; continue; }
       e.label = { x: best.x, y: best.y, w, h, text: lines[0], lines };
       placed.push({ x: best.x, y: best.y, w, h, from: e.from });
     }
@@ -996,7 +1013,7 @@
       };
     });
     return {
-      width: W, height: H, compact: !!opts.compact, initial: M.initial, skill_id: M.skill_id, version: M.version,
+      width: W, height: H, compact: !!opts.compact, unlabelled, initial: M.initial, skill_id: M.skill_id, version: M.version,
       spine: spine.nodes.slice(), nodes: out_nodes, edges: out_edges,
       start: start ? { x: r1(start.x + dx), y: r1(start.y + dy), path: path_d(shift_segs(start.segs, dx, dy)) } : null,
       fallback: fb,
