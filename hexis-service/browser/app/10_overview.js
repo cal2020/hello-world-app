@@ -346,11 +346,56 @@
     }
 
     /* The panel may stay in view beside the steps (CSS makes it sticky) only while all of it fits in the
-       window with 16px above and below; otherwise its lower part would stay out of reach. */
+       window with 16px above and below; otherwise its lower part would stay out of reach.
+       The graph's caption grows when a state takes focus (one line per transition). Deciding from the current
+       height would flip the panel from sticky to static at that moment and throw it off screen, so the decision
+       counts the caption at its tallest: the measured worst case for this machine at the caption's width. */
+    let reserve = { width: -1, height: 0 };
+    function caption_lines(n, outs) {
+      const c = (t) => h("code", { class: "hxg-code" }, t);
+      const kids = [c(n.id), ": " + (n.kind_text || n.kind || "") + (n.detail ? " · " + (n.lead || "") : ""),
+        n.detail ? (n.detail_mono ? c(n.detail) : n.detail) : null];
+      for (const e of outs) {
+        kids.push(h("br"), "→ ", c(e.to), e.cond ? " if " : " otherwise", e.cond ? c(e.cond) : null,
+          e.inc ? ", then +1 " : null, e.inc ? c(e.inc) : null);
+      }
+      return kids.filter((k) => k !== null);
+    }
+    function caption_reserve(cap) {
+      const width = cap.clientWidth;
+      if (width === reserve.width) return reserve.height;
+      let tallest = 0;
+      try {
+        const L = HXUI.graph.layout(ctx.compiled.package.machine, { compact: true });
+        const probe = cap.cloneNode(false);
+        probe.removeAttribute("hidden");
+        Object.assign(probe.style, { position: "absolute", visibility: "hidden", pointerEvents: "none", inset: "0 auto auto 0", height: "auto", maxHeight: "none", width: width + "px" });
+        cap.parentNode.appendChild(probe);
+        for (const n of L.nodes) {
+          if (n.kind === "end") continue;
+          probe.replaceChildren(...caption_lines(n, L.edges.filter((e) => e.from === n.id)));
+          tallest = Math.max(tallest, probe.getBoundingClientRect().height);
+        }
+        probe.remove();
+      } catch (err) {
+        tallest = 0; /* no worst case known: fall back to what the caption shows now */
+      }
+      reserve = { width, height: tallest };
+      return tallest;
+    }
     function sync_fit() {
       const height = panel.getBoundingClientRect().height;
       if (!height) return;
-      panel.dataset.fit = height + 32 <= (globalThis.innerHeight || 0) ? "yes" : "no";
+      const cap = panel.querySelector(".hxg-caption");
+      let extra = 0;
+      if (cap && !cap.hidden && cap.parentNode) {
+        const now = cap.getBoundingClientRect().height;
+        /* a caption taller than the measured worst case (new caption text) raises the reserve for good */
+        const most = Math.max(caption_reserve(cap), now);
+        reserve.height = most;
+        extra = most - now;
+      }
+      panel.dataset.fit = height + extra + 32 <= (globalThis.innerHeight || 0) ? "yes" : "no";
     }
     function watch_fit() {
       if (fit_observer || typeof ResizeObserver !== "function") return;

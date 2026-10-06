@@ -385,6 +385,36 @@ export default async function (t) {
           };
         }, i);
         assert.ok(r.hidden, `${tag}: compact hides edge labels at rest`);
+        // every edge that has something to say (a guard, "else" beside guarded siblings, "+1 counter") has a placed
+        // label in the compact layout, and hovering its state shows exactly that state's labels
+        const lab = await page.evaluate(({ i, m }) => {
+          const L = HXUI.graph.layout(m, { compact: true });
+          const guarded = new Set(L.edges.filter((e) => e.cond).map((e) => e.from));
+          const want = L.edges.filter((e) => e.cond || e.inc || guarded.has(e.from)).map((e) => e.key);
+          const missing = want.filter((k) => !L.edges.find((e) => e.key === k).label);
+          const v = __hxgt.views[i].view;
+          const root = v.root;
+          const hover = {};
+          for (const st of new Set(want.map((k) => k.split("#")[0]))) {
+            const g = root.querySelector(`.hxg-node[data-state="${st}"]:not([data-copy]) .hxg-box`);
+            g.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+            hover[st] = {
+              shown: [...root.querySelectorAll(".hxg-label")].filter((l) => getComputedStyle(l).visibility === "visible").map((l) => l.getAttribute("data-key")).sort(),
+              caption: root.querySelector(".hxg-caption").textContent,
+            };
+            g.dispatchEvent(new MouseEvent("mouseout", { bubbles: true, relatedTarget: document.body }));
+          }
+          return { want, missing, hover, edges: L.edges.map((e) => ({ key: e.key, from: e.from, cond: e.cond })) };
+        }, { i, m });
+        assert.ok(lab.want.length >= 14, `${tag}: guarded edges found (${lab.want.length})`);
+        assert.deepEqual(lab.missing, [], `${tag}: every guarded edge has a label in the compact layout`);
+        for (const [st, h] of Object.entries(lab.hover)) {
+          const own = lab.want.filter((k) => k.startsWith(st + "#")).sort();
+          assert.deepEqual(h.shown, own, `${tag}: hovering ${st} shows its guard labels`);
+          for (const e of lab.edges.filter((x) => x.from === st && x.cond)) {
+            assert.ok(h.caption.includes(e.cond), `${tag}: hovering ${st} lists the guard "${e.cond}" in the caption`);
+          }
+        }
         // full size at both widths: ids at 12px, pills and labels at 12px, never scaled below the type scale
         assert.equal(r.drawn_w, r.layout_w, `${tag}: the compact drawing is shown at full size (${r.drawn_w} of ${r.layout_w}px)`);
         assert.equal(r.id_px, 12, `${tag}: compact ids are 12px`);
@@ -452,14 +482,21 @@ export default async function (t) {
       const tags = [...svg.querySelectorAll(".hxg-tag text")].map((g) => g.textContent.trim());
       const alt = r.querySelector(".hxg-sr .hxg-alt-run").textContent;
       const legend = r.querySelector(".hxg-legend");
+      const first = legend ? legend.querySelector("li") : null;
       return { badges, nodes, edges, tags, alt, faint_marker, legend: legend ? !legend.hidden && getComputedStyle(legend).display !== "none" : null,
+        legend_first: first && !first.hidden ? first.textContent : null,
+        legend_sw: first ? getComputedStyle(first.querySelector(".hxg-sw")).backgroundColor : null,
         active: r.classList.contains("is-active"), vb: { w: vb.width, h: vb.height } };
     }, { i: viewIndex, snap });
   }
   function checkRun(name, r, snap, { compact = false } = {}) {
     const keys = snap.transitions.map((x) => `${x.from}#${x.edge}`);
     assert.ok(r.active, `${name}: graph shows a run`);
-    if (!compact) assert.equal(r.legend, true, `${name}: the legend is shown during a run`);
+    if (!compact) {
+      assert.equal(r.legend, true, `${name}: the legend is shown during a run`);
+      // the legend names the mark that is drawn: never "current state" once the run has ended in an outcome
+      assert.equal(r.legend_first, snap.terminal !== null ? "reached outcome" : "current state", `${name}: the legend's first entry`);
+    }
     assert.equal(r.faint_marker, css["hxg-edge-dim"], `${name}: arrowheads of edges not taken use the receding shade`);
     // every visited transition is solid accent; the rest recedes
     for (const e of r.edges) {
@@ -523,8 +560,10 @@ export default async function (t) {
   // happy path, completed: the verified terminal is filled in its category color
   {
     const end = hp[hp.length - 1];
-    const m = checkRun("happy_path (completed)", await show(views.initial, end), end);
+    const r = await show(views.initial, end);
+    const m = checkRun("happy_path (completed)", r, end);
     assert.match(m.cls, /\bis-reached\b/, "verified terminal is reached");
+    assert.equal(r.legend_sw, css.ok, "the legend's outcome swatch takes the reached category's color");
     assert.equal(m.fill, css.ok, "verified terminal is colored ok");
   }
   // registry conflict: the fallback stub next to LOOKUP_SUPPLIER is reached, colored crit
@@ -692,7 +731,8 @@ export default async function (t) {
     assert.equal(cf.caption, "LOOKUP_SUPPLIER: tool · supplier.lookup→ EXTRACT_DRAFT if lookup_status in ['new', 'exists_compatible']→ FALLBACK otherwise",
       "compact graph: focus fills the caption with the state's transitions and guards");
     assert.equal(cf.ring, css.focus, "compact graph: the focused state shows a ring in the focus color");
-    // the pointer reads one line per state and never pushes the page around; leaving returns to the focused state
+    // the pointer reads the state with its guards too and never pushes the page around (the caption reserves the
+    // lines of the longest reading); leaving returns to the focused state
     const hov = await page.evaluate((i) => {
       const r = __hxgt.views[i].view.root;
       const cap = r.querySelector(".hxg-caption");
@@ -703,12 +743,41 @@ export default async function (t) {
       g.dispatchEvent(new MouseEvent("mouseout", { bubbles: true, relatedTarget: document.body }));
       return { over, back: cap.textContent, h0, line: parseFloat(getComputedStyle(cap).lineHeight) };
     }, c);
-    assert.equal(hov.over.text, "PERSIST_DRAFT: tool · erp.create_draft · 2 transitions", "compact graph: hovering a state reads one line");
-    assert.ok(hov.over.h <= 2 * hov.line + 0.5, "compact graph: a hover caption fits the two reserved lines");
+    assert.equal(hov.over.text, "PERSIST_DRAFT: tool · erp.create_draft→ READ_BACK if persist_status in ['created', 'existing']→ FALLBACK otherwise",
+      "compact graph: hovering a state lists its transitions and guards");
+    assert.ok(Math.abs(hov.over.h - hov.h0) < 0.5, `compact graph: hovering does not change the caption's height (${hov.h0} -> ${hov.over.h})`);
     assert.equal(hov.back, cf.caption, "compact graph: when the pointer leaves, the focused state's details return");
     assert.match(cf.label, /lookup_status in \['new', 'exists_compatible'\]/, "compact graph: the focused state's name carries its guards");
     assert.ok(cf.shown.every((k) => k.startsWith("LOOKUP_SUPPLIER#")), "compact graph: only the focused state's guards are shown");
     await page.keyboard.press("Tab");
+    // a short window (a phone in landscape, or with the keyboard up): focusing or tapping a state near the top keeps
+    // the caption on screen (it is a sticky bar at the bottom of the frame)
+    {
+      const vp = page.viewportSize();
+      await page.setViewportSize({ width: vp.width, height: 420 });
+      const s = await page.evaluate((m) => __hxgt.mount(m, { compact: true }), machines.refined);
+      await frames();
+      const r = await page.evaluate(async (i) => {
+        const v = __hxgt.views[i].view;
+        v.root.scrollIntoView({ block: "start" });
+        const g = v.root.querySelector('.hxg-node[data-state="READ_INTAKE"]');
+        g.focus({ preventScroll: true });
+        await __hxgt.frames(2);
+        const cap = v.root.querySelector(".hxg-caption").getBoundingClientRect();
+        const svg = v.svg.getBoundingClientRect();
+        const box = g.getBoundingClientRect();
+        // the caption bar covers no more than the lower part of the drawing, and never the focused state
+        return { cap_top: cap.top, cap_bottom: cap.bottom, vh: innerHeight, svg_bottom: svg.bottom, text: v.root.querySelector(".hxg-caption").textContent,
+          box_bottom: box.bottom, bg: getComputedStyle(v.root.querySelector(".hxg-caption")).backgroundColor };
+      }, s);
+      await page.evaluate((i) => document.activeElement && document.activeElement.blur(), s);
+      await page.setViewportSize(vp);
+      assert.ok(r.svg_bottom > r.vh, "short window: the compact drawing is taller than the window (the case under test)");
+      assert.ok(r.cap_top >= 0 && r.cap_bottom <= r.vh + 0.5, `short window: the caption stays on screen (${r.cap_top}..${r.cap_bottom} of ${r.vh})`);
+      assert.ok(r.text.startsWith("READ_INTAKE: tool"), `short window: the caption reads the focused state (${r.text})`);
+      assert.ok(r.box_bottom <= r.cap_top, "short window: the caption never covers the focused state");
+      assert.equal(r.bg, css["graph-bg"], "short window: the caption bar is opaque (the canvas color)");
+    }
     // the full drawing, not selectable: no stop at all while it fits; one stop (the canvas region) while it overflows
     const n = await page.evaluate((m) => __hxgt.mount(m, { compact: false }), machines.initial);
     await frames();

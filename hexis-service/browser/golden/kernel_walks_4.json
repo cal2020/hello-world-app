@@ -1,0 +1,3919 @@
+{
+ "walks": [
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "revision": 4,
+     "run_id": "run-621",
+     "state_id": "T",
+     "status": "DONE",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 1,
+      "num": false,
+      "t": "found",
+      "u": "available"
+     }
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "errors": [
+     [
+      "literal_error",
+      [
+       "status"
+      ]
+     ]
+    ],
+    "exc": "ValidationError"
+   },
+   "steps": []
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "kind": "initial",
+    "run_id": "r",
+    "task_input": {},
+    "tenant_id": "t"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 0,
+     "run_id": "r",
+     "state_id": "M",
+     "status": "RUNNING",
+     "tenant_id": "t",
+     "variables": {
+      "loops": 0
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "actor": "é",
+      "kind": "model",
+      "outputs": {
+       "ghostvar": null,
+       "num": "x",
+       "u": "go"
+      },
+      "receipt_ref": "la_494e8d#1",
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "code": "OUTPUT_TYPE",
+      "detail": {
+       "variable": "num"
+      },
+      "exc": "KernelError",
+      "message": "'num' expects number, got str"
+     }
+    },
+    {
+     "obs": {
+      "actor": "user:bob",
+      "kind": "model",
+      "outputs": {
+       "ghostvar": "g",
+       "num": 3,
+       "u": 2.5
+      },
+      "revision": 0,
+      "state_id": "M"
+     },
+     "result": {
+      "errors": [
+       [
+        "missing",
+        [
+         "run_id"
+        ]
+       ]
+      ],
+      "exc": "ValidationError"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": null,
+       "num": 2.5,
+       "u": 1
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "code": "OUTPUT_TYPE",
+      "detail": {
+       "variable": "u"
+      },
+      "exc": "KernelError",
+      "message": "'u' expects string, got int"
+     }
+    },
+    {
+     "obs": {
+      "failure": "",
+      "kind": "model",
+      "outputs": {
+       "ghostvar": 1,
+       "num": 3,
+       "u": 0
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "exc": "KeyError",
+      "message": "'ghostvar'"
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "kind": "initial",
+    "run_id": "r",
+    "task_input": {},
+    "tenant_id": "t"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 0,
+     "run_id": "r",
+     "state_id": "M",
+     "status": "RUNNING",
+     "tenant_id": "t",
+     "variables": {
+      "loops": 0
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": 2.5,
+       "num": "x",
+       "u": null
+      },
+      "revision": -1,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "code": "OBSERVATION_IDENTITY",
+      "detail": {
+       "expected": [
+        "r",
+        "M",
+        0
+       ],
+       "got": [
+        "r",
+        "M",
+        -1
+       ]
+      },
+      "exc": "KernelError",
+      "message": "observation does not belong to this state visit"
+     }
+    },
+    {
+     "obs": {
+      "actor": "tool:erp.create_draft",
+      "kind": "model",
+      "outputs": {
+       "ghostvar": 1,
+       "num": -0.5,
+       "u": 1
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "exc": "KeyError",
+      "message": "'ghostvar'"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": null,
+       "num": 2.5,
+       "u": 1
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M",
+      "usage": {}
+     },
+     "result": {
+      "code": "OUTPUT_TYPE",
+      "detail": {
+       "variable": "u"
+      },
+      "exc": "KernelError",
+      "message": "'u' expects string, got int"
+     }
+    },
+    {
+     "obs": {
+      "failure": "tool error: timeout",
+      "kind": "model",
+      "outputs": {
+       "ghostvar": null,
+       "num": [
+        1
+       ],
+       "u": "stop"
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "ok": {
+       "checkpoint": {
+        "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+        "assurance": {
+         "diagnostics": [],
+         "entered_fallback": true,
+         "fallback_reason": "M: tool error: timeout",
+         "missing_evidence": [],
+         "policy_violations": [],
+         "unresolved_effects": [],
+         "verification_scope": ""
+        },
+        "budget": {
+         "model_calls": 0,
+         "output_repairs": 0,
+         "steps": 1,
+         "tokens": 0,
+         "tool_calls": 0
+        },
+        "evidence_refs": [],
+        "outcome": null,
+        "record_schema": "hexis-checkpoint/1",
+        "revision": 1,
+        "run_id": "r",
+        "state_id": "FALLBACK",
+        "status": "RUNNING",
+        "tenant_id": "t",
+        "variables": {
+         "loops": 0
+        }
+       },
+       "delta": {},
+       "edge": null,
+       "events": [
+        {
+         "actor": "",
+         "kind": "model",
+         "observation_digest": "sha256:9678a6221686114d1b7a99cecec5ed7242413206de9b896348e5eaa319506552",
+         "receipt_ref": "",
+         "revision": 0,
+         "state": "M",
+         "type": "OBSERVATION_ACCEPTED"
+        },
+        {
+         "from": "M",
+         "reason": "tool error: timeout",
+         "to": "FALLBACK",
+         "type": "FALLBACK_ENTERED"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "budget": {
+      "steps": 20,
+      "tokens": 99995,
+      "tool_calls": 0
+     },
+     "revision": 3,
+     "run_id": "run-54",
+     "state_id": "A",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 0,
+      "t": "found",
+      "u": "x"
+     }
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 20,
+      "tokens": 99995,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 3,
+     "run_id": "run-54",
+     "state_id": "A",
+     "status": "RUNNING",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 0,
+      "t": "found",
+      "u": "x"
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "engine": {
+       "terminal_admission": {
+        "evidence_valid": "yes",
+        "unresolved_effects": "xy"
+       }
+      },
+      "kind": "end",
+      "outputs": {},
+      "revision": 3,
+      "run_id": "run-54",
+      "state_id": "A"
+     },
+     "result": {
+      "ok": {
+       "checkpoint": {
+        "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+        "assurance": {
+         "diagnostics": [],
+         "entered_fallback": false,
+         "fallback_reason": "",
+         "missing_evidence": [],
+         "policy_violations": [],
+         "unresolved_effects": [
+          "x",
+          "y"
+         ],
+         "verification_scope": ""
+        },
+        "budget": {
+         "model_calls": 0,
+         "output_repairs": 0,
+         "steps": 21,
+         "tokens": 99995,
+         "tool_calls": 0
+        },
+        "evidence_refs": [],
+        "outcome": {
+         "category": "unverified",
+         "evidence_receipts": [],
+         "outputs": {},
+         "terminal": "END_A"
+        },
+        "record_schema": "hexis-checkpoint/1",
+        "revision": 4,
+        "run_id": "run-54",
+        "state_id": "A",
+        "status": "COMPLETED",
+        "tenant_id": "acme",
+        "variables": {
+         "loops": 0,
+         "t": "found",
+         "u": "x"
+        }
+       },
+       "delta": {},
+       "edge": null,
+       "events": [
+        {
+         "actor": "",
+         "kind": "end",
+         "observation_digest": "sha256:8415e0b8176b9fed4bf3cd760fe81b517abf0fac9f66b7f09d3792a68f4c7ba8",
+         "receipt_ref": "",
+         "revision": 3,
+         "state": "END_A",
+         "type": "OBSERVATION_ACCEPTED"
+        },
+        {
+         "category": "unverified",
+         "terminal": "END_A",
+         "type": "TERMINAL_ADMITTED"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "kind": "initial",
+    "run_id": "r",
+    "task_input": {},
+    "tenant_id": "t"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 0,
+     "run_id": "r",
+     "state_id": "M",
+     "status": "RUNNING",
+     "tenant_id": "t",
+     "variables": {
+      "loops": 0
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": "g",
+       "num": "x",
+       "u": null
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "exc": "KeyError",
+      "message": "'ghostvar'"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": null,
+       "num": {},
+       "u": null
+      },
+      "record_schema": "hexis-observation/1",
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "code": "OUTPUT_TYPE",
+      "detail": {
+       "variable": "num"
+      },
+      "exc": "KernelError",
+      "message": "'num' expects number, got dict"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": "g",
+       "num": 3,
+       "u": "stop"
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "exc": "KeyError",
+      "message": "'ghostvar'"
+     }
+    },
+    {
+     "obs": {
+      "actor": "é",
+      "engine": {
+       "fallback": {
+        "why": "x"
+       }
+      },
+      "kind": "model",
+      "outputs": {
+       "ghostvar": null,
+       "num": 2.5,
+       "u": "go"
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "ok": {
+       "checkpoint": {
+        "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+        "assurance": {
+         "diagnostics": [],
+         "entered_fallback": false,
+         "fallback_reason": "",
+         "missing_evidence": [],
+         "policy_violations": [],
+         "unresolved_effects": [],
+         "verification_scope": ""
+        },
+        "budget": {
+         "model_calls": 0,
+         "output_repairs": 0,
+         "steps": 1,
+         "tokens": 0,
+         "tool_calls": 0
+        },
+        "evidence_refs": [],
+        "outcome": null,
+        "record_schema": "hexis-checkpoint/1",
+        "revision": 1,
+        "run_id": "r",
+        "state_id": "A",
+        "status": "RUNNING",
+        "tenant_id": "t",
+        "variables": {
+         "ghostvar": null,
+         "loops": 0,
+         "num": 2.5,
+         "u": "go"
+        }
+       },
+       "delta": {
+        "ghostvar": null,
+        "num": 2.5,
+        "u": "go"
+       },
+       "edge": {
+        "if": "u == 'go'",
+        "inc": null,
+        "index": 0,
+        "to": "A"
+       },
+       "events": [
+        {
+         "actor": "é",
+         "kind": "model",
+         "observation_digest": "sha256:9eff46815ba705c2084ac4a782ee45376656e628c7a5e3d669026534edd73038",
+         "receipt_ref": "",
+         "revision": 0,
+         "state": "M",
+         "type": "OBSERVATION_ACCEPTED"
+        },
+        {
+         "delta_digest": "sha256:95571c3920deb0dd03f8b365d3f426e95e84130c4bfa27ae81aae1e4e6aaa3e8",
+         "delta_keys": [
+          "ghostvar",
+          "num",
+          "u"
+         ],
+         "edge": {
+          "if": "u == 'go'",
+          "inc": null,
+          "index": 0,
+          "to": "A"
+         },
+         "from": "M",
+         "revision": 1,
+         "to": "A",
+         "type": "TRANSITION"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "kind": "initial",
+    "run_id": "r",
+    "task_input": {},
+    "tenant_id": "t"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 0,
+     "run_id": "r",
+     "state_id": "M",
+     "status": "RUNNING",
+     "tenant_id": "t",
+     "variables": {
+      "loops": 0
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": 1,
+       "num": 2.5,
+       "u": null
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "exc": "KeyError",
+      "message": "'ghostvar'"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": null,
+       "num": true,
+       "u": null
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "code": "OUTPUT_TYPE",
+      "detail": {
+       "variable": "num"
+      },
+      "exc": "KernelError",
+      "message": "'num' expects number, got bool"
+     }
+    },
+    {
+     "obs": {
+      "kind": "end",
+      "outputs": {
+       "ghostvar": "x",
+       "num": -0.5,
+       "u": "go"
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "code": "OBSERVATION_KIND",
+      "detail": {},
+      "exc": "KernelError",
+      "message": "state M is model, observation is end"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": 1,
+       "num": 3,
+       "u": "stop"
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "exc": "KeyError",
+      "message": "'ghostvar'"
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "revision": 1,
+     "run_id": "run-946",
+     "state_id": "A",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 1,
+      "num": true,
+      "t": "new"
+     }
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 1,
+     "run_id": "run-946",
+     "state_id": "A",
+     "status": "RUNNING",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 1,
+      "num": true,
+      "t": "new"
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "engine": {
+       "terminal_admission": [
+        1
+       ]
+      },
+      "kind": "end",
+      "outputs": {},
+      "revision": 1,
+      "run_id": "run-946",
+      "state_id": "A"
+     },
+     "result": {
+      "exc": "AttributeError",
+      "message": "'list' object has no attribute 'get'"
+     }
+    },
+    {
+     "obs": {
+      "actor": "é",
+      "engine": {
+       "terminal_admission": {
+        "evidence_valid": true,
+        "receipts": [
+         {
+          "id": 1
+         },
+         2,
+         null
+        ]
+       }
+      },
+      "failure": 5,
+      "kind": "end",
+      "outputs": {},
+      "revision": 1,
+      "run_id": "run-946",
+      "state_id": "A"
+     },
+     "result": {
+      "errors": [
+       [
+        "string_type",
+        [
+         "failure"
+        ]
+       ]
+      ],
+      "exc": "ValidationError"
+     }
+    },
+    {
+     "obs": {
+      "engine": {
+       "fallback": "noted",
+       "terminal_admission": {
+        "evidence_valid": true,
+        "other": 1,
+        "receipts": [
+         "ev"
+        ],
+        "unresolved_effects": []
+       }
+      },
+      "kind": "end",
+      "outputs": {},
+      "revision": 1,
+      "run_id": "run-946",
+      "state_id": "A"
+     },
+     "result": {
+      "ok": {
+       "checkpoint": {
+        "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+        "assurance": {
+         "diagnostics": [],
+         "entered_fallback": false,
+         "fallback_reason": "",
+         "missing_evidence": [],
+         "policy_violations": [],
+         "unresolved_effects": [],
+         "verification_scope": ""
+        },
+        "budget": {
+         "model_calls": 0,
+         "output_repairs": 0,
+         "steps": 1,
+         "tokens": 0,
+         "tool_calls": 0
+        },
+        "evidence_refs": [
+         "ev"
+        ],
+        "outcome": {
+         "category": "unverified",
+         "evidence_receipts": [
+          "ev"
+         ],
+         "outputs": {},
+         "terminal": "END_A"
+        },
+        "record_schema": "hexis-checkpoint/1",
+        "revision": 2,
+        "run_id": "run-946",
+        "state_id": "A",
+        "status": "COMPLETED",
+        "tenant_id": "acme",
+        "variables": {
+         "loops": 1,
+         "num": true,
+         "t": "new"
+        }
+       },
+       "delta": {},
+       "edge": null,
+       "events": [
+        {
+         "actor": "",
+         "kind": "end",
+         "observation_digest": "sha256:a80578d8fbfda498fbb5977ab1b7a053ec27ab26f32ceda17543602b8235b688",
+         "receipt_ref": "",
+         "revision": 1,
+         "state": "END_A",
+         "type": "OBSERVATION_ACCEPTED"
+        },
+        {
+         "category": "unverified",
+         "terminal": "END_A",
+         "type": "TERMINAL_ADMITTED"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "obs": {
+      "engine": {
+       "terminal_admission": {
+        "evidence_valid": true,
+        "unresolved_effects": 5
+       }
+      },
+      "kind": "end",
+      "outputs": {},
+      "revision": 2,
+      "run_id": "run-946",
+      "state_id": "A"
+     },
+     "result": {
+      "code": "RUN_FINISHED",
+      "detail": {},
+      "exc": "KernelError",
+      "message": "run already COMPLETED"
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "extra": 1,
+     "revision": 3,
+     "run_id": "run-1",
+     "state_id": "M",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 2,
+      "u": "pass"
+     }
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "errors": [
+     [
+      "extra_forbidden",
+      [
+       "extra"
+      ]
+     ]
+    ],
+    "exc": "ValidationError"
+   },
+   "steps": []
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "budget": {
+      "steps": 19,
+      "tokens": 0,
+      "tool_calls": 24
+     },
+     "revision": 1,
+     "run_id": "run-51",
+     "state_id": "A",
+     "tenant_id": "acme",
+     "variables": {
+      "t": "available",
+      "u": "found"
+     }
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 19,
+      "tokens": 0,
+      "tool_calls": 24
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 1,
+     "run_id": "run-51",
+     "state_id": "A",
+     "status": "RUNNING",
+     "tenant_id": "acme",
+     "variables": {
+      "t": "available",
+      "u": "found"
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "engine": {
+       "terminal_admission": {
+        "evidence_valid": true,
+        "unresolved_effects": 5
+       }
+      },
+      "kind": "end",
+      "outputs": {},
+      "revision": 1,
+      "run_id": "run-51",
+      "state_id": "A"
+     },
+     "result": {
+      "exc": "TypeError",
+      "message": "'int' object is not iterable"
+     }
+    },
+    {
+     "obs": {
+      "engine": {
+       "terminal_admission": {
+        "evidence_valid": true,
+        "receipts": [
+         {
+          "id": 1
+         },
+         2,
+         null
+        ]
+       }
+      },
+      "kind": "end",
+      "outputs": {},
+      "revision": 1,
+      "run_id": "run-51",
+      "state_id": "A"
+     },
+     "result": {
+      "ok": {
+       "checkpoint": {
+        "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+        "assurance": {
+         "diagnostics": [],
+         "entered_fallback": false,
+         "fallback_reason": "",
+         "missing_evidence": [],
+         "policy_violations": [],
+         "unresolved_effects": [],
+         "verification_scope": ""
+        },
+        "budget": {
+         "model_calls": 0,
+         "output_repairs": 0,
+         "steps": 20,
+         "tokens": 0,
+         "tool_calls": 24
+        },
+        "evidence_refs": [
+         {
+          "id": 1
+         },
+         2,
+         null
+        ],
+        "outcome": {
+         "category": "unverified",
+         "evidence_receipts": [
+          {
+           "id": 1
+          },
+          2,
+          null
+         ],
+         "outputs": {},
+         "terminal": "END_A"
+        },
+        "record_schema": "hexis-checkpoint/1",
+        "revision": 2,
+        "run_id": "run-51",
+        "state_id": "A",
+        "status": "COMPLETED",
+        "tenant_id": "acme",
+        "variables": {
+         "t": "available",
+         "u": "found"
+        }
+       },
+       "delta": {},
+       "edge": null,
+       "events": [
+        {
+         "actor": "",
+         "kind": "end",
+         "observation_digest": "sha256:a90fd46c4d639eadb4d527916ef095a703a48fee2c771697e2b957842117c1fa",
+         "receipt_ref": "",
+         "revision": 1,
+         "state": "END_A",
+         "type": "OBSERVATION_ACCEPTED"
+        },
+        {
+         "category": "unverified",
+         "terminal": "END_A",
+         "type": "TERMINAL_ADMITTED"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "kind": "initial",
+    "run_id": "r",
+    "task_input": {},
+    "tenant_id": "t"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 0,
+     "run_id": "r",
+     "state_id": "M",
+     "status": "RUNNING",
+     "tenant_id": "t",
+     "variables": {
+      "loops": 0
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "kind": "robot",
+      "outputs": {
+       "ghostvar": null,
+       "num": -0.5,
+       "u": "x"
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "errors": [
+       [
+        "literal_error",
+        [
+         "kind"
+        ]
+       ]
+      ],
+      "exc": "ValidationError"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": null,
+       "num": true,
+       "u": null
+      },
+      "revision": 0,
+      "state_id": "M",
+      "usage": {}
+     },
+     "result": {
+      "errors": [
+       [
+        "missing",
+        [
+         "run_id"
+        ]
+       ]
+      ],
+      "exc": "ValidationError"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": null,
+       "num": 3,
+       "u": "go"
+      },
+      "receipt_ref": "la_53379f#1",
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "ok": {
+       "checkpoint": {
+        "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+        "assurance": {
+         "diagnostics": [],
+         "entered_fallback": false,
+         "fallback_reason": "",
+         "missing_evidence": [],
+         "policy_violations": [],
+         "unresolved_effects": [],
+         "verification_scope": ""
+        },
+        "budget": {
+         "model_calls": 0,
+         "output_repairs": 0,
+         "steps": 1,
+         "tokens": 0,
+         "tool_calls": 0
+        },
+        "evidence_refs": [],
+        "outcome": null,
+        "record_schema": "hexis-checkpoint/1",
+        "revision": 1,
+        "run_id": "r",
+        "state_id": "A",
+        "status": "RUNNING",
+        "tenant_id": "t",
+        "variables": {
+         "ghostvar": null,
+         "loops": 0,
+         "num": 3,
+         "u": "go"
+        }
+       },
+       "delta": {
+        "ghostvar": null,
+        "num": 3,
+        "u": "go"
+       },
+       "edge": {
+        "if": "u == 'go'",
+        "inc": null,
+        "index": 0,
+        "to": "A"
+       },
+       "events": [
+        {
+         "actor": "",
+         "kind": "model",
+         "observation_digest": "sha256:80f94b1a097745c0570d4e96912e66705451576f7837e6341044812a2097b8e0",
+         "receipt_ref": "la_53379f#1",
+         "revision": 0,
+         "state": "M",
+         "type": "OBSERVATION_ACCEPTED"
+        },
+        {
+         "delta_digest": "sha256:4a67b1279da556b001f8cb94c6727ebf3b69f1b4f431128b9edc8c135bb2fc70",
+         "delta_keys": [
+          "ghostvar",
+          "num",
+          "u"
+         ],
+         "edge": {
+          "if": "u == 'go'",
+          "inc": null,
+          "index": 0,
+          "to": "A"
+         },
+         "from": "M",
+         "revision": 1,
+         "to": "A",
+         "type": "TRANSITION"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "obs": {
+      "engine": {
+       "terminal_admission": {
+        "evidence_valid": false,
+        "missing": [
+         "persisted_draft_matches_approved_payload"
+        ]
+       }
+      },
+      "kind": "end",
+      "outputs": {},
+      "revision": 1,
+      "run_id": "r",
+      "state_id": "A",
+      "usage": {}
+     },
+     "result": {
+      "ok": {
+       "checkpoint": {
+        "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+        "assurance": {
+         "diagnostics": [],
+         "entered_fallback": false,
+         "fallback_reason": "",
+         "missing_evidence": [],
+         "policy_violations": [],
+         "unresolved_effects": [],
+         "verification_scope": ""
+        },
+        "budget": {
+         "model_calls": 0,
+         "output_repairs": 0,
+         "steps": 2,
+         "tokens": 0,
+         "tool_calls": 0
+        },
+        "evidence_refs": [],
+        "outcome": {
+         "category": "unverified",
+         "evidence_receipts": [],
+         "outputs": {},
+         "terminal": "END_A"
+        },
+        "record_schema": "hexis-checkpoint/1",
+        "revision": 2,
+        "run_id": "r",
+        "state_id": "A",
+        "status": "COMPLETED",
+        "tenant_id": "t",
+        "variables": {
+         "ghostvar": null,
+         "loops": 0,
+         "num": 3,
+         "u": "go"
+        }
+       },
+       "delta": {},
+       "edge": null,
+       "events": [
+        {
+         "actor": "",
+         "kind": "end",
+         "observation_digest": "sha256:dc6d327c0f230e3a7e4098aa8e85d6ed0a6500a2e1169df1dded94f0bf623528",
+         "receipt_ref": "",
+         "revision": 1,
+         "state": "END_A",
+         "type": "OBSERVATION_ACCEPTED"
+        },
+        {
+         "category": "unverified",
+         "terminal": "END_A",
+         "type": "TERMINAL_ADMITTED"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "kind": "initial",
+    "run_id": "r",
+    "task_input": {},
+    "tenant_id": "t"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 0,
+     "run_id": "r",
+     "state_id": "M",
+     "status": "RUNNING",
+     "tenant_id": "t",
+     "variables": {
+      "loops": 0
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": [],
+       "num": true,
+       "u": "go"
+      },
+      "revision": -1,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "code": "OBSERVATION_IDENTITY",
+      "detail": {
+       "expected": [
+        "r",
+        "M",
+        0
+       ],
+       "got": [
+        "r",
+        "M",
+        -1
+       ]
+      },
+      "exc": "KernelError",
+      "message": "observation does not belong to this state visit"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": null,
+       "num": [],
+       "u": "go"
+      },
+      "record_schema": "hexis-observation/2",
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "errors": [
+       [
+        "literal_error",
+        [
+         "record_schema"
+        ]
+       ]
+      ],
+      "exc": "ValidationError"
+     }
+    },
+    {
+     "obs": {
+      "approved": true,
+      "kind": "model",
+      "outputs": {
+       "ghostvar": 1,
+       "num": {
+        "a": 1
+       },
+       "u": "go"
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "errors": [
+       [
+        "extra_forbidden",
+        [
+         "approved"
+        ]
+       ]
+      ],
+      "exc": "ValidationError"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": null,
+       "num": 3,
+       "u": "x"
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M",
+      "usage": {
+       "tokens": 1000000
+      }
+     },
+     "result": {
+      "ok": {
+       "checkpoint": {
+        "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+        "assurance": {
+         "diagnostics": [
+          {
+           "code": "BUDGET_EXHAUSTED",
+           "message": "run budget 'tokens' exhausted",
+           "revision": 0,
+           "state": "M"
+          }
+         ],
+         "entered_fallback": false,
+         "fallback_reason": "",
+         "missing_evidence": [],
+         "policy_violations": [],
+         "unresolved_effects": [],
+         "verification_scope": ""
+        },
+        "budget": {
+         "model_calls": 0,
+         "output_repairs": 0,
+         "steps": 1,
+         "tokens": 1000000,
+         "tool_calls": 0
+        },
+        "evidence_refs": [],
+        "outcome": null,
+        "record_schema": "hexis-checkpoint/1",
+        "revision": 1,
+        "run_id": "r",
+        "state_id": "M",
+        "status": "FAILED",
+        "tenant_id": "t",
+        "variables": {
+         "ghostvar": null,
+         "loops": 1,
+         "num": 3,
+         "u": "x"
+        }
+       },
+       "delta": {},
+       "edge": null,
+       "events": [
+        {
+         "actor": "",
+         "kind": "model",
+         "observation_digest": "sha256:e2e3a15b594d6e0f07b0857453b90b9e80f7f0994beaa12b747f1cd460509018",
+         "receipt_ref": "",
+         "revision": 0,
+         "state": "M",
+         "type": "OBSERVATION_ACCEPTED"
+        },
+        {
+         "code": "BUDGET_EXHAUSTED",
+         "message": "run budget 'tokens' exhausted",
+         "state": "M",
+         "status": "FAILED",
+         "type": "RUN_STOPPED"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "budget": {
+      "steps": 3,
+      "tokens": 99995,
+      "tool_calls": 0
+     },
+     "revision": 3,
+     "run_id": "run-184",
+     "state_id": "M",
+     "tenant_id": "acme",
+     "variables": []
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "errors": [
+     [
+      "dict_type",
+      [
+       "variables"
+      ]
+     ]
+    ],
+    "exc": "ValidationError"
+   },
+   "steps": []
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "revision": 2,
+     "run_id": "run-70",
+     "state_id": "A",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 2,
+      "num": true,
+      "t": "SUP-10042",
+      "u": "approved"
+     }
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 2,
+     "run_id": "run-70",
+     "state_id": "A",
+     "status": "RUNNING",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 2,
+      "num": true,
+      "t": "SUP-10042",
+      "u": "approved"
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "engine": {
+       "terminal_admission": {
+        "evidence_valid": 1,
+        "receipts": "ab"
+       }
+      },
+      "kind": "end",
+      "outputs": {},
+      "revision": 2,
+      "run_id": "run-70",
+      "state_id": "A"
+     },
+     "result": {
+      "ok": {
+       "checkpoint": {
+        "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+        "assurance": {
+         "diagnostics": [],
+         "entered_fallback": false,
+         "fallback_reason": "",
+         "missing_evidence": [],
+         "policy_violations": [],
+         "unresolved_effects": [],
+         "verification_scope": ""
+        },
+        "budget": {
+         "model_calls": 0,
+         "output_repairs": 0,
+         "steps": 1,
+         "tokens": 0,
+         "tool_calls": 0
+        },
+        "evidence_refs": [
+         "a",
+         "b"
+        ],
+        "outcome": {
+         "category": "unverified",
+         "evidence_receipts": [
+          "a",
+          "b"
+         ],
+         "outputs": {},
+         "terminal": "END_A"
+        },
+        "record_schema": "hexis-checkpoint/1",
+        "revision": 3,
+        "run_id": "run-70",
+        "state_id": "A",
+        "status": "COMPLETED",
+        "tenant_id": "acme",
+        "variables": {
+         "loops": 2,
+         "num": true,
+         "t": "SUP-10042",
+         "u": "approved"
+        }
+       },
+       "delta": {},
+       "edge": null,
+       "events": [
+        {
+         "actor": "",
+         "kind": "end",
+         "observation_digest": "sha256:d128dcdeb236f68b5042f0f26dcbbd35b11ccccf57d66fc83605ca486923691f",
+         "receipt_ref": "",
+         "revision": 2,
+         "state": "END_A",
+         "type": "OBSERVATION_ACCEPTED"
+        },
+        {
+         "category": "unverified",
+         "terminal": "END_A",
+         "type": "TERMINAL_ADMITTED"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [
+       {
+        "code": "OLD"
+       }
+      ],
+      "entered_fallback": true,
+      "fallback_reason": "x",
+      "missing_evidence": [
+       "m"
+      ]
+     },
+     "revision": 3,
+     "run_id": "run-373",
+     "state_id": "A",
+     "status": "FAILED",
+     "variables": {
+      "loops": 2,
+      "t": "pass",
+      "u": "found"
+     }
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "errors": [
+     [
+      "missing",
+      [
+       "tenant_id"
+      ]
+     ]
+    ],
+    "exc": "ValidationError"
+   },
+   "steps": []
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "revision": 5,
+     "run_id": "run-986",
+     "state_id": "A",
+     "variables": {
+      "loops": 2,
+      "num": true,
+      "u": "x"
+     }
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "errors": [
+     [
+      "missing",
+      [
+       "tenant_id"
+      ]
+     ]
+    ],
+    "exc": "ValidationError"
+   },
+   "steps": []
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "budget": {
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 24
+     },
+     "revision": 5,
+     "run_id": "run-492",
+     "state_id": "T",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 2,
+      "num": false,
+      "t": "SUP-10042",
+      "u": "repairable"
+     }
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 24
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 5,
+     "run_id": "run-492",
+     "state_id": "T",
+     "status": "RUNNING",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 2,
+      "num": false,
+      "t": "SUP-10042",
+      "u": "repairable"
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "t": "task-owned"
+      },
+      "revision": 5,
+      "run_id": "run-492",
+      "state_id": "T"
+     },
+     "result": {
+      "code": "WRITE_OWNERSHIP",
+      "detail": {
+       "variable": "t"
+      },
+      "exc": "KernelError",
+      "message": "model may not write 't'"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "t": "task-owned"
+      },
+      "receipt_ref": "la_249acf#1",
+      "revision": 5,
+      "run_id": "run-492",
+      "state_id": "T"
+     },
+     "result": {
+      "code": "WRITE_OWNERSHIP",
+      "detail": {
+       "variable": "t"
+      },
+      "exc": "KernelError",
+      "message": "model may not write 't'"
+     }
+    },
+    {
+     "obs": {
+      "actor": "tool:erp.create_draft",
+      "kind": "model",
+      "outputs": {
+       "t": "task-owned"
+      },
+      "revision": 5,
+      "run_id": "run-492",
+      "state_id": "T",
+      "usage": {
+       "other": 4
+      }
+     },
+     "result": {
+      "code": "WRITE_OWNERSHIP",
+      "detail": {
+       "variable": "t"
+      },
+      "exc": "KernelError",
+      "message": "model may not write 't'"
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "revision": 0,
+     "run_id": "run-376",
+     "state_id": "T",
+     "status": "WAITING_FOR_APPROVAL",
+     "variables": {
+      "loops": 3,
+      "num": false,
+      "t": "SUP-10042",
+      "u": "x"
+     }
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "errors": [
+     [
+      "missing",
+      [
+       "tenant_id"
+      ]
+     ]
+    ],
+    "exc": "ValidationError"
+   },
+   "steps": []
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "revision": 3,
+     "run_id": "run-233",
+     "state_id": "T",
+     "status": "READY",
+     "tenant_id": "acme",
+     "variables": {
+      "num": false,
+      "t": "x",
+      "u": "x"
+     }
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 3,
+     "run_id": "run-233",
+     "state_id": "T",
+     "status": "READY",
+     "tenant_id": "acme",
+     "variables": {
+      "num": false,
+      "t": "x",
+      "u": "x"
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "kind": "tool",
+      "outputs": {},
+      "receipt_ref": "la_6200db#1",
+      "revision": 3,
+      "run_id": "run-233",
+      "state_id": "T"
+     },
+     "result": {
+      "code": "OBSERVATION_KIND",
+      "detail": {},
+      "exc": "KernelError",
+      "message": "state T is model, observation is tool"
+     }
+    },
+    {
+     "obs": {
+      "actor": "user:bob",
+      "kind": "model",
+      "outputs": {
+       "t": "task-owned"
+      },
+      "revision": 3,
+      "run_id": "run-233",
+      "state_id": "T"
+     },
+     "result": {
+      "code": "WRITE_OWNERSHIP",
+      "detail": {
+       "variable": "t"
+      },
+      "exc": "KernelError",
+      "message": "model may not write 't'"
+     }
+    },
+    {
+     "obs": {
+      "actor": "tool:erp.create_draft",
+      "kind": "model",
+      "outputs": {},
+      "revision": 3,
+      "run_id": "run-233",
+      "state_id": "T",
+      "usage": {
+       "tokens": 1000000
+      }
+     },
+     "result": {
+      "code": "OUTPUT_INCOMPLETE",
+      "detail": {
+       "missing": [
+        "t"
+       ]
+      },
+      "exc": "KernelError",
+      "message": "model output lacks declared writes ['t']"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "t": "task-owned"
+      },
+      "receipt_ref": "la_463a1d#1",
+      "revision": 3,
+      "run_id": "run-233",
+      "state_id": "T"
+     },
+     "result": {
+      "code": "WRITE_OWNERSHIP",
+      "detail": {
+       "variable": "t"
+      },
+      "exc": "KernelError",
+      "message": "model may not write 't'"
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "revision": 3,
+     "run_id": "run-301",
+     "state_id": "A",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 1,
+      "num": false,
+      "u": "match"
+     }
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 3,
+     "run_id": "run-301",
+     "state_id": "A",
+     "status": "RUNNING",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 1,
+      "num": false,
+      "u": "match"
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "engine": {
+       "terminal_admission": {
+        "evidence_valid": true,
+        "receipts": null
+       }
+      },
+      "kind": null,
+      "outputs": {},
+      "revision": 3,
+      "run_id": "run-301",
+      "state_id": "A"
+     },
+     "result": {
+      "errors": [
+       [
+        "literal_error",
+        [
+         "kind"
+        ]
+       ]
+      ],
+      "exc": "ValidationError"
+     }
+    },
+    {
+     "obs": {
+      "engine": {
+       "terminal_admission": {
+        "evidence_valid": "yes",
+        "unresolved_effects": "xy"
+       }
+      },
+      "kind": "end",
+      "outputs": {},
+      "revision": 3,
+      "run_id": "run-301",
+      "state_id": "A"
+     },
+     "result": {
+      "ok": {
+       "checkpoint": {
+        "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+        "assurance": {
+         "diagnostics": [],
+         "entered_fallback": false,
+         "fallback_reason": "",
+         "missing_evidence": [],
+         "policy_violations": [],
+         "unresolved_effects": [
+          "x",
+          "y"
+         ],
+         "verification_scope": ""
+        },
+        "budget": {
+         "model_calls": 0,
+         "output_repairs": 0,
+         "steps": 1,
+         "tokens": 0,
+         "tool_calls": 0
+        },
+        "evidence_refs": [],
+        "outcome": {
+         "category": "unverified",
+         "evidence_receipts": [],
+         "outputs": {},
+         "terminal": "END_A"
+        },
+        "record_schema": "hexis-checkpoint/1",
+        "revision": 4,
+        "run_id": "run-301",
+        "state_id": "A",
+        "status": "COMPLETED",
+        "tenant_id": "acme",
+        "variables": {
+         "loops": 1,
+         "num": false,
+         "u": "match"
+        }
+       },
+       "delta": {},
+       "edge": null,
+       "events": [
+        {
+         "actor": "",
+         "kind": "end",
+         "observation_digest": "sha256:4d7e52e0d9bee7cd0fffcf8e3ef8f8b95a448a72fb121afb60b662919975ef90",
+         "receipt_ref": "",
+         "revision": 3,
+         "state": "END_A",
+         "type": "OBSERVATION_ACCEPTED"
+        },
+        {
+         "category": "unverified",
+         "terminal": "END_A",
+         "type": "TERMINAL_ADMITTED"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "revision": 0,
+     "run_id": "run-456",
+     "state_id": "A",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 3,
+      "num": true,
+      "u": "found"
+     }
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 0,
+     "run_id": "run-456",
+     "state_id": "A",
+     "status": "RUNNING",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 3,
+      "num": true,
+      "u": "found"
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "engine": {
+       "terminal_admission": {
+        "evidence_valid": false
+       }
+      },
+      "kind": "end",
+      "outputs": {},
+      "revision": 0,
+      "run_id": "run-456",
+      "state_id": "A"
+     },
+     "result": {
+      "ok": {
+       "checkpoint": {
+        "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+        "assurance": {
+         "diagnostics": [],
+         "entered_fallback": false,
+         "fallback_reason": "",
+         "missing_evidence": [],
+         "policy_violations": [],
+         "unresolved_effects": [],
+         "verification_scope": ""
+        },
+        "budget": {
+         "model_calls": 0,
+         "output_repairs": 0,
+         "steps": 1,
+         "tokens": 0,
+         "tool_calls": 0
+        },
+        "evidence_refs": [],
+        "outcome": {
+         "category": "unverified",
+         "evidence_receipts": [],
+         "outputs": {},
+         "terminal": "END_A"
+        },
+        "record_schema": "hexis-checkpoint/1",
+        "revision": 1,
+        "run_id": "run-456",
+        "state_id": "A",
+        "status": "COMPLETED",
+        "tenant_id": "acme",
+        "variables": {
+         "loops": 3,
+         "num": true,
+         "u": "found"
+        }
+       },
+       "delta": {},
+       "edge": null,
+       "events": [
+        {
+         "actor": "",
+         "kind": "end",
+         "observation_digest": "sha256:376051813783e73eda01af4d0af948d60c15c47a160e5b318b2aa1f29b64d52c",
+         "receipt_ref": "",
+         "revision": 0,
+         "state": "END_A",
+         "type": "OBSERVATION_ACCEPTED"
+        },
+        {
+         "category": "unverified",
+         "terminal": "END_A",
+         "type": "TERMINAL_ADMITTED"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "kind": "initial",
+    "run_id": "r",
+    "task_input": {},
+    "tenant_id": "t"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 0,
+     "run_id": "r",
+     "state_id": "M",
+     "status": "RUNNING",
+     "tenant_id": "t",
+     "variables": {
+      "loops": 0
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": null,
+       "num": [],
+       "u": "stop"
+      },
+      "revision": "x",
+      "run_id": "r",
+      "state_id": "M",
+      "usage": {
+       "output_repairs": 2
+      }
+     },
+     "result": {
+      "errors": [
+       [
+        "int_parsing",
+        [
+         "revision"
+        ]
+       ]
+      ],
+      "exc": "ValidationError"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": null,
+       "num": null,
+       "u": "go"
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "code": "OUTPUT_SCHEMA",
+      "detail": {
+       "variable": "num"
+      },
+      "exc": "KernelError",
+      "message": "'num' fails its schema: <root>: None is not of type 'number'"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": "g",
+       "num": "x",
+       "u": 1
+      },
+      "revision": 0,
+      "run_id": "r"
+     },
+     "result": {
+      "errors": [
+       [
+        "missing",
+        [
+         "state_id"
+        ]
+       ]
+      ],
+      "exc": "ValidationError"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": null,
+       "num": null,
+       "u": "stop"
+      },
+      "receipt_ref": "la_f25920#1",
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M",
+      "usage": {
+       "model_calls": 11
+      }
+     },
+     "result": {
+      "code": "OUTPUT_SCHEMA",
+      "detail": {
+       "variable": "num"
+      },
+      "exc": "KernelError",
+      "message": "'num' fails its schema: <root>: None is not of type 'number'"
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "budget": {
+      "steps": 20,
+      "tokens": 99995,
+      "tool_calls": 24
+     },
+     "revision": 5,
+     "run_id": "run-300",
+     "state_id": "FALLBACK",
+     "status": "CANCELLED",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 3,
+      "num": true,
+      "t": "approved",
+      "u": "approved"
+     }
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 20,
+      "tokens": 99995,
+      "tool_calls": 24
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 5,
+     "run_id": "run-300",
+     "state_id": "FALLBACK",
+     "status": "CANCELLED",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 3,
+      "num": true,
+      "t": "approved",
+      "u": "approved"
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "actor": "é",
+      "engine": {
+       "terminal_admission": {
+        "evidence_valid": true,
+        "unresolved_effects": 5
+       }
+      },
+      "kind": "end",
+      "outputs": {},
+      "revision": 5,
+      "run_id": "run-300",
+      "state_id": "FALLBACK"
+     },
+     "result": {
+      "code": "RUN_FINISHED",
+      "detail": {},
+      "exc": "KernelError",
+      "message": "run already CANCELLED"
+     }
+    },
+    {
+     "obs": {
+      "engine": {
+       "terminal_admission": {
+        "evidence_valid": true,
+        "unresolved_effects": 5
+       }
+      },
+      "kind": "end",
+      "outputs": {},
+      "receipt_ref": "la_aa10e2#1",
+      "revision": 5,
+      "run_id": "run-300",
+      "state_id": "FALLBACK"
+     },
+     "result": {
+      "code": "RUN_FINISHED",
+      "detail": {},
+      "exc": "KernelError",
+      "message": "run already CANCELLED"
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "kind": "initial",
+    "run_id": "r",
+    "task_input": {},
+    "tenant_id": "t"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 0,
+     "run_id": "r",
+     "state_id": "M",
+     "status": "RUNNING",
+     "tenant_id": "t",
+     "variables": {
+      "loops": 0
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": "g",
+       "num": "x",
+       "u": 1
+      },
+      "receipt_ref": "la_cc63b4#1",
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "exc": "KeyError",
+      "message": "'ghostvar'"
+     }
+    },
+    {
+     "obs": {
+      "approved": true,
+      "kind": "model",
+      "outputs": {
+       "ghostvar": null,
+       "num": [],
+       "u": "go"
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M",
+      "usage": {
+       "tokens": "5"
+      }
+     },
+     "result": {
+      "errors": [
+       [
+        "extra_forbidden",
+        [
+         "approved"
+        ]
+       ]
+      ],
+      "exc": "ValidationError"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": 1,
+       "num": false,
+       "u": "go"
+      },
+      "receipt_ref": "la_20deab#1",
+      "revision": 0,
+      "run_id": "r",
+      "usage": {
+       "output_repairs": 2
+      }
+     },
+     "result": {
+      "errors": [
+       [
+        "missing",
+        [
+         "state_id"
+        ]
+       ]
+      ],
+      "exc": "ValidationError"
+     }
+    },
+    {
+     "obs": {
+      "actor": "tool:erp.create_draft",
+      "kind": "model",
+      "outputs": {
+       "ghostvar": "g",
+       "num": null,
+       "u": "stop"
+      },
+      "receipt_ref": "la_a5b273#1",
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "exc": "KeyError",
+      "message": "'ghostvar'"
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "budget": {
+      "steps": 3,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "revision": 1,
+     "run_id": "run-510",
+     "state_id": "A",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 2,
+      "num": true,
+      "t": "found",
+      "u": "pass"
+     }
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 3,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 1,
+     "run_id": "run-510",
+     "state_id": "A",
+     "status": "RUNNING",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 2,
+      "num": true,
+      "t": "found",
+      "u": "pass"
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "engine": {
+       "terminal_admission": {
+        "evidence_valid": false,
+        "missing": []
+       }
+      },
+      "kind": "model",
+      "outputs": {
+       "x": 1
+      },
+      "revision": 1,
+      "run_id": "run-510",
+      "state_id": "A",
+      "usage": {}
+     },
+     "result": {
+      "code": "OBSERVATION_KIND",
+      "detail": {},
+      "exc": "KernelError",
+      "message": "state END_A is end, observation is model"
+     }
+    },
+    {
+     "obs": {
+      "engine": {},
+      "kind": "end",
+      "outputs": {},
+      "receipt_ref": "la_f01b92#1",
+      "revision": 1,
+      "run_id": "run-510",
+      "state_id": "A",
+      "usage": {}
+     },
+     "result": {
+      "ok": {
+       "checkpoint": {
+        "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+        "assurance": {
+         "diagnostics": [],
+         "entered_fallback": false,
+         "fallback_reason": "",
+         "missing_evidence": [],
+         "policy_violations": [],
+         "unresolved_effects": [],
+         "verification_scope": ""
+        },
+        "budget": {
+         "model_calls": 0,
+         "output_repairs": 0,
+         "steps": 4,
+         "tokens": 0,
+         "tool_calls": 0
+        },
+        "evidence_refs": [],
+        "outcome": {
+         "category": "unverified",
+         "evidence_receipts": [],
+         "outputs": {},
+         "terminal": "END_A"
+        },
+        "record_schema": "hexis-checkpoint/1",
+        "revision": 2,
+        "run_id": "run-510",
+        "state_id": "A",
+        "status": "COMPLETED",
+        "tenant_id": "acme",
+        "variables": {
+         "loops": 2,
+         "num": true,
+         "t": "found",
+         "u": "pass"
+        }
+       },
+       "delta": {},
+       "edge": null,
+       "events": [
+        {
+         "actor": "",
+         "kind": "end",
+         "observation_digest": "sha256:8e0a48de4067faaa2532da420f1fdfbaa928346be7a14217f4f8213285083706",
+         "receipt_ref": "la_f01b92#1",
+         "revision": 1,
+         "state": "END_A",
+         "type": "OBSERVATION_ACCEPTED"
+        },
+        {
+         "category": "unverified",
+         "terminal": "END_A",
+         "type": "TERMINAL_ADMITTED"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "obs": {
+      "engine": {
+       "terminal_admission": {
+        "evidence_valid": true,
+        "receipts": [],
+        "unresolved_effects": [
+         "la_1:erp.create_draft:UNKNOWN"
+        ]
+       }
+      },
+      "kind": "end",
+      "outputs": {},
+      "revision": 2,
+      "run_id": "run-510",
+      "state_id": "A"
+     },
+     "result": {
+      "code": "RUN_FINISHED",
+      "detail": {},
+      "exc": "KernelError",
+      "message": "run already COMPLETED"
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "kind": "initial",
+    "run_id": "r",
+    "task_input": {},
+    "tenant_id": "t"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 0,
+     "run_id": "r",
+     "state_id": "M",
+     "status": "RUNNING",
+     "tenant_id": "t",
+     "variables": {
+      "loops": 0
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": "g",
+       "num": 2.5,
+       "u": null
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M",
+      "usage": {}
+     },
+     "result": {
+      "exc": "KeyError",
+      "message": "'ghostvar'"
+     }
+    },
+    {
+     "obs": {
+      "failure": 5,
+      "kind": "model",
+      "outputs": {
+       "ghostvar": false,
+       "num": 2.5,
+       "u": null
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "errors": [
+       [
+        "string_type",
+        [
+         "failure"
+        ]
+       ]
+      ],
+      "exc": "ValidationError"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": null,
+       "num": 3,
+       "u": "stop"
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M",
+      "usage": {
+       "tokens": 60000
+      }
+     },
+     "result": {
+      "ok": {
+       "checkpoint": {
+        "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+        "assurance": {
+         "diagnostics": [],
+         "entered_fallback": false,
+         "fallback_reason": "",
+         "missing_evidence": [],
+         "policy_violations": [],
+         "unresolved_effects": [],
+         "verification_scope": ""
+        },
+        "budget": {
+         "model_calls": 0,
+         "output_repairs": 0,
+         "steps": 1,
+         "tokens": 60000,
+         "tool_calls": 0
+        },
+        "evidence_refs": [],
+        "outcome": null,
+        "record_schema": "hexis-checkpoint/1",
+        "revision": 1,
+        "run_id": "r",
+        "state_id": "T",
+        "status": "RUNNING",
+        "tenant_id": "t",
+        "variables": {
+         "ghostvar": null,
+         "loops": 1,
+         "num": 3,
+         "u": "stop"
+        }
+       },
+       "delta": {
+        "ghostvar": null,
+        "num": 3,
+        "u": "stop"
+       },
+       "edge": {
+        "if": "num > 2",
+        "inc": "loops",
+        "index": 1,
+        "to": "T"
+       },
+       "events": [
+        {
+         "actor": "",
+         "kind": "model",
+         "observation_digest": "sha256:c710dacdade1ca0975fa743542766a2893981416e48070200e5911d94caa38ff",
+         "receipt_ref": "",
+         "revision": 0,
+         "state": "M",
+         "type": "OBSERVATION_ACCEPTED"
+        },
+        {
+         "delta_digest": "sha256:a78f6f7929782896127f9cf062e94a105293de989770436e637b6d17b8b01855",
+         "delta_keys": [
+          "ghostvar",
+          "num",
+          "u"
+         ],
+         "edge": {
+          "if": "num > 2",
+          "inc": "loops",
+          "index": 1,
+          "to": "T"
+         },
+         "from": "M",
+         "revision": 1,
+         "to": "T",
+         "type": "TRANSITION"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "t": "task-owned"
+      },
+      "revision": 1,
+      "run_id": "r",
+      "state_id": "T"
+     },
+     "result": {
+      "code": "WRITE_OWNERSHIP",
+      "detail": {
+       "variable": "t"
+      },
+      "exc": "KernelError",
+      "message": "model may not write 't'"
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "revision": 0,
+     "run_id": "run-866",
+     "state_id": "FALLBACK",
+     "status": "WAITING_FOR_APPROVAL",
+     "tenant_id": "acme",
+     "variables": {
+      "num": false,
+      "t": "new",
+      "u": "available"
+     }
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 0,
+     "run_id": "run-866",
+     "state_id": "FALLBACK",
+     "status": "WAITING_FOR_APPROVAL",
+     "tenant_id": "acme",
+     "variables": {
+      "num": false,
+      "t": "new",
+      "u": "available"
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "engine": {
+       "fallback": "noted",
+       "terminal_admission": {
+        "evidence_valid": true,
+        "other": 1,
+        "receipts": [
+         "ev"
+        ],
+        "unresolved_effects": []
+       }
+      },
+      "kind": "end",
+      "outputs": {},
+      "receipt_ref": "la_ea5c82#1",
+      "revision": 0,
+      "run_id": "run-866",
+      "state_id": "FALLBACK"
+     },
+     "result": {
+      "ok": {
+       "checkpoint": {
+        "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+        "assurance": {
+         "diagnostics": [],
+         "entered_fallback": false,
+         "fallback_reason": "",
+         "missing_evidence": [],
+         "policy_violations": [],
+         "unresolved_effects": [],
+         "verification_scope": ""
+        },
+        "budget": {
+         "model_calls": 0,
+         "output_repairs": 0,
+         "steps": 1,
+         "tokens": 0,
+         "tool_calls": 0
+        },
+        "evidence_refs": [
+         "ev"
+        ],
+        "outcome": {
+         "category": "fallback",
+         "evidence_receipts": [
+          "ev"
+         ],
+         "outputs": {},
+         "terminal": "END_REVIEW"
+        },
+        "record_schema": "hexis-checkpoint/1",
+        "revision": 1,
+        "run_id": "run-866",
+        "state_id": "FALLBACK",
+        "status": "COMPLETED",
+        "tenant_id": "acme",
+        "variables": {
+         "num": false,
+         "t": "new",
+         "u": "available"
+        }
+       },
+       "delta": {},
+       "edge": null,
+       "events": [
+        {
+         "actor": "",
+         "kind": "end",
+         "observation_digest": "sha256:99415851892d60febf16cb0be80657b117a488714781cf36212ccc54332e01b0",
+         "receipt_ref": "la_ea5c82#1",
+         "revision": 0,
+         "state": "END_REVIEW",
+         "type": "OBSERVATION_ACCEPTED"
+        },
+        {
+         "category": "fallback",
+         "terminal": "END_REVIEW",
+         "type": "TERMINAL_ADMITTED"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "obs": {
+      "engine": {
+       "terminal_admission": {
+        "evidence_valid": false,
+        "missing": [
+         "persisted_draft_matches_approved_payload"
+        ]
+       }
+      },
+      "kind": "end",
+      "outputs": {},
+      "receipt_ref": "la_5f9cf5#1",
+      "revision": 1,
+      "run_id": "run-866",
+      "state_id": "FALLBACK",
+      "usage": {
+       "tool_calls": -3
+      }
+     },
+     "result": {
+      "code": "RUN_FINISHED",
+      "detail": {},
+      "exc": "KernelError",
+      "message": "run already COMPLETED"
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "kind": "initial",
+    "run_id": "r",
+    "task_input": {},
+    "tenant_id": "t"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 0,
+     "run_id": "r",
+     "state_id": "M",
+     "status": "RUNNING",
+     "tenant_id": "t",
+     "variables": {
+      "loops": 0
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": 1,
+       "num": -0.5,
+       "u": "go"
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M",
+      "usage": {}
+     },
+     "result": {
+      "exc": "KeyError",
+      "message": "'ghostvar'"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": null,
+       "num": "x",
+       "u": null
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "code": "OUTPUT_TYPE",
+      "detail": {
+       "variable": "num"
+      },
+      "exc": "KernelError",
+      "message": "'num' expects number, got str"
+     }
+    },
+    {
+     "obs": {
+      "kind": "end",
+      "outputs": {
+       "ghostvar": 1,
+       "num": 0,
+       "u": 1
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "code": "OBSERVATION_KIND",
+      "detail": {},
+      "exc": "KernelError",
+      "message": "state M is model, observation is end"
+     }
+    },
+    {
+     "obs": {
+      "actor": "user:bob",
+      "kind": "model",
+      "outputs": {
+       "ghostvar": "x",
+       "num": 2.5,
+       "u": 1
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M",
+      "usage": {
+       "tokens": "x"
+      }
+     },
+     "result": {
+      "errors": [
+       [
+        "int_parsing",
+        [
+         "usage",
+         "tokens"
+        ]
+       ]
+      ],
+      "exc": "ValidationError"
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "kind": "initial",
+    "run_id": "r",
+    "task_input": {},
+    "tenant_id": "t"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 0,
+      "tokens": 0,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 0,
+     "run_id": "r",
+     "state_id": "M",
+     "status": "RUNNING",
+     "tenant_id": "t",
+     "variables": {
+      "loops": 0
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": "g",
+       "num": 3,
+       "u": null
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "exc": "KeyError",
+      "message": "'ghostvar'"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": null,
+       "num": 3,
+       "u": null
+      },
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "code": "OUTPUT_SCHEMA",
+      "detail": {
+       "variable": "u"
+      },
+      "exc": "KernelError",
+      "message": "'u' fails its schema: <root>: None is not of type 'string'"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": 1,
+       "num": true,
+       "u": [
+        1
+       ]
+      },
+      "revision": 0,
+      "run_id": "other-run",
+      "state_id": "M"
+     },
+     "result": {
+      "code": "OBSERVATION_IDENTITY",
+      "detail": {
+       "expected": [
+        "r",
+        "M",
+        0
+       ],
+       "got": [
+        "other-run",
+        "M",
+        0
+       ]
+      },
+      "exc": "KernelError",
+      "message": "observation does not belong to this state visit"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "ghostvar": 1,
+       "num": 2.5,
+       "u": 1
+      },
+      "receipt_ref": "la_8920e7#1",
+      "revision": 0,
+      "run_id": "r",
+      "state_id": "M"
+     },
+     "result": {
+      "exc": "KeyError",
+      "message": "'ghostvar'"
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "budget": {
+      "steps": 3,
+      "tokens": 99995,
+      "tool_calls": 0
+     },
+     "revision": 0,
+     "run_id": "run-88",
+     "state_id": "T",
+     "tenant_id": "acme",
+     "variables": {
+      "num": false
+     }
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 3,
+      "tokens": 99995,
+      "tool_calls": 0
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 0,
+     "run_id": "run-88",
+     "state_id": "T",
+     "status": "RUNNING",
+     "tenant_id": "acme",
+     "variables": {
+      "num": false
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "failure": 5,
+      "kind": "model",
+      "outputs": {},
+      "receipt_ref": "la_7e5d4e#1",
+      "revision": 0,
+      "run_id": "run-88",
+      "state_id": "T"
+     },
+     "result": {
+      "errors": [
+       [
+        "string_type",
+        [
+         "failure"
+        ]
+       ]
+      ],
+      "exc": "ValidationError"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "t": "task-owned"
+      },
+      "revision": 0,
+      "run_id": "run-88",
+      "state_id": "T"
+     },
+     "result": {
+      "code": "WRITE_OWNERSHIP",
+      "detail": {
+       "variable": "t"
+      },
+      "exc": "KernelError",
+      "message": "model may not write 't'"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "t": "task-owned"
+      },
+      "revision": 0,
+      "run_id": "run-88",
+      "state_id": "T"
+     },
+     "result": {
+      "code": "WRITE_OWNERSHIP",
+      "detail": {
+       "variable": "t"
+      },
+      "exc": "KernelError",
+      "message": "model may not write 't'"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "t": "task-owned"
+      },
+      "revision": 0,
+      "run_id": "run-88",
+      "state_id": "T",
+      "usage": {
+       "tool_calls": 30
+      }
+     },
+     "result": {
+      "code": "WRITE_OWNERSHIP",
+      "detail": {
+       "variable": "t"
+      },
+      "exc": "KernelError",
+      "message": "model may not write 't'"
+     }
+    }
+   ]
+  },
+  {
+   "pkg": "owner_mix",
+   "start": {
+    "fields": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "budget": {
+      "steps": 3,
+      "tokens": 0,
+      "tool_calls": 24
+     },
+     "revision": 3,
+     "run_id": "run-786",
+     "state_id": "T",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 2,
+      "num": false,
+      "t": "found",
+      "u": "SUP-10042"
+     }
+    },
+    "kind": "checkpoint"
+   },
+   "start_result": {
+    "ok": {
+     "artifact_hash": "sha256:d3421e0d2785ea05564dfb9ded5bd10fe55bb5a6f1779ace3af984c19eff75e3",
+     "assurance": {
+      "diagnostics": [],
+      "entered_fallback": false,
+      "fallback_reason": "",
+      "missing_evidence": [],
+      "policy_violations": [],
+      "unresolved_effects": [],
+      "verification_scope": ""
+     },
+     "budget": {
+      "model_calls": 0,
+      "output_repairs": 0,
+      "steps": 3,
+      "tokens": 0,
+      "tool_calls": 24
+     },
+     "evidence_refs": [],
+     "outcome": null,
+     "record_schema": "hexis-checkpoint/1",
+     "revision": 3,
+     "run_id": "run-786",
+     "state_id": "T",
+     "status": "RUNNING",
+     "tenant_id": "acme",
+     "variables": {
+      "loops": 2,
+      "num": false,
+      "t": "found",
+      "u": "SUP-10042"
+     }
+    }
+   },
+   "steps": [
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "t": "task-owned"
+      },
+      "revision": 3,
+      "run_id": "run-786",
+      "state_id": "T"
+     },
+     "result": {
+      "code": "WRITE_OWNERSHIP",
+      "detail": {
+       "variable": "t"
+      },
+      "exc": "KernelError",
+      "message": "model may not write 't'"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "t": "task-owned"
+      },
+      "revision": 3,
+      "run_id": "run-786",
+      "state_id": "T"
+     },
+     "result": {
+      "code": "WRITE_OWNERSHIP",
+      "detail": {
+       "variable": "t"
+      },
+      "exc": "KernelError",
+      "message": "model may not write 't'"
+     }
+    },
+    {
+     "obs": {
+      "kind": "model",
+      "outputs": {
+       "t": "task-owned"
+      },
+      "revision": 3,
+      "run_id": "run-786",
+      "state_id": "T"
+     },
+     "result": {
+      "code": "WRITE_OWNERSHIP",
+      "detail": {
+       "variable": "t"
+      },
+      "exc": "KernelError",
+      "message": "model may not write 't'"
+     }
+    }
+   ]
+  }
+ ]
+}

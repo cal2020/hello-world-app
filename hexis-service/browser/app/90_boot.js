@@ -140,14 +140,22 @@
       list.dataset.scrollStart = list.scrollLeft > 2 ? "more" : "edge";
       list.dataset.scrollEnd = list.scrollLeft < max - 2 ? "more" : "edge";
     };
-    /* keep a tab clear of the faded edges: scroll the strip so it sits at least 24px inside */
+    /* keep a tab clear of the faded edges: scroll the strip so the tab sits fully inside the opaque part. The fade
+       width is the strip's scroll-padding (01_base.css --hx-rail-fade); 4px more keeps the underline clear of it. */
+    const fade_width = () => {
+      const v = parseFloat(getComputedStyle(list).scrollPaddingInlineStart || getComputedStyle(list).scrollPaddingLeft);
+      return Number.isFinite(v) && v > 0 ? v : 40;
+    };
     const reveal = (a) => {
       if (a && list.scrollWidth > list.clientWidth + 1) {
-        const pad = 24;
-        const left = a.offsetLeft;
-        const right = left + a.offsetWidth;
+        const pad = fade_width() + 4;
+        const box = list.getBoundingClientRect();
+        const r = a.getBoundingClientRect();
+        const left = r.left - box.left - list.clientLeft + list.scrollLeft;
+        const right = left + r.width;
+        const max = list.scrollWidth - list.clientWidth;
         if (left - pad < list.scrollLeft) list.scrollLeft = Math.max(0, left - pad);
-        else if (right + pad > list.scrollLeft + list.clientWidth) list.scrollLeft = right + pad - list.clientWidth;
+        else if (right + pad > list.scrollLeft + list.clientWidth) list.scrollLeft = Math.min(max, right + pad - list.clientWidth);
       }
       sync_edges();
     };

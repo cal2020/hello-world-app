@@ -59,6 +59,23 @@
   border-radius: var(--r-1);
   background: var(--accent-tint);
 }
+/* after the run: the outcome it reached (a filled pill in its category's color), or where it stopped */
+.hxg-sw--reached {
+  width: 1.5rem;
+  height: 0.75rem;
+  border-radius: var(--r-pill);
+  background: var(--ink-2);
+}
+.hxg-sw--reached[data-tone="ok"] { background: var(--ok); }
+.hxg-sw--reached[data-tone="warn"] { background: var(--warn); }
+.hxg-sw--reached[data-tone="crit"] { background: var(--crit); }
+.hxg-sw--stopped {
+  width: 1.125rem;
+  height: 0.75rem;
+  border: 2px solid var(--crit);
+  border-radius: var(--r-1);
+}
+.hxg-legend li[hidden] { display: none; }
 .hxg-sw--step {
   display: inline-grid;
   place-items: center;
@@ -252,15 +269,24 @@
   white-space: nowrap;
 }
 
-/* compact: tighter header, and a caption for whatever is hovered or focused, or the run status. Two lines are
-   reserved, so pointing at states and edges never moves what follows; a focused state lists its transitions. */
+/* compact: tighter header, and a caption bar at the bottom of the frame for whatever is hovered or focused (the
+   state and one line per transition with its guard), or the run status. It reserves the lines of the longest
+   reading (--hxg-cap-lines, set by the script), so pointing at states and edges never moves what follows. It is
+   sticky: on a short window it stays at the bottom of the screen while the drawing is in view, so tapping a state
+   near the top still shows its details. */
 .hxg.is-compact { gap: var(--sp-2); }
 .hxg-caption {
+  position: sticky;
+  bottom: 0;
   margin: 0;
-  min-height: calc(var(--fs-2) * var(--lh-body) * 2);
+  padding: var(--sp-2) var(--sp-3);
+  min-height: calc(var(--fs-2) * var(--lh-body) * var(--hxg-cap-lines, 2) + 2 * var(--sp-2) + 1px);
   font: 400 var(--fs-2) / var(--lh-body) var(--font-sans);
   color: var(--ink-2);
   overflow-wrap: anywhere;
+  background: var(--graph-bg);
+  border-top: 1px solid var(--rule);
+  border-radius: 0 0 calc(var(--r-2) - 1px) calc(var(--r-2) - 1px);
 }
 .hxg-caption[hidden] { display: none; }
 .hxg-code { font-family: var(--font-mono); font-size: var(--fs-1); color: var(--ink); }

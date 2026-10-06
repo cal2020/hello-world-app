@@ -4,7 +4,12 @@
 // paints one cell over the next, the top bar title never runs under its actions, a focused tab or control is
 // never hidden under a fade or the sticky strip, and blocked copying says what to do. Runs at 1280px and 400px,
 // light and dark.
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 const SECTIONS = ["overview", "compile", "run", "learn", "break", "selftest"];
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 async function booted(page) {
   await page.waitForFunction(() => document.getElementById("app")?.dataset.boot !== "pending", null, { timeout: 15000 });
@@ -148,29 +153,53 @@ export default async function (t) {
     assert.equal(await page.evaluate(() => location.hash), "#" + id, "the hash follows the rail");
   }
   if (t.viewport.width < 600) {
-    /* a tab reached with the keyboard is scrolled clear of the strip's faded edges */
-    const strip_state = () => page.evaluate(() => {
+    /* a tab reached with the keyboard, or made active, is scrolled clear of the strip's faded edges (the fade
+       width is the one the mask uses, --hx-rail-fade) */
+    const strip_state = (which) => page.evaluate((which) => {
       const l = document.querySelector(".hx-rail-list");
-      const a = document.activeElement;
+      const a = which === "active" ? l.querySelector('[aria-current="page"]') : document.activeElement;
+      const raw = getComputedStyle(l).getPropertyValue("--hx-rail-fade").trim();
+      const fade = parseFloat(raw) * (raw.endsWith("rem") ? parseFloat(getComputedStyle(document.documentElement).fontSize) : 1);
       const lb = l.getBoundingClientRect();
       const ab = a.getBoundingClientRect();
-      const fade = 40;
       return {
-        section: a.dataset.section, start: l.dataset.scrollStart, end: l.dataset.scrollEnd, wide: l.scrollWidth > l.clientWidth + 1,
+        section: a.dataset.section, start: l.dataset.scrollStart, end: l.dataset.scrollEnd, wide: l.scrollWidth > l.clientWidth + 1, fade,
         clear_left: ab.left >= lb.left + (l.dataset.scrollStart === "more" ? fade : 0) - 0.5,
         clear_right: ab.right <= lb.right - (l.dataset.scrollEnd === "more" ? fade : 0) + 0.5,
       };
-    });
+    }, which);
     await page.focus('.hx-rail-link[data-section="break"]');
     await page.keyboard.press("Tab");
     let s = await strip_state();
     assert.equal(s.section, "selftest");
+    assert.ok(s.fade >= 24, `the strip fades its edges (${s.fade}px)`);
     assert.ok(s.clear_left && s.clear_right, `the focused last tab is clear of the faded edges: ${JSON.stringify(s)}`);
     for (let i = 0; i < 5; i++) await page.keyboard.press("Shift+Tab");
     s = await strip_state();
     assert.equal(s.section, "overview");
     assert.ok(s.clear_left && s.clear_right, `the focused first tab is clear of the faded edges: ${JSON.stringify(s)}`);
     if (!s.wide) assert.deepEqual([s.start, s.end], ["edge", "edge"], "no fade when every tab fits");
+    /* narrower phones (the review found tabs under the fade below 400px): every tab, focused or active, stays clear */
+    for (const w of [t.viewport.width, 375, 360, 320]) {
+      await page.setViewportSize({ width: w, height: t.viewport.height });
+      await frames(page);
+      for (const id of SECTIONS) {
+        await page.focus(`.hx-rail-link[data-section="${id}"]`);
+        await frames(page);
+        s = await strip_state();
+        assert.ok(s.section === id && s.clear_left && s.clear_right, `at ${w}px the focused ${id} tab is clear of the faded edges: ${JSON.stringify(s)}`);
+      }
+      for (const id of [...SECTIONS.slice(1).reverse(), "overview", "learn"]) {
+        await page.evaluate(() => document.activeElement && document.activeElement.blur());
+        await page.evaluate((id) => HXUI.go(id), id);
+        await frames(page);
+        s = await strip_state("active");
+        assert.ok(s.section === id && s.clear_left && s.clear_right, `at ${w}px the active ${id} tab is clear of the faded edges: ${JSON.stringify(s)}`);
+      }
+    }
+    await page.setViewportSize(t.viewport);
+    await page.evaluate(() => HXUI.go("overview"));
+    await frames(page);
   }
 
   /* ---- #hash deep links: fresh loads, in-place hash changes, unknown hashes */
@@ -378,6 +407,19 @@ export default async function (t) {
     `blocked copy shows a visible note and selects the full value: ${JSON.stringify(note)}`);
   await page.evaluate(() => getSelection().removeAllRanges());
   await page.waitForFunction(() => !document.querySelector(".hx-copy-note") && !document.getElementById("ov-initial-ref-copy").dataset.state);
+  /* on a touch screen (pointer: coarse) the note says to long-press instead of naming keyboard shortcuts */
+  await page.evaluate(() => {
+    const real = globalThis.matchMedia.bind(globalThis);
+    globalThis.__real_mm = real;
+    const coarse = (q) => ({ matches: true, media: q, onchange: null, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false });
+    globalThis.matchMedia = (q) => (/pointer:\s*coarse/.test(q) ? coarse(q) : real(q));
+  });
+  await page.click("#ov-initial-ref-copy");
+  await page.waitForSelector(".hx-copy-note");
+  const touch_note = await page.evaluate(() => document.querySelector(".hx-copy-note").textContent);
+  assert.ok(/long-press/i.test(touch_note) && !/Ctrl\+C/.test(touch_note), `touch users are told to long-press: ${touch_note}`);
+  await page.evaluate(() => { globalThis.matchMedia = globalThis.__real_mm; getSelection().removeAllRanges(); });
+  await page.waitForFunction(() => !document.querySelector(".hx-copy-note") && !document.getElementById("ov-initial-ref-copy").dataset.state);
 
   /* ---- phones: Shift+Tab never leaves the focused control under the sticky section strip (WCAG 2.4.11) */
   if (t.viewport.width < 600) {
@@ -582,6 +624,71 @@ export default async function (t) {
   await page.emulateMedia({ reducedMotion: "reduce" });
   assert.ok(zero(await durations()), "prefers-reduced-motion: reduce turns transitions off");
   await page.emulateMedia({ reducedMotion: "no-preference" });
+
+  /* ---- Overview: the machine panel beside the steps never leaves the window when a state takes focus. Its
+     caption grows by a line per transition; the sticky decision must already count that, or the panel flips to
+     static and jumps off screen (the review saw it end at y=-124 at 1440x790). The build may not have the
+     compiler yet, so this page compiles to the Python-built package from golden/ui_fixtures.json. */
+  if (t.viewport.width >= 1200 && await page.evaluate(() => !!(HXUI.graph && HXUI.graph.create))) {
+    const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, "golden", "ui_fixtures.json"), "utf8")).packages.initial;
+    const p2 = await page.context().newPage();
+    const errs = [];
+    p2.on("pageerror", (e) => errs.push("pageerror: " + (e.stack || e)));
+    p2.on("console", (m) => { if (m.type() === "error") errs.push("console: " + m.text()); });
+    /* the same network rules as the runner: fonts answer empty, anything else is an error */
+    await p2.route("**/*", (route) => {
+      const u = route.request().url();
+      if (u.startsWith("file://")) return route.continue();
+      if (u.startsWith("https://fonts.googleapis.com") || u.startsWith("https://fonts.gstatic.com")) {
+        return route.fulfill({ status: 200, body: "", contentType: u.includes("css") ? "text/css" : "font/woff2" });
+      }
+      errs.push("network request attempted: " + u);
+      return route.abort();
+    });
+    await p2.addInitScript((pkg) => {
+      const HX = (globalThis.HX = globalThis.HX || {});
+      const hash = () => HX.data.python_build.initial_artifact_hash;
+      HX.compile = { compile_procurement: () => ({ status: "valid", attempts: [], package: Object.assign({}, pkg, { artifact_hash: hash() }) }) };
+      if (!HX.catalog) HX.catalog = { load_catalog: (x) => x, digest: () => HX.data.python_build.catalog_digest };
+      if (!HX.validate) HX.validate = {};
+    }, pkg);
+    for (const [w, hgt] of [[1440, 790], [1440, 820], [1440, 900], [1280, 800], [1280, 840], [1280, 1000]]) {
+      await p2.setViewportSize({ width: w, height: hgt });
+      await p2.goto(url + "#overview");
+      await booted(p2);
+      await p2.waitForFunction(() => document.querySelector(".ov-machine")?.dataset.graph === "ready", null, { timeout: 15000 });
+      await frames(p2);
+      const res = await p2.evaluate(async () => {
+        const tick = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+        const panel = document.querySelector(".ov-machine");
+        const split = panel.parentNode.getBoundingClientRect();
+        const pr = panel.getBoundingClientRect();
+        /* scroll into the stretch where a sticky panel is held at the top of the window */
+        scrollTo(0, scrollY + pr.top - 16 + Math.max(0, Math.min(60, split.height - pr.height - 4)));
+        await tick();
+        const fit = panel.dataset.fit;
+        const at_rest = panel.getBoundingClientRect();
+        const bad = [];
+        for (const g of panel.querySelectorAll(".hxg-canvas g[data-state][tabindex]")) {
+          g.focus({ preventScroll: true });
+          await tick();
+          const r = panel.getBoundingClientRect();
+          const id = g.getAttribute("data-state");
+          if (panel.dataset.fit !== fit) bad.push(`${id}: fit ${fit} -> ${panel.dataset.fit}`);
+          if (Math.abs(r.top - at_rest.top) > 1) bad.push(`${id}: panel moved from ${Math.round(at_rest.top)} to ${Math.round(r.top)}`);
+          if (fit === "yes" && (r.top < 0 || r.bottom > innerHeight + 0.5)) bad.push(`${id}: sticky panel spans ${Math.round(r.top)}..${Math.round(r.bottom)} of ${innerHeight}`);
+        }
+        const n = panel.querySelectorAll(".hxg-canvas g[data-state][tabindex]").length;
+        document.activeElement.blur();
+        return { fit, top: at_rest.top, bad, n, sticky: getComputedStyle(panel).position };
+      });
+      assert.ok(res.n > 3, `the overview graph has focusable states at ${w}x${hgt}`);
+      assert.deepEqual(res.bad, [], `at ${w}x${hgt} (fit ${res.fit}) focusing a state keeps the machine panel in place`);
+      if (res.fit === "yes") assert.ok(res.sticky === "sticky" && Math.abs(res.top - 16) <= 1, `at ${w}x${hgt} the panel that fits is held 16px from the top`);
+    }
+    assert.ok(errs.length === 0, `overview sticky page errors: ${errs.join("; ")}`);
+    await p2.close();
+  }
 
   /* ---- a boot failure shows a readable error panel and sets data-boot="failed" (no uncaught error) */
   await page.addInitScript(() => {

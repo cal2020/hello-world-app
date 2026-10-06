@@ -8,8 +8,8 @@
      pill ("stub") right next to its source, in a lane to the right. Only the spine's own last edge reaches the
      drawn terminal at the bottom. Everything else is routed through the free channels between columns.
      A guard label sits within 20px of its own edge and never covers a node, another label or another edge.
-     When no such spot exists the label is left out; the edge's tooltip, the caption and the text alternative
-     still carry the guard.
+     When no such spot exists the label is left out of the full drawing (the edge's tooltip and the text
+     alternative still carry the guard); the compact drawing opens its rows up until every label has a spot.
    * create(container, machine, opts) draws the layout as inline SVG with a text alternative.
    * view.update(run) restyles the existing drawing in place on every step: no redraw, no flash.
 
@@ -22,9 +22,10 @@
        A sole unconditional edge has no label; a default edge next to guarded ones is labelled "else".
      const view = HXUI.graph.create(container, machine, {title, on_select(state_id), compact,
                                                          + interactions: package.contracts.interactions})
-       compact: true      the compact drawing (the Overview): one line per state, edge labels on hover or focus,
-                          a caption line under the canvas. It fits about 360px at full size and scales down to
-                          90% below that.
+       compact: true      the compact drawing (the Overview): one line per state, edge labels on hover or focus
+                          (every guarded edge gets a spot: the rows open up when one would not fit), and a
+                          caption bar at the bottom of the frame, sticky so it stays on screen. It fits about
+                          360px at full size and scales down to 90% below that.
                 false     the full drawing at its natural size. It scrolls sideways inside its canvas when it
                           is wider than the container; the canvas edges fade on the side that has more.
                 + "auto"  (the default when compact is left out) the full drawing while it fits the container,
@@ -34,8 +35,9 @@
        edge = the transition index (or the kernel's {index, ...} object). An entry whose edge is null or
        missing and that matches no transition (the kernel's FALLBACK_ENTERED event) is drawn as a fallback
        jump: + optional "reason" is shown in its tooltip. terminal and current accept a state id or a terminal id.
-       update({}) returns the drawing to rest. The legend ("current state", "transition taken", "not taken")
-       is shown only while a run is on the graph.
+       update({}) returns the drawing to rest. The legend is shown only while a run is on the graph; its first entry
+       names the mark drawn now: "current state", "reached outcome" (after the run ended in a terminal, in its
+       category's color) or "run stopped here" (failed or cancelled), followed by "transition taken", "not taken".
      view.highlight(state_ids)   [] clears. The other states and the edges step back in color (never opacity:
                                  every text stays at 4.5:1 or better).
      view.destroy()
@@ -1102,8 +1104,11 @@
     const meta_text = count_text + (L0.initial ? " · starts at " + L0.initial : "");
 
     // ---- header: title, size, and (during a run) the legend
+    // the first entry names the mark that is drawn: the current state, the outcome the run reached, or where it stopped
+    const legend_sw = el("span", { class: "hxg-sw hxg-sw--current" });
+    const legend_mark = el("span", { class: "hxg-legend-mark", text: "current state" });
     const legend = mode === "compact" ? null : el("ul", { class: "hxg-legend", "aria-hidden": "true", hidden: true },
-      el("li", null, el("span", { class: "hxg-sw hxg-sw--current" }), "current state"),
+      el("li", { class: "hxg-legend-first" }, legend_sw, legend_mark),
       el("li", null, el("span", { class: "hxg-sw hxg-sw--step", text: "1" }), "transition taken, in order"),
       el("li", null, el("span", { class: "hxg-sw hxg-sw--faint" }), "not taken"));
     const head = mode === "compact" && !title ? null : el("div", { class: "hxg-head" },
@@ -1127,10 +1132,17 @@
       alt_run);
 
     // ---- frame (border, fill) > canvas (scrolls sideways) > drawing; the caption line under compact drawings
+    // The caption is the frame's bottom bar. It is sticky, so on a short window it stays at the bottom of the screen
+    // while any of the drawing is in view (a state tapped near the top still shows its details). It reserves room
+    // for the longest state reading (the state, then one line per transition), so pointing never moves the page.
     const canvas = el("div", { class: "hxg-canvas" }, alt);
-    const frame = el("div", { class: "hxg-frame" }, canvas);
     const caption = mode === "normal" ? null : el("p", { class: "hxg-caption", "aria-hidden": "true", hidden: true });
-    const root = el("figure", { class: "hxg" + (on_select ? " is-selectable" : ""), "data-hxg": uid }, head, frame, caption);
+    if (caption) {
+      const most = Math.max(1, ...L0.nodes.map((n) => L0.edges.filter((e) => e.from === n.id).length));
+      caption.style.setProperty("--hxg-cap-lines", String(Math.min(5, most + 1)));
+    }
+    const frame = el("div", { class: "hxg-frame" }, canvas, caption);
+    const root = el("figure", { class: "hxg" + (on_select ? " is-selectable" : ""), "data-hxg": uid }, head, frame);
     if (title) root.setAttribute("aria-labelledby", uid + "-title");
     else root.setAttribute("aria-label", name);
     container.appendChild(root);
@@ -1344,13 +1356,12 @@
     function edge_caption(e) {
       return [[e.from], " → ", [e.to], e.cond ? " if " : " otherwise", e.cond ? [e.cond] : null, e.inc ? ", then +1 " : null, e.inc ? [e.inc] : null];
     }
-    /** One line (pointer hover), or with full = true one more line per transition with its guard (keyboard focus or a
-        tap: a deliberate request, so the caption may grow). */
-    function node_caption(n, full) {
+    /** The state on one line, then one line per transition with its guard (hover, keyboard focus or a tap). */
+    function node_caption(n) {
       if (n.kind === "end") return [[n.id], ": terminal, " + (n.terminal_kind || "no category")];
       const outs = D.L.edges.filter((e) => e.from === n.id);
       const parts = [[n.id], ": " + n.kind_text + (n.detail ? " · " + n.lead : ""), n.detail ? (n.detail_mono ? [n.detail] : n.detail) : null];
-      if (!full || !outs.length) return parts.concat(" · " + outs.length + (outs.length === 1 ? " transition" : " transitions"));
+      if (!outs.length) return parts.concat(" · no transitions");
       for (const e of outs) {
         parts.push("\n", "→ ", [e.to], e.cond ? " if " : " otherwise", e.cond ? [e.cond] : null, e.inc ? ", then +1 " : null, e.inc ? [e.inc] : null);
       }
@@ -1380,8 +1391,8 @@
         if (D.label_el[e.key]) D.label_el[e.key].classList.toggle("is-shown", on);
       }
       if (pointer.edge && D.edge_el[pointer.edge]) set_caption(edge_caption(D.edge_el[pointer.edge].e));
-      else if (pointer.state && D.by_id[pointer.state]) set_caption(node_caption(D.by_id[pointer.state], false));
-      else if (focused && D.by_id[focused]) set_caption(node_caption(D.by_id[focused], true));
+      else if (pointer.state && D.by_id[pointer.state]) set_caption(node_caption(D.by_id[pointer.state]));
+      else if (focused && D.by_id[focused]) set_caption(node_caption(D.by_id[focused]));
       else caption_default();
     }
     // every listener sits on the HTML canvas: focus listeners on an <svg> would make the drawing itself a Tab stop
@@ -1772,6 +1783,17 @@
       }
       for (const id of Object.keys(node_els)) {
         if (!jumps.some((j) => j.from === id && !j.drawn)) for (const x of node_els[id]) x.g.classList.remove("is-failed-out");
+      }
+
+      // the legend's first entry follows the mark drawn now
+      if (legend) {
+        const mk = D.svg.querySelector(".hxg-node.is-current, .hxg-node.is-reached, .hxg-node.is-stopped");
+        const kind = !mk ? "none" : mk.classList.contains("is-reached") ? "reached" : mk.classList.contains("is-stopped") ? "stopped" : "current";
+        legend_sw.className = "hxg-sw hxg-sw--" + kind;
+        if (kind === "reached") legend_sw.setAttribute("data-tone", mk.getAttribute("data-tone") || "neutral");
+        else legend_sw.removeAttribute("data-tone");
+        legend_mark.textContent = kind === "reached" ? "reached outcome" : kind === "stopped" ? "run stopped here" : "current state";
+        legend_mark.parentNode.hidden = kind === "none";
       }
 
       // text alternative

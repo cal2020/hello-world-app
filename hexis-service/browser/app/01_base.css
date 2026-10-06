@@ -267,22 +267,24 @@ code.hx-inline {
     gap: 0;
     overflow-x: auto;
     padding-inline: calc(var(--hx-gutter-l) - 0.5rem) calc(var(--hx-gutter-r) - 0.5rem);
-    scroll-padding-inline: 2.5rem;
+    /* the faded edge; 90_boot.js keeps a focused or active tab at least this far inside (via scroll-padding) */
+    --hx-rail-fade: 2.5rem;
+    scroll-padding-inline: var(--hx-rail-fade);
     scrollbar-width: none;
     overscroll-behavior-x: contain;
   }
   .hx-rail-list::-webkit-scrollbar { display: none; }
   .hx-rail-list[data-scroll-end="more"] {
-    -webkit-mask-image: linear-gradient(to right, var(--ink) calc(100% - 2.5rem), transparent);
-    mask-image: linear-gradient(to right, var(--ink) calc(100% - 2.5rem), transparent);
+    -webkit-mask-image: linear-gradient(to right, var(--ink) calc(100% - var(--hx-rail-fade)), transparent);
+    mask-image: linear-gradient(to right, var(--ink) calc(100% - var(--hx-rail-fade)), transparent);
   }
   .hx-rail-list[data-scroll-start="more"][data-scroll-end="more"] {
-    -webkit-mask-image: linear-gradient(to right, transparent, var(--ink) 2.5rem, var(--ink) calc(100% - 2.5rem), transparent);
-    mask-image: linear-gradient(to right, transparent, var(--ink) 2.5rem, var(--ink) calc(100% - 2.5rem), transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, var(--ink) var(--hx-rail-fade), var(--ink) calc(100% - var(--hx-rail-fade)), transparent);
+    mask-image: linear-gradient(to right, transparent, var(--ink) var(--hx-rail-fade), var(--ink) calc(100% - var(--hx-rail-fade)), transparent);
   }
   .hx-rail-list[data-scroll-start="more"][data-scroll-end="edge"] {
-    -webkit-mask-image: linear-gradient(to right, transparent, var(--ink) 2.5rem);
-    mask-image: linear-gradient(to right, transparent, var(--ink) 2.5rem);
+    -webkit-mask-image: linear-gradient(to right, transparent, var(--ink) var(--hx-rail-fade));
+    mask-image: linear-gradient(to right, transparent, var(--ink) var(--hx-rail-fade));
   }
   .hx-rail-link {
     display: block;

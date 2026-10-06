@@ -202,7 +202,14 @@
     } catch (e) { return false; }
   }
 
-  const COPY_BLOCKED = "Copy is blocked here. Press Ctrl+C or Cmd+C to copy the selected value.";
+  /* what to do instead depends on the input: a touch screen has no keyboard shortcut, it has the long-press menu */
+  function copy_blocked() {
+    let touch = false;
+    try { touch = !!(globalThis.matchMedia && globalThis.matchMedia("(pointer: coarse)").matches); } catch (e) { touch = false; }
+    return touch
+      ? "Copy is blocked here. Long-press the selected value and choose Copy."
+      : "Copy is blocked here. Press Ctrl+C or Cmd+C to copy the selected value.";
+  }
 
   /** copy_button(text, {label, target, id}) -> button that copies text. When the clipboard is blocked (the
       normal case in a sandboxed viewer) it expands and selects `target` and shows a visible one-line note
@@ -229,7 +236,7 @@
     }
     function show_note(target) {
       drop_note();
-      note = h("span", { class: "hx-copy-note", id: btn.id + "-note" }, HXUI.icon("info"), h("span", null, COPY_BLOCKED));
+      note = h("span", { class: "hx-copy-note", id: btn.id + "-note" }, HXUI.icon("info"), h("span", null, copy_blocked()));
       const anchor = btn.closest(".hx-digest") || btn;
       anchor.insertAdjacentElement("afterend", note);
       btn.setAttribute("aria-describedby", note.id);
@@ -242,7 +249,7 @@
       clearTimeout(timer);
       btn.dataset.state = state;
       btn.replaceChildren(HXUI.icon(state === "copied" ? "check" : "copy"));
-      const msg = state === "copied" ? "Copied" : COPY_BLOCKED;
+      const msg = state === "copied" ? "Copied" : copy_blocked();
       /* blocked: the button keeps its name and the visible note becomes its description (read once) */
       btn.setAttribute("aria-label", state === "copied" ? msg : name);
       btn.title = msg;
