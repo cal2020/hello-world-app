@@ -71,6 +71,7 @@ browser/
 | 50 | `broker` (+ `FaultInjector`, `SimulatedCrash`, `ToolTimeout`, `ToolFailure`) | `tools/broker.py`, `tools/errors.py` |
 | 55 | `fakes` | `demo/fakes.py` |
 | 58 | `service` (`RunService`, `RunError`, `erp_freshness`) | `runtime/service.py` |
+| 59 | `metrics` | `metrics.py` |
 | 60 | `traces` | `traces/model.py` |
 | 62 | `normalize` | `traces/normalize.py` |
 | 64 | `replay` | `replay/replay.py` |
@@ -79,6 +80,7 @@ browser/
 | 70 | `reference` | `demo/reference.py` |
 | 75 | `env` | `demo/env.py` |
 | 80 | `demo` | `demo/procurement_demo.py` |
+| 90 | `eval` | `evals/run_eval.py` |
 
 ## Tests
 

@@ -146,6 +146,10 @@ a horizontal scrollable tab bar on narrow ones. A bare `#anchor` deep-links each
   before and after. A "Race two updates" demo reproduces A18 (one ADMITTED, one CONFLICT).
 * **Shortcut:** shows trace eligibility EXCLUDED; the hand-built shortcut candidate's gate failures with the
   counterexample path; and "active version unchanged" with the hash.
+* **Evaluate:** runs `HX.eval.run_eval()` on the held-out tasks, comparing the initial and trace-refined machines.
+  It shows the summary table, a strictly held-out table that excludes tasks overlapping the development trace,
+  and a per-task table with overlap flags. It marks the direct-prompting baseline "not run (needs a live
+  model)" and states the in-page timing.
 
 ### 5. Break it (`#break`)
 * **Mutation lab:** a list of named mutations (the conformance tests' mutations: remove verifier, widen
