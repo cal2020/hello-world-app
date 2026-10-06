@@ -1,0 +1,9254 @@
+{
+ "cases": [
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 16 representative configurations",
+   "edges": [],
+   "guards": [
+    "validation_status == 'pass'",
+    "validation_status == 'repairable' and repair_count < 2"
+   ],
+   "note": "procurement validate state",
+   "status": "PROVEN",
+   "types": {
+    "repair_count": "integer",
+    "validation_status": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "repair_count": 0,
+    "validation_status": "repairable"
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "validation_status in ['pass', 'repairable'] and repair_count < 2",
+    "validation_status == 'repairable'"
+   ],
+   "note": "A08 overlap",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "repair_count": "integer",
+    "validation_status": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"validation_status == 'repairable' and repair_count < readback_count\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "validation_status == 'repairable' and repair_count < readback_count",
+    "validation_status == 'pass'"
+   ],
+   "note": "A08 var-to-var",
+   "status": "UNKNOWN",
+   "types": {
+    "readback_count": "integer",
+    "repair_count": "integer",
+    "validation_status": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard '\"a\" in tags' compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "\"a\" in tags",
+    "\"b\" in tags"
+   ],
+   "note": "membership in array variable",
+   "status": "UNKNOWN",
+   "types": {
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard '\"DOC-A\" in tags' compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "\"DOC-A\" in tags",
+    "\"DOC-B\" not in tags"
+   ],
+   "note": "membership in array variable",
+   "status": "UNKNOWN",
+   "types": {
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(tags)",
+    "nonempty(tags)"
+   ],
+   "note": "empty/nonempty array",
+   "status": "PROVEN",
+   "types": {
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(o)",
+    "nonempty(o)"
+   ],
+   "note": "empty/nonempty object",
+   "status": "PROVEN",
+   "types": {
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {
+    "s": "a"
+   },
+   "detail": "guards [1, 2] are simultaneously true",
+   "edges": [
+    1,
+    2
+   ],
+   "guards": [
+    "empty(s)",
+    "nonempty(s)",
+    "s == 'a'"
+   ],
+   "note": "empty/nonempty string overlap",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "x": {
+     "$int": "100000000000000000001"
+    }
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x > 1e20",
+    "x > 5e19"
+   ],
+   "note": "large constants",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "n": {
+     "$int": "9007199254740994"
+    }
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "n > 9007199254740993",
+    "n > 9007199254740993"
+   ],
+   "note": "big int literal (JS rejects)",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "n": {
+     "$int": "9007199254740994"
+    }
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "n > 9007199254740993",
+    "n < 9007199254740995"
+   ],
+   "note": "big int literal (JS rejects)",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "x": {
+     "$int": "9007199254740994"
+    }
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x > 9007199254740993",
+    "x < 9007199254740995"
+   ],
+   "note": "big int literal (JS rejects)",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "x": {
+     "$int": "1000000000000000052504760255204420248704468581108159154915854115511802457988908195786371375080447864043704443832883878176942523235360430575644792184786706982848387200926575803737830233794788090059368953234970799945081119038967640880074652742780142494579258788820056842838115669472196386865459400540161"
+    }
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x > 1e300",
+    "x > 1e299"
+   ],
+   "note": "huge constants",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "x": 0.10000000000000002
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x > 0.1",
+    "x < 0.10000000000000003"
+   ],
+   "note": "adjacent floats",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "x > 1e20",
+    "x <= 1e20"
+   ],
+   "note": "disjoint large",
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "n > 9007199254740993",
+    "n <= 9007199254740993"
+   ],
+   "note": "big int literal (JS rejects)",
+   "status": "PROVEN",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "n > 2.5",
+    "n < 3"
+   ],
+   "note": "integer between fractional bounds",
+   "status": "PROVEN",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "x > 0.1",
+    "x < 0.1"
+   ],
+   "note": "disjoint float",
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "n": 3
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "n > 2.5",
+    "n < 3.5"
+   ],
+   "note": "integer 3 overlaps",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {
+    "x": 8.500000000000002
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "8.5 < x < 10",
+    "x < 8.9"
+   ],
+   "note": "chained overlap",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "n": 2
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "1 < n < 10",
+    "n == 2"
+   ],
+   "note": "chained overlap",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {
+    "x": 4.500000000000001
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "0 <= x <= 5 < 100",
+    "x > 4.5"
+   ],
+   "note": "chained overlap",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 7 representative configurations",
+   "edges": [],
+   "guards": [
+    "0 <= x < 5",
+    "5 <= x < 10"
+   ],
+   "note": "chained disjoint",
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "n > 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999",
+    "n < 3"
+   ],
+   "note": "huge literal (JS rejects)",
+   "status": "PROVEN",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "x": {
+     "$int": "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999991"
+    }
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x > 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999",
+    "x > 99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999990"
+   ],
+   "note": "huge literal (JS rejects)",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "x": {
+     "$int": "179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858369"
+    }
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x > 1.7976931348623157e308",
+    "x > 1e308"
+   ],
+   "note": "max double (JS: no double above)",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "x": {
+     "$int": "179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368"
+    }
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x >= 1.7976931348623157e308",
+    "x > 1e308"
+   ],
+   "note": "max double, equality region",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "n": {
+     "$int": "9007199254740993"
+    }
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "n > 9007199254740992.0",
+    "n < 9007199254740994.0"
+   ],
+   "note": "adjacent doubles above 2**53",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "x": {
+     "$int": "9007199254740993"
+    }
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x > 9007199254740992.0",
+    "x < 9007199254740994.0"
+   ],
+   "note": "adjacent doubles above 2**53",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 5 representative configurations",
+   "edges": [],
+   "guards": [
+    "n > 9007199254740991",
+    "n < 9007199254740993.0"
+   ],
+   "note": "2**53 boundary",
+   "status": "PROVEN",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 5 representative configurations",
+   "edges": [],
+   "guards": [
+    "x > 4503599627370495.5",
+    "x < 4503599627370496"
+   ],
+   "note": "no double strictly between",
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 5 representative configurations",
+   "edges": [],
+   "guards": [
+    "x > 5e-324",
+    "x < 1e-323"
+   ],
+   "note": "subnormal neighbours",
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "x": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x == 0.0",
+    "x < 5e-324"
+   ],
+   "note": "zero and subnormal",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between numeric and boolean is not allowed",
+   "edges": [],
+   "guards": [
+    "x == 1",
+    "x == True"
+   ],
+   "note": "bool/int set collision, int first",
+   "status": "UNKNOWN",
+   "types": {
+    "x": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between numeric and boolean is not allowed",
+   "edges": [],
+   "guards": [
+    "x == True",
+    "x == 1"
+   ],
+   "note": "bool/int set collision, bool first",
+   "status": "UNKNOWN",
+   "types": {
+    "x": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between numeric and boolean is not allowed",
+   "edges": [],
+   "guards": [
+    "x == False or x == 0",
+    "x > 0"
+   ],
+   "note": "False/0 collision",
+   "status": "UNKNOWN",
+   "types": {
+    "x": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between numeric and boolean is not allowed",
+   "edges": [],
+   "guards": [
+    "not b and x == True",
+    "x == 1 and b",
+    "x >= 1 and b"
+   ],
+   "note": "True inserted first hides the constant 1 from the numeric domain",
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "x": 1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x == 1 and b",
+    "x >= 1 and b",
+    "not b and x == True"
+   ],
+   "note": "1 inserted first keeps it",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "x": 0
+   },
+   "detail": "guards [1, 2] are simultaneously true",
+   "edges": [
+    1,
+    2
+   ],
+   "guards": [
+    "not b and x in [False, 2.5]",
+    "x < 0.5 and b",
+    "x >= 0 and b"
+   ],
+   "note": "False hides 0 inside a list literal",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 19683 representative configurations",
+   "edges": [],
+   "guards": [
+    "a == 1 and b2 == 1 and c2 == 1 and d == 1 and e == 1 and f == 1 and g == 1 and h == 1 and i == 1",
+    "a != 1 and b2 != 1"
+   ],
+   "note": "19683 configurations, just under the bound",
+   "status": "PROVEN",
+   "types": {
+    "a": "integer",
+    "b2": "integer",
+    "c2": "integer",
+    "d": "integer",
+    "e": "integer",
+    "f": "integer",
+    "g": "integer",
+    "h": "integer",
+    "i": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "b",
+    "not b"
+   ],
+   "note": "boolean partition",
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "c": true
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b",
+    "b and c"
+   ],
+   "note": "boolean overlap",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "b == True",
+    "b == False"
+   ],
+   "note": "boolean equality partition",
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'y'",
+   "edges": [],
+   "guards": [
+    "x == 1",
+    "y == 2"
+   ],
+   "note": "undeclared variable",
+   "status": "UNKNOWN",
+   "types": {
+    "x": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "unparseable guard: guard syntax error: invalid syntax",
+   "edges": [],
+   "guards": [
+    "x == 1",
+    "x =="
+   ],
+   "note": "unparseable guard",
+   "status": "UNKNOWN",
+   "types": {
+    "x": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "unparseable guard: empty guard (default edges have cond == '')",
+   "edges": [],
+   "guards": [
+    "x == 1",
+    ""
+   ],
+   "note": "empty guard",
+   "status": "UNKNOWN",
+   "types": {
+    "x": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "fewer than two guarded edges",
+   "edges": [],
+   "guards": [
+    "x == 1"
+   ],
+   "note": "single guard",
+   "status": "PROVEN",
+   "types": {
+    "x": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "fewer than two guarded edges",
+   "edges": [],
+   "guards": [],
+   "note": "no guards",
+   "status": "PROVEN",
+   "types": {}
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between string and numeric is not allowed",
+   "edges": [],
+   "guards": [
+    "x == 'a'",
+    "x == 1"
+   ],
+   "note": "evaluation error",
+   "status": "UNKNOWN",
+   "types": {
+    "x": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: variable 'x' used as a condition is not boolean",
+   "edges": [],
+   "guards": [
+    "x",
+    "not x"
+   ],
+   "note": "bare non-boolean name",
+   "status": "UNKNOWN",
+   "types": {
+    "x": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "True",
+    "True"
+   ],
+   "note": "constant guards",
+   "status": "COUNTEREXAMPLE",
+   "types": {}
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 1 representative configurations",
+   "edges": [],
+   "guards": [
+    "True",
+    "False"
+   ],
+   "note": "constant guards",
+   "status": "PROVEN",
+   "types": {}
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: guard did not evaluate to a boolean",
+   "edges": [],
+   "guards": [
+    "1",
+    "True"
+   ],
+   "note": "non-boolean constant",
+   "status": "UNKNOWN",
+   "types": {}
+  },
+  {
+   "counterexample": {},
+   "detail": "59049 configurations exceed analysis bound 20000",
+   "edges": [],
+   "guards": [
+    "a == 1 and b2 == 1 and c2 == 1 and d == 1 and h == 1",
+    "e == 1 and f == 1 and g == 1 and i == 1 and j == 1"
+   ],
+   "note": "configuration bound exceeded",
+   "status": "UNKNOWN",
+   "types": {
+    "a": "integer",
+    "b2": "integer",
+    "c2": "integer",
+    "d": "integer",
+    "e": "integer",
+    "f": "integer",
+    "g": "integer",
+    "h": "integer",
+    "i": "integer",
+    "j": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "34992 configurations exceed analysis bound 20000",
+   "edges": [],
+   "guards": [
+    "a == 1 and b2 == 1 and c2 == 1 and d == 1",
+    "e == 1 and f == 1 and g == 1 and h == 2 and i == 3"
+   ],
+   "note": "configuration bound exactly",
+   "status": "UNKNOWN",
+   "types": {
+    "a": "integer",
+    "b2": "integer",
+    "c2": "integer",
+    "d": "integer",
+    "e": "integer",
+    "f": "integer",
+    "g": "integer",
+    "h": "integer",
+    "i": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 27 representative configurations",
+   "edges": [],
+   "guards": [
+    "a < 1 and b2 < 1 and c2 < 1",
+    "a > 1 and b2 > 1 and c2 > 1"
+   ],
+   "note": "three variables disjoint",
+   "status": "PROVEN",
+   "types": {
+    "a": "integer",
+    "b2": "integer",
+    "c2": "integer"
+   }
+  },
+  {
+   "counterexample": {
+    "x": 3
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x in [1, 2, 3]",
+    "x in [3, 4]"
+   ],
+   "note": "list overlap",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "x in (1, 2)",
+    "x not in (1, 2)"
+   ],
+   "note": "list partition",
+   "status": "PROVEN",
+   "types": {
+    "x": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "s in ['a', 'b']",
+    "s not in ['a', 'b']"
+   ],
+   "note": "string list partition",
+   "status": "PROVEN",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "s": "a"
+   },
+   "detail": "guards [0, 2] are simultaneously true",
+   "edges": [
+    0,
+    2
+   ],
+   "guards": [
+    "s == 'a'",
+    "s == 'b'",
+    "s == 'a'"
+   ],
+   "note": "triple overlap first and last",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "s == 'é'",
+    "s == 'é'"
+   ],
+   "note": "unnormalized strings",
+   "status": "PROVEN",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: ordering comparison on string and string",
+   "edges": [],
+   "guards": [
+    "s < 'b'",
+    "s == 'a'"
+   ],
+   "note": "string ordering error",
+   "status": "UNKNOWN",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "x": 2
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x == 2.0",
+    "x == 2"
+   ],
+   "note": "float/int same value",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "n": 2
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "n == 2.0",
+    "n == 2"
+   ],
+   "note": "float/int same value, integer",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 5 representative configurations",
+   "edges": [],
+   "guards": [
+    "x > 2",
+    "x < 2.0000000000000004"
+   ],
+   "note": "next double above integer",
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "n > 2",
+    "n < 2.0000000000000004"
+   ],
+   "note": "no integer in region",
+   "status": "PROVEN",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "x == 1 and y",
+    "x == 1 and not y"
+   ],
+   "note": "two variables",
+   "status": "PROVEN",
+   "types": {
+    "x": "integer",
+    "y": "boolean"
+   }
+  },
+  {
+   "counterexample": {
+    "s": "a",
+    "x": 1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x > 0 and s == 'a'",
+    "x < 5 and s == 'a'"
+   ],
+   "note": "two variables overlap",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "s": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 3 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(s) or s == 'x'",
+    "nonempty(s) and s != 'x'"
+   ],
+   "note": "string predicates",
+   "status": "PROVEN",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "x": 1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x == 1",
+    "x == 1"
+   ],
+   "note": "unknown type name -> numeric domain",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "null"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between array and numeric is not allowed",
+   "edges": [],
+   "guards": [
+    "x == 1",
+    "x == 2"
+   ],
+   "note": "equality on array evaluation error",
+   "status": "UNKNOWN",
+   "types": {
+    "x": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: left operand of 'in' has type boolean",
+   "edges": [],
+   "guards": [
+    "x in [1]",
+    "x in [2]"
+   ],
+   "note": "in on boolean evaluation error",
+   "status": "UNKNOWN",
+   "types": {
+    "x": "boolean"
+   }
+  },
+  {
+   "counterexample": {
+    "é": 2
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "é > 1",
+    "é < 3"
+   ],
+   "note": "unicode variable",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "é": "integer"
+   }
+  },
+  {
+   "counterexample": {
+    "K": 2
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "K > 1",
+    "K < 3"
+   ],
+   "note": "NFKC-normalized variable",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "K": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: guard uses undefined variable 'empty'",
+   "edges": [],
+   "guards": [
+    "empty(empty)",
+    "nonempty(empty)"
+   ],
+   "note": "predicate name as argument",
+   "status": "UNKNOWN",
+   "types": {
+    "empty": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "x": 1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x == 1",
+    "x == 1"
+   ],
+   "note": "identical guards",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(__proto__)",
+    "nonempty(__proto__)"
+   ],
+   "note": "__proto__ as a variable name",
+   "status": "PROVEN",
+   "types": {
+    "__proto__": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "__proto__": ""
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(__proto__)",
+    "empty(__proto__) or nonempty(__proto__)"
+   ],
+   "note": "__proto__ in a counterexample",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "__proto__": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "constructor": "a"
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "constructor == 'a'",
+    "constructor != 'b'"
+   ],
+   "note": "constructor as a variable name",
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "constructor": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "n": 1,
+    "t": "b",
+    "tags": [
+     "\u0000x"
+    ]
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "t == 'b' and n > 5e-324",
+    "(t not in ['pass']) and not (empty(tags))",
+    "t == 'pass' and not b"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "n": "integer",
+    "t": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'y'",
+   "edges": [],
+   "guards": [
+    "1e300 <= y <= 1e300 and nonempty(o)",
+    "x in [2.0]"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "o": "object",
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between numeric and boolean is not allowed",
+   "edges": [],
+   "guards": [
+    "4503599627370496 < y <= 1e20 and 5e19 <= x <= 5",
+    "t == 'repairable' and s in ['\\x00other', 'é', 'b'] or not empty(o)",
+    "x != True"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "o": "object",
+    "s": "string",
+    "t": "string",
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: ordering comparison on string and numeric",
+   "edges": [],
+   "guards": [
+    "b != True and t < 0.1",
+    "x != 0.10000000000000003"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "t": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"s == 'é' or 'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "x != 007.5 and m <= 9.007199254740994e15",
+    "s == 'é' or 'a' in tags"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "m": "integer",
+    "s": "string",
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 36 representative configurations",
+   "edges": [],
+   "guards": [
+    "b == False or b",
+    "9.007199254740994e15 < y <= 2.5 and not t == 'pass'"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean",
+    "t": "string",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 14 representative configurations",
+   "edges": [],
+   "guards": [
+    "n >= 9.007199254740994e15 and 0.10000000000000003 < n < 2",
+    "1 <= n < 9.007199254740994e15 and nonempty(o)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer",
+    "o": "object"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 24 representative configurations",
+   "edges": [],
+   "guards": [
+    "1e20 < n <= 10",
+    "y > 9.007199254740994e15"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "nonempty(o) and c != True",
+    "empty(o) and c != True"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean",
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"empty(o) and 'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "empty(o) and 'a' in tags",
+    "nonempty(o) and 'a' in tags"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "o": "object",
+    "tags": "array"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "m": 0,
+    "s": "",
+    "t": "\u0000other",
+    "y": 0.1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "s not in ['a', 'b', 'pass']",
+    "y in [0.1] and not empty(t) or 1.7976931348623157e308 <= m <= 2.5"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "s": "string",
+    "t": "string",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 12 representative configurations",
+   "edges": [],
+   "guards": [
+    "9007199254740991 <= y < 5e19 and 2 <= y <= 5",
+    "y >= 5e19 and 2 <= y <= 5",
+    "4503599627370495.5 <= y < 9007199254740991 and 2 <= y <= 5"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "c": false,
+    "n": -1,
+    "t": "",
+    "y": -1
+   },
+   "detail": "guards [1, 2] are simultaneously true",
+   "edges": [
+    1,
+    2
+   ],
+   "guards": [
+    "n <= 0.1 and t in [4503599627370496, 9.007199254740994e15] and y < 0.5",
+    "c == False and not c",
+    "c == False"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "n": "integer",
+    "t": "string",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "n": {
+     "$int": "100000000000000000000"
+    }
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "n <= 1e20",
+    "n >= 1e20"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "c": true,
+    "m": 0,
+    "s": "",
+    "x": -1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b == True or s == 'é'",
+    "5e-324 < x < 100 or not 007.5 <= m < 2 or c != True",
+    "c != True and c == True"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "m": "integer",
+    "s": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'zz'",
+   "edges": [],
+   "guards": [
+    "(t not in ['pass', 'b', 'repairable']) and not (b != 'pass')",
+    "t == 'b' and s == True",
+    "zz == 1"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "s": "string",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'm'",
+   "edges": [],
+   "guards": [
+    "2.5 <= y <= 0",
+    "not c",
+    "m != True or n in [1] or empty(t)"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "n": "integer",
+    "t": "string",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "b": false,
+    "x": -1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b != True",
+    "x < 0"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "b": true,
+    "m": 0,
+    "n": 0,
+    "o": {},
+    "s": "\u0000other",
+    "x": 0
+   },
+   "detail": "guards [1, 2] are simultaneously true",
+   "edges": [
+    1,
+    2
+   ],
+   "guards": [
+    "s == 'repairable' and m > 5e19 and empty(o)",
+    "n < 1.7976931348623157e308 and 1 <= x <= 2.5 or s != 'a'",
+    "b != True and not n < 1e300 or s not in ['repairable', 'é', '']"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "m": "integer",
+    "n": "integer",
+    "o": "object",
+    "s": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 3 representative configurations",
+   "edges": [],
+   "guards": [
+    "t == 'repairable'",
+    "t == ''"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "y >= 5e-324",
+    "y < 5e-324"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "'a' in tags",
+    "b != True"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'zz'",
+   "edges": [],
+   "guards": [
+    "empty(o) and c and not not b",
+    "m in [2.0, 4503599627370495.5]",
+    "b != True",
+    "zz == 1"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "m": "integer",
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"m == 9.007199254740994e15 and 'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "t not in ['repairable'] or y >= 0.10000000000000003",
+    "b == True and m == 9007199254740992.0 and m in [2.0]",
+    "m == 9.007199254740994e15 and 'a' in tags"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "m": "integer",
+    "t": "string",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "s": "pass",
+    "t": "é"
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "s == 'pass'",
+    "t == 'é'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "s": "string",
+    "t": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 16 representative configurations",
+   "edges": [],
+   "guards": [
+    "(x >= 1.7976931348623157e308) and not (empty(tags))",
+    "x < 1.7976931348623157e308 and nonempty(o)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "o": "object",
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "y < 2.0",
+    "10 <= y < 9.007199254740994e15",
+    "y >= 9.007199254740994e15",
+    "2.0 <= y < 10"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'zz'",
+   "edges": [],
+   "guards": [
+    "b",
+    "b or c",
+    "zz == 1"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "c": "boolean"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "c": true
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b",
+    "b or c"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "0.10000000000000003 <= x < 1e20",
+    "x < 0.10000000000000003",
+    "x > 1e20"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "b",
+    "not b"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "c": false,
+    "n": -1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "c != True",
+    "not c",
+    "n in [1e20, 0, 9007199254740992.0]"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "n": "integer"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "b": true,
+    "c": true,
+    "n": 0,
+    "t": "pass"
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "c and b == True or 2 < n < 5e19",
+    "t == 'pass'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "n": "integer",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"not c and 'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "not c and 'a' in tags",
+    "c and 'a' in tags"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "tags": "array"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "o": {},
+    "tags": [],
+    "x": 1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(o) and empty(tags)",
+    "x in [1, 9007199254740992.0, 1e300]"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "o": "object",
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 12 representative configurations",
+   "edges": [],
+   "guards": [
+    "(empty(o) or b) and not (t != 'a')",
+    "empty(o) and t != 'a'"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean",
+    "o": "object",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(tags)",
+    "nonempty(tags)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "b and nonempty(t)",
+    "not b and nonempty(t)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'zz'",
+   "edges": [],
+   "guards": [
+    "m != 3 or nonempty(tags)",
+    "m < 3 or s in ['pass', ''] and s == ''",
+    "zz == 1"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "m": "integer",
+    "s": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "n in [5e19] or not 5e19 <= n <= 10",
+    "'a' in tags"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "nonempty(tags) and c",
+    "empty(tags) and nonempty(tags)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "m": 3,
+    "t": ""
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "2 < m <= 10",
+    "t not in ['pass']"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between numeric and string is not allowed",
+   "edges": [],
+   "guards": [
+    "x != 'é' and nonempty(o) and y == 100",
+    "empty(t)"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "o": "object",
+    "t": "string",
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "s": "\u0000other",
+    "x": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "s not in ['b', 'a', '']",
+    "x < 1e20"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "s": "string",
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "9007199254740992.0 <= y < 9.007199254740994e15",
+    "y >= 9.007199254740994e15"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "5e-324 <= x < 2.5",
+    "x < 5e-324"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 24 representative configurations",
+   "edges": [],
+   "guards": [
+    "(empty(tags)) and not (t not in ['repairable', '\\x00other', ''])",
+    "nonempty(tags) and m != 1.7976931348623157e308"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer",
+    "t": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'x'",
+   "edges": [],
+   "guards": [
+    "x != 9007199254740991 and c == False",
+    "c != True"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 72 representative configurations",
+   "edges": [],
+   "guards": [
+    "(y >= 10) and not (c == False)",
+    "5 <= y < 10 and nonempty(o)",
+    "y < 5 and m > 0.1"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean",
+    "m": "integer",
+    "o": "object",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(o)",
+    "nonempty(o)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "o": "object"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "evaluation error during analysis: ordering comparison on boolean and numeric",
+   "edges": [],
+   "guards": [
+    "y >= 9007199254740992.0 or b > 5",
+    "2.0 < y <= 2.0"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "evaluation error during analysis: variable 'o' used as a condition is not boolean",
+   "edges": [],
+   "guards": [
+    "y in [4503599627370495.5, 5e19, 2]",
+    "s != 'a' and not o",
+    "y <= 1e20"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "o": "object",
+    "s": "string",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"'a' in tags and y != 0\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "s not in ['a']",
+    "'a' in tags and y != 0"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "s": "string",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "(empty(tags)) and not (b == True)",
+    "nonempty(tags) and c == False"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(tags)",
+    "nonempty(tags)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "tags": "array"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "m": 0,
+    "o": {},
+    "s": "",
+    "x": 0,
+    "y": -1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "y < 5e-324",
+    "m <= 9007199254740992.0 or m >= 5e19 or s != '\\x00other'",
+    "x > 100 or empty(o) and y == 1e300"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "o": "object",
+    "s": "string",
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'y'",
+   "edges": [],
+   "guards": [
+    "y != 0.10000000000000003 or not y != 0 or empty(o)",
+    "t == 'pass'"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "o": "object",
+    "t": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "y >= 9007199254740992.0",
+    "y < 0.10000000000000003"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 5 representative configurations",
+   "edges": [],
+   "guards": [
+    "x < 1",
+    "x >= 100"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 9 representative configurations",
+   "edges": [],
+   "guards": [
+    "t not in ['a'] and s == 'b'",
+    "t == 'a' and s == 'b'"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "s": "string",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "c": true,
+    "o": {},
+    "s": ""
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(o) or b and s in ['a', 'b', 'repairable']",
+    "(empty(o)) and not (c == False)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "o": "object",
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "m": 0,
+    "n": 0,
+    "o": {}
+   },
+   "detail": "guards [0, 2] are simultaneously true",
+   "edges": [
+    0,
+    2
+   ],
+   "guards": [
+    "n <= 2.0 or m < 2.5",
+    "b == False",
+    "empty(o)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "m": "integer",
+    "n": "integer",
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"'a' in tags or s != 'a' or not c\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "nonempty(o) and x in [0.1, 5e-324]",
+    "'a' in tags or s != 'a' or not c"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "o": "object",
+    "s": "string",
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "(not c) and not (empty(o))",
+    "c and empty(o)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean",
+    "o": "object"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "undeclared variable 'c'",
+   "edges": [],
+   "guards": [
+    "b != True and x != 0.10000000000000003 or t == '\\x00other'",
+    "9.007199254740994e15 < x <= 2",
+    "y != 1e-3 and not c != True"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "t": "string",
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "not c",
+    "c"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "b": true,
+    "c": true,
+    "t": "a",
+    "x": {
+     "$int": "50000000000000000000"
+    },
+    "y": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "y != 9.007199254740994e15 and not x != 5e19",
+    "t == 'a'",
+    "not c and b != True"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "t": "string",
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "m < 100",
+    "m >= 100"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "x": 6
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b == True",
+    "5 < x < 10"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "c",
+    "not c"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(tags) and x >= 100",
+    "(nonempty(tags)) and not (x >= 100)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "m": {
+     "$int": "9007199254740994"
+    },
+    "s": "repairable"
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "m >= 9.007199254740994e15",
+    "s == 'repairable' or 5 < m < 4503599627370496"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "t == 'repairable'",
+    "t == 'pass'"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 5 representative configurations",
+   "edges": [],
+   "guards": [
+    "m < 0.1",
+    "m >= 3",
+    "0.1 <= m < 3"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "o": {},
+    "t": "",
+    "x": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(o) or b and x > 007.5",
+    "empty(o) and t != 'b'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "o": "object",
+    "t": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "(b) and not (c != True)",
+    "not b and nonempty(s)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "n": 9007199254740991
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "n <= 9007199254740991",
+    "n >= 9007199254740991"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "nonempty(tags)",
+    "empty(tags)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between string and boolean is not allowed",
+   "edges": [],
+   "guards": [
+    "c",
+    "s != True"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "s": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "n": -1,
+    "o": {},
+    "s": "repairable",
+    "x": -1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "s == 'repairable'",
+    "x in [0, 9007199254740992.0, 1e300] or empty(o) or not n in [0, 9007199254740992.0, 1e-3]"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer",
+    "o": "object",
+    "s": "string",
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 7 representative configurations",
+   "edges": [],
+   "guards": [
+    "4503599627370495.5 <= x < 1.7976931348623157e308",
+    "x >= 1.7976931348623157e308",
+    "1 <= x < 4503599627370495.5"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "x >= 1.7976931348623157e308",
+    "x < 1.7976931348623157e308"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "unparseable guard: syntax node not allowed: BinOp",
+   "edges": [],
+   "guards": [
+    "not b",
+    "b",
+    "y + 1 == 2"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 5 representative configurations",
+   "edges": [],
+   "guards": [
+    "n > 2.0",
+    "0.10000000000000003 <= n < 2.0"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"(not c) and not ('a' in tags)\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "(not c) and not ('a' in tags)",
+    "c and 'a' in tags"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "m": 0,
+    "s": "",
+    "y": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "s == 'a' or b",
+    "m == 1 and not y in [4503599627370496, 4503599627370495.5] or not s in ['b', 'repairable', 'pass']"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "m": "integer",
+    "s": "string",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "m": -1,
+    "o": {},
+    "y": 2.5
+   },
+   "detail": "guards [0, 2] are simultaneously true",
+   "edges": [
+    0,
+    2
+   ],
+   "guards": [
+    "empty(o) or not b",
+    "y in [9007199254740991] or 0.5 < m < 007.5",
+    "y in [2.5, 3]"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "m": "integer",
+    "o": "object",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "5 <= x < 100",
+    "100 <= x < 9.007199254740994e15"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "c": true,
+    "s": ""
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "c",
+    "b == True and s != 'b'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "nonempty(tags)",
+    "empty(tags)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "n": 0,
+    "o": {
+     "\u0000k": 0
+    },
+    "x": 0
+   },
+   "detail": "guards [0, 2] are simultaneously true",
+   "edges": [
+    0,
+    2
+   ],
+   "guards": [
+    "b",
+    "n in [2.5] and not 2.0 < x < 5",
+    "nonempty(o)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "n": "integer",
+    "o": "object",
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "1 <= y < 1e300",
+    "0.1 <= y < 1",
+    "y < 0.1"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "nonempty(tags) and t not in ['é']",
+    "empty(tags) and t not in ['é']"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "t": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "nonempty(tags)",
+    "empty(tags)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "s": "b"
+   },
+   "detail": "guards [2, 3] are simultaneously true",
+   "edges": [
+    2,
+    3
+   ],
+   "guards": [
+    "s == 'é'",
+    "s == '\\x00other'",
+    "s not in ['é', '\\x00other']",
+    "s == 'b'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "x": 5e-324
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x <= 5e-324",
+    "5e-324 <= x < 1"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "c": true
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "c or c",
+    "c"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 12 representative configurations",
+   "edges": [],
+   "guards": [
+    "5e-324 <= x < 100 and b == False",
+    "x < 5e-324 and b == True"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "s == 'repairable'",
+    "s not in ['repairable', 'a', '\\x00other']",
+    "s == 'a'",
+    "s == '\\x00other'"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"n in [10, 9.007199254740994e15] or 'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "b == 9007199254740991 or y == 3",
+    "n in [10, 9.007199254740994e15] or 'a' in tags",
+    "empty(tags) or t != 'é' or t != '\\x00other'"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "n": "integer",
+    "t": "string",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "m": 11,
+    "o": {}
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(o)",
+    "m > 10"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "o": "object"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "m": {
+     "$int": "50000000000000000001"
+    },
+    "tags": [
+     "\u0000x"
+    ]
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "nonempty(tags)",
+    "m > 5e19"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "tags": "array"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 5 representative configurations",
+   "edges": [],
+   "guards": [
+    "0.1 <= m < 1.7976931348623157e308",
+    "m > 1.7976931348623157e308"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 21 representative configurations",
+   "edges": [],
+   "guards": [
+    "(10 <= n < 4503599627370495.5) and not (n == 1e300)",
+    "n < 10 and m >= 0.1"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer",
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {
+    "o": {
+     "\u0000k": 0
+    },
+    "y": 1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "nonempty(o)",
+    "y > 0.5"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "o": "object",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "b",
+    "not b"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean"
+   }
+  },
+  {
+   "counterexample": {
+    "s": "repairable"
+   },
+   "detail": "guards [1, 2] are simultaneously true",
+   "edges": [
+    1,
+    2
+   ],
+   "guards": [
+    "s == 'pass'",
+    "s == 'repairable'",
+    "s not in ['pass']"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "n": 0,
+    "o": {
+     "\u0000k": 0
+    },
+    "s": "",
+    "x": {
+     "$int": "9007199254740992"
+    }
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "n == 9.007199254740994e15 or not empty(s) or x >= 9007199254740992.0",
+    "nonempty(o)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer",
+    "o": "object",
+    "s": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'zz'",
+   "edges": [],
+   "guards": [
+    "s != '' or nonempty(o) and y != 0.5",
+    "s not in ['pass']",
+    "zz == 1"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "o": "object",
+    "s": "string",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "c": false,
+    "y": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b and c != True",
+    "b or c and y <= 1"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "t not in ['pass', '\\x00other', 'b']",
+    "t == 'pass'",
+    "t == 'b'"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "c": true,
+    "o": {},
+    "t": "",
+    "tags": []
+   },
+   "detail": "guards [1, 2] are simultaneously true",
+   "edges": [
+    1,
+    2
+   ],
+   "guards": [
+    "not c",
+    "c",
+    "empty(o) and t != 'pass' or nonempty(tags)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "o": "object",
+    "t": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "undeclared variable 'zz'",
+   "edges": [],
+   "guards": [
+    "not c or not x <= 1e20",
+    "x > 9.007199254740994e15",
+    "zz == 1"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 24 representative configurations",
+   "edges": [],
+   "guards": [
+    "0.1 <= m <= 0.10000000000000003",
+    "nonempty(tags) or nonempty(tags) and x > 5e-324"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer",
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "b",
+    "not b"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean"
+   }
+  },
+  {
+   "counterexample": {
+    "c": true,
+    "m": 0,
+    "s": "",
+    "x": -1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "s not in ['é']",
+    "m < 2 or not c and x <= 0.1"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "m": "integer",
+    "s": "string",
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "o": {},
+    "tags": [
+     "\u0000x"
+    ],
+    "x": {
+     "$int": "100000000000000000000"
+    }
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x in [1e20] and nonempty(tags)",
+    "empty(o) or empty(o)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "o": "object",
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 40 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(o) and 2 < m < 0.5",
+    "nonempty(o) and t in ['a', '', 'é']"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer",
+    "o": "object",
+    "t": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "m": 0,
+    "n": -1,
+    "o": {},
+    "s": "",
+    "t": "",
+    "tags": []
+   },
+   "detail": "guards [1, 2] are simultaneously true",
+   "edges": [
+    1,
+    2
+   ],
+   "guards": [
+    "n == 0.10000000000000003 and s != ''",
+    "nonempty(tags) or not t == 'repairable' or m in [5e19, 4503599627370495.5, 3]",
+    "empty(o) and n == 0.5 or empty(tags)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "n": "integer",
+    "o": "object",
+    "s": "string",
+    "t": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(tags)",
+    "nonempty(tags)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "tags": "array"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "b": false,
+    "n": 0,
+    "s": "",
+    "x": {
+     "$int": "9007199254740992"
+    }
+   },
+   "detail": "guards [0, 2] are simultaneously true",
+   "edges": [
+    0,
+    2
+   ],
+   "guards": [
+    "n < 4503599627370495.5 and not b",
+    "s not in ['é', '\\x00other', '']",
+    "x == 9007199254740992.0"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "n": "integer",
+    "s": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"t not in ['repairable'] and 'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "t not in ['repairable'] and 'a' in tags",
+    "t == 'repairable' and 'a' in tags"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "t": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "t": "\u0000other"
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "t in ['b', '\\x00other', 'repairable']",
+    "b"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "'a' in tags",
+    "y in [0.1, 0.5] and n == 3 and not b"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "n": "integer",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(o)",
+    "nonempty(o)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {
+    "t": "\u0000other"
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "t == '\\x00other'",
+    "t != 'repairable'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(o) and c == False",
+    "(nonempty(o)) and not (c == False)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean",
+    "o": "object"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "b": true,
+    "n": 0,
+    "s": "a",
+    "t": "",
+    "x": 0
+   },
+   "detail": "guards [0, 2] are simultaneously true",
+   "edges": [
+    0,
+    2
+   ],
+   "guards": [
+    "t != '\\x00other'",
+    "x != 100 and n in [9.007199254740994e15, 1.7976931348623157e308]",
+    "s == 'a' or not b"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "n": "integer",
+    "s": "string",
+    "t": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(o)",
+    "n == 0.10000000000000003"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer",
+    "o": "object"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "c": false,
+    "n": {
+     "$int": "9007199254740995"
+    },
+    "o": {}
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "n > 9.007199254740994e15 or not nonempty(o) and not not c",
+    "c == False"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "n": "integer",
+    "o": "object"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 32 representative configurations",
+   "edges": [],
+   "guards": [
+    "5e-324 <= x < 2.0 and n != 1.7976931348623157e308",
+    "x >= 100 and n != 1.7976931348623157e308"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 3 representative configurations",
+   "edges": [],
+   "guards": [
+    "n < 0",
+    "n >= 0"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between numeric and string is not allowed",
+   "edges": [],
+   "guards": [
+    "x == 2",
+    "x > 0.1 or nonempty(o)",
+    "x != 'pass'"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "o": "object",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "1e-3 <= y < 9007199254740991",
+    "5e-324 <= y < 1e-3",
+    "y < 5e-324",
+    "y >= 9007199254740991"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "not b",
+    "b"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "t == 'a'",
+    "t == 'repairable'",
+    "t == '\\x00other'",
+    "t not in ['a', 'repairable', '\\x00other']"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "t": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "b": false,
+    "s": "b",
+    "x": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b != True",
+    "x != 5e19 and not s != 'b'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "s": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "not b",
+    "b"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "n": {
+     "$int": "100000000000000000000"
+    },
+    "t": "",
+    "tags": []
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "nonempty(tags) or not nonempty(t)",
+    "n == 1e20"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer",
+    "t": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "c == False",
+    "c == True"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean"
+   }
+  },
+  {
+   "counterexample": {
+    "b": false,
+    "t": "\u0000other"
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b != True",
+    "t == '\\x00other' and b != True"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "x >= 5",
+    "2 <= x < 5"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "c": true
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b",
+    "b or c"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "m < 5e19",
+    "m >= 5e19"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'm'",
+   "edges": [],
+   "guards": [
+    "m >= 9007199254740991 or not not s",
+    "n <= 5",
+    "empty(o) and t == 'a'"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "n": "integer",
+    "o": "object",
+    "t": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "c": false,
+    "m": 4,
+    "n": {
+     "$int": "9007199254740994"
+    },
+    "y": -1
+   },
+   "detail": "guards [1, 2] are simultaneously true",
+   "edges": [
+    1,
+    2
+   ],
+   "guards": [
+    "0.5 < y <= 5e-324",
+    "n in [1.7976931348623157e308, 9.007199254740994e15]",
+    "not c and 3 < m <= 4503599627370496"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "m": "integer",
+    "n": "integer",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "n": {
+     "$int": "1000000000000000052504760255204420248704468581108159154915854115511802457988908195786371375080447864043704443832883878176942523235360430575644792184786706982848387200926575803737830233794788090059368953234970799945081119038967640880074652742780142494579258788820056842838115669472196386865459400540160"
+    },
+    "x": 5,
+    "y": -1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "1.7976931348623157e308 <= y < 0.5 or n in [1e-3, 0.10000000000000003, 1e300]",
+    "x == 5"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer",
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between array and boolean is not allowed",
+   "edges": [],
+   "guards": [
+    "s != '\\x00other' and b == False",
+    "tags == True and not b in ['\\x00other', '', 'a'] and m <= 4503599627370496"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "m": "integer",
+    "s": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "c and c != True",
+    "not c and c != True"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "c": true,
+    "n": 0,
+    "tags": [],
+    "y": {
+     "$int": "9007199254740992"
+    }
+   },
+   "detail": "guards [0, 2] are simultaneously true",
+   "edges": [
+    0,
+    2
+   ],
+   "guards": [
+    "y in [9007199254740992.0]",
+    "nonempty(tags)",
+    "n < 4503599627370495.5 and not not c"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "n": "integer",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(tags)",
+    "nonempty(tags)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "s not in ['pass', '\\x00other', 'é'] and s in ['pass']",
+    "(s == 'é') and not (nonempty(o))"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "o": "object",
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "tags": []
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(tags) or b",
+    "empty(tags)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "0 <= m < 1",
+    "1 <= m < 9007199254740991",
+    "m >= 9007199254740991"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 3 representative configurations",
+   "edges": [],
+   "guards": [
+    "s == ''",
+    "s == 'pass'",
+    "s == '\\x00other'"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(o) and empty(o)",
+    "empty(tags) and nonempty(tags)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "o": "object",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "o": {},
+    "tags": [
+     "\u0000x"
+    ],
+    "y": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "nonempty(tags)",
+    "y == 100 or empty(o)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "o": "object",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "b": true,
+    "tags": [],
+    "x": -1,
+    "y": -1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b == True",
+    "empty(tags)",
+    "x in [0.1] and not y in [0.5, 5e19, 10] and y < 100"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "tags": "array",
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 10 representative configurations",
+   "edges": [],
+   "guards": [
+    "m >= 10 and c == True",
+    "m < 0 and c == True"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean",
+    "m": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'zz'",
+   "edges": [],
+   "guards": [
+    "nonempty(tags)",
+    "empty(tags)",
+    "zz == 1"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "tags": "array"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 192 representative configurations",
+   "edges": [],
+   "guards": [
+    "n < 0 and n < 1e300",
+    "007.5 <= n < 5e19 and y > 0.10000000000000003",
+    "(n >= 5e19) and not (t == 'pass')",
+    "0 <= n < 007.5 and b != True"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean",
+    "n": "integer",
+    "t": "string",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "c": true,
+    "t": ""
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "t != 'repairable' and c",
+    "empty(t)",
+    "b == False"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "t": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "x >= 1e300",
+    "x < 1e300"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between boolean and string is not allowed",
+   "edges": [],
+   "guards": [
+    "b != 'a'",
+    "not b"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean"
+   }
+  },
+  {
+   "counterexample": {
+    "m": 0,
+    "o": {
+     "\u0000k": 0
+    },
+    "tags": [
+     "\u0000x"
+    ]
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "nonempty(tags)",
+    "007.5 < m < 007.5 or not empty(o)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "o": "object",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "(nonempty(o)) and not (b)",
+    "empty(o) and b"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean",
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 3 representative configurations",
+   "edges": [],
+   "guards": [
+    "s == 'a'",
+    "s not in ['a']"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: left operand of 'in' has type array",
+   "edges": [],
+   "guards": [
+    "x < 0.1 and x < 1",
+    "(x >= 2.0) and not (tags in [0.5, 2, 5e-324])",
+    "0.1 <= x < 2.0 and c == False"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between numeric and boolean is not allowed",
+   "edges": [],
+   "guards": [
+    "(2 <= n < 10) and not (n != True)",
+    "n >= 10 and n != True"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between array and numeric is not allowed",
+   "edges": [],
+   "guards": [
+    "tags != 2.0 or nonempty(o)",
+    "t != 'a' or x > 100 or not empty(o)"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "o": "object",
+    "t": "string",
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "unparseable guard: guard syntax error: invalid syntax",
+   "edges": [],
+   "guards": [
+    "c == False",
+    "nonempty(o)",
+    "x ="
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "m": -1,
+    "s": "\u0000other",
+    "y": 0
+   },
+   "detail": "guards [1, 2] are simultaneously true",
+   "edges": [
+    1,
+    2
+   ],
+   "guards": [
+    "y in ['']",
+    "nonempty(s)",
+    "b == True and not m in [0.5, 1] or b == False"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "m": "integer",
+    "s": "string",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "c": false,
+    "x": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "not c",
+    "x < 1"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"'a' in tags or b\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "m <= 0.1",
+    "'a' in tags or b"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "m": "integer",
+    "tags": "array"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 7 representative configurations",
+   "edges": [],
+   "guards": [
+    "m >= 9.007199254740994e15",
+    "0 <= m < 3"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "y >= 5",
+    "y < 5"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "c": true,
+    "m": 0,
+    "tags": [
+     "\u0000x"
+    ],
+    "x": 4503599627370497
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "m >= 10 and not not c or not x <= 4503599627370496",
+    "nonempty(tags)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "m": "integer",
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "t not in ['']",
+    "t == ''"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "t": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "b": true,
+    "m": 9007199254740991,
+    "t": ""
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b",
+    "b == False or m in [5e19, 9007199254740991, 9.007199254740994e15] and t != 'pass'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "m": "integer",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'm'",
+   "edges": [],
+   "guards": [
+    "empty(o) and m == 3",
+    "y < 100 or not tags != 1e-3"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "o": "object",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 84 representative configurations",
+   "edges": [],
+   "guards": [
+    "nonempty(o) and n in [9.007199254740994e15, 2.0, 007.5]",
+    "empty(o) and 1e20 <= x < 2.5"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer",
+    "o": "object",
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "m < 0.10000000000000003",
+    "0.10000000000000003 <= m < 4503599627370495.5",
+    "m > 1e20"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"(y >= 3) and not ('a' in tags)\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "(y >= 3) and not ('a' in tags)",
+    "1 <= y < 3 and 'a' in tags",
+    "y < 0 and 'a' in tags"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "c": true,
+    "m": 3,
+    "t": ""
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "m >= 2.5 and c == True",
+    "m > 2.5 or empty(t)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "m": "integer",
+    "t": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "n < 1e300",
+    "n > 1e300"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {
+    "n": 1,
+    "o": {},
+    "s": "",
+    "tags": [
+     "\u0000x"
+    ]
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "nonempty(tags) and empty(o) and n > 1e-3",
+    "s != 'b'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer",
+    "o": "object",
+    "s": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "x": 0.5,
+    "y": -1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x >= 0.5",
+    "y != 0.5"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(o) and y == 0.1",
+    "nonempty(o) and y == 0.1"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "o": "object",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "m >= 9.007199254740994e15",
+    "m < 9.007199254740994e15"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between boolean and string is not allowed",
+   "edges": [],
+   "guards": [
+    "x < 5e19",
+    "s in ['\\x00other', 'pass']",
+    "9007199254740992.0 <= x < 9007199254740991 or c == 'repairable'"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "s": "string",
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "m": 0,
+    "n": 0,
+    "s": "",
+    "y": -1
+   },
+   "detail": "guards [0, 1, 2] are simultaneously true",
+   "edges": [
+    0,
+    1,
+    2
+   ],
+   "guards": [
+    "n != 1",
+    "m != 1.7976931348623157e308",
+    "n != 5 or s not in ['a'] and y in [0.5, 1e300, 2.5]"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "n": "integer",
+    "s": "string",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 5 representative configurations",
+   "edges": [],
+   "guards": [
+    "n >= 1e20",
+    "0.10000000000000003 <= n < 0.5",
+    "0.5 <= n < 1e20",
+    "n < 0.10000000000000003"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 7 representative configurations",
+   "edges": [],
+   "guards": [
+    "10 <= m < 4503599627370495.5 and m >= 100",
+    "m >= 4503599627370495.5 and m >= 100",
+    "m < 10 and m >= 100"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between boolean and string is not allowed",
+   "edges": [],
+   "guards": [
+    "b == False",
+    "b != True",
+    "m <= 100 or b == 'b'"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "m": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "t not in ['b', 'pass']",
+    "t == 'pass'"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 3 representative configurations",
+   "edges": [],
+   "guards": [
+    "m >= 0.10000000000000003",
+    "m < 0.10000000000000003"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'zz'",
+   "edges": [],
+   "guards": [
+    "s == ''",
+    "s not in ['']",
+    "zz == 1"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "not b and nonempty(t)",
+    "b and nonempty(t)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "o": {
+     "\u0000k": 0
+    },
+    "tags": [
+     "\u0000x"
+    ],
+    "y": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "nonempty(tags) and nonempty(o)",
+    "empty(o) or y != 3"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "o": "object",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 18 representative configurations",
+   "edges": [],
+   "guards": [
+    "s not in ['repairable'] and n in [4503599627370496, 100]",
+    "s == 'repairable' and n in [4503599627370496, 100]"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer",
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between array and string is not allowed",
+   "edges": [],
+   "guards": [
+    "y == 5e-324 or t == 'a' or not b",
+    "tags == 'pass'",
+    "t == 'pass'"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "t": "string",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "n": 4503599627370496,
+    "tags": [],
+    "y": 2
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(tags)",
+    "y >= 2 and n >= 4503599627370496"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "s": "",
+    "t": "",
+    "x": 0,
+    "y": 3
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x == 5 or 2.0 < y <= 1.7976931348623157e308",
+    "s not in ['repairable'] or t == ''"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "s": "string",
+    "t": "string",
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "b": true,
+    "n": 1,
+    "t": ""
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "nonempty(t) or n <= 9.007199254740994e15",
+    "n > 5e-324",
+    "b == True and b != True"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "n": "integer",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "c",
+    "not c"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean"
+   }
+  },
+  {
+   "counterexample": {
+    "o": {
+     "\u0000k": 0
+    },
+    "tags": [
+     "\u0000x"
+    ]
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "nonempty(tags) or empty(o)",
+    "nonempty(o)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "o": "object",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'n'",
+   "edges": [],
+   "guards": [
+    "4503599627370496 <= x <= 0.1 and empty(o) or not b == True",
+    "n != 1.7976931348623157e308 and c and not s == 'é'"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "o": "object",
+    "s": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 16 representative configurations",
+   "edges": [],
+   "guards": [
+    "(b) and not (empty(tags))",
+    "not b and x == 2.0"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean",
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "s not in ['a', 'b']",
+    "s == 'a'"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between boolean and string is not allowed",
+   "edges": [],
+   "guards": [
+    "not b and y <= 10 or not c == 'a'",
+    "b > 10 and not c < 1e300",
+    "empty(o) or empty(o)"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "o": "object",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "m": 0,
+    "s": "repairable",
+    "t": "é",
+    "x": -1
+   },
+   "detail": "guards [1, 2] are simultaneously true",
+   "edges": [
+    1,
+    2
+   ],
+   "guards": [
+    "m == 1e20",
+    "s != 'é' and s == 'repairable' and not 1e-3 <= x <= 2.0",
+    "t == 'é'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "s": "string",
+    "t": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 3 representative configurations",
+   "edges": [],
+   "guards": [
+    "t == '\\x00other'",
+    "t not in ['repairable', '\\x00other']"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'b'",
+   "edges": [],
+   "guards": [
+    "x >= 1e-3 and nonempty(o) or not t != ''",
+    "b"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "o": "object",
+    "t": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'zz'",
+   "edges": [],
+   "guards": [
+    "y <= 0.5",
+    "nonempty(o)",
+    "zz == 1"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "o": "object",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between numeric and string is not allowed",
+   "edges": [],
+   "guards": [
+    "m != '' and m >= 1.7976931348623157e308",
+    "m in [5, 0.1] or m >= 007.5 and not b"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "m": "integer"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 96 representative configurations",
+   "edges": [],
+   "guards": [
+    "y > 1e300 and not c == False and y <= 9007199254740991",
+    "y not in ['b', 'pass'] and not x <= 1 or x in [0.10000000000000003, 5e19]"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean",
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 7 representative configurations",
+   "edges": [],
+   "guards": [
+    "5 <= m < 4503599627370495.5",
+    "m >= 4503599627370495.5",
+    "m < 2.0"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 30 representative configurations",
+   "edges": [],
+   "guards": [
+    "x < 0.1 and m in [1e300, 0.5]",
+    "(x >= 0.5) and not (m in [1e300, 0.5])"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer",
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 12 representative configurations",
+   "edges": [],
+   "guards": [
+    "n >= 0.1 and n == 0",
+    "n < 0.1 and y != 9007199254740992.0"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"s != 'é' and empty(tags) and 'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "s != 'é' and empty(tags) and 'a' in tags",
+    "nonempty(o)"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "o": "object",
+    "s": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "s == 'b'",
+    "s == 'a'",
+    "s not in ['b', 'a']"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 12 representative configurations",
+   "edges": [],
+   "guards": [
+    "3 <= m < 007.5 and nonempty(o)",
+    "m < 2.0 and nonempty(o)",
+    "m >= 007.5 and nonempty(o)",
+    "2.0 <= m < 3 and nonempty(o)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer",
+    "o": "object"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 144 representative configurations",
+   "edges": [],
+   "guards": [
+    "(0.1 <= m < 2.5) and not (empty(t))",
+    "2.5 <= m < 5e19 and n in [0.5]",
+    "m >= 5e19 and y <= 0.5"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer",
+    "n": "integer",
+    "t": "string",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "not c",
+    "c"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(o)",
+    "nonempty(o)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "o": {},
+    "x": 0.10000000000000003,
+    "y": 2
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b and empty(o)",
+    "2 <= y <= 3 and x >= 0.10000000000000003"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "o": "object",
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "not c",
+    "c"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "c": true,
+    "n": -1,
+    "t": "\u0000other"
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b and nonempty(t)",
+    "b or c and n <= 0.5"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "n": "integer",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "o": {}
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(o) or b == True",
+    "empty(o)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "o": "object"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "b": true,
+    "c": true,
+    "o": {},
+    "t": "",
+    "y": {
+     "$int": "9007199254740995"
+    }
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b != True and empty(o) or y > 9.007199254740994e15",
+    "t != 'é' or c == False"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "o": "object",
+    "t": "string",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 32 representative configurations",
+   "edges": [],
+   "guards": [
+    "(x < 0.10000000000000003) and not (m > 5e19)",
+    "x >= 10 and m > 5e19",
+    "0.5 <= x < 10 and m > 5e19"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer",
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 16 representative configurations",
+   "edges": [],
+   "guards": [
+    "n >= 1.7976931348623157e308 and 1e300 <= n <= 100",
+    "s not in ['\\x00other']"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer",
+    "s": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "c": false,
+    "m": -1,
+    "y": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "c != True",
+    "m < 0.5 or m == 1e20 and y != 5e19"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "m": "integer",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "c": true,
+    "n": 0,
+    "tags": [],
+    "y": -1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(tags) and n in [9007199254740992.0] or y < 3",
+    "y < 0.1 or c == False"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "n": "integer",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "c": true,
+    "s": "",
+    "t": ""
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "t != 'a' and t not in ['\\x00other']",
+    "c == True",
+    "t == 'repairable' or s == '\\x00other' and t == ''"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "s": "string",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "m": 0,
+    "t": ""
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "2.0 < m < 2 or m < 10",
+    "t == 'a' or not m in [007.5]"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"not b and 'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "not b and 'a' in tags",
+    "b and 'a' in tags"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "tags": "array"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 672 representative configurations",
+   "edges": [],
+   "guards": [
+    "m > 1e300 and nonempty(tags)",
+    "5e-324 <= m < 2.0 and n != 10",
+    "m < 5e-324 and not b",
+    "2.0 <= m < 1e300 and y in [1e20, 2.5]"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean",
+    "m": "integer",
+    "n": "integer",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(tags)",
+    "nonempty(tags)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "tags": "array"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "m": 0,
+    "n": 0,
+    "s": "",
+    "y": -1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "y < 0.1 and s not in ['\\x00other']",
+    "y <= 5e-324",
+    "m in [2.5, 5e19, 1e20] or n == 2.0"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "n": "integer",
+    "s": "string",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "t not in ['', 'é', 'a']",
+    "t == ''",
+    "t == 'a'",
+    "t == 'é'"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "b": false,
+    "c": true,
+    "m": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "not b or not b or not m <= 1",
+    "b == False and c"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "m": "integer"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 96 representative configurations",
+   "edges": [],
+   "guards": [
+    "n == 1e300",
+    "empty(o) and x in [007.5, 4503599627370496, 0.1] and n == 1e20"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer",
+    "o": "object",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 't'",
+   "edges": [],
+   "guards": [
+    "x < 2.0 and t <= 0.10000000000000003",
+    "2.0 <= x < 4503599627370496 and x <= 5",
+    "x >= 4503599627370496 and n != 0.5"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "n": "integer",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"s == 'pass' and 'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "s == 'pass' and 'a' in tags",
+    "s == 'repairable' and y in [3, 1.7976931348623157e308]",
+    "s not in ['a', 'repairable', 'pass'] and m in [5, 0]"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "m": "integer",
+    "s": "string",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "m": 0,
+    "s": "é",
+    "tags": [
+     "\u0000x"
+    ]
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(tags) or s == 'é' or m >= 4503599627370495.5",
+    "nonempty(tags)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "s": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "c": true,
+    "o": {},
+    "y": 9007199254740991
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "(empty(o) or b) and not (c != True)",
+    "empty(o) and y == 9007199254740991"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "o": "object",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "x < 2 and c == True",
+    "x >= 2.0 and c == True",
+    "2 <= x < 2.0 and c == True"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "c": true,
+    "tags": [
+     "\u0000x"
+    ]
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b and nonempty(tags)",
+    "b or c and c != True"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 3 representative configurations",
+   "edges": [],
+   "guards": [
+    "s == 'é'",
+    "s not in ['é']"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "o": {},
+    "tags": []
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(tags) or b and nonempty(o)",
+    "(empty(tags)) and not (nonempty(o))"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "o": "object",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "o": {
+     "\u0000k": 0
+    },
+    "s": "\u0000other",
+    "t": "\u0000other"
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "nonempty(o)",
+    "s == '\\x00other' and t in ['\\x00other']"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "o": "object",
+    "s": "string",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "c == False or empty(tags)",
+    "y == 007.5",
+    "'a' in tags"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "b": false,
+    "c": false,
+    "m": 0,
+    "n": 0,
+    "o": {},
+    "s": ""
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "n > 4503599627370495.5 or nonempty(s) or m != 100",
+    "c != True and b == False and empty(o)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "m": "integer",
+    "n": "integer",
+    "o": "object",
+    "s": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 32 representative configurations",
+   "edges": [],
+   "guards": [
+    "1.7976931348623157e308 < x < 1.7976931348623157e308",
+    "nonempty(o) or not b == False or not x in [0.1, 3]"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean",
+    "o": "object",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "c": false,
+    "t": "\u0000other",
+    "x": 0
+   },
+   "detail": "guards [0, 2] are simultaneously true",
+   "edges": [
+    0,
+    2
+   ],
+   "guards": [
+    "not b or c == False",
+    "b == False",
+    "x == 0 and nonempty(t)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "t": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "t == ''",
+    "t == '\\x00other'"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "b",
+    "not b"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: variable 'o' used as a condition is not boolean",
+   "edges": [],
+   "guards": [
+    "n in [007.5] or s in ['repairable'] and b",
+    "not o"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "n": "integer",
+    "o": "object",
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "y >= 9007199254740991",
+    "10 <= y < 100"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "m": 0,
+    "s": "",
+    "tags": []
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "m >= 1.7976931348623157e308 or empty(tags)",
+    "s != 'é' or s in ['repairable', 'b']"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "s": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "b": false,
+    "n": 1,
+    "o": {
+     "\u0000k": 0
+    }
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b != True",
+    "nonempty(o) and n > 1e-3"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "n": "integer",
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "nonempty(tags) and nonempty(tags)",
+    "empty(tags) and nonempty(tags)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "tags": "array"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "c": true,
+    "m": 0,
+    "s": "",
+    "t": "",
+    "x": 2.5
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "c or c <= 5e-324 or s not in ['a', '\\x00other', 'repairable']",
+    "m == 10 and t == 'b' or 2.5 <= x < 1.7976931348623157e308",
+    "t == 'pass'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "m": "integer",
+    "s": "string",
+    "t": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 24 representative configurations",
+   "edges": [],
+   "guards": [
+    "y >= 4503599627370496 and empty(o)",
+    "2.5 <= y < 4503599627370496 and c == False"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean",
+    "o": "object",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "s not in ['']",
+    "s == ''"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "m < 4503599627370496",
+    "m >= 1e20",
+    "4503599627370496 <= m < 1e20"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between boolean and numeric is not allowed",
+   "edges": [],
+   "guards": [
+    "y in [2, 2.0] and t == 'é' and b == 9.007199254740994e15",
+    "c == True or not s == ''"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "s": "string",
+    "t": "string",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "x": 2
+   },
+   "detail": "guards [1, 2] are simultaneously true",
+   "edges": [
+    1,
+    2
+   ],
+   "guards": [
+    "x >= 9.007199254740994e15",
+    "x <= 2.0",
+    "2.0 <= x < 007.5"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 3 representative configurations",
+   "edges": [],
+   "guards": [
+    "t not in ['pass', '\\x00other']",
+    "t == 'pass'"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "nonempty(tags)",
+    "empty(tags)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'tags'",
+   "edges": [],
+   "guards": [
+    "tags in ['', 'b']",
+    "x in [2.5, 1]",
+    "m == 4503599627370496 and empty(t) or not b"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "m": "integer",
+    "t": "string",
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "b": true,
+    "c": true,
+    "x": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b or c and x in [1e300, 007.5, 100]",
+    "b and b == True"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "n >= 4503599627370495.5",
+    "n <= 007.5",
+    "007.5 <= n < 4503599627370495.5"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "undeclared variable 'zz'",
+   "edges": [],
+   "guards": [
+    "n < 4503599627370495.5 and m in [3, 1.7976931348623157e308, 5e19]",
+    "n >= 9.007199254740994e15 and s not in ['é']",
+    "9007199254740992.0 <= n < 9.007199254740994e15 and not b",
+    "4503599627370495.5 <= n < 9007199254740992.0 and t in ['pass']",
+    "zz == 1"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "m": "integer",
+    "n": "integer",
+    "s": "string",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 16 representative configurations",
+   "edges": [],
+   "guards": [
+    "nonempty(tags) and x < 4503599627370496",
+    "empty(tags) and c == False"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean",
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "unparseable guard: syntax node not allowed: BinOp",
+   "edges": [],
+   "guards": [
+    "t not in ['repairable', 'a'] and m <= 4503599627370495.5",
+    "nonempty(tags)",
+    "x in [10, 1] and not 9.007199254740994e15 < y < 9007199254740992.0 or c == True",
+    "y + 1 == 2"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "m": "integer",
+    "t": "string",
+    "tags": "array",
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "unparseable guard: guard syntax error: invalid syntax",
+   "edges": [],
+   "guards": [
+    "nonempty(o)",
+    "empty(o)",
+    "x ="
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"'a' in tags and nonempty(tags)\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "nonempty(o)",
+    "c",
+    "'a' in tags and nonempty(tags)"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "o": "object",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 32 representative configurations",
+   "edges": [],
+   "guards": [
+    "(m < 3) and not (nonempty(t))",
+    "m >= 3 and n != 2.0"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer",
+    "n": "integer",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'x'",
+   "edges": [],
+   "guards": [
+    "(m < 4503599627370495.5) and not (y == 0.10000000000000003)",
+    "m >= 4503599627370495.5 and x > 9007199254740992.0"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "m": "integer",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "y": 2
+   },
+   "detail": "guards [0, 2] are simultaneously true",
+   "edges": [
+    0,
+    2
+   ],
+   "guards": [
+    "2.0 <= y < 1.7976931348623157e308",
+    "y >= 1.7976931348623157e308",
+    "y <= 2.0"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "n": 0,
+    "o": {},
+    "y": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(o)",
+    "n == 0 and y <= 3"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer",
+    "o": "object",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 's'",
+   "edges": [],
+   "guards": [
+    "s == 'é'",
+    "s not in ['pass', 'a', 'é']",
+    "s == 'pass'"
+   ],
+   "status": "UNKNOWN",
+   "types": {}
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "nonempty(tags) or not x == 5 or 4503599627370495.5 <= n <= 2.0",
+    "'a' in tags"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "n": "integer",
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "o": {},
+    "t": ""
+   },
+   "detail": "guards [1, 2] are simultaneously true",
+   "edges": [
+    1,
+    2
+   ],
+   "guards": [
+    "nonempty(t)",
+    "t != 'a'",
+    "empty(o)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "o": "object",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 5 representative configurations",
+   "edges": [],
+   "guards": [
+    "n >= 007.5 and n > 2.0",
+    "n < 007.5 and n > 2.0"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {
+    "b": false,
+    "c": true,
+    "m": 0,
+    "x": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b != True and not m > 4503599627370495.5",
+    "c == False or x != 9007199254740991"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "m": "integer",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "n == 0 and c == False and x in ['a']",
+    "c == True"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean",
+    "n": "integer",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "o": {
+     "\u0000k": 0
+    },
+    "tags": []
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "nonempty(o)",
+    "empty(tags)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "o": "object",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 5 representative configurations",
+   "edges": [],
+   "guards": [
+    "x < 1",
+    "x >= 9007199254740991",
+    "1 <= x < 9007199254740991"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "b == False",
+    "b == True and not empty(o)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean",
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"(x >= 1e300) and not ('a' in tags)\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "(x >= 1e300) and not ('a' in tags)",
+    "2 <= x < 2.5 and 'a' in tags"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "o": {},
+    "s": "",
+    "tags": [
+     "\u0000x"
+    ]
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(o)",
+    "s == 'pass' or nonempty(tags)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "o": "object",
+    "s": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "y": 2
+   },
+   "detail": "guards [1, 2] are simultaneously true",
+   "edges": [
+    1,
+    2
+   ],
+   "guards": [
+    "y >= 5",
+    "2.0 <= y < 5",
+    "y <= 2.0"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "c": true,
+    "n": 0,
+    "tags": []
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(tags) and c",
+    "n != 1"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "n": "integer",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "b": false,
+    "n": -1,
+    "o": {},
+    "y": 7.5
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "nonempty(o) or y == 007.5",
+    "b == False and not n in [2, 0, 100]"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "n": "integer",
+    "o": "object",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 96 representative configurations",
+   "edges": [],
+   "guards": [
+    "m > 9007199254740992.0 and not b",
+    "(007.5 <= m < 9007199254740992.0) and not (x >= 9.007199254740994e15)",
+    "m < 1e-3 and c == False"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "m": "integer",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "s": "",
+    "t": "",
+    "x": 0,
+    "y": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x < 9007199254740991 or not b and not s != 'b'",
+    "y < 5 or not s or t == 'é'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "s": "string",
+    "t": "string",
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(o)",
+    "nonempty(o)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'm'",
+   "edges": [],
+   "guards": [
+    "m != 1e20 or b == True",
+    "b == True and c == True"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "c": "boolean"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "evaluation error during analysis: left operand of 'in' has type boolean",
+   "edges": [],
+   "guards": [
+    "x >= 1.7976931348623157e308 or b in [5e-324]",
+    "c or m in [9.007199254740994e15] or empty(o)",
+    "c and 9.007199254740994e15 <= x < 2 and not y <= 5e-324"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "m": "integer",
+    "o": "object",
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "n": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "n <= 9007199254740991",
+    "n <= 9.007199254740994e15"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {
+    "n": 1
+   },
+   "detail": "guards [0, 2] are simultaneously true",
+   "edges": [
+    0,
+    2
+   ],
+   "guards": [
+    "1 <= n < 2.5",
+    "n >= 2.5",
+    "n <= 1"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: ordering comparison on array and numeric",
+   "edges": [],
+   "guards": [
+    "tags < 2.0",
+    "x == 9007199254740991"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"'a' in tags and empty(s)\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "'a' in tags and empty(s)",
+    "b == True and not c"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "s": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "o": {}
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(o) or b",
+    "empty(o)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {
+    "c": true,
+    "t": "",
+    "y": 4503599627370495.5
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "y >= 4503599627370495.5 or not c",
+    "t not in ['pass']"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "t": "string",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "s not in ['\\x00other', 'b', 'é']",
+    "s == '\\x00other'",
+    "s == 'b'"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "0.5 <= x < 2",
+    "x < 0.5",
+    "x >= 2.0",
+    "2 <= x < 2.0"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "'a' in tags",
+    "'a' in tags"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "n": -1,
+    "t": "",
+    "x": 0
+   },
+   "detail": "guards [1, 2] are simultaneously true",
+   "edges": [
+    1,
+    2
+   ],
+   "guards": [
+    "t == 'é'",
+    "x <= 2.0",
+    "n != 1e-3"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer",
+    "t": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 3 representative configurations",
+   "edges": [],
+   "guards": [
+    "m < 0.1",
+    "m >= 0.1"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: left operand of 'not in' has type array",
+   "edges": [],
+   "guards": [
+    "tags not in ['b', '\\x00other'] and s in ['é', 'repairable']",
+    "n != 2.0 or not not c"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "n": "integer",
+    "s": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "c": true,
+    "tags": [],
+    "y": 2
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(tags)",
+    "y >= 2 and c"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "4503599627370495.5 <= y < 5e19",
+    "y < 5",
+    "5 <= y < 4503599627370495.5"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between numeric and string is not allowed",
+   "edges": [],
+   "guards": [
+    "x >= 1e300 and y == 'a'",
+    "x < 9007199254740992.0 and y == 'a'",
+    "9007199254740992.0 <= x < 1e300 and y == 'a'"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "'a' in tags",
+    "not c"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "s": "\u0000other"
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b == True or not s != 'b'",
+    "s == '\\x00other'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "c": true,
+    "s": ""
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "c or c and c == True",
+    "c and s != 'b'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"'a' in tags or y in [10, 0.5, 1e300]\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "'a' in tags or y in [10, 0.5, 1e300]",
+    "s != 'b'",
+    "n > 0"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "s": "string",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "o": {},
+    "t": "\u0000other"
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(o) and nonempty(t)",
+    "empty(o) or b and nonempty(t)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "o": "object",
+    "t": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "b": true,
+    "t": "",
+    "y": {
+     "$int": "50000000000000000000"
+    }
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "y > 5e19 or t not in ['pass', '\\x00other'] or not b",
+    "y == 5e19",
+    "y >= 1e20"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "t": "string",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 24 representative configurations",
+   "edges": [],
+   "guards": [
+    "t == '' and 007.5 <= y < 0.1",
+    "t not in [''] and b != True"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean",
+    "t": "string",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 3 representative configurations",
+   "edges": [],
+   "guards": [
+    "s == 'repairable'",
+    "s == ''"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "b": true,
+    "c": true,
+    "m": -1,
+    "o": {},
+    "t": ""
+   },
+   "detail": "guards [0, 1, 2] are simultaneously true",
+   "edges": [
+    0,
+    1,
+    2
+   ],
+   "guards": [
+    "empty(t) or empty(o)",
+    "not c or c == True or 9.007199254740994e15 < m <= 0.10000000000000003",
+    "b and nonempty(o) or not 5e19 < m <= 5e19"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "m": "integer",
+    "o": "object",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "c": true,
+    "t": "\u0000other"
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b == True",
+    "nonempty(t)",
+    "c == False"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 12 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(o)",
+    "n in [0.5] and b != True"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean",
+    "n": "integer",
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "not b",
+    "b"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 't'",
+   "edges": [],
+   "guards": [
+    "t not in ['a']",
+    "t == 'a'"
+   ],
+   "status": "UNKNOWN",
+   "types": {}
+  },
+  {
+   "counterexample": {
+    "s": "pass",
+    "x": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x != 1",
+    "s == 'pass'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "s": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"c != True and 'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "nonempty(t)",
+    "c != True and 'a' in tags",
+    "n > 2.5 and empty(tags)"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "n": "integer",
+    "t": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "y < 100",
+    "y >= 100"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "t": "",
+    "tags": [],
+    "y": 4503599627370495.5
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "nonempty(tags) and y < 1.7976931348623157e308 or t not in ['b']",
+    "y >= 4503599627370495.5"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "t": "string",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 5 representative configurations",
+   "edges": [],
+   "guards": [
+    "0.10000000000000003 <= m < 9007199254740991",
+    "m >= 9007199254740991",
+    "m < 0.10000000000000003"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "undeclared variable 'x'",
+   "edges": [],
+   "guards": [
+    "n < 0.1 and x != 1.7976931348623157e308",
+    "n < 1e300"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "m >= 5e19",
+    "3 <= m < 5e19"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between array and numeric is not allowed",
+   "edges": [],
+   "guards": [
+    "s == 'repairable'",
+    "t != 'a' or m > 5e-324 or not tags == 2.0"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "m": "integer",
+    "s": "string",
+    "t": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "c": true
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b or c",
+    "b"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "y >= 5",
+    "y < 0.10000000000000003",
+    "0.10000000000000003 <= y < 5"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "m": 0,
+    "s": "",
+    "y": {
+     "$int": "1000000000000000052504760255204420248704468581108159154915854115511802457988908195786371375080447864043704443832883878176942523235360430575644792184786706982848387200926575803737830233794788090059368953234970799945081119038967640880074652742780142494579258788820056842838115669472196386865459400540160"
+    }
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "m not in ['a', '\\x00other'] and y == 1e300",
+    "s != 'é'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "s": "string",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"x < 9007199254740991 and 'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "x < 9007199254740991 and 'a' in tags",
+    "x >= 9007199254740991 and 'a' in tags"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 3 representative configurations",
+   "edges": [],
+   "guards": [
+    "m < 0.10000000000000003",
+    "m >= 0.10000000000000003"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 15 representative configurations",
+   "edges": [],
+   "guards": [
+    "4503599627370495.5 <= n < 5e19 and m >= 0.1",
+    "(n < 4503599627370495.5) and not (m >= 0.1)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer",
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"'a' in tags or nonempty(tags)\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "'a' in tags or nonempty(tags)",
+    "y == 5e-324"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "s": "",
+    "t": "repairable",
+    "y": 5
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "t == 'repairable' or y == 10 and s == 'pass'",
+    "y in [9.007199254740994e15] or y == 5"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "s": "string",
+    "t": "string",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between array and numeric is not allowed",
+   "edges": [],
+   "guards": [
+    "4503599627370496 < m < 1e20 or tags != 9.007199254740994e15",
+    "y >= 5"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "m": "integer",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "undeclared variable 'm'",
+   "edges": [],
+   "guards": [
+    "9.007199254740994e15 <= y < 100",
+    "c != True and m > 9007199254740992.0 or m < 10"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "not b",
+    "b"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean"
+   }
+  },
+  {
+   "counterexample": {
+    "c": false,
+    "m": 0,
+    "tags": []
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "c != True",
+    "empty(tags) and m < 5"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "m": "integer",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "n": 0,
+    "o": {},
+    "s": ""
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "s == '' or 10 < n <= 1",
+    "empty(o)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer",
+    "o": "object",
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "t == 'b' and empty(tags)",
+    "t not in ['pass', 'b'] and empty(tags)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "t": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 432 representative configurations",
+   "edges": [],
+   "guards": [
+    "2.0 <= x < 3 and m != 4503599627370495.5",
+    "3 <= x < 5 and 5e19 < y < 100",
+    "x >= 5 and s in ['\\x00other', 'b']"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer",
+    "s": "string",
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between numeric and boolean is not allowed",
+   "edges": [],
+   "guards": [
+    "n >= 1 or c == False",
+    "m == False and not empty(o) or nonempty(o)"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "m": "integer",
+    "n": "integer",
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"m != 2.5 or nonempty(o) and not 'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "m != 2.5 or nonempty(o) and not 'a' in tags",
+    "0.5 < m <= 007.5",
+    "'a' in tags"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "m": "integer",
+    "o": "object",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 't'",
+   "edges": [],
+   "guards": [
+    "c",
+    "m < 3 and t != 'b'"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "m": "integer"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "m < 2",
+    "5 <= m < 9007199254740992.0"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "b": true,
+    "c": true,
+    "x": 0,
+    "y": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "y < 9.007199254740994e15 or x < 9.007199254740994e15",
+    "not b or c == True"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "nonempty(o)",
+    "empty(o)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "o": "object"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "c": true,
+    "m": 4503599627370496,
+    "n": 0,
+    "x": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "m in [4503599627370496]",
+    "n < 1.7976931348623157e308 or c == True or x in [1e20, 4503599627370495.5, 9007199254740992.0]"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "m": "integer",
+    "n": "integer",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(o)",
+    "nonempty(o)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"n >= 1.7976931348623157e308 and 'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "y in [5e19] and y < 4503599627370495.5",
+    "n >= 1.7976931348623157e308 and 'a' in tags"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "n": "integer",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "x >= 1.7976931348623157e308",
+    "x < 007.5",
+    "007.5 <= x < 1.7976931348623157e308"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "c": true,
+    "tags": []
+   },
+   "detail": "guards [0, 2] are simultaneously true",
+   "edges": [
+    0,
+    2
+   ],
+   "guards": [
+    "empty(tags)",
+    "c != True",
+    "nonempty(tags) or not b != True"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "not b",
+    "b"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "n >= 2.5 and b == False",
+    "n < 2.0 and b == False",
+    "2.0 <= n < 2.5 and b == False"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean",
+    "n": "integer"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "x >= 9.007199254740994e15",
+    "2.0 <= x < 9.007199254740994e15"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "o": {},
+    "x": {
+     "$int": "9007199254740993"
+    }
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(o)",
+    "x > 9007199254740992.0"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "o": "object",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "unparseable guard: guard syntax error: invalid syntax",
+   "edges": [],
+   "guards": [
+    "empty(tags)",
+    "nonempty(tags)",
+    "x ="
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "unparseable guard: guard syntax error: invalid syntax",
+   "edges": [],
+   "guards": [
+    "y == True",
+    "m != 100",
+    "empty(o) and m >= 0",
+    "x ="
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "m": "integer",
+    "o": "object",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "unparseable guard: guard syntax error: invalid syntax",
+   "edges": [],
+   "guards": [
+    "empty(tags) and nonempty(t)",
+    "nonempty(tags) and m == 5e-324",
+    "x ="
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "m": "integer",
+    "t": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "'a' in tags",
+    "empty(o)"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "o": "object",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "tags": []
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(tags) or b",
+    "empty(tags)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 3 representative configurations",
+   "edges": [],
+   "guards": [
+    "y < 0",
+    "y >= 0"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "not c",
+    "c"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between numeric and string is not allowed",
+   "edges": [],
+   "guards": [
+    "empty(tags) and m == 'repairable'",
+    "empty(tags) or b and x < 4503599627370495.5"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "m": "integer",
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "b": false,
+    "m": 3,
+    "o": {
+     "\u0000k": 0
+    },
+    "y": 101
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "m in [1e300, 1e20, 3]",
+    "b != True and not empty(o) and y > 100"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "m": "integer",
+    "o": "object",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 24 representative configurations",
+   "edges": [],
+   "guards": [
+    "9.007199254740994e15 <= m <= 5e-324 and not m < 007.5",
+    "y < 5"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "c",
+    "not c"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "tags": [],
+    "y": 0.1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b or nonempty(tags)",
+    "y in [0.1, 2.5]"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "s": "",
+    "t": "pass",
+    "y": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "s != 'b'",
+    "y <= 4503599627370495.5 and t in ['repairable', 'pass', 'é']"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "s": "string",
+    "t": "string",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "nonempty(tags) and nonempty(tags)",
+    "empty(tags) and nonempty(o)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "o": "object",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 12 representative configurations",
+   "edges": [],
+   "guards": [
+    "nonempty(tags) and nonempty(o)",
+    "empty(tags) and s in ['b']"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "o": "object",
+    "s": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 16 representative configurations",
+   "edges": [],
+   "guards": [
+    "y < 0.5 and nonempty(o)",
+    "0.5 <= y < 1 and nonempty(o)",
+    "y >= 1.7976931348623157e308 and nonempty(o)",
+    "1 <= y < 1.7976931348623157e308 and nonempty(o)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "o": "object",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "x < 0.10000000000000003",
+    "x >= 0.10000000000000003"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "2 <= y < 4503599627370495.5",
+    "4503599627370495.5 <= y < 1e20",
+    "y < 2",
+    "y >= 1e20"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "tags": []
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(tags) or b",
+    "empty(tags)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "tags": "array"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "m": 0,
+    "n": 0,
+    "o": {},
+    "s": "",
+    "t": ""
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "s == 'b' or empty(o)",
+    "n == 1.7976931348623157e308 or t not in ['pass', 'b', 'a']",
+    "m == 1"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "n": "integer",
+    "o": "object",
+    "s": "string",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 3 representative configurations",
+   "edges": [],
+   "guards": [
+    "t == 'b'",
+    "t not in ['', 'b']",
+    "t == ''"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "c": true,
+    "o": {},
+    "t": "",
+    "tags": []
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "t not in ['\\x00other', 'pass']",
+    "empty(tags) and nonempty(o) or c == True"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "o": "object",
+    "t": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "(s not in ['repairable', 'é']) and not (c != True)",
+    "s == 'repairable' and c != True"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean",
+    "s": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "m": 0,
+    "n": -1,
+    "s": "",
+    "t": ""
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "n <= 0.1 and s != 'é' or m < 9007199254740992.0",
+    "s == '' and t == ''"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "n": "integer",
+    "s": "string",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "tags": []
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "empty(tags)",
+    "empty(tags) or b"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "tags": "array"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "evaluation error during analysis: equality between array and boolean is not allowed",
+   "edges": [],
+   "guards": [
+    "tags == True and 1e20 < x < 007.5",
+    "b != True"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "n < 4503599627370496",
+    "n >= 4503599627370496"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {
+    "x": 5e-324
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "x >= 5e-324",
+    "x <= 5e-324"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 16 representative configurations",
+   "edges": [],
+   "guards": [
+    "nonempty(o) and empty(tags)",
+    "(empty(o)) and not (y in [9.007199254740994e15])"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "o": "object",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "n >= 1.7976931348623157e308",
+    "5 <= n < 1.7976931348623157e308",
+    "n < 5"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "s not in ['\\x00other', '']",
+    "y <= 5e-324"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "s": "string",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "b",
+    "not b"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'x'",
+   "edges": [],
+   "guards": [
+    "not x",
+    "x == 'é' and empty(tags)"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "m": -1,
+    "s": "",
+    "t": "",
+    "tags": [],
+    "y": 0
+   },
+   "detail": "guards [1, 2] are simultaneously true",
+   "edges": [
+    1,
+    2
+   ],
+   "guards": [
+    "s != 'a' and 9007199254740991 <= y <= 007.5 and not t == 'repairable'",
+    "m in [0.10000000000000003, 4503599627370496, 2] or b == True or tags != 'b'",
+    "t != 'repairable'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "m": "integer",
+    "s": "string",
+    "t": "string",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 3 representative configurations",
+   "edges": [],
+   "guards": [
+    "t == 'é'",
+    "t not in ['é']"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "t": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "m": 0,
+    "n": 0,
+    "s": "",
+    "t": "\u0000other",
+    "x": -1
+   },
+   "detail": "guards [0, 2] are simultaneously true",
+   "edges": [
+    0,
+    2
+   ],
+   "guards": [
+    "t in ['repairable', '\\x00other']",
+    "x in [1e300, 0.1] and not s not in ['é', 'a'] and m <= 007.5",
+    "n <= 1e300"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "n": "integer",
+    "s": "string",
+    "t": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "t": "b"
+   },
+   "detail": "guards [1, 2] are simultaneously true",
+   "edges": [
+    1,
+    2
+   ],
+   "guards": [
+    "t == 'repairable'",
+    "t == 'b'",
+    "t not in ['repairable', 'pass']",
+    "t == 'pass'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "t": "string"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "n": 0,
+    "s": "\u0000other"
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "n <= 1.7976931348623157e308",
+    "s == '\\x00other'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer",
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "m": 1,
+    "o": {},
+    "s": "",
+    "x": -1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "m > 0",
+    "s != 'é' or x >= 1e-3",
+    "nonempty(o) and m >= 0 and empty(o)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "o": "object",
+    "s": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'n'",
+   "edges": [],
+   "guards": [
+    "n >= 1.7976931348623157e308",
+    "1 <= n < 9007199254740991"
+   ],
+   "status": "UNKNOWN",
+   "types": {}
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "t == 'é'",
+    "t not in ['b', 'é', '\\x00other']",
+    "t == 'b'"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 6 representative configurations",
+   "edges": [],
+   "guards": [
+    "y >= 1",
+    "y < 1e-3",
+    "1e-3 <= y < 1"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "not c and nonempty(o)",
+    "c and not c"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean",
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "c": true,
+    "o": {},
+    "s": "",
+    "tags": []
+   },
+   "detail": "guards [1, 2] are simultaneously true",
+   "edges": [
+    1,
+    2
+   ],
+   "guards": [
+    "not c and nonempty(o)",
+    "b == True",
+    "empty(tags) and empty(s)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "o": "object",
+    "s": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "not c",
+    "c"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "c": "boolean"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 14 representative configurations",
+   "edges": [],
+   "guards": [
+    "(5 <= n < 1.7976931348623157e308) and not (empty(tags))",
+    "0 <= n < 5 and empty(tags)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 32 representative configurations",
+   "edges": [],
+   "guards": [
+    "nonempty(o) and nonempty(o)",
+    "n >= 100 and not m > 10 and empty(o)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "m": "integer",
+    "n": "integer",
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "not b",
+    "b"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "b",
+    "not b"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "m": 0,
+    "s": "",
+    "x": 0.1
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "0.1 <= x <= 1e20",
+    "m < 007.5",
+    "s == '\\x00other'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "s": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"x < 1e300 and 'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "x < 1e300 and 'a' in tags",
+    "5 <= m < 1.7976931348623157e308"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "m": "integer",
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 7 representative configurations",
+   "edges": [],
+   "guards": [
+    "x < 0",
+    "0.5 <= x < 1e20"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 24 representative configurations",
+   "edges": [],
+   "guards": [
+    "(t == 'pass') and not (empty(s))",
+    "(t not in ['pass']) and not (x <= 0.5)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "s": "string",
+    "t": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 48 representative configurations",
+   "edges": [],
+   "guards": [
+    "s not in ['repairable', '\\x00other'] and s != 'a'",
+    "s == 'repairable' and y >= 2.5",
+    "s == '\\x00other' and t != 'pass'"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "s": "string",
+    "t": "string",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "unparseable guard: guard syntax error: invalid syntax",
+   "edges": [],
+   "guards": [
+    "c",
+    "not c",
+    "x ="
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean"
+   }
+  },
+  {
+   "counterexample": {
+    "c": true,
+    "s": ""
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "c or s == 'é'",
+    "s != 'a'"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "y < 3",
+    "y >= 3"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "n": -1,
+    "o": {},
+    "t": "b",
+    "y": -1
+   },
+   "detail": "guards [1, 2] are simultaneously true",
+   "edges": [
+    1,
+    2
+   ],
+   "guards": [
+    "nonempty(o)",
+    "t == 'b' and t != '\\x00other'",
+    "n != 5e-324 or not y in [5e-324] or 5e-324 <= n < 5e-324"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "n": "integer",
+    "o": "object",
+    "t": "string",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "c": true,
+    "t": "a"
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "c and t == 'a'",
+    "c or c and c == True"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "m": 1,
+    "s": "é"
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "s in ['é']",
+    "m > 1e-3"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "m": "integer",
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {
+    "t": "",
+    "tags": [
+     "\u0000x"
+    ],
+    "y": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "t != 'pass' and y < 2.0",
+    "nonempty(tags)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "t": "string",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {
+    "s": "",
+    "tags": [
+     "\u0000x"
+    ],
+    "y": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "y == 5e19 or not s != ''",
+    "nonempty(tags)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "s": "string",
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "exhaustive over 8 representative configurations",
+   "edges": [],
+   "guards": [
+    "n < 2",
+    "5 <= n < 1.7976931348623157e308",
+    "n >= 1.7976931348623157e308"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "n": "integer"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 16 representative configurations",
+   "edges": [],
+   "guards": [
+    "s == 'repairable' and y > 1e-3",
+    "(s == 'é') and not (y > 1e-3)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "s": "string",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"t not in ['\\\\x00other'] or n < 1e-3 or 'a' in tags\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "t not in ['\\x00other'] or n < 1e-3 or 'a' in tags",
+    "c == False",
+    "0.1 < x <= 5e-324"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "n": "integer",
+    "t": "string",
+    "tags": "array",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 5 representative configurations",
+   "edges": [],
+   "guards": [
+    "s not in ['pass', 'repairable', 'é']",
+    "s == 'repairable'",
+    "s == 'pass'",
+    "s == 'é'"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "s": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 64 representative configurations",
+   "edges": [],
+   "guards": [
+    "t not in ['', 'repairable', 'a'] and m >= 4503599627370496",
+    "t == 'a' and empty(tags)",
+    "(t == '') and not (b != True)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "b": "boolean",
+    "m": "integer",
+    "t": "string",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "c": true,
+    "n": 0,
+    "t": "",
+    "y": 0
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "t == '\\x00other' or not c == False",
+    "n <= 4503599627370495.5 or y in [5]"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean",
+    "n": "integer",
+    "t": "string",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"(empty(tags)) and not ('a' in tags)\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "(empty(tags)) and not ('a' in tags)",
+    "nonempty(tags) and c == True"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "c": "boolean",
+    "tags": "array"
+   }
+  },
+  {
+   "counterexample": {
+    "tags": [],
+    "y": 10
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "y >= 10 and empty(tags)",
+    "y <= 10 and empty(tags)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "tags": "array",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "empty(o)",
+    "nonempty(o)"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "undeclared variable 'b'",
+   "edges": [],
+   "guards": [
+    "not b and b == True",
+    "b and b == True"
+   ],
+   "status": "UNKNOWN",
+   "types": {}
+  },
+  {
+   "counterexample": {
+    "b": false,
+    "n": 5,
+    "o": {},
+    "t": "\u0000other"
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "n in [5, 9007199254740991, 0.5] and b == False and nonempty(t)",
+    "empty(o)"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "n": "integer",
+    "o": "object",
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "unparseable guard: guard syntax error: invalid syntax",
+   "edges": [],
+   "guards": [
+    "nonempty(o)",
+    "empty(o)",
+    "x ="
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "o": "object"
+   }
+  },
+  {
+   "counterexample": {
+    "c": true
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "c",
+    "c or c"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "c": "boolean"
+   }
+  },
+  {
+   "counterexample": {
+    "b": true,
+    "c": true
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "b",
+    "b or c"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "c": "boolean"
+   }
+  },
+  {
+   "big": true,
+   "counterexample": {},
+   "detail": "undeclared variable 'b'",
+   "edges": [],
+   "guards": [
+    "b == True or 100 < n < 9007199254740992.0 and n >= 10",
+    "nonempty(o) and not empty(o)",
+    "2.0 <= x <= 2 and s not in ['\\x00other']"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "n": "integer",
+    "o": "object",
+    "s": "string",
+    "x": "number"
+   }
+  },
+  {
+   "counterexample": {
+    "b": false,
+    "s": "",
+    "x": -1,
+    "y": 0.10000000000000003
+   },
+   "detail": "guards [0, 1] are simultaneously true",
+   "edges": [
+    0,
+    1
+   ],
+   "guards": [
+    "s != '' or y == 0.10000000000000003",
+    "b != True",
+    "y != 0.10000000000000003 and 2 <= x < 0.10000000000000003"
+   ],
+   "status": "COUNTEREXAMPLE",
+   "types": {
+    "b": "boolean",
+    "s": "string",
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 4 representative configurations",
+   "edges": [],
+   "guards": [
+    "t == 'pass'",
+    "t == 'b'"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 24 representative configurations",
+   "edges": [],
+   "guards": [
+    "x < 4503599627370496 and y <= 007.5",
+    "4503599627370496 <= x < 9007199254740991 and y <= 007.5"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "x": "number",
+    "y": "number"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "exhaustive over 2 representative configurations",
+   "edges": [],
+   "guards": [
+    "t not in ['\\x00other']",
+    "t == '\\x00other'"
+   ],
+   "status": "PROVEN",
+   "types": {
+    "t": "string"
+   }
+  },
+  {
+   "counterexample": {},
+   "detail": "guard \"empty(o) or 'a' in tags and not c == True\" compares two variables or tests membership in an array variable; outside the enumerable fragment",
+   "edges": [],
+   "guards": [
+    "t in ['repairable', 'a', '\\x00other'] or b != True",
+    "empty(o) or 'a' in tags and not c == True"
+   ],
+   "status": "UNKNOWN",
+   "types": {
+    "b": "boolean",
+    "c": "boolean",
+    "o": "object",
+    "t": "string",
+    "tags": "array"
+   }
+  }
+ ]
+}

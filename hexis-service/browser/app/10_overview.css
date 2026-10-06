@@ -1,0 +1,162 @@
+/* HEXIS Runtime Lab: Overview section. */
+.ov { display: flex; flex-direction: column; gap: var(--sp-6); min-width: 0; container: ov / inline-size; }
+.ov-thesis { display: grid; gap: var(--sp-3); }
+.ov-body { display: flex; flex-direction: column; gap: var(--sp-6); min-width: 0; }
+.ov-body.hx-ruled > * + * { padding-top: var(--sp-6); }
+
+/* ------------------------------------------------------------------ parity */
+.ov-parity { container: ovparity / inline-size; }
+.ov-checks-wrap {
+  border: 1px solid var(--rule);
+  border-radius: var(--r-2);
+  background: var(--surface);
+  overflow: hidden;
+}
+.ov-checks-head, .ov-check {
+  display: grid;
+  grid-template-columns: minmax(13rem, 1.25fr) minmax(0, 1fr) minmax(0, 1fr) 8rem;
+  column-gap: var(--sp-5);
+  padding-inline: var(--sp-4);
+}
+.ov-checks-head {
+  padding-block: 0.5rem;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--rule);
+  font: 500 var(--fs-1) / 1.3 var(--font-sans);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.ov-checks { display: grid; padding: 0; list-style: none; }
+.ov-check { padding-block: 0.85rem; align-items: start; row-gap: var(--sp-2); }
+.ov-check + .ov-check { border-top: 1px solid var(--rule); }
+.ov-check-name { display: grid; gap: 0.2rem; min-width: 0; }
+.ov-check-label { font-weight: 600; color: var(--ink); }
+.ov-check-how { font-size: var(--fs-2); color: var(--ink-3); text-wrap: pretty; }
+.ov-check-cell { display: grid; gap: 0.3rem; min-width: 0; }
+.ov-cell-label {
+  position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.ov-cell-body { display: grid; gap: 0.3rem; justify-items: start; min-width: 0; padding-top: 0.05rem; }
+.ov-check-note { font-size: var(--fs-1); line-height: 1.45; color: var(--ink-3); text-wrap: pretty; }
+.ov-check-error { font-size: var(--fs-2); color: var(--crit); overflow-wrap: anywhere; }
+.ov-check-result { display: flex; justify-content: flex-start; padding-top: 0.05rem; }
+.ov-check[data-state="mismatch"], .ov-check[data-state="error"] {
+  background: color-mix(in srgb, var(--crit-tint) 55%, transparent);
+}
+.ov-check-ref .hx-digest-text { color: var(--ink-2); }
+.ov-diff-digest { align-items: flex-start; }
+.ov-diff { line-height: 1.5; }
+.ov-diff-mark { padding: 0 1px; border-radius: 2px; background: var(--crit-tint); color: var(--crit); box-shadow: inset 0 -1px 0 var(--crit); }
+.ov-missing { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; font-size: var(--fs-2); color: var(--ink-3); }
+.ov-missing-more { font-size: var(--fs-2); color: var(--ink-3); }
+.ov-parity-foot { font-size: var(--fs-1); line-height: 1.6; color: var(--ink-3); }
+.ov-parity-foot code.hx-inline { font-size: var(--fs-1); color: var(--ink-2); }
+
+@container ovparity (max-width: 46rem) {
+  .ov-checks-head { display: none; }
+  .ov-check {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "name result" "this this" "ref ref";
+    row-gap: var(--sp-3);
+  }
+  .ov-check-name { grid-area: name; }
+  .ov-check-this { grid-area: this; }
+  .ov-check-ref { grid-area: ref; }
+  .ov-check-result { grid-area: result; }
+  .ov-cell-label { position: static; width: auto; height: auto; margin: 0; overflow: visible; clip-path: none; }
+}
+
+/* ------------------------------------------------------------------ guided demo + machine */
+.ov-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--sp-6);
+  align-items: start;
+}
+.ov-split > .ov-machine { padding-left: var(--sp-6); border-left: 1px solid var(--rule); align-self: stretch; }
+/* without a graph the demo takes the full width and the machine panel follows it */
+.ov-split:not([data-graph="ready"]):not([data-graph="pending"]) { grid-template-columns: minmax(0, 1fr); }
+.ov-split:not([data-graph="ready"]):not([data-graph="pending"]) > .ov-machine {
+  padding-left: 0; border-left: 0; padding-top: var(--sp-6); border-top: 1px solid var(--rule);
+}
+@container ov (max-width: 54rem) {
+  .ov-split { grid-template-columns: minmax(0, 1fr); }
+  .ov-split > .ov-machine { padding-left: 0; border-left: 0; padding-top: var(--sp-6); border-top: 1px solid var(--rule); }
+}
+
+.ov-demo { container: ovdemo / inline-size; }
+.ov-demo-actions { display: grid; justify-items: start; gap: var(--sp-2); }
+.ov-demo-actions .hx-reason { max-width: 60ch; }
+
+.ov-steps { display: grid; column-gap: var(--sp-6); padding: 0; list-style: none; }
+.ov-step {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr) auto;
+  gap: 0.15rem var(--sp-3);
+  align-items: start;
+  padding-block: 0.8rem;
+  border-top: 1px solid var(--rule);
+}
+@container ovdemo (min-width: 46rem) {
+  .ov-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, auto); grid-auto-flow: column; }
+}
+.ov-step-num {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-1);
+  background: var(--surface);
+  font: 500 var(--fs-2) / 1 var(--font-mono);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.ov-step-main { display: grid; gap: 0.2rem; min-width: 0; padding-top: 0.2rem; }
+.ov-step-title { font-weight: 600; color: var(--ink); line-height: 1.35; }
+.ov-step-body { font-size: var(--fs-2); color: var(--ink-2); text-wrap: pretty; }
+.ov-step-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.15rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: var(--r-1);
+  font-size: var(--fs-2);
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.12s ease;
+}
+.ov-step-link:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.ov-step-link .hx-icon { width: 0.875rem; height: 0.875rem; }
+.ov-step[data-status="active"] .ov-step-num { border-color: var(--accent); background: var(--accent-tint); color: var(--accent); }
+.ov-step[data-status="done"] .ov-step-num { border-color: color-mix(in srgb, var(--ok) 45%, transparent); background: var(--ok-tint); color: var(--ok); }
+
+@container ovdemo (max-width: 30rem) {
+  .ov-step { grid-template-columns: 1.75rem minmax(0, 1fr); }
+  .ov-step-link { grid-column: 2; justify-self: start; margin-top: 0.25rem; margin-left: -0.45rem; }
+}
+
+.ov-graph { min-width: 0; }
+.ov-graph-wait { color: var(--ink-3); font-size: var(--fs-2); }
+.ov-graph-caption { font-size: var(--fs-2); color: var(--ink-2); text-wrap: pretty; }
+
+/* ------------------------------------------------------------------ what is simulated */
+.ov-sim-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-4) var(--sp-6);
+}
+.ov-sim-item { display: grid; gap: 0.3rem; align-content: start; min-width: 0; }
+.ov-sim-item dt { font-weight: 600; color: var(--ink); }
+.ov-sim-item dd { font-size: var(--fs-2); color: var(--ink-2); text-wrap: pretty; }
+.ov-sim-ids { display: grid; gap: var(--sp-3); min-width: 0; }
+.ov-sim-ids-lead { font-size: var(--fs-2); color: var(--ink-2); }
+.ov-sim-ids-lead strong { color: var(--ink); font-weight: 600; }
+.ov-roles { display: inline-flex; flex-wrap: wrap; gap: 0.3rem; }
+@container ov (max-width: 46rem) {
+  .ov-sim-list { grid-template-columns: minmax(0, 1fr); }
+}
