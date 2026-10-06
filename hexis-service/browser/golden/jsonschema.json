@@ -1,0 +1,323 @@
+{
+ "cases": [
+  {
+   "error_paths": [],
+   "instance": {
+    "a": "x",
+    "b": 0
+   },
+   "n_errors": 0,
+   "schema": "obj",
+   "valid": true
+  },
+  {
+   "error_paths": [
+    "a"
+   ],
+   "instance": {
+    "a": "",
+    "b": 0
+   },
+   "n_errors": 1,
+   "schema": "obj",
+   "valid": false
+  },
+  {
+   "error_paths": [
+    "<root>"
+   ],
+   "instance": {
+    "a": "x"
+   },
+   "n_errors": 1,
+   "schema": "obj",
+   "valid": false
+  },
+  {
+   "error_paths": [
+    "b"
+   ],
+   "instance": {
+    "a": "x",
+    "b": -1
+   },
+   "n_errors": 1,
+   "schema": "obj",
+   "valid": false
+  },
+  {
+   "error_paths": [
+    "b"
+   ],
+   "instance": {
+    "a": "x",
+    "b": 1.5
+   },
+   "n_errors": 1,
+   "schema": "obj",
+   "valid": false
+  },
+  {
+   "error_paths": [
+    "b"
+   ],
+   "instance": {
+    "a": "x",
+    "b": true
+   },
+   "n_errors": 1,
+   "schema": "obj",
+   "valid": false
+  },
+  {
+   "error_paths": [
+    "<root>"
+   ],
+   "instance": {
+    "a": "x",
+    "b": 1,
+    "z": 1
+   },
+   "n_errors": 1,
+   "schema": "obj",
+   "valid": false
+  },
+  {
+   "error_paths": [],
+   "instance": {
+    "a": "x",
+    "b": 1,
+    "c": null
+   },
+   "n_errors": 0,
+   "schema": "obj",
+   "valid": true
+  },
+  {
+   "error_paths": [
+    "c"
+   ],
+   "instance": {
+    "a": "x",
+    "b": 1,
+    "c": "no"
+   },
+   "n_errors": 1,
+   "schema": "obj",
+   "valid": false
+  },
+  {
+   "error_paths": [
+    "d"
+   ],
+   "instance": {
+    "a": "x",
+    "b": 1,
+    "d": "z"
+   },
+   "n_errors": 1,
+   "schema": "obj",
+   "valid": false
+  },
+  {
+   "error_paths": [
+    "e"
+   ],
+   "instance": {
+    "a": "x",
+    "b": 1,
+    "e": []
+   },
+   "n_errors": 1,
+   "schema": "obj",
+   "valid": false
+  },
+  {
+   "error_paths": [
+    "e"
+   ],
+   "instance": {
+    "a": "x",
+    "b": 1,
+    "e": [
+     "p",
+     "q",
+     "r"
+    ]
+   },
+   "n_errors": 1,
+   "schema": "obj",
+   "valid": false
+  },
+  {
+   "error_paths": [
+    "e/0"
+   ],
+   "instance": {
+    "a": "x",
+    "b": 1,
+    "e": [
+     1
+    ]
+   },
+   "n_errors": 1,
+   "schema": "obj",
+   "valid": false
+  },
+  {
+   "error_paths": [],
+   "instance": {
+    "a": "x",
+    "b": 1,
+    "f": "SUP-123"
+   },
+   "n_errors": 0,
+   "schema": "obj",
+   "valid": true
+  },
+  {
+   "error_paths": [
+    "f"
+   ],
+   "instance": {
+    "a": "x",
+    "b": 1,
+    "f": "SUP-12"
+   },
+   "n_errors": 1,
+   "schema": "obj",
+   "valid": false
+  },
+  {
+   "error_paths": [
+    "f"
+   ],
+   "instance": {
+    "a": "x",
+    "b": 1,
+    "f": "xSUP-123"
+   },
+   "n_errors": 1,
+   "schema": "obj",
+   "valid": false
+  },
+  {
+   "error_paths": [],
+   "instance": {
+    "a": "x",
+    "b": 1,
+    "g": {
+     "k": "v"
+    }
+   },
+   "n_errors": 0,
+   "schema": "obj",
+   "valid": true
+  },
+  {
+   "error_paths": [
+    "g/k"
+   ],
+   "instance": {
+    "a": "x",
+    "b": 1,
+    "g": {
+     "k": 1
+    }
+   },
+   "n_errors": 1,
+   "schema": "obj",
+   "valid": false
+  },
+  {
+   "error_paths": [
+    "<root>"
+   ],
+   "instance": [],
+   "n_errors": 1,
+   "schema": "obj",
+   "valid": false
+  },
+  {
+   "error_paths": [
+    "<root>"
+   ],
+   "instance": "str",
+   "n_errors": 1,
+   "schema": "obj",
+   "valid": false
+  },
+  {
+   "error_paths": [
+    "<root>"
+   ],
+   "instance": null,
+   "n_errors": 1,
+   "schema": "obj",
+   "valid": false
+  },
+  {
+   "error_paths": [
+    "a",
+    "b"
+   ],
+   "instance": {
+    "a": 1,
+    "b": "1"
+   },
+   "n_errors": 2,
+   "schema": "obj",
+   "valid": false
+  }
+ ],
+ "schemas": {
+  "obj": {
+   "additionalProperties": false,
+   "properties": {
+    "a": {
+     "minLength": 1,
+     "type": "string"
+    },
+    "b": {
+     "minimum": 0,
+     "type": "integer"
+    },
+    "c": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "d": {
+     "enum": [
+      "x",
+      "y"
+     ]
+    },
+    "e": {
+     "items": {
+      "type": "string"
+     },
+     "maxItems": 2,
+     "minItems": 1,
+     "type": "array"
+    },
+    "f": {
+     "pattern": "^SUP-[0-9]{3,10}$",
+     "type": "string"
+    },
+    "g": {
+     "additionalProperties": {
+      "type": "string"
+     },
+     "type": "object"
+    }
+   },
+   "required": [
+    "a",
+    "b"
+   ],
+   "type": "object"
+  }
+ }
+}
