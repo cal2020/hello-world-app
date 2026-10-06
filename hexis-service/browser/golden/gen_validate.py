@@ -90,6 +90,12 @@ def apply_ops(d, ops):
         elif kind == "order":
             old = _walk(d, op[1])
             _walk(d, op[1][:-1])[op[1][-1]] = {k: old[k] for k in op[2]}
+        elif kind == "chain":  # ["chain", from_state, n, to_state]: from_state's first edge -> C0 -> ... -> C{n-1} -> to_state
+            states = d["machine"]["states"]
+            states[op[1]]["transitions"][0]["to"] = "C0"
+            for i in range(op[2]):
+                states[f"C{i}"] = {"id": f"C{i}", "action": {"kind": "model", "prompt": "p", "reads": [], "writes": []},
+                                   "transitions": [{"if": "", "to": f"C{i + 1}" if i + 1 < op[2] else op[3]}]}
         elif kind == "strrep":
             _walk(d, op[1][:-1])[op[1][-1]] = _walk(d, op[1]).replace(op[2], op[3])
         else:
@@ -313,6 +319,12 @@ def conformance():
     out.append(case("task-required-odd", [["set", ["contracts", "task_input_schema", "required"], "supplier_ref"]]))
     out.append(case("skill-extra-clauses", [], skill_edits=[("## Intake", "## Intake\n\nNew clause **MUST** hold.\n\nAnother one."),
                                                            ("at most two times", "at most two times ")]))
+    # recursion depth of the SCC search (Python: RecursionError near 996 nested calls; JS: fixed limit 900)
+    out.append(case("chain-500", [["chain", "EXTRACT_DRAFT", 500, "VALIDATE_DRAFT"]], variants=(0,)))
+    dev = case("chain-950", [["chain", "EXTRACT_DRAFT", 950, "VALIDATE_DRAFT"]], variants=(0,))
+    dev["js_deviation"] = "RecursionError"
+    out.append(dev)
+    out.append(case("chain-1100", [["chain", "EXTRACT_DRAFT", 1100, "VALIDATE_DRAFT"]], variants=(0,)))
     out.append(case("states-reordered", [["order", S, list(reversed(list(BASE["machine"]["states"])))]]))
     return out
 

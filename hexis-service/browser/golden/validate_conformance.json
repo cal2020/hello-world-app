@@ -14222,19 +14222,19 @@
       "READ_BEFORE_WRITE",
       "WRITE_WORKFLOW_UNDECLARED"
      ],
-     "digest": "sha256:2204d3273a110a43934d6d9af2b203b750f9d94b408d8534fea7bd33c1f2742c",
+     "digest": "sha256:693b87f457338ef85277a33af7468dbef13c91648840e89954307152f333cbeb",
      "findings": [
-      {
-       "code": "NO_ROUTE_TO_STOP",
-       "message": "state FB_LOOP cannot reach any terminal",
-       "severity": "error",
-       "state": "FB_LOOP"
-      },
       {
        "code": "NO_ROUTE_TO_STOP",
        "message": "state FB_WRITE cannot reach any terminal",
        "severity": "error",
        "state": "FB_WRITE"
+      },
+      {
+       "code": "NO_ROUTE_TO_STOP",
+       "message": "state FB_LOOP cannot reach any terminal",
+       "severity": "error",
+       "state": "FB_LOOP"
       },
       {
        "code": "READ_BEFORE_WRITE",
@@ -14381,7 +14381,7 @@
       "READ_BEFORE_WRITE",
       "WRITE_WORKFLOW_UNDECLARED"
      ],
-     "digest": "sha256:6e02ed93f68bcb25f6b12a02c4794d02d5e57e09e8d841bb6612b8fdd7a1c366",
+     "digest": "sha256:f2d894ad22775968a5886f727ab6dc58721539c3d48061750b74d03d654b1437",
      "findings": [
       {
        "code": "POLICY_EXCEEDS_DEPLOYMENT",
@@ -14395,15 +14395,15 @@
       },
       {
        "code": "NO_ROUTE_TO_STOP",
-       "message": "state FB_LOOP cannot reach any terminal",
-       "severity": "error",
-       "state": "FB_LOOP"
-      },
-      {
-       "code": "NO_ROUTE_TO_STOP",
        "message": "state FB_WRITE cannot reach any terminal",
        "severity": "error",
        "state": "FB_WRITE"
+      },
+      {
+       "code": "NO_ROUTE_TO_STOP",
+       "message": "state FB_LOOP cannot reach any terminal",
+       "severity": "error",
+       "state": "FB_LOOP"
       },
       {
        "code": "READ_BEFORE_WRITE",
@@ -14549,14 +14549,8 @@
       "READ_BEFORE_WRITE",
       "WRITE_WORKFLOW_UNDECLARED"
      ],
-     "digest": "sha256:2204d3273a110a43934d6d9af2b203b750f9d94b408d8534fea7bd33c1f2742c",
+     "digest": "sha256:693b87f457338ef85277a33af7468dbef13c91648840e89954307152f333cbeb",
      "findings": [
-      {
-       "code": "NO_ROUTE_TO_STOP",
-       "message": "state FB_LOOP cannot reach any terminal",
-       "severity": "error",
-       "state": "FB_LOOP"
-      },
       {
        "code": "NO_ROUTE_TO_STOP",
        "message": "state FB_WRITE cannot reach any terminal",
@@ -14564,173 +14558,10 @@
        "state": "FB_WRITE"
       },
       {
-       "code": "READ_BEFORE_WRITE",
-       "message": "FB_LOOP reads 'approval_decision' which is not assigned on every path",
-       "severity": "error",
-       "state": "FB_LOOP",
-       "variable": "approval_decision"
-      },
-      {
-       "code": "READ_BEFORE_WRITE",
-       "message": "FB_WRITE reads 'draft' which is not assigned on every path",
-       "severity": "error",
-       "state": "FB_WRITE",
-       "variable": "draft"
-      },
-      {
-       "code": "READ_BEFORE_WRITE",
-       "message": "FB_WRITE reads 'draft_digest' which is not assigned on every path",
-       "severity": "error",
-       "state": "FB_WRITE",
-       "variable": "draft_digest"
-      },
-      {
-       "code": "LOOP_UNBOUNDED",
-       "detail": {
-        "cycle_states": [
-         "FB_LOOP",
-         "FB_WRITE"
-        ]
-       },
-       "message": "cycle through ['FB_LOOP', 'FB_WRITE'] avoids every counter-bounded edge",
-       "severity": "error",
-       "state": "FB_LOOP"
-      },
-      {
-       "clause": "S3.1",
-       "code": "ORDERING_VIOLATION",
-       "detail": {
-        "path": [
-         "FB_WRITE"
-        ],
-        "requirement": "ORD-VALIDATE-BEFORE-WRITE"
-       },
-       "message": "requirement ORD-VALIDATE-BEFORE-WRITE: path reaches tool:erp.create_draft without tool:draft.validate (after last change to ['draft'])",
-       "severity": "error",
-       "state": "FB_WRITE"
-      },
-      {
-       "clause": "S4.1",
-       "code": "ORDERING_VIOLATION",
-       "detail": {
-        "path": [
-         "FB_WRITE"
-        ],
-        "requirement": "ORD-APPROVAL-BEFORE-WRITE"
-       },
-       "message": "requirement ORD-APPROVAL-BEFORE-WRITE: path reaches tool:erp.create_draft without user:approval (after last change to ['draft', 'draft_digest'])",
-       "severity": "error",
-       "state": "FB_WRITE"
-      },
-      {
-       "code": "WRITE_WORKFLOW_UNDECLARED",
-       "message": "machine calls consequential tools ['erp.create_draft'] but declares write_workflow = false",
-       "severity": "error"
-      },
-      {
-       "code": "FALLBACK_MODE",
-       "message": "write workflows require fallback_mode = stop_for_review",
-       "severity": "error"
-      },
-      {
-       "code": "FALLBACK_NOT_REVIEW",
-       "message": "fallback state must be a review end state under stop_for_review",
-       "severity": "error",
-       "state": "FB_WRITE"
-      }
-     ],
-     "passed": false
-    },
-    {
-     "analyses": [
-      {
-       "analysis": "disjointness",
-       "counterexample": {},
-       "detail": "exhaustive over 16 representative configurations",
-       "state": "VALIDATE_DRAFT",
-       "status": "PROVEN"
-      },
-      {
-       "analysis": "disjointness",
-       "counterexample": {},
-       "detail": "exhaustive over 16 representative configurations",
-       "state": "READ_BACK",
-       "status": "PROVEN"
-      },
-      {
-       "analysis": "loop",
-       "bounded_edges": [
-        {
-         "bound": 2,
-         "counter": "readback_count",
-         "edge": 1,
-         "state": "READ_BACK"
-        }
-       ],
-       "component": [
-        "READ_BACK"
-       ],
-       "status": "PROVEN"
-      },
-      {
-       "analysis": "loop",
-       "bounded_edges": [
-        {
-         "bound": 2,
-         "counter": "repair_count",
-         "edge": 1,
-         "state": "VALIDATE_DRAFT"
-        }
-       ],
-       "component": [
-        "REPAIR_DRAFT",
-        "VALIDATE_DRAFT"
-       ],
-       "status": "PROVEN"
-      },
-      {
-       "analysis": "loop",
-       "bounded_edges": [],
-       "component": [
-        "FB_LOOP",
-        "FB_WRITE"
-       ],
-       "status": "COUNTEREXAMPLE"
-      }
-     ],
-     "codes": [
-      "FALLBACK_MODE",
-      "FALLBACK_NOT_REVIEW",
-      "LOOP_UNBOUNDED",
-      "NO_ROUTE_TO_STOP",
-      "ORDERING_VIOLATION",
-      "POLICY_EXCEEDS_DEPLOYMENT",
-      "READ_BEFORE_WRITE",
-      "WRITE_WORKFLOW_UNDECLARED"
-     ],
-     "digest": "sha256:6e02ed93f68bcb25f6b12a02c4794d02d5e57e09e8d841bb6612b8fdd7a1c366",
-     "findings": [
-      {
-       "code": "POLICY_EXCEEDS_DEPLOYMENT",
-       "message": "execution_policy exceeds the operator deployment policy: fallback_mode 'sandbox_interpret' widens operator 'stop_for_review'",
-       "severity": "error"
-      },
-      {
-       "code": "POLICY_EXCEEDS_DEPLOYMENT",
-       "message": "execution_policy exceeds the operator deployment policy: write_workflow=false relaxes operator write-workflow controls",
-       "severity": "error"
-      },
-      {
        "code": "NO_ROUTE_TO_STOP",
        "message": "state FB_LOOP cannot reach any terminal",
        "severity": "error",
        "state": "FB_LOOP"
-      },
-      {
-       "code": "NO_ROUTE_TO_STOP",
-       "message": "state FB_WRITE cannot reach any terminal",
-       "severity": "error",
-       "state": "FB_WRITE"
       },
       {
        "code": "READ_BEFORE_WRITE",
@@ -14877,7 +14708,7 @@
       "READ_BEFORE_WRITE",
       "WRITE_WORKFLOW_UNDECLARED"
      ],
-     "digest": "sha256:824994f81c94e5ecdc2d7b750d37aed6810ded4220abca526387d862d3629d68",
+     "digest": "sha256:f2d894ad22775968a5886f727ab6dc58721539c3d48061750b74d03d654b1437",
      "findings": [
       {
        "code": "POLICY_EXCEEDS_DEPLOYMENT",
@@ -14891,15 +14722,184 @@
       },
       {
        "code": "NO_ROUTE_TO_STOP",
+       "message": "state FB_WRITE cannot reach any terminal",
+       "severity": "error",
+       "state": "FB_WRITE"
+      },
+      {
+       "code": "NO_ROUTE_TO_STOP",
        "message": "state FB_LOOP cannot reach any terminal",
        "severity": "error",
        "state": "FB_LOOP"
+      },
+      {
+       "code": "READ_BEFORE_WRITE",
+       "message": "FB_LOOP reads 'approval_decision' which is not assigned on every path",
+       "severity": "error",
+       "state": "FB_LOOP",
+       "variable": "approval_decision"
+      },
+      {
+       "code": "READ_BEFORE_WRITE",
+       "message": "FB_WRITE reads 'draft' which is not assigned on every path",
+       "severity": "error",
+       "state": "FB_WRITE",
+       "variable": "draft"
+      },
+      {
+       "code": "READ_BEFORE_WRITE",
+       "message": "FB_WRITE reads 'draft_digest' which is not assigned on every path",
+       "severity": "error",
+       "state": "FB_WRITE",
+       "variable": "draft_digest"
+      },
+      {
+       "code": "LOOP_UNBOUNDED",
+       "detail": {
+        "cycle_states": [
+         "FB_LOOP",
+         "FB_WRITE"
+        ]
+       },
+       "message": "cycle through ['FB_LOOP', 'FB_WRITE'] avoids every counter-bounded edge",
+       "severity": "error",
+       "state": "FB_LOOP"
+      },
+      {
+       "clause": "S3.1",
+       "code": "ORDERING_VIOLATION",
+       "detail": {
+        "path": [
+         "FB_WRITE"
+        ],
+        "requirement": "ORD-VALIDATE-BEFORE-WRITE"
+       },
+       "message": "requirement ORD-VALIDATE-BEFORE-WRITE: path reaches tool:erp.create_draft without tool:draft.validate (after last change to ['draft'])",
+       "severity": "error",
+       "state": "FB_WRITE"
+      },
+      {
+       "clause": "S4.1",
+       "code": "ORDERING_VIOLATION",
+       "detail": {
+        "path": [
+         "FB_WRITE"
+        ],
+        "requirement": "ORD-APPROVAL-BEFORE-WRITE"
+       },
+       "message": "requirement ORD-APPROVAL-BEFORE-WRITE: path reaches tool:erp.create_draft without user:approval (after last change to ['draft', 'draft_digest'])",
+       "severity": "error",
+       "state": "FB_WRITE"
+      },
+      {
+       "code": "WRITE_WORKFLOW_UNDECLARED",
+       "message": "machine calls consequential tools ['erp.create_draft'] but declares write_workflow = false",
+       "severity": "error"
+      },
+      {
+       "code": "FALLBACK_MODE",
+       "message": "write workflows require fallback_mode = stop_for_review",
+       "severity": "error"
+      },
+      {
+       "code": "FALLBACK_NOT_REVIEW",
+       "message": "fallback state must be a review end state under stop_for_review",
+       "severity": "error",
+       "state": "FB_WRITE"
+      }
+     ],
+     "passed": false
+    },
+    {
+     "analyses": [
+      {
+       "analysis": "disjointness",
+       "counterexample": {},
+       "detail": "exhaustive over 16 representative configurations",
+       "state": "VALIDATE_DRAFT",
+       "status": "PROVEN"
+      },
+      {
+       "analysis": "disjointness",
+       "counterexample": {},
+       "detail": "exhaustive over 16 representative configurations",
+       "state": "READ_BACK",
+       "status": "PROVEN"
+      },
+      {
+       "analysis": "loop",
+       "bounded_edges": [
+        {
+         "bound": 2,
+         "counter": "readback_count",
+         "edge": 1,
+         "state": "READ_BACK"
+        }
+       ],
+       "component": [
+        "READ_BACK"
+       ],
+       "status": "PROVEN"
+      },
+      {
+       "analysis": "loop",
+       "bounded_edges": [
+        {
+         "bound": 2,
+         "counter": "repair_count",
+         "edge": 1,
+         "state": "VALIDATE_DRAFT"
+        }
+       ],
+       "component": [
+        "REPAIR_DRAFT",
+        "VALIDATE_DRAFT"
+       ],
+       "status": "PROVEN"
+      },
+      {
+       "analysis": "loop",
+       "bounded_edges": [],
+       "component": [
+        "FB_LOOP",
+        "FB_WRITE"
+       ],
+       "status": "COUNTEREXAMPLE"
+      }
+     ],
+     "codes": [
+      "FALLBACK_MODE",
+      "FALLBACK_NOT_REVIEW",
+      "LOOP_UNBOUNDED",
+      "NO_ROUTE_TO_STOP",
+      "ORDERING_VIOLATION",
+      "POLICY_EXCEEDS_DEPLOYMENT",
+      "READ_BEFORE_WRITE",
+      "WRITE_WORKFLOW_UNDECLARED"
+     ],
+     "digest": "sha256:9ee11c18bad3cfa76ee10158164406f13e0cf433331fbcbb923a62283ccaf8c0",
+     "findings": [
+      {
+       "code": "POLICY_EXCEEDS_DEPLOYMENT",
+       "message": "execution_policy exceeds the operator deployment policy: fallback_mode 'sandbox_interpret' widens operator 'stop_for_review'",
+       "severity": "error"
+      },
+      {
+       "code": "POLICY_EXCEEDS_DEPLOYMENT",
+       "message": "execution_policy exceeds the operator deployment policy: write_workflow=false relaxes operator write-workflow controls",
+       "severity": "error"
       },
       {
        "code": "NO_ROUTE_TO_STOP",
        "message": "state FB_WRITE cannot reach any terminal",
        "severity": "error",
        "state": "FB_WRITE"
+      },
+      {
+       "code": "NO_ROUTE_TO_STOP",
+       "message": "state FB_LOOP cannot reach any terminal",
+       "severity": "error",
+       "state": "FB_LOOP"
       },
       {
        "code": "READ_BEFORE_WRITE",
@@ -30512,6 +30512,170 @@
     2,
     3,
     4
+   ]
+  },
+  {
+   "hash": "sha256:8a92fe7315ea5c3651aa4e9f7aa0a6be3737b41fb7542ff43ef2416f7c2fc0d7",
+   "mode": "reseal",
+   "name": "chain-500",
+   "ops": [
+    [
+     "chain",
+     "EXTRACT_DRAFT",
+     500,
+     "VALIDATE_DRAFT"
+    ]
+   ],
+   "runs": [
+    {
+     "analyses": [
+      {
+       "analysis": "disjointness",
+       "counterexample": {},
+       "detail": "exhaustive over 16 representative configurations",
+       "state": "VALIDATE_DRAFT",
+       "status": "PROVEN"
+      },
+      {
+       "analysis": "disjointness",
+       "counterexample": {},
+       "detail": "exhaustive over 16 representative configurations",
+       "state": "READ_BACK",
+       "status": "PROVEN"
+      },
+      {
+       "analysis": "loop",
+       "bounded_edges": [
+        {
+         "bound": 2,
+         "counter": "readback_count",
+         "edge": 1,
+         "state": "READ_BACK"
+        }
+       ],
+       "component": [
+        "READ_BACK"
+       ],
+       "status": "PROVEN"
+      },
+      {
+       "analysis": "loop",
+       "bounded_edges": [
+        {
+         "bound": 2,
+         "counter": "repair_count",
+         "edge": 1,
+         "state": "VALIDATE_DRAFT"
+        }
+       ],
+       "component": [
+        "REPAIR_DRAFT",
+        "VALIDATE_DRAFT"
+       ],
+       "status": "PROVEN"
+      }
+     ],
+     "codes": [],
+     "digest": "sha256:3fca46a9faabff030b59e9aa1d4152afb7fb854d85c707150dca0dce74fabcc2",
+     "findings": [],
+     "passed": true
+    }
+   ],
+   "variants": [
+    0
+   ]
+  },
+  {
+   "hash": "sha256:b1b497fb70c85f868f8108b8315af949429b6c47db127f8aa4a5b81baba60bbe",
+   "js_deviation": "RecursionError",
+   "mode": "reseal",
+   "name": "chain-950",
+   "ops": [
+    [
+     "chain",
+     "EXTRACT_DRAFT",
+     950,
+     "VALIDATE_DRAFT"
+    ]
+   ],
+   "runs": [
+    {
+     "analyses": [
+      {
+       "analysis": "disjointness",
+       "counterexample": {},
+       "detail": "exhaustive over 16 representative configurations",
+       "state": "VALIDATE_DRAFT",
+       "status": "PROVEN"
+      },
+      {
+       "analysis": "disjointness",
+       "counterexample": {},
+       "detail": "exhaustive over 16 representative configurations",
+       "state": "READ_BACK",
+       "status": "PROVEN"
+      },
+      {
+       "analysis": "loop",
+       "bounded_edges": [
+        {
+         "bound": 2,
+         "counter": "readback_count",
+         "edge": 1,
+         "state": "READ_BACK"
+        }
+       ],
+       "component": [
+        "READ_BACK"
+       ],
+       "status": "PROVEN"
+      },
+      {
+       "analysis": "loop",
+       "bounded_edges": [
+        {
+         "bound": 2,
+         "counter": "repair_count",
+         "edge": 1,
+         "state": "VALIDATE_DRAFT"
+        }
+       ],
+       "component": [
+        "REPAIR_DRAFT",
+        "VALIDATE_DRAFT"
+       ],
+       "status": "PROVEN"
+      }
+     ],
+     "codes": [],
+     "digest": "sha256:31f068e31179857c31d97a8b7f5c9aa8c989349c0d78980aaad65ecfdd01c4a6",
+     "findings": [],
+     "passed": true
+    }
+   ],
+   "variants": [
+    0
+   ]
+  },
+  {
+   "hash": "sha256:1264fe4a52ed668d6d08406559effda91fa63c6e1138c9df59ea29d259c0e4b9",
+   "mode": "reseal",
+   "name": "chain-1100",
+   "ops": [
+    [
+     "chain",
+     "EXTRACT_DRAFT",
+     1100,
+     "VALIDATE_DRAFT"
+    ]
+   ],
+   "runs": [
+    {
+     "exc": "RecursionError"
+    }
+   ],
+   "variants": [
+    0
    ]
   },
   {

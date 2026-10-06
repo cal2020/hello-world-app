@@ -197,7 +197,8 @@ def normalize_vectors():
     for defect in (False, True):
         m = load_machine(machine_dict(defect=defect))
         n = normalize_machine(m)
-        out.append({"ops": [], "defect": defect, "normalized": ints(n.to_json()),
+        out.append({"ops": [], "defect": defect, "normalized": ints(n.to_json()), "state_order": list(n.states),
+                    "variable_order": [v.name for v in n.variables],
                     "idempotent": normalize_machine(n).to_json() == n.to_json()})
     variants = [
         [["perm", ["states", "VALIDATE_DRAFT", "transitions"], [2, 0, 1]]],
@@ -213,7 +214,8 @@ def normalize_vectors():
         md = apply_ops(machine_dict(), ops)
         m = load_machine(md)
         n = normalize_machine(m)
-        out.append({"ops": ops, "defect": False, "normalized": ints(n.to_json()),
+        out.append({"ops": ops, "defect": False, "normalized": ints(n.to_json()), "state_order": list(n.states),
+                    "variable_order": [v.name for v in n.variables],
                     "idempotent": normalize_machine(n).to_json() == n.to_json()})
     return out
 
@@ -233,6 +235,8 @@ def main():
         prompt_template_sha256 = "x"
 
     fx = result_json(fixture)
+    fx["state_order"] = list(fixture.package.machine.states)
+    fx["machine_digest"] = digest(fixture.package.machine.to_json())
     fx["coverage_markdown"] = coverage_markdown(fixture.coverage)
     write("compile", {
         "constants": {"COMPILER_VERSION": Cmod.COMPILER_VERSION, "NORMALIZER_VERSION": Cmod.NORMALIZER_VERSION,

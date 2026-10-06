@@ -716,6 +716,272 @@ for _ in range(500):
     select.append({"pkg": name, "state": sid, "variables": env,
                    "result": run(lambda: list(K.select_edge(pkg, sid, env)))})
 
+# --------------------------------------------------------------------------- exact multipleOf (python-jsonschema)
+# Kernel schema checks (TASK_INPUT_INVALID / OUTPUT_SCHEMA) must give python-jsonschema's verdict for multipleOf:
+# int divisor -> instance % dB, float divisor -> int(q) != q, overflow -> Fraction. Verdicts only (texts differ).
+from hexis_service.tools.catalog import validate_against  # noqa: E402
+
+mrng = random.Random(77001)
+DIVISORS = [0.01, 0.1, 0.5, 0.25, 0.3, 1e-300, 5e-324, 1e-10, 2.5, 1e-9, 1e-7, 3, 1, 2, 7, 1000, 1.5e-300, 2.5e-310]
+INSTANCES = [0.07, 0.3, 0.6, 0.7, 1.1, 3, 0, -0.07, 0.5, 1.5e-300, 1e-300, 5e-324, 1e-299, 3e-300, 1234.5,
+             4503599627370495.5, 10 ** 15, 2 ** 52 + 1, 9007199254740991, 2.5, 7.5, 12, -6, 0.75, 1.25,
+             0.1 + 0.2, 4.35, 19.99, 100.01, 1e-7, 2e-9, 3e-10]
+mo_cases = []
+
+
+def mo_case(schema, value):
+    schema, value = canon(schema), canon(value)
+    mo_cases.append({"schema": schema, "value": value, "valid": not validate_against(schema, value)})
+
+
+for d in DIVISORS:
+    for x in INSTANCES:
+        mo_case({"multipleOf": d}, x)
+for _ in range(1500):
+    d = mrng.choice(DIVISORS + [mrng.choice([0.01, 0.05, 0.125]) * mrng.randrange(1, 9)])
+    x = mrng.choice([round(mrng.uniform(-50, 50), mrng.randrange(0, 4)), mrng.randrange(-100, 100),
+                     mrng.choice(INSTANCES) * mrng.choice([1, 2, 3, 10, 0.5])])
+    if isinstance(x, float) and (x != x or x in (float("inf"), float("-inf"))):
+        x = 0.07
+    if isinstance(x, float) and x.is_integer():
+        x = int(x) if abs(x) < 2 ** 53 else 0.07
+    if isinstance(x, float) and abs(x) >= 2 ** 52:
+        x = 0.07
+    if isinstance(x, int) and abs(x) >= 2 ** 53:
+        x = 0.07
+    if isinstance(d, float) and d.is_integer():
+        d = int(d)
+    mo_case({"multipleOf": d}, x)
+NESTED = [
+    lambda d: {"type": "object", "properties": {"a": {"type": "number", "multipleOf": d}}},
+    lambda d: {"type": "array", "items": {"multipleOf": d}},
+    lambda d: {"anyOf": [{"multipleOf": d}, {"type": "string"}]},
+    lambda d: {"oneOf": [{"multipleOf": d}, {"multipleOf": 0.5}]},
+    lambda d: {"not": {"multipleOf": d}},
+    lambda d: {"allOf": [{"minimum": 0}, {"multipleOf": d}]},
+    lambda d: {"type": "object", "patternProperties": {"^n": {"multipleOf": d}}, "additionalProperties": {"multipleOf": 0.25}},
+    lambda d: {"anyOf": [{"not": {"multipleOf": d}}, {"maximum": -1000}]},
+]
+for _ in range(600):
+    d = mrng.choice([0.01, 0.1, 0.5, 0.3, 3, 1e-300, 5e-324])
+    f = mrng.randrange(len(NESTED))
+    x = mrng.choice(INSTANCES)
+    v = {0: {"a": x}, 1: [x, mrng.choice(INSTANCES)], 6: {"n1": x, "z": mrng.choice(INSTANCES)}}.get(f, x)
+    mo_case(NESTED[f](d), v)
+
+MO_STATES = {"U": {"id": "U", "action": {"kind": "user", "prompt": "p", "writes": ["amount"]},
+                   "transitions": [{"if": "", "to": "E"}]},
+             "E": END("EE"), "FALLBACK": END("ER")}
+MO_PKG = mini_package(MO_STATES, [{"name": "amount", "type": "number"}],
+                      {"amount": {"owner": "user", "schema": {"type": "number", "multipleOf": 0.01}}},
+                      [{"id": "EE", "kind": "unverified"}, {"id": "ER", "kind": "fallback"}],
+                      {"EE": {"category": "unverified"}, "ER": {"category": "fallback"}}, "U",
+                      task_schema={"type": "object", "properties": {"amount": {"type": "number", "multipleOf": 0.01}}})
+mo_kernel = []
+MO_CP = K.initial_checkpoint(MO_PKG, "t", "r", {})
+for x in [0.07, 0.25, 19.99, 100.01, 0.3, 4.35, 1.005, 0.015, 7, 1e-300, 1234.5, 0.1 + 0.2]:
+    mo_kernel.append({"amount": x,
+                      "initial": run(lambda: K.initial_checkpoint(MO_PKG, "t", "r", {"amount": x}).model_dump(mode="json")),
+                      "advance": run(lambda: result_dump(K.advance(MO_CP, K.Observation(
+                          run_id="r", state_id="U", revision=0, kind="user", outputs={"amount": x}), MO_PKG)))})
+
+# --------------------------------------------------------------------------- Python regex semantics in schemas
+# python-jsonschema applies pattern / patternProperties with re.search (Unicode \d \w \s \b, `$` before a final
+# "\n", `.` excluding "\n"). The kernel translates schema regexes; JS must give Python's verdict or fail closed.
+import re  # noqa: E402
+
+xrng = random.Random(55021)
+
+
+def re_table(p):
+    r, out, start = re.compile(p), [], None
+    for c in range(0x110001):
+        m = c < 0x110000 and r.fullmatch(chr(c)) is not None
+        if m and start is None:
+            start = c
+        if not m and start is not None:
+            out.append("%x" % start if start == c - 1 else "%x-%x" % (start, c - 1))
+            start = None
+    return ",".join(out)
+
+
+RE_CHARS = ["a", "b", "z", "A", "_", "0", "7", "-", ".", " ", "\n", "\t", "\r", "é", "İ", "ǅ", "٣", "١", "²", "½", "Ⅻ",
+            "ͅ", " ", " ", " ", "\u001c", "\u001f", "\u0085", "﻿", "😀", "Ᲊ", "\U0001e4d0",
+            "๐", "ß", "$", "^", "\\", "]", "[", "{", "}", "(", ")", "|", "*", "+", "?", "/", "\x00"]
+RE_LIT = ["a", "b", "z", "_", "0", "7", "-", " ", "é", "٣", "😀", ",", ":", "#", "=", "!", "<", ">", "&", "~", "'", '"']
+RE_ESC = [r"\d", r"\D", r"\w", r"\W", r"\s", r"\S", r"\b", r"\B", r"\A", r"\Z", r"\.", r"\-", r"\n", r"\t", r"\x41",
+          r"é", r"\U0001F600", r"\\", r"\$", r"\^", r"\{", r"\}", r"\]", r"\/", r"\é", r"\ ", r"\#", r"\a", r"\f", r"\v"]
+RE_BAD = [r"\1", r"(?i)a", r"a*+", r"(?#c)", r"\N{DIGIT ZERO}", r"\0", r"(?>a)", r"(?P=n)", r"\q", r"(?s).", r"a{2}{3}",
+          r"[\w-z]", r"*a", r"(a", r"a)", r"[a", r"\x4", r"a{3,1}", r"(?<=a+)b", r"(?=a)*", r"^*", r"(?P<1>a)", r"\U00110000"]
+
+
+def rand_class():
+    items = []
+    for _ in range(xrng.randrange(1, 4)):
+        k = xrng.random()
+        if k < 0.35:
+            items.append(xrng.choice(RE_LIT + ["]", "^", "[", "\\]", "\\\\", "\\-", "\\b", "\\n", "\\x41", "\\u0663"]))
+        elif k < 0.6:
+            items.append(xrng.choice([r"\d", r"\D", r"\w", r"\W", r"\s", r"\S"]))
+        else:
+            a, b = sorted([xrng.choice("abz09_AZ"), xrng.choice("abz09_AZ")])
+            items.append(xrng.choice([a + "-" + b, "٠-٩", "à-ÿ", "a-", "-"]))
+    return "[" + ("^" if xrng.random() < 0.3 else "") + "".join(items) + "]"
+
+
+def rand_regex(depth=0):
+    seq = []
+    for _ in range(xrng.randrange(1, 4)):
+        k = xrng.random()
+        if k < 0.3:
+            atom = xrng.choice(RE_LIT)
+        elif k < 0.55:
+            atom = xrng.choice(RE_ESC)
+        elif k < 0.67:
+            atom = rand_class()
+        elif k < 0.75:
+            atom = xrng.choice([".", "^", "$", "{", "{}", "{x"])
+        elif k < 0.9 and depth < 2:
+            inner = rand_regex(depth + 1)
+            if xrng.random() < 0.3:
+                inner += "|" + rand_regex(depth + 1)
+            atom = xrng.choice(["(", "(?:", "(?=", "(?!", "(?P<g%d>" % xrng.randrange(1000)]) + inner + ")"
+            if xrng.random() < 0.1:
+                atom = xrng.choice(["(?<=", "(?<!"]) + xrng.choice(["a", "\\d", "[ab]", "é", "\\n"]) + ")"
+        else:
+            atom = xrng.choice(RE_LIT)
+        if xrng.random() < 0.35:
+            atom += xrng.choice(["*", "+", "?", "{2}", "{1,3}", "{,2}", "{2,}", "{,}", "{0}"]) + xrng.choice(["", "", "?"])
+        seq.append(atom)
+    if xrng.random() < 0.05:
+        seq.append(xrng.choice(RE_BAD))
+    return "".join(seq)
+
+
+def rand_text():
+    return "".join(xrng.choice(RE_CHARS) for _ in range(xrng.randrange(0, 6))) + xrng.choice(["", "", "\n", "\n\n", "x\n"])
+
+
+def re_result(p, s):
+    try:
+        return re.search(p, s) is not None
+    except re.error:
+        return "error"
+    except Exception as e:  # noqa: BLE001
+        return type(e).__name__
+
+
+CURATED = [(r"^SUP-[0-9]{3,10}$", ["SUP-123", "SUP-123\n", "SUP-123\n\n", "SUP-12", "xSUP-1234"]),
+           (r"^\w+$", ["é", "İ", "١٢", "٣", "abc_9", "a-b", "²", "½", "Ⅻ", "ǅ", "ͅ", "\U0001e4d0", "Ᲊ", ""]),
+           (r"^\d+$", ["٣", "123", "²", "１２", "\U0001d7ce", "1\n"]),
+           (r"^\s+$", [" ", "\u001c", "\u0085", "﻿", " ", " ", "​", "᠎"]),
+           (r"^DROP$", ["DROP", "DROP\n", "DROP\r", "DROP "]),
+           (r"^a.c$", ["abc", "a\nc", "a\rc", "a c", "a😀c"]),
+           (r"\bfoo\b", ["foo", "éfoo", "foo٣", "a foo b", "_foo"]),
+           (r"\B", ["", "a", " ", "ab"]), (r"\b", ["", "a", " "]),
+           (r"a\Z", ["a", "a\n"]), (r"\Aa", ["a", "ba"]), (r"x{,2}y", ["xxy", "y"]), (r"a{", ["a{", "a"]),
+           (r"[\W\d]", ["a", "٣", "-"]), (r"[^\w]", ["é", "-"]), (r"[]a]", ["]", "a", "b"]), (r"[^]a]", ["]", "b"]),
+           (r"(?P<n>a)b", ["ab"]), (r"(?<=a)b", ["ab", "b"]), (r"[\b]", ["\b", "b"]), (r"\é", ["é"]),
+           (r"^amount_[a-z]+$", ["amount_x", "amount_x\n", "amount_X"])]
+re_vectors = []
+for p, texts in CURATED:
+    for s in texts:
+        re_vectors.append({"p": p, "s": s, "r": re_result(p, s)})
+for p in RE_BAD:
+    re_vectors.append({"p": p, "s": "aaa", "r": re_result(p, "aaa")})
+for _ in range(2500):
+    p = rand_regex()
+    for _ in range(3):
+        s = rand_text()
+        re_vectors.append({"p": p, "s": s, "r": re_result(p, s)})
+
+
+def schema_result(schema, value):
+    try:
+        return not validate_against(schema, value)
+    except re.error:
+        return "error"
+    except Exception as e:  # noqa: BLE001
+        return type(e).__name__
+
+
+SCHEMA_FORMS = [
+    lambda p: {"type": "string", "pattern": p},
+    lambda p: {"type": "string", "not": {"pattern": p}},
+    lambda p: {"type": "object", "patternProperties": {p: {"type": "number"}}},
+    lambda p: {"type": "object", "patternProperties": {p: {"type": "number"}}, "additionalProperties": False},
+    lambda p: {"not": {"type": "object", "patternProperties": {p: {"type": "string"}}}},
+    lambda p: {"anyOf": [{"pattern": p}, {"type": "integer"}]},
+    lambda p: {"oneOf": [{"pattern": p}, {"pattern": "^a"}]},
+    lambda p: {"type": "object", "patternProperties": {p: {"multipleOf": 0.01}, "^a": {"type": "number"}}},
+    lambda p: {"type": "object", "patternProperties": {p: {"type": "number"}, "(?:" + p + ")": {"minimum": 5}}},
+]
+schema_vectors = [
+    {"schema": {"type": "object", "patternProperties": {"^\\w+$": {"type": "number"}}}, "value": {"é": "x"}},
+    {"schema": {"not": {"pattern": "^\\d+$"}}, "value": "٣"},
+    {"schema": {"type": "object", "patternProperties": {"^amount_[a-z]+$": {"type": "number"}}}, "value": {"amount_x\n": "lots"}},
+    {"schema": {"type": "string", "not": {"pattern": "^DROP$"}}, "value": "DROP\n"},
+    {"schema": {"type": "object", "patternProperties": {"a": {"type": "number"}, "\\x61": {"minimum": 5}}}, "value": {"a": 3}},
+    {"schema": {"pattern": 5}, "value": "x"}, {"schema": {"pattern": 5}, "value": 1},
+]
+for _ in range(1500):
+    p = rand_regex() if xrng.random() < 0.8 else xrng.choice([c[0] for c in CURATED])
+    form = xrng.randrange(len(SCHEMA_FORMS))
+    s = rand_text()
+    value = {s: xrng.choice([1, "x", 2.5, 7])} if form in (2, 3, 4, 7, 8) else xrng.choice([s, s, s, 3])
+    schema_vectors.append({"schema": SCHEMA_FORMS[form](p), "value": value})
+for v in schema_vectors:
+    v["valid"] = schema_result(v["schema"], v["value"])
+
+# kernel-level repros: TASK_INPUT_INVALID / OUTPUT_SCHEMA with Python regex semantics
+RX_STATES = {"U": {"id": "U", "action": {"kind": "model", "prompt": "p", "reads": [], "writes": ["code"]},
+                   "transitions": [{"if": "", "to": "E"}]},
+             "E": END("EE"), "FALLBACK": END("ER")}
+RX_PKG = mini_package(RX_STATES, [{"name": "code", "type": "string"}],
+                      {"code": {"owner": "model", "schema": {"type": "string", "not": {"pattern": "^DROP$"}}}},
+                      [{"id": "EE", "kind": "unverified"}, {"id": "ER", "kind": "fallback"}],
+                      {"EE": {"category": "unverified"}, "ER": {"category": "fallback"}}, "U",
+                      task_schema={"type": "object", "patternProperties": {"^amount_[a-z]+$": {"type": "number"},
+                                                                           "^\\w+$": {"type": "integer"}}})
+RX_CP = K.initial_checkpoint(RX_PKG, "t", "r", {})
+rx_kernel = []
+for ti in [{"amount_x\n": "lots"}, {"amount_x": 3}, {"é": 2.5}, {"é": 2}, {"٣": "x"}, {"a-b": "x"}]:
+    rx_kernel.append({"task_input": ti, "result": run(lambda: K.initial_checkpoint(RX_PKG, "t", "r", ti).model_dump(mode="json"))})
+for code in ["DROP", "DROP\n", "DROP\n\n", "drop", "DROP\r"]:
+    rx_kernel.append({"code": code, "result": run(lambda: result_dump(K.advance(RX_CP, K.Observation(
+        run_id="r", state_id="U", revision=0, kind="model", outputs={"code": code}), RX_PKG)))})
+
+# int() (inc counters, usage): the whitespace CPython strips
+INT_CPS = [c for c in list(range(0, 0x3001)) + [0xfeff, 0x180e, 0x200b, 0x2060, 0x10000, 0x1d7ce]
+           if not 0xd800 <= c < 0xe000]
+int_vectors = {"cps": INT_CPS, "accepted": []}  # accepted: [form, cp, int value]; every other (form, cp) raises
+for c in INT_CPS:
+    for form, s in enumerate([chr(c) + "8", "8" + chr(c), chr(c)]):
+        try:
+            int_vectors["accepted"].append([form, c, int(s)])
+        except ValueError:
+            pass
+
+# judge with empty writes: the package model refuses it, so the action is emptied after construction; Python's
+# validate_declared_outputs then reaches delta[writes[0]] (IndexError)
+JE_PKG = judge_pkg().model_copy(deep=True)
+JE_PKG.machine.states["J"].action.writes = []
+judge_empty = {"package_build": run(lambda: mini_package(
+    {"J": {"id": "J", "action": {"kind": "judge", "prompt": "q", "reads": [], "writes": [], "labels": ["ok"]},
+           "transitions": [{"if": "", "to": "E"}]}, "E": END("EE"), "FALLBACK": END("ER")},
+    [], {}, [{"id": "EE", "kind": "unverified"}, {"id": "ER", "kind": "fallback"}],
+    {"EE": {"category": "unverified"}, "ER": {"category": "fallback"}}, "J") and "built"),
+    "validate": run(lambda: K.validate_declared_outputs(JE_PKG, "J", K.Observation(
+        run_id="r", state_id="J", revision=0, kind="judge", outputs={}), {}))}
+
+write("kernel_regex", {
+    "tables": {k: re_table(p) for k, p in (("d", r"\d"), ("s", r"\s"), ("w", r"\w"))},
+    "regex": re_vectors, "schemas": schema_vectors,
+    "kernel": {"package": pkg_dump(RX_PKG), "cases": rx_kernel},
+    "int": int_vectors, "judge_empty_writes": judge_empty,
+})
+print("kernel_regex:", len(re_vectors), "regex vectors,", len(schema_vectors), "schema vectors,", len(int_vectors["accepted"]), "accepted int vectors")
+
 INDEX = {"walk_files": []}
 chunk, size, n = [], 0, 0
 
@@ -744,6 +1010,7 @@ write("kernel", {
     "walk_files": INDEX["walk_files"], "total_steps": total_steps,
     "fill_template": fill, "resolve_path": resolve, "select_edge": select,
     "terminal_statuses": list(K.TERMINAL_STATUSES),
+    "multiple_of": {"cases": mo_cases, "package": pkg_dump(MO_PKG), "kernel": mo_kernel},
 })
 print("kernel golden:", len(walks), "walks,", total_steps, "steps,", len(INDEX["walk_files"]), "walk files")
 for f in sorted(GOLDEN.glob("kernel*.json")):

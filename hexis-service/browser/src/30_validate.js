@@ -248,12 +248,20 @@
     return seen;
   };
 
+  /** Python's recursive Tarjan raises RecursionError at about 996 nested calls minus the caller's stack depth;
+   *  the port refuses earlier, at a fixed depth (deviations/static.md). */
+  validate.MAX_SCC_DEPTH = 900;
+
   /** Tarjan's SCCs in Python's visiting order. ``succ``: Map or object of arrays. */
   function _sccs(nodes, succ) {
     const get = (v) => (succ instanceof Map ? succ.get(v) || [] : (hasOwn(succ, v) ? succ[v] : []));
     const index = new Map(), low = new Map(), stack = [], on = new Set(), out = [];
-    let counter = 0;
+    let counter = 0, depth = 0;
     function strong(v) {
+      if (++depth > validate.MAX_SCC_DEPTH) {
+        throw pyerr("RecursionError", "maximum recursion depth exceeded (JavaScript port limit: " + validate.MAX_SCC_DEPTH +
+          " nested states in the strongly-connected-component search)");
+      }
       index.set(v, counter);
       low.set(v, counter);
       counter += 1;
@@ -277,6 +285,7 @@
         }
         out.push(comp);
       }
+      depth--;
     }
     for (const n of nodes) if (!index.has(n)) strong(n);
     return out;

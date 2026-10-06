@@ -1,0 +1,243 @@
+{
+ "deviations": [
+  {
+   "op": {
+    "a": [
+     "t",
+     "r1",
+     "h",
+     2.5,
+     "",
+     {
+      "status": "RUNNING"
+     },
+     [],
+     1
+    ],
+    "kw": {},
+    "m": "create_run"
+   },
+   "python": {
+    "r": true
+   }
+  },
+  {
+   "op": {
+    "a": [
+     "t",
+     "r1",
+     "h",
+     "p",
+     "",
+     {
+      "status": "RUNNING"
+     },
+     [],
+     "5"
+    ],
+    "kw": {},
+    "m": "create_run"
+   },
+   "python": {
+    "r": true
+   }
+  },
+  {
+   "op": {
+    "a": [
+     "t",
+     "r1",
+     "1"
+    ],
+    "kw": {},
+    "m": "intent_for_revision"
+   },
+   "python": {
+    "r": null
+   }
+  },
+  {
+   "op": {
+    "a": [
+     "tr",
+     "sha",
+     0.5,
+     1
+    ],
+    "kw": {},
+    "m": "put_trace"
+   },
+   "python": {
+    "r": null
+   }
+  },
+  {
+   "op": {
+    "a": [
+     "t",
+     "r1",
+     "w",
+     1,
+     "10"
+    ],
+    "kw": {},
+    "m": "acquire_lease"
+   },
+   "python": {
+    "e": "TypeError",
+    "message": "unsupported operand type(s) for +: 'int' and 'str'"
+   }
+  }
+ ],
+ "files": [
+  "store_1",
+  "store_2"
+ ],
+ "n_ops": 7664,
+ "n_sequences": 341,
+ "open_store": [
+  {
+   "path": ":memory:",
+   "url": ":memory:"
+  },
+  {
+   "path": ":memory:",
+   "url": "sqlite://"
+  },
+  {
+   "path": ":memory:",
+   "url": "sqlite:"
+  },
+  {
+   "path": ":memory:",
+   "url": "sqlite:///:memory:"
+  },
+  {
+   "path": ":memory:",
+   "url": "sqlite://:memory:"
+  },
+  {
+   "path": "rel.db",
+   "url": "sqlite:///rel.db"
+  },
+  {
+   "path": "/abs/x.db",
+   "url": "sqlite:////abs/x.db"
+  },
+  {
+   "exc": "ValueError",
+   "message": "unsupported sqlite URL 'sqlite:rel.db' (use sqlite:///relative.db or sqlite:////abs.db)",
+   "url": "sqlite:rel.db"
+  },
+  {
+   "exc": "ValueError",
+   "message": "unsupported sqlite URL 'sqlite://host/x.db' (use sqlite:///relative.db or sqlite:////abs.db)",
+   "url": "sqlite://host/x.db"
+  },
+  {
+   "exc": "ValueError",
+   "message": "unsupported store URL scheme in 'mysql://nope' (use sqlite:/// or postgresql://)",
+   "url": "mysql://nope"
+  },
+  {
+   "path": "plain/path.db",
+   "url": "plain/path.db"
+  },
+  {
+   "path": "x.db",
+   "url": "x.db"
+  }
+ ],
+ "reopen": [
+  {
+   "close_first": false,
+   "original_body": {
+    "ok": "b"
+   },
+   "path": "",
+   "reopened_body": {
+    "ok": null
+   },
+   "same_object": false
+  },
+  {
+   "close_first": true,
+   "original_body": {
+    "e": "ProgrammingError",
+    "message": "Cannot operate on a closed database."
+   },
+   "path": "",
+   "reopened_body": {
+    "ok": null
+   },
+   "same_object": false
+  },
+  {
+   "close_first": false,
+   "original_body": {
+    "ok": "b"
+   },
+   "path": ":memory:",
+   "reopened_body": {
+    "ok": "b"
+   },
+   "same_object": true
+  },
+  {
+   "close_first": true,
+   "original_body": {
+    "e": "ProgrammingError",
+    "message": "Cannot operate on a closed database."
+   },
+   "path": ":memory:",
+   "reopened_body": {
+    "e": "ProgrammingError",
+    "message": "Cannot operate on a closed database."
+   },
+   "same_object": true
+  },
+  {
+   "close_first": false,
+   "original_body": {
+    "ok": "b"
+   },
+   "path": "FILE",
+   "reopened_body": {
+    "ok": "b"
+   },
+   "same_object": false
+  },
+  {
+   "close_first": true,
+   "original_body": {
+    "e": "ProgrammingError",
+    "message": "Cannot operate on a closed database."
+   },
+   "path": "FILE",
+   "reopened_body": {
+    "ok": "b"
+   },
+   "same_object": false
+  }
+ ],
+ "schema_version": 2,
+ "tables": [
+  "schema_migrations",
+  "machine_versions",
+  "machine_lifecycle",
+  "active_machine_versions",
+  "admission_reports",
+  "runs",
+  "checkpoints",
+  "run_events",
+  "leases",
+  "action_intents",
+  "action_receipts",
+  "approval_requests",
+  "approval_responses",
+  "trace_blobs",
+  "trace_archive_manifests",
+  "update_proposals",
+  "evidence_receipts"
+ ]
+}

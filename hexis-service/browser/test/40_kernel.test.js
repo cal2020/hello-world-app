@@ -242,4 +242,168 @@
     assert.equal(HX.canonical.digest(cp), before);
     assert.deepEqual(plain(o2.engine), adm);
   });
+
+  test("schema checks use python-jsonschema's exact multipleOf (verdicts; TASK_INPUT_INVALID / OUTPUT_SCHEMA results)", () => {
+    const M = golden("kernel").multiple_of;
+    let n = 0;
+    for (const c of M.cases) {
+      const errs = K._schema_errors(c.schema, c.value);
+      assert.equal(errs.length === 0, c.valid, "multipleOf " + JSON.stringify(c.schema) + " / " + c.value + ": " + JSON.stringify(errs));
+      n++;
+    }
+    assert.ok(n > 2000, "cases " + n);
+    /* the plain HX.jsonschema subset is looser (documented in deviations/kernel.md) */
+    assert.deepEqual(HX.catalog.validate_against({ multipleOf: 0.1 }, 0.3), []);
+    assert.equal(K._schema_errors({ multipleOf: 0.1 }, 0.3).length, 1);
+    const pkg = deep_freeze(HX.pkg.normalize_package(M.package));
+    const cp = deep_freeze(K.initial_checkpoint(pkg, "t", "r", {}));
+    for (const k of M.kernel) {
+      same(run(() => K.initial_checkpoint(pkg, "t", "r", deep_freeze({ amount: k.amount }))), k.initial, "initial " + k.amount);
+      if (k.initial.ok) assert.deepEqual(plain(K.initial_checkpoint(pkg, "t", "r", { amount: k.amount })), k.initial.ok);
+      const obs = deep_freeze(K.new_observation({ run_id: "r", state_id: "U", revision: 0, kind: "user", outputs: { amount: k.amount } }));
+      const got = run(() => result_dump(K.advance(cp, obs, pkg)));
+      same(got, k.advance, "advance " + k.amount);
+      if (k.advance.ok) assert.deepEqual(got.ok, k.advance.ok, "advance result " + k.amount);
+    }
+  });
+
+  test("documented deviations (deviations/kernel.md) are conservative", () => {
+    const P = packages();
+    const code = (fn) => { try { fn(); } catch (e) { return e.code; } return null; };
+    /* 1. integral floats cannot reach the kernel through intake: strict_loads refuses them, so the field-scope
+          check never misses a 1 -> 1.0 change (Python: FIELD_SCOPE_VIOLATION) */
+    assert.throws(() => HX.canonical.strict_loads('{"a": "y", "locked": 1.0, "gone": null}'), HX.canonical.CanonicalError);
+    let cp = K.initial_checkpoint(P.scoped, "t", "r", {});
+    const o = (doc) => K.new_observation({ run_id: "r", state_id: "R", revision: 0, kind: "model", outputs: { doc } });
+    assert.equal(code(() => K.advance(cp, o({ a: "y", locked: true, gone: null }), P.scoped)), "FIELD_SCOPE_VIOLATION");
+    assert.equal(K.advance(cp, o({ a: "y", locked: 1, gone: null }), P.scoped).checkpoint.variables.doc.a, "y");
+    /* 2. values Python accepts in Any fields but cannot hash (lone surrogates, unsafe integers) are rejected when the
+          observation / checkpoint is constructed */
+    assert.throws(() => K.new_observation({ run_id: "r", state_id: "R", revision: 0, kind: "model", outputs: { doc: "\ud800" } }),
+      K.ValidationError);
+    assert.throws(() => K.new_checkpoint({ tenant_id: "t", run_id: "r", artifact_hash: "h", state_id: "S",
+      variables: { n: 2 ** 60 } }), K.ValidationError);
+    /* 3. integer-like output keys iterate first in JS: with two failing outputs the first error can name the other
+          key (both reject) */
+    const dump = plain(golden("kernel").packages.owner_mix);
+    dump.machine.states.T.action.writes = ["t", "7"];
+    const p7 = HX.pkg.normalize_package(dump);
+    cp = K.new_checkpoint({ tenant_id: "t", run_id: "r", artifact_hash: p7.artifact_hash, state_id: "T", variables: {} });
+    const bad = K.new_observation({ run_id: "r", state_id: "T", revision: 0, kind: "model", outputs: { t: "x", 7: 1 } });
+    /* Python (outputs in order t, 7): WRITE_OWNERSHIP for 't'; JS iterates '7' first: WRITE_OWNERSHIP for '7' */
+    assert.throws(() => K.advance(cp, bad, p7), (e) => e.code === "WRITE_OWNERSHIP" && e.detail.variable === "7");
+    /* 4. engine counters: int() of a Unicode-digit or huge numeric string is a ValueError in JS */
+    assert.equal(K._py_int(" 12 "), 12);
+    assert.equal(K._py_int("1_000"), 1000);
+    assert.equal(K._py_int(2.9), 2);
+    assert.equal(K._py_int(true), 1);
+    assert.throws(() => K._py_int("\u0663"), (e) => e.code === "ValueError");
+    assert.throws(() => K._py_int("9".repeat(20)), (e) => e.code === "ValueError");
+    assert.throws(() => K._py_int(null), (e) => e.code === "TypeError");
+    /* 5. schema regexes have Python's meaning (`$` before a final newline); a regex outside the translated
+          subset makes the schema check fail closed */
+    const ti = { supplier_ref: "SUP-123\n", business_unit: "BU-NA", document_ids: [], required_fields: [], policy_version: "v" };
+    assert.equal(code(() => K.initial_checkpoint(P.initial, "acme", "r", ti)), null);
+    assert.deepEqual(K._schema_errors({ not: { pattern: "(?i)drop" } }, "x").length, 1);
+    assert.deepEqual(K._schema_errors({ type: "object", patternProperties: { "\\1": {} } }, {}).length, 1);
+    /* 7. list(dict) of terminal_admission receipts / missing / unresolved_effects: insertion order is lost for
+          integer-like keys, so such a dict (2+ keys) raises KEY_ORDER_UNKNOWN instead of a reordered list */
+    assert.deepEqual(K._py_list({ z: 1, y: 2 }), ["z", "y"]);
+    assert.deepEqual(K._py_list({ 7: 1 }), ["7"]);
+    assert.throws(() => K._py_list({ z: 1, 7: 2 }), (e) => e.code === "KEY_ORDER_UNKNOWN");
+    {
+      const vp = P.verified;
+      const st = Object.keys(vp.machine.states).find((s) => vp.machine.states[s].action.kind === "end" &&
+        (vp.contracts.terminals[vp.machine.states[s].action.terminal] || {}).category !== "verified");
+      assert.ok(st, "unverified end state");
+      {
+        const vars = {};
+        const term = HX.efsm.terminal(vp.machine, vp.machine.states[st].action.terminal);
+        for (const o of term ? term.output : []) vars[o] = "v";
+        const c0 = K.new_checkpoint({ tenant_id: "t", run_id: "r", artifact_hash: vp.artifact_hash, state_id: st, variables: vars });
+        const ob = (receipts) => K.new_observation({ run_id: "r", state_id: st, revision: 0, kind: "end",
+          engine: { terminal_admission: { evidence_valid: true, receipts } } });
+        assert.throws(() => K.advance(c0, ob({ z: 1, 7: 2 }), vp), (e) => e.code === "KEY_ORDER_UNKNOWN");
+        assert.deepEqual(plain(K.advance(c0, ob({ z: 1, y: 2 }), vp).checkpoint.evidence_refs), ["z", "y"]);
+      }
+    }
+    /* 6. fill_template interpolates floats with Python's repr and never stringifies bools/null/containers */
+    assert.equal(K.fill_template("v=${f}", { f: 1e-7 }), "v=1e-07");
+    assert.equal(code(() => K.fill_template("v=${b}", { b: true })), "TEMPLATE_TYPE");
+  });
+
+  test("schema regexes have Python re.search semantics (Unicode \\d \\w \\s \\b, `$` before a final newline); others fail closed", () => {
+    const G = golden("kernel_regex");
+    /* the embedded CPython class tables are Python's */
+    for (const k of ["d", "s", "w"]) assert.equal(K._PY_RE_TABLES[k], G.tables[k], "table " + k);
+    let same_n = 0, closed = 0;
+    for (const v of G.regex) {
+      const src = K._py_regex_to_js(v.p);
+      const label = JSON.stringify(v.p) + " / " + JSON.stringify(v.s);
+      if (v.r !== true && v.r !== false) { assert.equal(src, null, "Python refuses " + label); continue; }
+      if (src === null) { closed++; continue; }
+      assert.equal(new RegExp(src, "u").test(v.s), v.r, label + " -> " + src);
+      assert.equal(K._py_re_search(v.p, v.s), v.r, label);
+      same_n++;
+    }
+    assert.ok(same_n > 4500 && closed < same_n / 10, "translated " + same_n + ", fail-closed " + closed);
+    let sv = 0, sc = 0;
+    for (const v of G.schemas) {
+      const errs = K._schema_errors(v.schema, v.value);
+      const label = JSON.stringify(v.schema) + " / " + JSON.stringify(v.value) + ": " + JSON.stringify(errs);
+      if (v.valid === true || v.valid === false) {
+        if (errs.length === 1 && /^<root>: unsupported pattern/.test(errs[0])) { assert.equal(v.valid !== null, true); sc++; continue; }
+        assert.equal(errs.length === 0, v.valid, label);
+        sv++;
+      } else {
+        assert.ok(errs.length > 0, "Python raises " + v.valid + ", JS must reject: " + label);
+      }
+    }
+    assert.ok(sv > 1000 && sc < sv / 10, "schema verdicts " + sv + ", fail-closed " + sc);
+    /* kernel results (TASK_INPUT_INVALID / OUTPUT_SCHEMA) with Python's verdicts */
+    const pkg = deep_freeze(HX.pkg.normalize_package(G.kernel.package));
+    const cp = deep_freeze(K.initial_checkpoint(pkg, "t", "r", {}));
+    for (const c of G.kernel.cases) {
+      if ("task_input" in c) {
+        const got = run(() => plain(K.initial_checkpoint(pkg, "t", "r", deep_freeze(plain(c.task_input)))));
+        same(got, c.result, "initial " + JSON.stringify(c.task_input));
+        if (c.result.ok) assert.deepEqual(got.ok, c.result.ok);
+      } else {
+        const obs = deep_freeze(K.new_observation({ run_id: "r", state_id: "U", revision: 0, kind: "model", outputs: { code: c.code } }));
+        const got = run(() => result_dump(K.advance(cp, obs, pkg)));
+        same(got, c.result, "advance " + JSON.stringify(c.code));
+        if (c.result.ok) assert.deepEqual(got.ok, c.result.ok);
+      }
+    }
+  });
+
+  test("int() of counters strips exactly CPython's whitespace (not U+001C..U+001F or U+FEFF)", () => {
+    const G = golden("kernel_regex").int;
+    const acc = new Map(G.accepted.map(([f, c, v]) => [f + ":" + c, v]));
+    const UNI_DIGIT = (c) => /\p{Nd}/u.test(String.fromCodePoint(c)) && !(c >= 0x30 && c <= 0x39);
+    let n = 0;
+    for (const c of G.cps) {
+      const ch = String.fromCodePoint(c);
+      [ch + "8", "8" + ch, ch].forEach((s, f) => {
+        const want = acc.get(f + ":" + c);
+        let got;
+        try { got = K._py_int(s); } catch (e) { got = e.code; }
+        if (want === undefined) assert.equal(got, "ValueError", "Python refuses " + JSON.stringify(s) + ", JS gave " + got);
+        else if (got === "ValueError") assert.ok(UNI_DIGIT(c), "only Unicode digits may be refused: " + JSON.stringify(s));
+        else assert.equal(got, want, JSON.stringify(s));
+        n++;
+      });
+    }
+    assert.ok(n > 36000);
+  });
+
+  test("judge action with empty writes: IndexError like Python's delta[writes[0]]", () => {
+    const G = golden("kernel_regex").judge_empty_writes;
+    assert.equal(G.package_build.exc, "ValidationError"); /* Python's package model refuses it */
+    const pkg = plain(packages().judge); /* emptied after validation, as the generator does */
+    pkg.machine.states.J.action.writes = [];
+    const obs = K.new_observation({ run_id: "r", state_id: "J", revision: 0, kind: "judge", outputs: {} });
+    same(run(() => K.validate_declared_outputs(pkg, "J", obs, {})), G.validate, "validate_declared_outputs");
+    assert.equal(G.validate.exc, "IndexError");
+  });
 })();

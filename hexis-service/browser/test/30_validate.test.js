@@ -30,6 +30,14 @@
       else if (kind === "setcopy") { const dst = op[2]; walk(d, dst.slice(0, -1))[dst[dst.length - 1]] = plain(walk(d, path)); }
       else if (kind === "perm") { const old = walk(d, path); parent()[last] = op[2].map((i) => old[i]); }
       else if (kind === "order") { const old = walk(d, path); const o = {}; for (const k of op[2]) o[k] = old[k]; parent()[last] = o; }
+      else if (kind === "chain") {
+        const states = d.machine.states;
+        states[op[1]].transitions[0].to = "C0";
+        for (let i = 0; i < op[2]; i++) {
+          states["C" + i] = { id: "C" + i, action: { kind: "model", prompt: "p", reads: [], writes: [] },
+            transitions: [{ if: "", to: i + 1 < op[2] ? "C" + (i + 1) : op[3] }] };
+        }
+      }
       else if (kind === "strrep") { const p = parent(); p[last] = p[last].split(op[2]).join(op[3]); }
       else throw new Error("unknown op " + kind);
     }
@@ -86,6 +94,11 @@
       const want = c.runs[k];
       const w = where + " variant " + vi;
       let rep;
+      if (c.js_deviation) {
+        assert.throws(() => HX.validate.validate_package(pkg, cat, v.profile, {}), (e) => exc_name(e) === c.js_deviation, w);
+        assert.ok(!want.exc, w + ": documented deviation: Python accepts");
+        return;
+      }
       try {
         rep = HX.validate.validate_package(pkg, cat, v.profile, { skill_text: v.skill ? text : null, deployment_policy: v.policy ? dp : null });
       } catch (e) {
@@ -104,7 +117,8 @@
       assert.deepEqual(g1.map(tuple), w1.map(tuple), w + ": ordered (code, severity, state, edge, variable, clause)");
       assert.deepEqual(g1.map(relax), w1.map(relax), w + ": findings");
       assert.deepEqual(plain(rj.analyses), want.analyses, w + ": analyses");
-      const exact = JSON.stringify(got) === JSON.stringify(want.findings) && !want.float_ints;
+      /* digest comparable unless a relaxed message or a set-iteration order differs (golden keys are sorted) */
+      const exact = HX.canonical.canonical_text(got) === HX.canonical.canonical_text(want.findings) && !want.float_ints;
       if (exact) assert.equal(rj.report_digest, want.digest, w + ": report_digest");
     });
     if (c.diff) {
