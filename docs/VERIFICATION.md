@@ -77,6 +77,8 @@ environment on 7 October 2026.
 | Production build | `npm run build` | Passed; **147 pages prerendered** (21 pages × 7 languages) plus the root redirect and the 404 page. Bundle sizes are in [PERFORMANCE.md](PERFORMANCE.md). |
 | Browser tests | `npm run test:e2e` | **17 passed** in 9.5 min (list below). |
 | Close-up check | `npm run check:closeups` | **21 of 21 views opened**, no console errors, every view showed labels, resources released (table below). |
+| Screenshots | `npm run screenshots` | **18 images** at desktop (1440×900), tablet (1024×1366) and phone (390×844) sizes in English, French, Chinese, Spanish, Serbian, Russian and Italian; reviewed in §3. |
+| Performance | `npm run perf` | **8 scenarios** measured, software rendering only; table and how to read it in [PERFORMANCE.md](PERFORMANCE.md). |
 
 ### Browser tests (Playwright, Chromium + SwiftShader, reduced motion)
 
@@ -134,8 +136,6 @@ shaders. "Released" means a second visit to every view left no more geometries
 or textures behind than there were before it (the first pass fills small
 bounded caches: one background texture per close-up colour and a few shared
 shapes).
-
-SCREENSHOTS_RESULTS
 
 ## 3. Browser inspection
 
