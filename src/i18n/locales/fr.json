@@ -1,0 +1,2023 @@
+{
+  "meta": {
+    "languageName": "Français",
+    "translationStatus": "Traduit de l’anglais avec l’aide de l’IA et vérifié pour en assurer la cohérence ; pas encore relu par un spécialiste du sujet dont le français est la langue maternelle."
+  },
+  "app": {
+    "title": "Atlas de la cellule humaine",
+    "tagline": "Un voyage illustré au cœur d’une cellule humaine",
+    "metaDescription": "Explorez un modèle 3D illustratif d’une cellule humaine : 19 structures, des gros plans moléculaires, une visite guidée et des explications sourcées en sept langues.",
+    "structureMetaDescription": "{name}. {short} À explorer dans un modèle 3D illustratif d’une cellule humaine.",
+    "aboutMetaDescription": "Comment le modèle de l’Atlas de la cellule humaine a été construit : hypothèses, simplifications, sources, crédits et licences.",
+    "titleSeparator": " — "
+  },
+  "loading": {
+    "title": "Préparation de la cellule",
+    "progress": "Prêt à {percent} %",
+    "opening": "Ouverture : {name}",
+    "steps": {
+      "locale": "Chargement des textes",
+      "engine": "Chargement du moteur 3D",
+      "structure": "Construction : {name}",
+      "materials": "Préparation des matériaux",
+      "done": "Prêt"
+    },
+    "enter": "Entrer dans la cellule",
+    "enterHint": "Faites glisser pour faire tourner la cellule, faites défiler ou pincez pour zoomer, et sélectionnez une structure pour la découvrir.",
+    "readText": "Lire plutôt l’atlas en version texte",
+    "previewAlt": "Illustration d’une cellule humaine ouverte pour montrer le noyau et les organites"
+  },
+  "nav": {
+    "skipToExplanation": "Aller à l’explication",
+    "skipToStructures": "Aller à la liste des structures",
+    "wholeCell": "Cellule entière",
+    "wholeCellHint": "Revenir à la cellule entière",
+    "structures": "Structures cellulaires",
+    "showList": "Afficher la liste des structures",
+    "hideList": "Masquer la liste des structures",
+    "previous": "Structure précédente",
+    "next": "Structure suivante",
+    "previousNamed": "Précédente : {name}",
+    "nextNamed": "Suivante : {name}",
+    "wrapNote": "La navigation fonctionne en boucle : après la dernière structure, on revient à la première.",
+    "breadcrumb": "Emplacement",
+    "selected": "sélectionnée",
+    "groupCount": {
+      "one": "{count} structure",
+      "many": "{count} de structures",
+      "other": "{count} structures"
+    }
+  },
+  "search": {
+    "label": "Rechercher une structure",
+    "placeholder": "Rechercher, p. ex. « membrane cellulaire »",
+    "clear": "Effacer la recherche",
+    "results": {
+      "one": "{count} résultat",
+      "many": "{count} de résultats",
+      "other": "{count} résultats"
+    },
+    "matched": "correspond à « {term} »",
+    "empty": "Aucune structure ne correspond à « {query} ».",
+    "emptyHint": "Essayez un nom comme « noyau », « mitochondrie » ou « RE », ou parcourez les groupes ci-dessous.",
+    "suggestions": "Quelques suggestions"
+  },
+  "panel": {
+    "region": "Explication",
+    "inTheCell": "Dans la cellule",
+    "closeup": "Gros plan",
+    "viewSwitch": "Choisir une vue",
+    "subviews": "Vues en gros plan",
+    "whatYouSee": "Ce que vous voyez",
+    "whatItDoes": "Son rôle",
+    "numbers": "En chiffres",
+    "typicalSize": "Taille typique",
+    "typicalQuantity": "Quantité typique dans le type cellulaire cité",
+    "drawnInModel": "Objets dessinés dans ce modèle",
+    "drawnCount": {
+      "one": "{count} exemplaire dessiné (qualité actuelle : {quality})",
+      "many": "{count} d’exemplaires dessinés (qualité actuelle : {quality})",
+      "other": "{count} exemplaires dessinés (qualité actuelle : {quality})"
+    },
+    "drawnContinuous": "Dessin d’une seule structure continue.",
+    "drawnSymbolic": "Représenté par de pâles particules qui évoquent l’encombrement moléculaire ; ce ne sont pas des molécules individuelles.",
+    "enlarged": "Dessin agrandi environ ×{factor} par rapport à l’échelle réelle, pour rester visible.",
+    "trueScale": "Dessin à peu près à l’échelle réelle.",
+    "symbolic": "Représentation par des repères symboliques, sans respect de l’échelle.",
+    "renderedSize": "Taille dessinée ({dimension}) : {size}",
+    "facts": "Données clés",
+    "interesting": "Le saviez-vous ?",
+    "parts": "Composants",
+    "related": "Relations",
+    "simplifications": "Simplifications du modèle",
+    "sources": "Sources",
+    "sourceRef": "Source n° {n}",
+    "sourcesLabel": "Sources :",
+    "openCloseup": "Ouvrir le gros plan",
+    "backToCell": "Revenir à la vue de la cellule",
+    "closeupLoading": "Chargement du gros plan…",
+    "closeupError": "Impossible de charger le gros plan.",
+    "slowdown": "Animation ralentie environ ×{factor} par rapport au temps réel.",
+    "noTimescale": "Les mouvements sont illustratifs et fortement ralentis.",
+    "toScale": "Les molécules sont dessinées à la même échelle les unes que les autres.",
+    "moleculesEnlarged": "Certains composants sont dessinés environ ×{factor} plus grands que ne le voudrait l’échelle de cette vue.",
+    "frozen": "L’animation biologique est figée.",
+    "expand": "Déplier l’explication",
+    "collapse": "Replier l’explication",
+    "dragHandle": "Redimensionner l’explication",
+    "groupLabel": "Groupe",
+    "pending": "Vérification en attente",
+    "pendingHint": "La source de cette affirmation n’a pas pu être vérifiée lors de la préparation de cette version.",
+    "sourcePending": "pas encore vérifiée",
+    "noValue": "Pas de valeur unique ; voir la note.",
+    "drawnFixed": {
+      "one": "{count} exemplaire dessiné à tous les niveaux de qualité",
+      "many": "{count} d’exemplaires dessinés à tous les niveaux de qualité",
+      "other": "{count} exemplaires dessinés à tous les niveaux de qualité"
+    },
+    "drawnRange": "De {low} à {high} exemplaires dessinés, selon le réglage de qualité",
+    "locationInset": "Emplacement de ce gros plan dans la cellule entière"
+  },
+  "overview": {
+    "title": "Une cellule humaine représentative",
+    "lead": "Voici le modèle illustratif d’une seule cellule humaine, large d’environ {cellWidth} et ouverte pour que vous puissiez regarder à l’intérieur.",
+    "model": "Il représente une cellule humaine générique entre deux divisions (en interphase). Ce n’est pas le portrait d’un type cellulaire précis : les cellules humaines réelles vont des globules rouges, larges de quelques micromètres, aux cellules nerveuses, dont les fibres peuvent dépasser la longueur d’un bras. Le modèle suppose une cellule arrondie et diploïde — c’est-à-dire dotée de deux lots de 23 chromosomes — et, pour pouvoir montrer l’inactivation du chromosome X, une cellule féminine (XX).",
+    "how": "Faites glisser pour faire tourner la cellule, faites défiler ou pincez pour zoomer, et sélectionnez une structure — dans la scène, dans la liste, sur une étiquette ou par la recherche — pour vous y rendre. Chaque structure dispose d’une vue « Dans la cellule » et d’un gros plan.",
+    "colors": "Les couleurs sont illustratives : la plupart des structures cellulaires sont incolores. Les objets répétés sont dessinés en bien moins d’exemplaires qu’une vraie cellule n’en contient, et les plus petits sont agrandis, afin que tout reste visible. Chaque valeur chiffrée précise le type de cellule dans lequel elle a été mesurée.",
+    "units": "1 µm (micromètre) est un millionième de mètre ; 1 nm (nanomètre) est un millième de micromètre.",
+    "groupsTitle": "19 structures en cinq groupes",
+    "startTour": "Commencer la visite guidée"
+  },
+  "controls": {
+    "toolbar": "Commandes de la vue 3D",
+    "tour": "Visite",
+    "startTour": "Lancer la visite guidée",
+    "labels": "Étiquettes",
+    "labelsHint": "Afficher ou masquer les étiquettes",
+    "bio": "Animation biologique",
+    "freeze": "Figer",
+    "play": "Animer",
+    "freezeHint": "Figer l’animation biologique (la caméra, la lecture et la sélection restent actives)",
+    "playHint": "Lancer l’animation biologique",
+    "bioPlaying": "En cours",
+    "bioFrozen": "Figée",
+    "quality": "Qualité",
+    "qualityAuto": "Auto",
+    "qualityAutoCurrent": "Auto ({level})",
+    "qualityLow": "Basse",
+    "qualityMedium": "Moyenne",
+    "qualityHigh": "Haute",
+    "qualityHint": "Qualité du rendu : modifie la netteté, les effets et le nombre d’objets répétés dessinés. Les 19 structures restent toutes visibles.",
+    "motion": "Mouvement",
+    "motionSystem": "Suivre le système",
+    "motionReduce": "Réduire les animations",
+    "motionAllow": "Autoriser les animations",
+    "motionHint": "« Réduire les animations » rend les mouvements de caméra instantanés, arrête les mouvements décoratifs et démarre avec l’animation biologique figée.",
+    "language": "Langue",
+    "export": "Enregistrer l’image",
+    "help": "Aide",
+    "about": "À propos",
+    "zoomIn": "Zoom avant",
+    "zoomOut": "Zoom arrière",
+    "resetView": "Réinitialiser la vue",
+    "settings": "Paramètres",
+    "more": "Plus d’options",
+    "textAtlas": "Version texte",
+    "view3d": "Vue 3D",
+    "close": "Fermer",
+    "on": "Activé",
+    "off": "Désactivé",
+    "freezeLabel": "Figer l’animation biologique",
+    "zoomGroup": "Zoom"
+  },
+  "tour": {
+    "title": "Visite guidée",
+    "start": "Commencer la visite",
+    "pause": "Mettre la visite en pause",
+    "resume": "Reprendre la visite",
+    "next": "Étape suivante",
+    "previous": "Étape précédente",
+    "exit": "Quitter la visite",
+    "progress": "Étape {current} sur {total}",
+    "traveling": "Déplacement en cours…",
+    "reading": "Étape suivante dans {seconds} s",
+    "paused": "En pause",
+    "noWrap": "La visite va de la première à la dernière étape, sans reprendre au début.",
+    "finished": "Visite terminée — vous avez parcouru les 19 structures.",
+    "endedByManual": "La visite s’est arrêtée, car vous avez vous-même choisi une structure."
+  },
+  "export": {
+    "title": "Enregistrer une image",
+    "intro": "Enregistre au format PNG la vue actuelle, exactement telle que la caméra la voit en ce moment.",
+    "clean": "Image épurée",
+    "cleanDescription": "La vue 3D seule, sans étiquettes ni éléments superposés.",
+    "annotated": "Image annotée",
+    "annotatedDescription": "Ajoute les étiquettes, la barre d’échelle physique et une légende.",
+    "saving": "Préparation de l’image…",
+    "saved": "Fichier enregistré : {file}.",
+    "failed": "Impossible d’enregistrer l’image : {reason}",
+    "unavailable": "L’enregistrement d’une image nécessite la vue 3D.",
+    "caption": "{title} · modèle illustratif · {app}",
+    "scaleNote": "Barre d’échelle valable au point visé."
+  },
+  "scale": {
+    "label": "Échelle",
+    "bar": "Barre d’échelle : {length}",
+    "wholeCell": "Vue de la cellule entière",
+    "closeup": "Gros plan · ×{factor} par rapport à la cellule entière",
+    "focusNote": "Mesurée au point visé.",
+    "enlargedNote": "{name} : agrandissement ×{factor} par rapport à l’échelle"
+  },
+  "closeupCaptions": {
+    "outside": "Extérieur de la cellule",
+    "cytosol": "Cytosol",
+    "nucleoplasm": "Nucléoplasme",
+    "lumen": "Lumière",
+    "erLumen": "Lumière du RE",
+    "cristaSpace": "Intérieur de la crête",
+    "atp": "ATP",
+    "adp": "ADP",
+    "calcium": "Ions calcium",
+    "chaperone": "Chaperon",
+    "growing": "Croissance",
+    "shrinking": "Raccourcissement",
+    "catastrophe": "Catastrophe",
+    "rescue": "Sauvetage",
+    "water": "Eau",
+    "oxygen": "Oxygène",
+    "peroxide": "Peroxyde d’hydrogène",
+    "aminoAcids": "Acides aminés",
+    "cargo": "Cargaison",
+    "fromEr": "Depuis le RE",
+    "toSurface": "Vers la surface cellulaire",
+    "toLysosomes": "Vers les lysosomes",
+    "plusDirection": "Vers l’extrémité plus",
+    "minusDirection": "Vers l’extrémité moins",
+    "linkerDna": "ADN de liaison",
+    "rnaChains": "Chaînes d’ARN en cours de synthèse",
+    "mitoRibosomes": "Ribosomes mitochondriaux",
+    "importReceptor": "Récepteur d’importation",
+    "newMicrotubule": "Nouveau microtubule",
+    "pull": "Traction",
+    "spindle": "Microtubules du fuseau",
+    "aminoAcid": "Acide aminé"
+  },
+  "help": {
+    "title": "Aide",
+    "intro": "Explorez un modèle 3D illustratif d’une cellule humaine. Tout ce que montre la vue 3D est aussi disponible sous forme de texte.",
+    "exploreTitle": "Explorer",
+    "explore": "Faites glisser pour faire tourner la cellule. Faites défiler, pincez ou utilisez les boutons + et − pour zoomer. « Réinitialiser la vue » recadre le sujet affiché.",
+    "selectTitle": "Sélectionner une structure",
+    "select": "Pour sélectionner une structure, cliquez dessus ou touchez-la dans la vue 3D, choisissez-la dans la liste, cliquez sur son étiquette ou recherchez-la. Ces quatre gestes ont le même effet : la caméra se rend jusqu’à la structure, l’explication s’ouvre et la barre d’adresse se met à jour, ce qui vous permet de partager le lien.",
+    "viewsTitle": "Dans la cellule et gros plan",
+    "views": "« Dans la cellule » montre la structure à sa place, tandis que tout le reste s’estompe. « Gros plan » ouvre une scène distincte et agrandie, avec des détails moléculaires ; sa barre d’échelle et ses notes indiquent de combien elle est agrandie et ralentie. Une petite vignette montre où se situe le gros plan dans la cellule entière.",
+    "tourTitle": "Visite guidée",
+    "tour": "La visite passe en revue les 19 structures dans l’ordre. À chaque étape, elle attend que la caméra soit arrivée, puis vous laisse environ {seconds} secondes de lecture. Vous pouvez la mettre en pause, la reprendre, avancer ou revenir d’une étape, ou la quitter. Choisir vous-même une structure met fin à la visite.",
+    "freezeTitle": "Figer l’animation biologique",
+    "freeze": "« Figer » arrête les mouvements biologiques (filaments, transport, machines moléculaires). Vous pouvez toujours déplacer la caméra, lire et sélectionner des structures. Figer l’animation et mettre la visite en pause sont deux commandes distinctes.",
+    "qualityTitle": "Qualité et mouvement",
+    "quality": "La qualité modifie la netteté, les effets et le nombre d’objets répétés (comme les ribosomes) qui sont dessinés ; elle ne supprime jamais une structure. « Auto » s’ajuste progressivement pour garder des mouvements fluides. « Réduire les animations » rend les mouvements de caméra instantanés et démarre avec l’animation biologique figée.",
+    "exportTitle": "Enregistrer des images",
+    "export": "« Enregistrer l’image » télécharge la vue actuelle au format PNG, soit épurée, soit annotée avec les étiquettes, une barre d’échelle et une légende.",
+    "shortcutsTitle": "Raccourcis clavier",
+    "shortcutsNote": "Les raccourcis sont ignorés pendant que vous tapez dans le champ de recherche ou que vous utilisez un élément de formulaire.",
+    "shortcuts": {
+      "search": "Rechercher une structure",
+      "tour": "Lancer, mettre en pause ou reprendre la visite",
+      "labels": "Afficher ou masquer les étiquettes",
+      "freeze": "Figer ou relancer l’animation biologique",
+      "overview": "Cellule entière (vue d’ensemble)",
+      "closeup": "Passer de « Dans la cellule » à « Gros plan » et inversement",
+      "prevNext": "Structure précédente ou suivante (en boucle) ; pendant la visite, étape précédente ou suivante",
+      "zoom": "Zoom avant ou arrière",
+      "reset": "Réinitialiser la vue",
+      "help": "Ouvrir cette aide",
+      "escape": "Fermer une boîte de dialogue ; sinon, remonter d’un niveau (gros plan → dans la cellule → cellule entière)"
+    },
+    "keys": {
+      "slash": "/",
+      "t": "T",
+      "l": "L",
+      "f": "F",
+      "o": "O",
+      "c": "C",
+      "arrows": "← / →",
+      "plusMinus": "+ / −",
+      "zero": "0",
+      "question": "?",
+      "escape": "Esc"
+    },
+    "sourcesTitle": "Toutes les sources",
+    "sourcesFilter": "Filtrer les sources",
+    "sourcesEmpty": "Aucune source ne correspond à « {query} ».",
+    "sourcesGeneral": "Modèle cellulaire et généralités",
+    "sourcesCount": {
+      "one": "{count} source",
+      "many": "{count} de sources",
+      "other": "{count} sources"
+    },
+    "aboutLink": "À propos du modèle, crédits et licences",
+    "sourcePendingNote": "Les sources portant la mention « pas encore vérifiée » sont des publications bien connues qui n’ont pas pu être vérifiées automatiquement lors de la préparation de cette version."
+  },
+  "about": {
+    "title": "À propos de cet atlas",
+    "modelTitle": "Le modèle",
+    "model": "L’Atlas de la cellule humaine est un modèle illustratif, et non photographique, d’une cellule humaine représentative. Il est dessiné en micromètres : la cellule mesure environ {cellWidth} de large et son noyau environ {nucleusWidth}. Les structures ont été placées par un générateur procédural à graine fixe, si bien que chaque visite montre la même disposition.",
+    "assumptionsTitle": "Hypothèses",
+    "assumptions": [
+      "Une cellule humaine générique, et non un type cellulaire précis ; les valeurs chiffrées des explications indiquent le type cellulaire, l’espèce ou le contexte expérimental dans lequel elles ont été mesurées.",
+      "Interphase (phase G1) : la cellule se trouve entre deux divisions ; les chromosomes sont donc sous forme de chromatine décondensée et il n’y a qu’un centrosome, avec deux centrioles.",
+      "Diploïde (deux lots de 23 chromosomes) et féminine (XX) : l’un des chromosomes X est donc représenté sous forme de X inactif (corps de Barr).",
+      "Un réseau de filaments intermédiaires de vimentine, typique des cellules de type fibroblaste ; les cellules épithéliales utiliseraient plutôt des kératines.",
+      "Une forme arrondie, avec une ouverture en coupe toujours tournée vers l’observateur."
+    ],
+    "simplificationsTitle": "Simplifications du modèle",
+    "simplifications": [
+      "Les couleurs sont illustratives.",
+      "Les objets répétés (ribosomes, mitochondries, vésicules, filaments) sont dessinés en bien plus petit nombre que dans les cellules réelles, et les très petits objets sont agrandis ; chaque explication indique le nombre d’exemplaires dessinés et le facteur d’agrandissement.",
+      "Les animations sont des illustrations pédagogiques : elles sont ralenties, simplifiées et ne montrent généralement qu’un événement à la fois. Les gros plans indiquent de combien ils sont ralentis.",
+      "Les gros plans sont des scènes distinctes, à une autre échelle ; ils ne se trouvent pas littéralement à l’intérieur de la scène de la cellule entière."
+    ],
+    "improvementsTitle": "Améliorations apportées",
+    "improvements": "Par rapport à l’expérience de référence décrite dans le cahier des charges du projet, cette réalisation ajoute une recherche qui tient compte des synonymes, un réglage visible de la qualité du rendu et un paramètre explicite de réduction des animations.",
+    "sourcesTitle": "Sources",
+    "sources": "Chaque donnée clé renvoie à sa source. La plupart des sources ont été contrôlées lors de la préparation de cette version, d’après les résultats de moteurs de recherche renvoyant aux pages de l’éditeur ou de bibliothèques ; les quelques sources qui n’ont pas pu l’être portent la mention « pas encore vérifiée », et les affirmations qui reposent sur elles, la mention « Vérification en attente ». Les valeurs chiffrées conservent le contexte de mesure indiqué dans la source.",
+    "translationTitle": "Traductions",
+    "translation": "{status}",
+    "creditsTitle": "Crédits",
+    "credits": "Concept inspiré de l’expérience Cellula Humana. Le code, la géométrie, les illustrations et les textes de ce projet sont originaux. Réalisé avec React, Three.js, React Three Fiber et camera-controls.",
+    "licensesTitle": "Licences",
+    "licenses": "Polices : Alegreya et Alegreya Sans (Huerta Tipográfica) ainsi que Noto Sans SC (Google, Adobe), toutes sous licence SIL Open Font License 1.1. Les bibliothèques logicielles sont sous licence MIT. Aucune image ni aucun modèle 3D externe n’est utilisé ; voir ASSET_LICENSES.md dans le dépôt des sources.",
+    "close": "Fermer"
+  },
+  "errors": {
+    "title": "La vue 3D n’est pas disponible",
+    "webgl": "Votre navigateur ou votre appareil n’a pas pu lancer l’affichage 3D (WebGL 2).",
+    "webglHelp": "Essayez d’activer l’accélération matérielle dans les paramètres de votre navigateur, de mettre à jour le navigateur ou d’utiliser un autre appareil. L’atlas complet est disponible en version texte ci-dessous.",
+    "engineLoad": "Impossible de charger la vue 3D.",
+    "engineLoadHelp": "Vérifiez votre connexion et réessayez. L’atlas complet est disponible en version texte ci-dessous.",
+    "contextLost": "Le système graphique a interrompu la vue 3D.",
+    "contextLostHelp": "Cela peut arriver lorsqu’un appareil manque de mémoire graphique ou que son pilote graphique redémarre. Relancez la vue 3D ou poursuivez votre lecture avec la version texte de l’atlas.",
+    "runtime": "La vue 3D s’est arrêtée à la suite d’une erreur inattendue.",
+    "runtimeHelp": "Relancez la vue 3D ou poursuivez avec la version texte de l’atlas ci-dessous.",
+    "simulated": "La vue 3D a été désactivée pour des tests.",
+    "simulatedHelp": "Retirez « renderer=fail » de l’adresse pour utiliser la vue 3D.",
+    "retry": "Réessayer",
+    "restart3d": "Relancer la vue 3D",
+    "localeFailed": "Impossible de charger la langue « {language} ».",
+    "localeStandIn": "Impossible de charger la langue « {language} » : cette page est donc affichée en anglais.",
+    "notFound": "Cette page n’existe pas ; la cellule entière est affichée à la place.",
+    "dismiss": "Fermer"
+  },
+  "atlas": {
+    "title": "Atlas en version texte",
+    "intro": "L’atlas complet en version texte : chaque structure avec son explication, ses chiffres et ses sources.",
+    "contents": "Sommaire",
+    "backToTop": "Retour en haut",
+    "noJs": "La vue 3D interactive nécessite JavaScript. Toutes les explications figurent ci-dessous.",
+    "openIn3d": "Ouvrir dans la vue 3D",
+    "illustration": "Illustration du gros plan « {name} » issue du modèle 3D"
+  },
+  "dimensions": {
+    "diameter": "diamètre",
+    "thickness": "épaisseur",
+    "width": "largeur",
+    "length": "longueur"
+  },
+  "quantity": {
+    "approx": "environ {q}",
+    "over": "plus de {q}",
+    "upTo": "jusqu’à {q}",
+    "under": "moins de {q}"
+  },
+  "units": {
+    "nm": "{n} nm",
+    "um": "{n} µm",
+    "mm": "{n} mm",
+    "m": "{n} m",
+    "pg": "{n} pg",
+    "bp": {
+      "one": "{n} paire de bases",
+      "many": "{n} de paires de bases",
+      "other": "{n} paires de bases"
+    },
+    "kb": "{n} kb",
+    "Gb": {
+      "one": "{n} milliard de paires de bases",
+      "many": "{n} de milliards de paires de bases",
+      "other": "{n} milliards de paires de bases"
+    },
+    "MDa": "{n} MDa",
+    "pH": "pH {n}",
+    "percent": "{n} %",
+    "percentVolume": "{n} % du volume cellulaire",
+    "percentMembrane": "{n} % de l’ensemble des membranes de la cellule",
+    "percentMass": "{n} % de la masse de la membrane",
+    "percentIncrease": "+{n} %",
+    "percentPerMinute": "{n} % par minute",
+    "perCell": "{n} par cellule",
+    "perUm2": "{n} par µm²",
+    "perSecond": "{n} par seconde",
+    "perMinute": "{n} par minute",
+    "timesPerSecond": {
+      "one": "{n} fois par seconde",
+      "many": "{n} de fois par seconde",
+      "other": "{n} fois par seconde"
+    },
+    "aaPerSecond": {
+      "one": "{n} acide aminé par seconde",
+      "many": "{n} d’acides aminés par seconde",
+      "other": "{n} acides aminés par seconde"
+    },
+    "bpPerDivision": {
+      "one": "{n} paire de bases par division",
+      "many": "{n} de paires de bases par division",
+      "other": "{n} paires de bases par division"
+    },
+    "rateConstant": "{n} µM⁻¹ s⁻¹",
+    "minutes": "{n} min",
+    "hours": "{n} h",
+    "seconds": "{n} s",
+    "days": {
+      "one": "{n} jour",
+      "many": "{n} de jours",
+      "other": "{n} jours"
+    },
+    "degrees": "{n}°",
+    "uM": "{n} µM",
+    "nMolar": "{n} nM",
+    "gPerL": "{n} g/L",
+    "molecules": {
+      "one": "{n} molécule",
+      "many": "{n} de molécules",
+      "other": "{n} molécules"
+    },
+    "proteins": {
+      "one": "{n} protéine",
+      "many": "{n} de protéines",
+      "other": "{n} protéines"
+    },
+    "genes": {
+      "one": "{n} gène",
+      "many": "{n} de gènes",
+      "other": "{n} gènes"
+    },
+    "chromosomes": {
+      "one": "{n} chromosome",
+      "many": "{n} de chromosomes",
+      "other": "{n} chromosomes"
+    },
+    "enzymes": {
+      "one": "{n} enzyme",
+      "many": "{n} d’enzymes",
+      "other": "{n} enzymes"
+    },
+    "diseases": {
+      "one": "{n} maladie",
+      "many": "{n} de maladies",
+      "other": "{n} maladies"
+    },
+    "protofilaments": {
+      "one": "{n} protofilament",
+      "many": "{n} de protofilaments",
+      "other": "{n} protofilaments"
+    },
+    "ratio": "{n} : 1",
+    "times": "×{n}",
+    "protonsPerAtp": {
+      "one": "{n} proton par ATP",
+      "many": "{n} de protons par ATP",
+      "other": "{n} protons par ATP"
+    },
+    "atpPerTurn": {
+      "one": "{n} ATP par tour",
+      "many": "{n} d’ATP par tour",
+      "other": "{n} ATP par tour"
+    },
+    "count": "{n}"
+  },
+  "groups": {
+    "boundary": "Limite et intérieur de la cellule",
+    "genetic": "Matériel génétique et structures nucléaires",
+    "protein": "Production et transport des protéines",
+    "energy": "Énergie, digestion et transformations chimiques",
+    "support": "Soutien structurel et mouvement"
+  },
+  "relations": {
+    "partOf": "Fait partie de",
+    "contains": "Contient",
+    "enclosedBy": "À l’intérieur de",
+    "continuousWith": "En continuité avec",
+    "attachesTo": "Se fixe sur",
+    "receivesFrom": "Reçoit du matériel de",
+    "sendsTo": "Envoie du matériel vers",
+    "travelsAlong": "Se déplace le long de",
+    "organizes": "Organise",
+    "organizedBy": "Organisé par",
+    "fusesWith": "Fusionne avec",
+    "supports": "Soutient",
+    "supportedBy": "Soutenu par",
+    "suppliesEnergyTo": "Fournit de l’énergie à",
+    "madeIn": "Fabriqué dans",
+    "makes": "Fabrique",
+    "protects": "Protège",
+    "anchors": "Ancre",
+    "worksWith": "Coopère avec"
+  },
+  "structures": {
+    "plasma-membrane": {
+      "name": "Membrane plasmique",
+      "synonyms": [
+        "membrane cellulaire",
+        "membrane cytoplasmique",
+        "membrane plasmatique",
+        "plasmalemme",
+        "surface cellulaire",
+        "bicouche lipidique",
+        "membrane",
+        "bicouche"
+      ],
+      "short": "La fine enveloppe souple qui entoure la cellule et contrôle ce qui y entre et ce qui en sort.",
+      "function": "La membrane plasmique est une double couche de molécules lipidiques — une bicouche lipidique — parsemée de protéines. Chaque lipide possède une tête qui attire l’eau (hydrophile) et deux queues qui la fuient (hydrophobes) : les lipides s’alignent donc queues vers l’intérieur et forment une barrière que la plupart des molécules solubles dans l’eau ne peuvent pas franchir seules. Les protéines enchâssées dans la bicouche servent de canaux, de pompes, de transporteurs et de récepteurs : elles laissent passer certains ions et nutriments, détectent des signaux comme les hormones et attachent la cellule à ses voisines et à son environnement. Des chaînes de sucres situées sur la face externe forment un revêtement appelé glycocalyx, qui aide les cellules à se reconnaître entre elles.",
+      "seeingCell": "La surface externe bleue et translucide est la membrane plasmique. Une ouverture en coupe reste toujours tournée vers vous pour que vous puissiez voir l’intérieur ; le bord lumineux marque l’endroit où la membrane est coupée. La membrane est dessinée de nombreuses fois plus épaisse qu’en réalité, afin que son bord reste visible.",
+      "sampling": "Représentée comme une seule surface continue.",
+      "views": {
+        "bilayer": {
+          "title": "Bicouche lipidique",
+          "seeing": "Un fragment de membrane d’environ {patch} de large, dessiné à l’échelle. Des têtes pâles munies de deux queues forment les deux couches de phospholipides ; les petits corps jaunes glissés entre elles sont du cholestérol. Une protéine canal (bleu canard) traverse la membrane et laisse passer des ions (petites étincelles), un récepteur (violet) se dresse vers l’extérieur, et des chaînes de sucres ramifiées, sur le dessus, forment le glycocalyx. En dessous, un filament d’actine du cortex soutient la membrane. Les lipides s’agitent et dérivent latéralement, car la bicouche se comporte comme un fluide à deux dimensions."
+        }
+      },
+      "parts": {
+        "bilayer": {
+          "name": "Bicouche lipidique",
+          "def": "Deux couches de lipides dont les queues sont tournées vers l’intérieur ; la barrière de base de toute membrane cellulaire."
+        },
+        "phospholipid": {
+          "name": "Phospholipide",
+          "def": "Le lipide membranaire le plus courant : une tête contenant un groupement phosphate, prolongée par deux queues d’acides gras."
+        },
+        "cholesterol": {
+          "name": "Cholestérol",
+          "def": "Un lipide rigide qui se glisse entre les phospholipides et module la fluidité de la membrane."
+        },
+        "channel": {
+          "name": "Canal ionique",
+          "def": "Une protéine munie d’un pore qui, lorsqu’elle est ouverte, laisse certains ions traverser rapidement la membrane."
+        },
+        "receptor": {
+          "name": "Récepteur",
+          "def": "Une protéine qui fixe une molécule signal à l’extérieur de la cellule et en transmet le message à l’intérieur."
+        },
+        "glycocalyx": {
+          "name": "Glycocalyx",
+          "def": "Le revêtement riche en sucres formé par les chaînes glucidiques fixées aux protéines et aux lipides de la membrane."
+        }
+      },
+      "simplifications": [
+        "Les vraies membranes sont bien plus densément garnies de protéines que ne le montre le modèle.",
+        "Dans la vue de la cellule entière, la membrane est dessinée environ dix fois plus épaisse qu’en réalité.",
+        "Dans le gros plan, le mouvement des lipides est ralenti d’un facteur d’environ un million, voire davantage."
+      ],
+      "sizeContext": "Épaisseur de la bicouche lipidique elle-même ; les protéines et les chaînes de sucres dépassent au-delà. Valeur indicative (BioNumbers, d’après Physical Biology of the Cell).",
+      "quantityContext": "Molécules lipidiques de la membrane plasmique d’une petite cellule animale — un ordre de grandeur tiré des manuels. Les cellules plus grandes en comptent proportionnellement davantage.",
+      "facts": {
+        "lipid-density": {
+          "label": "Molécules lipidiques par micromètre carré de bicouche",
+          "context": "Les deux couches sont comptées ; estimation tirée des manuels."
+        },
+        "protein-share": {
+          "label": "Part des protéines dans la masse d’une membrane plasmique typique",
+          "context": "À titre de comparaison : {myelin} dans la myéline, la gaine isolante qui entoure les fibres nerveuses, et {inner} dans la membrane mitochondriale interne."
+        },
+        "lipids-per-protein": {
+          "label": "Molécules lipidiques pour chaque molécule de protéine",
+          "context": "Dans une membrane composée pour moitié de protéines (en masse) ; les lipides sont bien plus petits que les protéines."
+        },
+        "cholesterol": {
+          "label": "Rapport cholestérol/phospholipides",
+          "context": "Les membranes plasmiques animales contiennent du cholestérol en quantité molaire à peu près égale à celle des phospholipides."
+        },
+        "small-share": {
+          "label": "Surface membranaire du réticulum endoplasmique comparée à celle de la membrane plasmique",
+          "context": "Cellule du foie (hépatocyte) ; {pancreas} dans une cellule exocrine du pancréas. La membrane plasmique ne représente qu’une petite partie de l’ensemble des membranes d’une cellule."
+        }
+      },
+      "interesting": "Les lipides membranaires ne tiennent jamais en place. Dans des bicouches lipidiques artificielles, un lipide échange sa place avec un voisin {swaps} ; il peut ainsi parcourir {distance} — la longueur d’une grosse bactérie — en {time}."
+    },
+    "cytoplasm": {
+      "name": "Cytoplasme",
+      "synonyms": [
+        "cytosol",
+        "hyaloplasme",
+        "matrice cytoplasmique",
+        "intérieur de la cellule",
+        "liquide cellulaire",
+        "liquide intracellulaire",
+        "protoplasme"
+      ],
+      "short": "Tout ce qui se trouve à l’intérieur de la membrane plasmique, à l’exception du noyau : un gel aqueux et encombré dans lequel baignent les organites et où se déroule une grande partie de la chimie de la cellule.",
+      "function": "Le cytoplasme se compose du cytosol — sa partie liquide — ainsi que des organites et du cytosquelette qui y sont en suspension. Le cytosol n’est pas une soupe diluée : il est encombré de protéines, d’ARN, de sucres, de sels et de bien d’autres molécules. De nombreuses réactions chimiques s’y déroulent, comme les premières étapes de la dégradation du glucose (la glycolyse), et les ribosomes libres du cytosol y fabriquent les protéines qui restent à l’intérieur de la cellule. Les molécules se déplacent dans le cytoplasme par diffusion — une agitation aléatoire — et sont aussi transportées activement le long des rails du cytosquelette.",
+      "seeingCell": "De pâles points qui dérivent emplissent l’espace entre les organites et figurent l’encombrement du cytosol ; ce sont des repères visuels, pas des molécules individuelles. Cliquez ou appuyez sur un espace libre à l’intérieur de la cellule pour sélectionner le cytoplasme.",
+      "sampling": "De pâles particules suggèrent l’encombrement ; ce ne sont pas des molécules individuelles.",
+      "views": {
+        "crowding": {
+          "title": "Un cytosol encombré",
+          "seeing": "Un cube de cytosol d’environ {cube} de côté, dessiné à l’échelle. Des protéines et des enzymes de toutes tailles (en bleu et en vert), des ribosomes (en doré), de petits ARN de transfert en forme de L et un brin d’ARN messager encombrent l’espace, que traverse un filament d’actine. Tout s’agite au hasard. L’eau, les ions et les petites molécules ont été omis pour que l’on puisse voir les molécules plus grosses."
+        }
+      },
+      "parts": {
+        "cytosol": {
+          "name": "Cytosol",
+          "def": "La partie liquide du cytoplasme, en dehors des organites."
+        },
+        "enzyme": {
+          "name": "Enzymes et autres protéines",
+          "def": "Des protéines qui accélèrent les réactions chimiques ; des milliers de types différents flottent dans le cytosol."
+        },
+        "free-ribosome": {
+          "name": "Ribosome libre",
+          "def": "Un ribosome du cytosol qui fabrique une protéine destinée à rester dans la cellule."
+        },
+        "mrna": {
+          "name": "ARN messager (ARNm)",
+          "def": "Une copie d’un gène sous forme d’ARN, qui porte les instructions pour fabriquer une protéine."
+        },
+        "filament": {
+          "name": "Filament du cytosquelette",
+          "def": "Une fibre protéique qui traverse le cytosol ; ici, un filament d’actine."
+        }
+      },
+      "simplifications": [
+        "L’eau, les ions et les petites molécules sont omis.",
+        "Dans la vue de la cellule entière, les points ne font que suggérer l’encombrement.",
+        "Le mouvement des molécules est énormément ralenti."
+      ],
+      "sizeContext": "Part du volume d’une cellule du foie (hépatocyte) occupée par le cytosol, la partie liquide du cytoplasme. Les proportions varient selon les types cellulaires.",
+      "quantityContext": "Protéines par litre de cellule : valeur de travail retenue dans des estimations de BioNumbers pour une cellule du foie et une cellule du thymus, et non mesure directe du cytosol.",
+      "facts": {
+        "mito-share": {
+          "label": "Mitochondries",
+          "context": "Part du volume d’une cellule du foie — le plus vaste compartiment d’organites de cette cellule."
+        },
+        "er-share": {
+          "label": "Citernes du RE rugueux",
+          "context": "Part du volume d’une cellule du foie ; les citernes du RE lisse et les saccules de l’appareil de Golgi en ajoutent ensemble {smooth}."
+        },
+        "small-share": {
+          "label": "Peroxysomes, lysosomes et endosomes, chacun",
+          "context": "Part du volume d’une cellule du foie."
+        },
+        "ph": {
+          "label": "pH du cytosol",
+          "context": "Proche de la neutralité (valeur des manuels) ; à comparer avec l’intérieur acide des lysosomes."
+        }
+      },
+      "interesting": "Les organites prennent beaucoup de place : dans une cellule typique, les compartiments délimités par des membranes occupent près de la moitié du volume, et le cytosol remplit l’espace qui les sépare."
+    },
+    "nucleus": {
+      "name": "Noyau",
+      "synonyms": [
+        "noyau cellulaire",
+        "noyaux",
+        "enveloppe nucléaire",
+        "membrane nucléaire",
+        "pore nucléaire",
+        "pores nucléaires",
+        "complexe du pore nucléaire",
+        "centre de contrôle"
+      ],
+      "short": "Le plus grand compartiment de la cellule : il renferme l’ADN et détermine quels gènes sont utilisés.",
+      "function": "Le noyau renferme presque tout l’ADN de la cellule, empaqueté avec des protéines sous forme de chromosomes. Il est délimité par l’enveloppe nucléaire : deux membranes séparées par un espace étroit, la membrane externe étant en continuité avec le réticulum endoplasmique. L’enveloppe est percée de milliers de complexes du pore nucléaire — de grandes portes protéiques. Les petites molécules les traversent librement, mais les plus grosses sont contrôlées : les protéines nécessaires dans le noyau y sont importées, tandis que les ARN messagers et les sous-unités des ribosomes fabriqués dans le noyau en sont exportés. Un réseau de protéines appelées lamines, la lamina nucléaire, tapisse la membrane interne et aide le noyau à garder sa forme.",
+      "seeingCell": "Le grand corps violet près du centre est le noyau. Son enveloppe est ouverte de votre côté pour révéler la chromatine et les nucléoles qu’il contient. Les petits anneaux qui parsèment sa surface sont des complexes du pore nucléaire, dessinés à leur taille réelle d’environ {poreSize}. Les particules bleu canard qui se dirigent vers l’intérieur représentent les protéines importées ; les particules ambrées qui se dirigent vers l’extérieur représentent les ARN et les sous-unités ribosomiques exportés.",
+      "sampling": "Un seul noyau, dessiné à peu près à sa taille réelle ; seul un échantillon de ses complexes du pore est représenté.",
+      "views": {
+        "pore": {
+          "title": "Complexe du pore nucléaire",
+          "seeing": "Une coupe de l’enveloppe nucléaire montrant les membranes externe et interne, l’espace qui les sépare et un complexe du pore nucléaire d’environ {poreSize} de large. Des anneaux à symétrie d’ordre huit ancrent le pore ; des fibres s’étendent vers le cytoplasme, en haut, et un panier pend du côté nucléaire, en bas. Une cargaison bleu canard liée à un récepteur d’importation descend dans le noyau, tandis qu’un paquet ambré d’ARN messager remonte et sort. Le maillage de la lamina soutient la membrane interne."
+        }
+      },
+      "parts": {
+        "outer-membrane": {
+          "name": "Membrane nucléaire externe",
+          "def": "La membrane externe de l’enveloppe ; elle est en continuité avec le réticulum endoplasmique et peut porter des ribosomes."
+        },
+        "inner-membrane": {
+          "name": "Membrane nucléaire interne",
+          "def": "La membrane interne de l’enveloppe, tournée vers la chromatine, et sur laquelle s’ancre la lamina."
+        },
+        "perinuclear-space": {
+          "name": "Espace périnucléaire",
+          "def": "L’étroit interstice entre les deux membranes, en continuité avec l’intérieur du réticulum endoplasmique."
+        },
+        "pore-complex": {
+          "name": "Complexe du pore nucléaire",
+          "def": "Un grand assemblage annulaire de protéines (les nucléoporines) qui forme un canal contrôlé à travers les deux membranes."
+        },
+        "lamina": {
+          "name": "Lamina nucléaire",
+          "def": "Un maillage de filaments de lamines qui soutient l’enveloppe et contribue à organiser la chromatine."
+        },
+        "import": {
+          "name": "Importation",
+          "def": "Les protéines porteuses d’un signal de localisation nucléaire sont introduites dans le noyau par des récepteurs d’importation."
+        },
+        "export": {
+          "name": "Exportation",
+          "def": "Les ARN messagers et les sous-unités ribosomiques sont transportés vers le cytoplasme par des récepteurs d’exportation."
+        }
+      },
+      "simplifications": [
+        "Le modèle ne dessine que quelques centaines de complexes du pore ; un noyau humain en compte des milliers.",
+        "L’importation et l’exportation sont représentées par des particules isolées qui avancent régulièrement ; le transport réel fait intervenir des récepteurs qui effectuent des cycles, l’énergie fournie par le système Ran et des événements très rapides.",
+        "Le noyau est dessiné comme un ellipsoïde lisse ; les vrais noyaux peuvent présenter des replis et des sillons."
+      ],
+      "sizeContext": "Part du volume d’une cellule du foie occupée par le noyau ; {range} dans les hépatocytes au sein du tissu hépatique. La taille du noyau varie selon les types cellulaires.",
+      "quantityContext": "Paires de bases d’ADN dans un noyau diploïde féminin (XX), calculées à partir du génome de référence ; {male} dans une cellule masculine.",
+      "facts": {
+        "dna-length": {
+          "label": "Longueur de l’ADN d’un noyau, une fois déroulé",
+          "context": "Cellule diploïde féminine ({male} dans une cellule masculine) ; valeur calculée à partir de la séquence du génome."
+        },
+        "dna-mass": {
+          "label": "Masse de l’ADN d’un noyau",
+          "context": "Cellule diploïde féminine ; valeur calculée à partir de la séquence du génome."
+        },
+        "pore-size": {
+          "label": "Largeur d’un complexe du pore nucléaire",
+          "context": "Complexes du pore des vertébrés, parmi les plus grands assemblages protéiques de la cellule."
+        },
+        "pore-traffic": {
+          "label": "Événements de transport qu’un complexe du pore peut assurer chaque seconde",
+          "context": "Estimation fondée sur des mesures de transport réalisées sur des cellules perméabilisées et des noyaux isolés."
+        },
+        "territories": {
+          "label": "Chaque chromosome occupe son propre territoire",
+          "context": "Dans le noyau en interphase, les chromosomes occupent des régions distinctes, dont la disposition n’est pas aléatoire (article de synthèse)."
+        }
+      },
+      "interesting": "Un noyau qui occupe seulement {share} du volume d’une cellule du foie renferme {length} d’ADN."
+    },
+    "chromosomes": {
+      "name": "Chromosomes",
+      "synonyms": [
+        "chromosome",
+        "chromatine",
+        "ADN",
+        "génome",
+        "chromatide",
+        "centromère",
+        "corps de Barr",
+        "X inactif",
+        "chromosome X",
+        "nucléosome"
+      ],
+      "short": "De longues molécules d’ADN empaquetées avec des protéines. Dans cette cellule, qui se trouve entre deux divisions, les chromosomes sont décondensés en une chromatine qui remplit le noyau.",
+      "function": "Un chromosome est une très longue molécule d’ADN, accompagnée des protéines qui l’empaquettent. Les cellules humaines possèdent normalement {chromosomeCount} chromosomes répartis en {pairCount} paires — un lot venant de chaque parent. L’ADN s’enroule autour de groupes de protéines appelées histones pour former des nucléosomes, comme du fil autour de bobines, et ceux-ci sont à leur tour repliés. Pendant l’interphase — la période entre deux divisions cellulaires, durant laquelle la cellule grandit et accomplit son travail —, les chromosomes sont relativement décondensés (on parle de chromatine) afin que les gènes puissent être lus, et chaque chromosome occupe sa propre région du noyau, appelée territoire chromosomique. Ce n’est que lorsqu’une cellule se prépare à se diviser que les chromosomes se condensent pour prendre les formes compactes en X que montrent les manuels : chacun est alors constitué de deux copies identiques (les chromatides sœurs) réunies au niveau d’une région étroite appelée centromère.",
+      "seeingCell": "Dans le noyau ouvert, {chromosomeCount} pelotes colorées montrent les territoires chromosomiques d’une cellule en interphase ; les deux exemplaires de chaque paire de chromosomes ont la même couleur. Comme la cellule du modèle est supposée féminine (XX), l’un des chromosomes X est représenté sous forme de X inactif — un corps compact et dense appelé corps de Barr, dessiné ici contre l’enveloppe nucléaire.",
+      "sampling": "Les {chromosomeCount} chromosomes sont tous dessinés, sous forme de fibres plusieurs fois plus épaisses que la vraie chromatine.",
+      "views": {
+        "metaphase": {
+          "title": "Chromosome condensé (mitose)",
+          "seeing": "Cette forme n’existe pas dans la cellule en interphase : elle montre un chromosome pendant la métaphase de la mitose, une fois l’ADN copié et condensé. Les deux chromatides sœurs sont réunies au niveau du centromère, où se trouve le kinétochore — une plateforme protéique qui s’attache aux microtubules du fuseau. Les extrémités lumineuses sont les télomères."
+        },
+        "nucleosomes": {
+          "title": "L’empaquetage de l’ADN",
+          "seeing": "Un court segment de chromatine dessiné à l’échelle. La double hélice d’ADN, large d’environ {dnaWidth}, s’enroule presque deux fois autour de chaque cœur de nucléosome — une bobine de huit histones d’environ {nucleosomeWidth} de diamètre —, de courts segments d’ADN de liaison reliant les bobines entre elles, comme les perles d’un collier."
+        }
+      },
+      "parts": {
+        "territory": {
+          "name": "Territoire chromosomique",
+          "def": "La région du noyau en interphase occupée par un chromosome."
+        },
+        "inactive-x": {
+          "name": "X inactif (corps de Barr)",
+          "def": "Dans les cellules féminines (XX), l’un des chromosomes X est réduit au silence et compacté en un corps dense appelé corps de Barr."
+        },
+        "chromatid": {
+          "name": "Chromatide sœur",
+          "def": "L’une des deux copies identiques d’un chromosome, une fois l’ADN copié ; elles se séparent lors de la division."
+        },
+        "centromere": {
+          "name": "Centromère",
+          "def": "La région étroite où les chromatides sœurs restent attachées l’une à l’autre."
+        },
+        "kinetochore": {
+          "name": "Kinétochore",
+          "def": "Un complexe protéique situé sur le centromère, qui s’attache aux microtubules du fuseau pendant la division."
+        },
+        "chromosome-end": {
+          "name": "Télomère",
+          "def": "La coiffe protectrice d’ADN répété située à chaque extrémité d’un chromosome."
+        },
+        "nucleosome": {
+          "name": "Nucléosome",
+          "def": "De l’ADN enroulé autour d’un cœur de huit histones ; l’unité de base de la chromatine."
+        },
+        "dna": {
+          "name": "Double hélice d’ADN",
+          "def": "Deux brins d’ADN complémentaires enroulés l’un autour de l’autre."
+        }
+      },
+      "simplifications": [
+        "Les territoires sont dessinés comme des fibres emmêlées dans des régions arrondies ; les vrais territoires sont irréguliers et s’entremêlent sur leurs bords.",
+        "Les fibres de chromatine sont dessinées plusieurs fois plus épaisses qu’en réalité.",
+        "Le chromosome condensé du gros plan appartient à une cellule en division, et non à cette cellule en interphase."
+      ],
+      "sizeContext": "Longueur cumulée de l’ADN de tous les chromosomes d’une cellule diploïde féminine, une fois déroulé et mis bout à bout. Dans cette cellule en interphase, il est replié dans un noyau de quelques micromètres de diamètre.",
+      "quantityContext": "Cellule humaine diploïde normale : {pairs} paires — {autosomePairs} paires d’autosomes plus deux chromosomes sexuels (XX chez la femme, XY chez l’homme).",
+      "facts": {
+        "genome-size": {
+          "label": "Un exemplaire complet du génome humain",
+          "context": "Premier assemblage sans lacune (d’un télomère à l’autre), publié en 2022 ; les estimations plus anciennes des manuels donnent {older}."
+        },
+        "diploid-content": {
+          "label": "ADN d’un noyau diploïde féminin",
+          "context": "{male} dans une cellule masculine (valeurs calculées à partir de la séquence du génome)."
+        },
+        "kinds": {
+          "label": "Types différents de chromosomes humains",
+          "context": "Les chromosomes 1 à 22, plus X et Y."
+        },
+        "x-inactivation": {
+          "label": "Un chromosome X est désactivé dans les cellules féminines",
+          "context": "Hypothèse proposée par Mary Lyon en 1961 à partir d’études sur la souris."
+        },
+        "nucleosome": {
+          "label": "ADN enroulé autour d’un cœur de nucléosome",
+          "context": "L’ADN fait environ {turns} fois le tour de huit histones, d’après la structure cristallographique de 1997."
+        }
+      },
+      "interesting": "Le X inactif a été observé bien avant d’être compris. En 1949, Murray Barr et Ewart Bertram ont remarqué un corps sombre supplémentaire dans les noyaux des cellules nerveuses de chats femelles — mais pas de chats mâles. En 1961, Mary Lyon a proposé que l’un des chromosomes X de chaque cellule féminine soit désactivé."
+    },
+    "telomeres": {
+      "name": "Télomères",
+      "synonyms": [
+        "télomère",
+        "extrémités des chromosomes",
+        "coiffes des chromosomes",
+        "TTAGGG",
+        "shelterine",
+        "télomérase",
+        "boucle T",
+        "boucle télomérique"
+      ],
+      "short": "Des coiffes protectrices d’ADN répété, situées aux extrémités de chaque chromosome.",
+      "function": "Chaque extrémité de chromosome porte de nombreuses copies de la courte séquence d’ADN TTAGGG, sur laquelle se fixe un complexe protéique protecteur appelé shelterine. Tout au bout, l’ADN se replie sur lui-même en une boucle (la boucle T) et glisse son extrémité simple brin dans la double hélice. Les extrémités naturelles sont ainsi dissimulées à la machinerie de réparation de l’ADN de la cellule, qui sinon les prendrait pour de l’ADN cassé et souderait des chromosomes entre eux. Comme la machinerie de copie de l’ADN ne peut pas copier entièrement les toutes dernières extrémités d’une molécule d’ADN linéaire, les télomères raccourcissent un peu à chaque division dans la plupart des cellules du corps ; des télomères très courts signalent à la cellule qu’elle doit cesser de se diviser. Une enzyme appelée télomérase peut rajouter des répétitions ; elle est active dans les cellules souches, dans les cellules qui produisent les ovules et les spermatozoïdes, et dans la plupart des cellules cancéreuses.",
+      "seeingCell": "Des points jaune vif aux extrémités des fibres de chromatine marquent les télomères : il y en a {telomereCount}, deux par chromosome. Ce sont des repères symboliques : un vrai télomère est un segment d’ADN trop petit pour être visible à cette échelle.",
+      "sampling": "Les {telomereCount} télomères d’une cellule diploïde sont tous signalés.",
+      "views": {
+        "t-loop": {
+          "title": "La boucle télomérique",
+          "seeing": "L’extrémité de l’ADN d’un chromosome, dessinée à l’échelle. Chaque segment coloré le long de la double hélice correspond à une répétition TTAGGG. Au bout, l’extrémité sortante simple brin se recourbe et s’insère dans la double hélice, formant la boucle T. Les protéines de la shelterine (en violet et bleu canard) recouvrent les répétitions et maintiennent la boucle en place."
+        }
+      },
+      "parts": {
+        "repeats": {
+          "name": "Répétitions TTAGGG",
+          "def": "De nombreuses copies d’une séquence d’ADN de six lettres, qui constituent les télomères humains."
+        },
+        "overhang": {
+          "name": "Extrémité 3′ sortante",
+          "def": "Un segment simple brin du brin riche en G, qui dépasse tout au bout."
+        },
+        "t-loop": {
+          "name": "Boucle T",
+          "def": "Une boucle formée lorsque l’extrémité sortante se replie et s’insère dans les répétitions double brin, ce qui dissimule l’extrémité."
+        },
+        "shelterin": {
+          "name": "Shelterine",
+          "def": "Un complexe de six protéines qui se fixe à l’ADN télomérique et protège les extrémités des chromosomes."
+        },
+        "chromosome-end": {
+          "name": "Extrémité du chromosome",
+          "def": "Le bout d’un bras chromosomique, où se trouve le télomère."
+        }
+      },
+      "simplifications": [
+        "Dans la vue de la cellule entière, les télomères sont représentés par des points lumineux ; ce sont en réalité des segments d’ADN.",
+        "Le gros plan ne montre que quelques répétitions ; un vrai télomère en contient de plusieurs centaines à plusieurs milliers.",
+        "La shelterine est représentée par des formes simplifiées plutôt que par des protéines individuelles."
+      ],
+      "sizeContext": "Longueur de la région répétée à chaque extrémité de chromosome dans les cellules somatiques humaines ; elle varie selon l’âge, le tissu et l’individu.",
+      "quantityContext": "Télomères d’une cellule diploïde avant la copie de son ADN : un à chaque extrémité de chacun des {chromosomes} chromosomes.",
+      "facts": {
+        "repeat": {
+          "label": "Longueur du motif répété, TTAGGG",
+          "context": "La même séquence de six lettres coiffe tous les chromosomes humains."
+        },
+        "shelterin": {
+          "label": "Protéines du complexe shelterine",
+          "context": "TRF1, TRF2, POT1, TIN2, TPP1 et RAP1."
+        },
+        "shortening": {
+          "label": "Perte télomérique par division cellulaire",
+          "context": "Fibroblastes humains en culture ; mesure par doublement de population."
+        },
+        "t-loop": {
+          "label": "Les télomères se terminent par une boucle",
+          "context": "La boucle T a été observée au microscope électronique sur de l’ADN télomérique issu de cellules humaines et de souris."
+        },
+        "telomerase": {
+          "label": "La télomérase, l’enzyme qui allonge les télomères, a été découverte en 1985",
+          "context": "Mise en évidence pour la première fois dans des extraits de Tetrahymena, un organisme unicellulaire."
+        }
+      },
+      "interesting": "La première séquence complète et sans lacune d’un génome humain n’a été publiée qu’en 2022, par le consortium Telomere-to-Telomere (T2T) : chaque chromosome, à l’exception du Y, a été lu d’un télomère à l’autre."
+    },
+    "nucleolus": {
+      "name": "Nucléole",
+      "synonyms": [
+        "nucléoles",
+        "usine à ribosomes",
+        "organisateur nucléolaire",
+        "région organisatrice nucléolaire",
+        "NOR"
+      ],
+      "short": "Une région dense du noyau où sont assemblées les sous-unités des ribosomes.",
+      "function": "Le nucléole se forme autour des gènes de l’ARN ribosomique (ARNr), regroupés en amas sur {norPairs} paires de chromosomes. Il n’a pas de membrane : ses molécules se rassemblent en un compartiment distinct, semblable à une gouttelette. Une enzyme appelée ARN polymérase I copie les gènes d’ARNr ; le long ARN qu’elle produit est ensuite découpé, modifié chimiquement et replié, tandis que des protéines ribosomiques — importées du cytoplasme — s’y associent. Les petites et grandes sous-unités ribosomiques achevées sont exportées séparément par les pores nucléaires et ne s’assemblent en ribosomes fonctionnels que dans le cytoplasme. Les nucléoles sont plus gros dans les cellules qui fabriquent beaucoup de protéines.",
+      "seeingCell": "Les corps orange à l’intérieur du noyau sont les nucléoles ; cette cellule en possède un grand et un petit. Ouverts en coupe, ils présentent trois couches : des centres fibrillaires pâles, une enveloppe fibrillaire dense autour de chacun d’eux et une région externe granulaire. Les petites particules qui quittent le nucléole sont de nouvelles sous-unités ribosomiques en route vers les pores nucléaires.",
+      "sampling": "Deux nucléoles sont dessinés à peu près à leur taille réelle.",
+      "views": {
+        "assembly": {
+          "title": "L’assemblage des sous-unités ribosomiques",
+          "seeing": "Une coupe à travers un nucléole. À la frontière entre un centre fibrillaire et le composant fibrillaire dense, des gènes d’ARN ribosomique sont en cours de copie : les chaînes d’ARN en croissance partent de l’ADN comme les branches d’un sapin de Noël. L’ARN est maturé et rejoint par des protéines à mesure qu’il se déplace vers l’extérieur ; dans le composant granulaire, les petites (40S) et les grandes (60S) sous-unités prennent forme et dérivent vers le nucléoplasme."
+        }
+      },
+      "parts": {
+        "fibrillar-center": {
+          "name": "Centre fibrillaire",
+          "def": "Des régions centrales pâles qui contiennent l’ADN ribosomique."
+        },
+        "dense-fibrillar": {
+          "name": "Composant fibrillaire dense",
+          "def": "L’enveloppe qui entoure chaque centre fibrillaire, où l’ARNr est synthétisé et subit ses premières étapes de maturation."
+        },
+        "granular": {
+          "name": "Composant granulaire",
+          "def": "La région externe où sont assemblées les sous-unités ribosomiques."
+        },
+        "rdna": {
+          "name": "ADN ribosomique",
+          "def": "Les gènes de l’ARN ribosomique, répétés de nombreuses fois."
+        },
+        "small-subunit": {
+          "name": "Petite sous-unité (40S)",
+          "def": "La plus petite partie du ribosome, qui lit l’ARN messager."
+        },
+        "large-subunit": {
+          "name": "Grande sous-unité (60S)",
+          "def": "La plus grande partie du ribosome, qui relie les acides aminés entre eux."
+        }
+      },
+      "simplifications": [
+        "Les trois couches sont dessinées comme des enveloppes bien nettes ; dans les vrais nucléoles, elles sont irrégulières et entremêlées.",
+        "Les chaînes d’ARN ramifiées sont agrandies pour être visibles.",
+        "L’assemblage des sous-unités fait intervenir des centaines de molécules auxiliaires qui ne sont pas représentées."
+      ],
+      "sizeContext": "La taille des nucléoles varie selon l’intensité avec laquelle une cellule fabrique des ribosomes : les cellules à croissance rapide en ont de plus gros. Une cellule peut posséder un seul nucléole ou plusieurs.",
+      "quantityContext": "Chromosomes portant des amas de gènes d’ARN ribosomique dans une cellule diploïde : les bras courts des chromosomes 13, 14, 15, 21 et 22, en deux exemplaires chacun.",
+      "facts": {
+        "production": {
+          "label": "Sous-unités ribosomiques produites par minute",
+          "context": "Une cellule HeLa en croissance (une lignée de cellules cancéreuses humaines)."
+        },
+        "layers": {
+          "label": "Couches distinctes à l’intérieur d’un nucléole",
+          "context": "Les centres fibrillaires, le composant fibrillaire dense et le composant granulaire."
+        },
+        "liquid": {
+          "label": "Les couches se comportent comme des gouttelettes liquides distinctes",
+          "context": "Démontré dans les nucléoles d’ovocytes de grenouille (xénope) et avec des protéines purifiées."
+        },
+        "firre": {
+          "label": "Un ARN maintient le X inactif près du nucléole",
+          "context": "Dans des cellules de souris, l’ARN non codant Firre contribue à l’y ancrer."
+        }
+      },
+      "interesting": "Le chromosome X inactif a été découvert à côté du nucléole : en 1949, il a d’abord été décrit comme un petit « satellite nucléolaire » dans les cellules nerveuses de chats femelles."
+    },
+    "ribosomes": {
+      "name": "Ribosomes",
+      "synonyms": [
+        "ribosome",
+        "polysome",
+        "polysomes",
+        "polyribosome",
+        "80S",
+        "traduction",
+        "synthèse des protéines",
+        "synthèse protéique",
+        "ARNr"
+      ],
+      "short": "Des machines moléculaires qui lisent l’ARN messager et assemblent les protéines un acide aminé à la fois.",
+      "function": "Un ribosome comporte deux sous-unités, chacune constituée d’ARN ribosomique et de dizaines de protéines. La traduction — la fabrication d’une protéine à partir d’un ARN messager (ARNm) — commence lorsque la petite sous-unité trouve le début d’un ARNm et que la grande sous-unité vient s’y associer. Les ARN de transfert (ARNt) apportent les acides aminés ; chaque ARNt s’apparie avec un mot de code de trois lettres (un codon) de l’ARNm. Le ribosome maintient les ARNt côte à côte, relie la chaîne en croissance au dernier acide aminé arrivé, puis avance d’un codon. La nouvelle chaîne protéique sort en se faufilant par un tunnel de la grande sous-unité. Les ribosomes libres du cytosol fabriquent les protéines qui restent dans le cytosol, le noyau ou les mitochondries ; les ribosomes fixés au réticulum endoplasmique rugueux fabriquent les protéines destinées aux membranes ou à l’exportation. Plusieurs ribosomes lisent souvent le même ARNm en même temps, formant un polysome.",
+      "seeingCell": "Les nombreuses particules dorées minuscules sont les ribosomes. Certains flottent librement, souvent en spirales et en chaînes (polysomes) ; d’autres parsèment le réticulum endoplasmique rugueux.",
+      "sampling": "Seule une infime fraction des ribosomes d’une vraie cellule est dessinée.",
+      "views": {
+        "translation": {
+          "title": "La traduction",
+          "seeing": "Un ribosome dessiné à l’échelle, d’environ {size} de large. La petite sous-unité (or pâle) enserre l’ARN messager, dont les codons sont représentés par des segments colorés. Les ARN de transfert (en forme de L) arrivent l’un après l’autre, cèdent leur acide aminé et repartent. La chaîne protéique en croissance (un collier de perles) émerge du tunnel de sortie de la grande sous-unité (or foncé)."
+        }
+      },
+      "parts": {
+        "large-subunit": {
+          "name": "Grande sous-unité (60S)",
+          "def": "Relie les acides aminés entre eux ; contient le tunnel de sortie."
+        },
+        "small-subunit": {
+          "name": "Petite sous-unité (40S)",
+          "def": "Fixe l’ARNm et vérifie que chaque codon correspond à son ARNt."
+        },
+        "mrna": {
+          "name": "ARN messager",
+          "def": "Les instructions codées, lues trois lettres (un codon) à la fois."
+        },
+        "trna": {
+          "name": "ARN de transfert",
+          "def": "Une molécule adaptatrice qui porte un acide aminé précis et s’apparie avec un codon."
+        },
+        "polypeptide": {
+          "name": "Chaîne protéique en croissance",
+          "def": "La nouvelle chaîne d’acides aminés, qui commence à se replier dès qu’elle émerge."
+        },
+        "exit-tunnel": {
+          "name": "Tunnel de sortie",
+          "def": "Un canal qui traverse la grande sous-unité et par lequel sort la nouvelle chaîne."
+        }
+      },
+      "simplifications": [
+        "Dans la vue de la cellule entière, les ribosomes sont agrandis et bien moins nombreux que dans une vraie cellule.",
+        "Le gros plan ne montre que les étapes principales ; l’initiation et de nombreuses protéines auxiliaires sont omises.",
+        "Les ARNt sont représentés par de simples formes en L."
+      ],
+      "sizeContext": "Largeur hors tout ; les ribosomes ne sont pas sphériques. On cite une valeur d’environ 25 nm pour les ribosomes de mammifères.",
+      "quantityContext": "Cellules HeLa (une lignée de cellules cancéreuses humaines) en croissance en culture ; estimation fondée sur leur teneur en ARN. Les nombres varient selon les types cellulaires et les états de croissance.",
+      "facts": {
+        "mass": {
+          "label": "Masse d’un ribosome 80S humain",
+          "context": "D’après la structure quasi atomique du ribosome humain."
+        },
+        "parts": {
+          "label": "Protéines d’un ribosome humain",
+          "context": "Plus {rnas} ARN ribosomiques : la grande sous-unité compte {large} protéines et trois ARNr, la petite sous-unité {small} protéines et un ARNr."
+        },
+        "speed": {
+          "label": "Vitesse de traduction",
+          "context": "Vitesse moyenne mesurée par profilage ribosomique dans des cellules souches embryonnaires de souris, et non dans des cellules humaines."
+        },
+        "modifications": {
+          "label": "Nucléotides de l’ARNr modifiés chimiquement, visibles dans la structure",
+          "context": "Structure à haute résolution du ribosome humain."
+        },
+        "polysomes": {
+          "label": "Plusieurs ribosomes lisent généralement un même ARNm en même temps",
+          "context": "Ces groupes sont appelés polyribosomes ou polysomes."
+        }
+      },
+      "interesting": "Le ribosome est un ribozyme — une enzyme faite d’ARN. Le site qui relie les acides aminés entre eux est formé par de l’ARN ribosomique, et la protéine la plus proche se trouve à {distance} de la liaison en cours de formation (mesure effectuée sur la grande sous-unité de l’archée Haloarcula marismortui)."
+    },
+    "rough-er": {
+      "name": "Réticulum endoplasmique rugueux",
+      "synonyms": [
+        "RE rugueux",
+        "RER",
+        "réticulum endoplasmique granuleux",
+        "REG",
+        "réticulum endoplasmique",
+        "RE",
+        "ergastoplasme",
+        "feuillets du RE",
+        "réticulum"
+      ],
+      "short": "Des sacs membranaires aplatis et empilés, parsemés de ribosomes, où sont fabriquées et repliées les protéines destinées aux membranes ou à l’exportation.",
+      "function": "Le réticulum endoplasmique (RE) est un réseau continu de membranes qui part de l’enveloppe nucléaire. Sa partie rugueuse forme de larges feuillets aplatis couverts de ribosomes. Lorsqu’un ribosome commence à fabriquer une protéine qui débute par une séquence signal — une courte « étiquette d’adresse » —, il est guidé jusqu’à la membrane du RE et fait passer la chaîne en croissance par un canal protéique, le translocon, vers l’intérieur du RE (la lumière) ou dans la membrane elle-même. Dans la lumière, des protéines chaperons aident la nouvelle protéine à se replier, des chaînes de sucres y sont fixées (glycosylation) et des systèmes de contrôle de la qualité retiennent les protéines mal repliées. Les protéines correctement repliées quittent le RE au niveau de sites de sortie, dans de petites vésicules à destination de l’appareil de Golgi.",
+      "seeingCell": "Les feuillets bleu canard superposés autour du noyau forment le RE rugueux ; la membrane externe du noyau se prolonge en eux. Les points dorés qui les parsèment sont des ribosomes fixés — d’où l’aspect « rugueux ». Sur leurs bords, les feuillets se transforment en tubes dépourvus de ribosomes : ceux du RE lisse. De temps à autre, une particule de cargaison brillante quitte un site de sortie et rejoint l’appareil de Golgi : c’est la première étape du voyage de sécrétion.",
+      "sampling": "Quelques feuillets empilés représentent le RE rugueux ; les cellules sécrétrices peuvent en posséder bien davantage.",
+      "views": {
+        "translocation": {
+          "title": "La fabrication d’une protéine sécrétée",
+          "seeing": "Une coupe transversale de la membrane du RE, avec le cytosol en haut et la lumière en bas. Un ribosome posé sur un canal translocon fait passer une nouvelle chaîne protéique (un collier de perles) à travers la membrane. La séquence signal (la perle rouge en tête) est coupée, une chaîne de sucres (ramifications vertes) est fixée et une protéine chaperon aide la chaîne à se replier. À droite, un site de sortie forme par bourgeonnement une vésicule recouverte, qui transportera les protéines achevées vers l’appareil de Golgi."
+        }
+      },
+      "parts": {
+        "er-sheet": {
+          "name": "Feuillet du RE (citerne)",
+          "def": "Un sac membranaire aplati ; le RE rugueux est surtout constitué de feuillets empilés."
+        },
+        "lumen": {
+          "name": "Lumière",
+          "def": "L’espace délimité par la membrane du RE, en continuité avec l’espace périnucléaire."
+        },
+        "bound-ribosome": {
+          "name": "Ribosome lié à la membrane",
+          "def": "Un ribosome fixé au RE pendant qu’il fabrique une protéine qui y pénètre."
+        },
+        "translocon": {
+          "name": "Translocon",
+          "def": "Un canal protéique (Sec61) par lequel les nouvelles protéines entrent dans le RE."
+        },
+        "signal-peptide": {
+          "name": "Séquence signal",
+          "def": "Un court segment au début d’une protéine, qui l’adresse au RE ; il est généralement coupé."
+        },
+        "glycan": {
+          "name": "Chaîne de sucres (glycane)",
+          "def": "Un glucide ramifié fixé à de nombreuses protéines dans le RE."
+        },
+        "exit-site": {
+          "name": "Site de sortie du RE",
+          "def": "Un endroit où bourgeonnent des vésicules recouvertes (COPII), qui transportent leur cargaison vers l’appareil de Golgi."
+        }
+      },
+      "simplifications": [
+        "Le RE est dessiné sous forme de quelques feuillets bien ordonnés ; dans les vraies cellules, c’est un réseau bien plus vaste, en remaniement constant.",
+        "Une seule particule de cargaison à la fois illustre le voyage de sécrétion ; les vraies cellules déplacent d’énormes quantités de protéines simultanément.",
+        "La machinerie d’adressage (la particule de reconnaissance du signal et son récepteur) n’est pas représentée."
+      ],
+      "sizeContext": "Distance entre les deux membranes d’un feuillet du RE dans les cellules de mammifères ({yeast} chez la levure).",
+      "quantityContext": "Part du volume d’une cellule du foie occupée par les citernes du RE rugueux ; les cellules qui sécrètent beaucoup de protéines en ont bien davantage.",
+      "facts": {
+        "membrane-share": {
+          "label": "Part du RE dans l’ensemble des membranes d’une cellule animale",
+          "context": "Selon la cellule, les manuels indiquent « environ la moitié » ou « plus de la moitié »."
+        },
+        "lumen-volume": {
+          "label": "Intérieur du RE, en proportion du volume cellulaire",
+          "context": "Cellule eucaryote générique (estimation des manuels)."
+        },
+        "rough-membrane": {
+          "label": "Part du RE rugueux dans l’ensemble des membranes d’une cellule du foie",
+          "context": "{pancreas} dans une cellule exocrine du pancréas, qui sécrète de grandes quantités d’enzymes digestives."
+        },
+        "spacer": {
+          "label": "Une protéine espaceur maintient l’épaisseur des feuillets uniforme",
+          "context": "Climp63 enjambe la lumière, tandis que des protéines qui façonnent la courbure bordent les feuillets (cellules de mammifères en culture)."
+        }
+      },
+      "interesting": "Les feuillets empilés du RE rugueux sont reliés par des rampes en spirale : toute la pile forme ainsi une seule membrane continue — construite comme un parking à étages. Ces « rampes de Terasaki » ont été observées dans des cellules sécrétrices et des neurones de souris."
+    },
+    "smooth-er": {
+      "name": "Réticulum endoplasmique lisse",
+      "synonyms": [
+        "RE lisse",
+        "REL",
+        "réticulum endoplasmique agranulaire",
+        "tubules du RE",
+        "RE tubulaire",
+        "réticulum endoplasmique",
+        "RE"
+      ],
+      "short": "Un réseau de tubes membranaires dépourvus de ribosomes, qui fabrique des lipides, stocke le calcium et aide à détoxifier certaines substances.",
+      "function": "Le RE lisse est la partie du réticulum endoplasmique dépourvue de ribosomes ; il forme généralement un lacis de tubes étroits reliés par des jonctions à trois branches. Il fabrique la plupart des lipides membranaires de la cellule et, dans des cellules spécialisées, des hormones stéroïdes. Il stocke les ions calcium et les libère lorsque la cellule reçoit certains signaux — par exemple pour déclencher la contraction musculaire ou la sécrétion. Dans les cellules du foie, les enzymes du RE lisse modifient les médicaments et les toxines pour qu’ils puissent être éliminés, et une enzyme qui s’y trouve aide à libérer du glucose dans le sang. Le RE lisse touche aussi les mitochondries, les peroxysomes et la membrane plasmique au niveau de sites de contact, où s’échangent lipides et calcium.",
+      "seeingCell": "Les tubes vert menthe qui se ramifient dans la partie externe du cytoplasme forment le réseau du RE lisse. Ils se raccordent aux bords des feuillets bleu canard du RE rugueux : tous deux constituent un seul système membranaire continu, que l’on distingue ici par la présence ou l’absence de ribosomes.",
+      "sampling": "Un réseau de tubes simplifié représente le RE lisse.",
+      "views": {
+        "calcium": {
+          "title": "Une réserve de calcium",
+          "seeing": "Une jonction de tubes du RE, larges chacun d’environ {tubeWidth}, dessinée à l’échelle. Des pompes à calcium (en vert) utilisent l’énergie de l’ATP pour faire passer des ions calcium (points brillants) du cytosol à l’intérieur des tubes. Toutes les quelques secondes, un canal de libération du calcium (en orange) s’ouvre et une bouffée d’ions s’en échappe — le type de signal qui déclenche la contraction musculaire ou la sécrétion. Des enzymes de synthèse des lipides (en bleu pâle) sont logées dans la membrane."
+        }
+      },
+      "parts": {
+        "tubule": {
+          "name": "Tubule du RE",
+          "def": "Un tube membranaire étroit ; les tubules forment le réseau du RE lisse."
+        },
+        "junction": {
+          "name": "Jonction à trois branches",
+          "def": "Un point où se rejoignent trois tubules, ce qui donne au réseau son motif polygonal."
+        },
+        "calcium-pump": {
+          "name": "Pompe à calcium (SERCA)",
+          "def": "Une pompe qui utilise l’ATP pour faire entrer les ions calcium dans le RE."
+        },
+        "calcium-channel": {
+          "name": "Canal de libération du calcium",
+          "def": "Un canal qui libère le calcium stocké lorsque la cellule reçoit un signal."
+        },
+        "lipid-enzyme": {
+          "name": "Enzyme de synthèse des lipides",
+          "def": "Des enzymes qui fabriquent les phospholipides et d’autres lipides destinés aux membranes de la cellule."
+        }
+      },
+      "simplifications": [
+        "Le réseau tubulaire est bien moins dense que dans les vraies cellules.",
+        "La libération du calcium est représentée par des bouffées régulières ; les vrais signaux varient dans leur rythme et leur ampleur.",
+        "Les enzymes de détoxification, abondantes dans les cellules du foie, ne sont pas représentées séparément."
+      ],
+      "sizeContext": "Diamètre des tubules du RE dans les cellules de mammifères.",
+      "quantityContext": "Part du volume d’une cellule du foie occupée par les citernes du RE lisse et les saccules de l’appareil de Golgi réunis ; le tableau du manuel ne les distingue pas.",
+      "facts": {
+        "calcium": {
+          "label": "Calcium libre à l’intérieur du RE",
+          "context": "Contre {cytosol} dans le cytosol au repos — une réserve des centaines à des milliers de fois plus concentrée. Les valeurs varient selon le type cellulaire et la méthode de mesure."
+        },
+        "scarce": {
+          "label": "La plupart des cellules ont peu de RE lisse",
+          "context": "Il se présente souvent sous forme de régions en partie lisses et en partie rugueuses."
+        },
+        "steroids": {
+          "label": "Les cellules productrices d’hormones ont un RE lisse abondant",
+          "context": "Il renferme les enzymes qui fabriquent le cholestérol et le transforment en hormones stéroïdes."
+        },
+        "phenobarbital": {
+          "label": "Volume du RE lisse après un traitement médicamenteux",
+          "context": "Cellules du foie de rat après {days} de traitement au phénobarbital ; la surface membranaire a gagné {area}."
+        },
+        "exit-sites": {
+          "label": "Sites de sortie du RE",
+          "context": "Des régions « de transition », en partie lisses, où bourgeonnent des vésicules à destination de l’appareil de Golgi."
+        }
+      },
+      "interesting": "Les cellules éliminent le RE lisse dont elles n’ont plus besoin : quand des rats ont cessé de recevoir du phénobarbital, leurs cellules du foie se sont débarrassées du RE lisse excédentaire par autophagie en {days}."
+    },
+    "golgi": {
+      "name": "Appareil de Golgi",
+      "synonyms": [
+        "Golgi",
+        "complexe de Golgi",
+        "corps de Golgi",
+        "dictyosome",
+        "dictyosomes",
+        "réseau trans-golgien",
+        "TGN",
+        "saccules golgiens",
+        "pile golgienne"
+      ],
+      "short": "Des piles de sacs membranaires aplatis qui modifient, trient et expédient les protéines et les lipides fabriqués dans le RE.",
+      "function": "Les protéines venues du RE entrent dans l’appareil de Golgi par sa face cis, le côté le plus proche du RE. À mesure qu’elles traversent la pile — les compartiments cis, médian et trans —, des enzymes élaguent et allongent leurs chaînes de sucres et leur apportent d’autres modifications chimiques. De l’autre côté, le réseau trans-golgien répartit les produits finis entre différents véhicules de transport : certains rejoignent la membrane plasmique pour être sécrétés ou devenir des protéines membranaires, d’autres partent vers les endosomes et les lysosomes. Dans de nombreuses cellules humaines, les piles golgiennes sont reliées côte à côte en un ruban situé près du noyau, à proximité du centrosome.",
+      "seeingCell": "Les piles ambrées en forme de coupe, près du centrosome, forment le ruban golgien. Chaque pile compte cinq saccules incurvés (des sacs aplatis), dont la teinte varie de la face cis, tournée vers le noyau et le RE, à la face trans, tournée vers l’extérieur. De petites vésicules se rassemblent sur leurs bords, et la particule de cargaison mise en évidence, venue du RE, traverse la pile avant de repartir dans une vésicule de sécrétion.",
+      "sampling": "Trois piles reliées représentent le ruban golgien.",
+      "views": {
+        "stack": {
+          "title": "À travers la pile",
+          "seeing": "Une coupe transversale d’une pile golgienne. Les vésicules venues du RE fusionnent avec la face cis (à gauche). Les protéines de cargaison (des perles) progressent vers la face trans à mesure que chaque saccule mûrit, et leurs chaînes de sucres (en vert) s’allongent et se modifient en chemin. De petites vésicules COPI ramènent des enzymes en sens inverse et, au niveau du réseau trans-golgien (à droite), la cargaison est conditionnée dans des vésicules de sécrétion et dans des vésicules à destination des lysosomes."
+        }
+      },
+      "parts": {
+        "cis": {
+          "name": "Face cis",
+          "def": "La face d’entrée, la plus proche du réticulum endoplasmique."
+        },
+        "medial": {
+          "name": "Saccules médians",
+          "def": "Les compartiments du milieu, où les chaînes de sucres poursuivent leur maturation."
+        },
+        "trans": {
+          "name": "Face trans",
+          "def": "La face de sortie de la pile."
+        },
+        "tgn": {
+          "name": "Réseau trans-golgien",
+          "def": "Un réseau tubulaire qui répartit la cargaison entre différents véhicules de transport."
+        },
+        "copii": {
+          "name": "Vésicule COPII",
+          "def": "Une vésicule recouverte qui transporte la cargaison du RE vers l’appareil de Golgi."
+        },
+        "copi": {
+          "name": "Vésicule COPI",
+          "def": "Une vésicule recouverte qui ramène du matériel en sens inverse, au sein de l’appareil de Golgi ou vers le RE."
+        },
+        "secretory-vesicle": {
+          "name": "Vésicule de sécrétion",
+          "def": "Un véhicule de transport qui achemine des produits jusqu’à la membrane plasmique pour qu’ils soient libérés."
+        }
+      },
+      "simplifications": [
+        "La façon dont la cargaison traverse la pile est encore débattue ; le gros plan montre le modèle, très répandu, de la maturation des saccules.",
+        "Le vrai ruban golgien compte davantage de piles et de nombreuses connexions tubulaires.",
+        "La glycosylation est représentée par un simple changement de couleur des chaînes de sucres."
+      ],
+      "sizeContext": "Largeur approximative d’une pile golgienne dans les cellules animales ; une pile compte généralement quelques saccules.",
+      "quantityContext": "Part du volume d’une cellule du foie occupée par les saccules de l’appareil de Golgi et les citernes du RE lisse réunis ; le tableau du manuel ne les distingue pas.",
+      "facts": {
+        "ergic": {
+          "label": "La cargaison passe d’abord par un compartiment intermédiaire",
+          "context": "Les vésicules issues du RE fusionnent pour former le compartiment intermédiaire entre RE et Golgi, avant que la cargaison n’atteigne le réseau cis-golgien."
+        },
+        "sorting": {
+          "label": "Le réseau trans-golgien trie les produits",
+          "context": "Vers la membrane plasmique, vers la sécrétion ou vers les lysosomes."
+        },
+        "glycans": {
+          "label": "Un lieu majeur de construction des chaînes de sucres",
+          "context": "Les chaînes de sucres d’abord ajoutées dans le RE y sont élaguées et allongées."
+        },
+        "residence": {
+          "label": "Temps moyen passé par une cargaison modèle dans l’appareil de Golgi",
+          "context": "Cellules de rein de singe (COS-7) produisant une glycoprotéine virale fluorescente ; {rate} de la quantité présente dans le Golgi en sortait chaque minute."
+        },
+        "tac": {
+          "label": "Temps de passage dans le Golgi de la protéine rapporteuse Tac",
+          "context": "Cellules humaines HeLa ; ce temps atteignait {long} lorsque la partie luminale de la protéine était raccourcie — la cargaison elle-même compte."
+        }
+      },
+      "interesting": "Camillo Golgi a décrit cet organite en 1898 grâce à sa méthode de coloration à l’argent ; pourtant, de nombreux scientifiques ont douté de sa réalité pendant environ un demi-siècle — jusqu’à ce que les microscopes électroniques révèlent ses membranes empilées."
+    },
+    "vesicles-motors": {
+      "name": "Vésicules et protéines motrices",
+      "synonyms": [
+        "vésicule",
+        "vésicules",
+        "protéine motrice",
+        "protéines motrices",
+        "moteurs moléculaires",
+        "kinésine",
+        "dynéine",
+        "myosine",
+        "vésicule de transport",
+        "transport intracellulaire"
+      ],
+      "short": "De petites bulles membranaires qui transportent une cargaison, tirées le long des rails du cytosquelette par des protéines motrices.",
+      "function": "Les vésicules sont de minuscules colis entourés d’une membrane, qui bourgeonnent à partir d’un compartiment et fusionnent avec un autre, transportant protéines et lipides entre le RE, l’appareil de Golgi, les endosomes, les lysosomes et la membrane plasmique. Sur de courtes distances, elles peuvent dériver, mais les longs trajets dépendent des protéines motrices : des machines moléculaires qui convertissent l’énergie chimique de l’ATP en mouvement. Les kinésines marchent le long des microtubules, surtout vers leurs extrémités plus, qui, dans une cellule typique, sont tournées vers la périphérie ; la dynéine marche vers les extrémités moins, près du centrosome, au centre de la cellule. Les myosines transportent des cargaisons le long des filaments d’actine, près de la surface cellulaire.",
+      "seeingCell": "Des vésicules roses glissent le long des microtubules bleu pâle. Celles qui se dirigent vers l’extérieur, vers le bord de la cellule, représentent des cargaisons transportées par la kinésine ; celles qui se dirigent vers l’intérieur, vers le centrosome, des cargaisons transportées par la dynéine. Les protéines motrices elles-mêmes sont trop petites pour être montrées ici ; elles apparaissent dans le gros plan.",
+      "sampling": "Un échantillon de vésicules en mouvement est dessiné ; les moteurs n’apparaissent que dans le gros plan.",
+      "views": {
+        "kinesin": {
+          "title": "La marche de la kinésine",
+          "seeing": "Un moteur kinésine-1 transporte une vésicule le long d’un microtubule ; il est dessiné à l’échelle et se dirige vers l’extrémité plus du microtubule — vers l’extérieur, vers le bord de la cellule. Ses deux têtes avancent à tour de rôle : la tête arrière passe devant la tête avant, si bien que chaque tête se déplace de {headStep} tandis que la cargaison avance de {step} par pas, en consommant une molécule d’ATP par pas. À l’arrière-plan, un moteur dynéine circule dans l’autre sens, vers l’extrémité moins."
+        }
+      },
+      "parts": {
+        "vesicle": {
+          "name": "Vésicule de transport",
+          "def": "Une petite bulle membranaire qui transporte une cargaison d’un compartiment à l’autre."
+        },
+        "kinesin": {
+          "name": "Kinésine",
+          "def": "Une protéine motrice qui marche vers les extrémités plus des microtubules."
+        },
+        "motor-heads": {
+          "name": "Têtes motrices",
+          "def": "Les deux parties alimentées par l’ATP, qui se fixent tour à tour au microtubule."
+        },
+        "neck-linker": {
+          "name": "Segment de liaison du cou",
+          "def": "Un court segment qui bascule vers l’avant pour faire passer la tête arrière devant."
+        },
+        "stalk": {
+          "name": "Tige",
+          "def": "Une longue queue enroulée en hélice qui relie les têtes à la cargaison."
+        },
+        "dynein": {
+          "name": "Dynéine",
+          "def": "Une grande protéine motrice qui marche vers les extrémités moins des microtubules."
+        },
+        "track": {
+          "name": "Rail de microtubule",
+          "def": "Le tube creux le long duquel marchent les moteurs."
+        },
+        "plus-end": {
+          "name": "Extrémité plus",
+          "def": "L’extrémité à croissance rapide d’un microtubule, généralement tournée vers le bord de la cellule."
+        }
+      },
+      "simplifications": [
+        "Dans la vue de la cellule entière, les vésicules avancent régulièrement ; le transport réel s’arrête, repart et change parfois de sens.",
+        "Chaque vésicule est représentée avec un seul type de moteur ; les vraies cargaisons en portent souvent plusieurs types à la fois.",
+        "Le transport par la myosine le long de l’actine est décrit, mais pas animé."
+      ],
+      "sizeContext": "Vésicules recouvertes de clathrine formées à la membrane plasmique des cellules de mammifères ; les autres véhicules de transport vont de vésicules plus petites à de longs tubes.",
+      "quantityContext": "Exemplaires d’une protéine de cargaison dans un véhicule de transport quittant l’appareil de Golgi, dans des cellules de rein de singe (COS) produisant une cargaison virale fluorescente.",
+      "facts": {
+        "step": {
+          "label": "Longueur du pas de la kinésine",
+          "context": "Molécules de kinésine isolées déplaçant des billes dans un piège optique (in vitro)."
+        },
+        "atp": {
+          "label": "Molécules d’ATP consommées par pas de {step}",
+          "context": "Kinésine-1, mesures sur molécule unique (in vitro)."
+        },
+        "head-step": {
+          "label": "Distance parcourue par chaque tête de kinésine à chaque pas",
+          "context": "Les têtes échangent leur place « main sur main » (fluorescence sur molécule unique, in vitro)."
+        },
+        "rates": {
+          "label": "Part de la cargaison en attente qui repart chaque minute",
+          "context": "Du RE vers l’appareil de Golgi et de l’appareil de Golgi vers la surface cellulaire, dans des cellules de rein de singe (COS)."
+        },
+        "lifetime": {
+          "label": "Durée de vie d’un véhicule de transport allant de l’appareil de Golgi à la surface",
+          "context": "Temps moyen avant sa fusion avec la membrane plasmique, dans des cellules COS-7."
+        }
+      },
+      "interesting": "La cargaison qui quitte l’appareil de Golgi pour la surface cellulaire voyage souvent non pas dans de petites vésicules rondes, mais dans de grands tubes irréguliers transportés le long des microtubules jusqu’au bord de la cellule, comme l’a révélé l’imagerie de cellules vivantes de rein de singe."
+    },
+    "mitochondria": {
+      "name": "Mitochondries",
+      "synonyms": [
+        "mitochondrie",
+        "mitochondrial",
+        "mitochondriale",
+        "centrale énergétique",
+        "crêtes mitochondriales",
+        "ATP synthase",
+        "ADNmt",
+        "respiration cellulaire",
+        "respiration"
+      ],
+      "short": "Des organites à double membrane qui libèrent l’énergie des molécules nutritives et la stockent sous forme d’ATP.",
+      "function": "Les mitochondries dégradent, à l’aide d’oxygène, des molécules-carburants issues des sucres, des graisses et des acides aminés. Les électrons arrachés à ces carburants passent le long d’une chaîne de complexes protéiques de la membrane interne : la chaîne de transport des électrons. Au fil du déplacement des électrons, les complexes pompent des protons (ions hydrogène) hors de l’intérieur de la mitochondrie, créant de part et d’autre de la membrane interne une différence de concentration en protons et de charge électrique. Les protons refluent à travers l’ATP synthase, un moteur rotatif qui utilise ce flux pour fabriquer de l’ATP — la molécule que les cellules utilisent comme monnaie énergétique. Les mitochondries produisent aussi de la chaleur, participent à la fabrication de certaines molécules, stockent du calcium et contribuent à décider si une cellule doit s’autodétruire. Elles possèdent leur propre petit ADN circulaire, vestige de leur origine bactérienne.",
+      "seeingCell": "Les corps allongés rouge corail dispersés dans le cytoplasme sont les mitochondries, dessinées à peu près à leur taille réelle. Dans la mitochondrie sélectionnée, la membrane externe est ouverte dans le sens de la longueur pour montrer la membrane interne qui se replie vers l’intérieur en crêtes lamellaires, avec la matrice entre elles.",
+      "sampling": "Les mitochondries dessinées sont bien moins nombreuses que dans une vraie cellule, afin que l’intérieur reste visible.",
+      "views": {
+        "organelle": {
+          "title": "À l’intérieur d’une mitochondrie",
+          "seeing": "Une mitochondrie ouverte. La membrane externe, lisse, entoure la membrane interne, qui se replie vers l’intérieur en crêtes. L’étroit espace entre les deux membranes est l’espace intermembranaire ; l’intérieur est la matrice, qui contient l’ADN mitochondrial (petits anneaux) et les ribosomes mitochondriaux (granules)."
+        },
+        "atp-synthase": {
+          "title": "Gradient de protons et ATP synthase",
+          "seeing": "Un petit fragment de membrane de crête dessiné à l’échelle. Les complexes I, III et IV de la chaîne de transport des électrons (en violet) pompent des protons (étincelles rouges) de la matrice (en bas) vers l’espace situé à l’intérieur de la crête (en haut). Les protons refluent à travers l’ATP synthase (en doré) et font tourner son rotor ; chaque tour complet libère {atp} molécules d’ATP (en vert) dans la matrice."
+        }
+      },
+      "parts": {
+        "outer-membrane": {
+          "name": "Membrane externe",
+          "def": "La limite externe, lisse, perméable aux petites molécules."
+        },
+        "inner-membrane": {
+          "name": "Membrane interne",
+          "def": "Une membrane très étanche qui porte la machinerie de conversion de l’énergie."
+        },
+        "intermembrane-space": {
+          "name": "Espace intermembranaire",
+          "def": "L’espace entre les membranes externe et interne."
+        },
+        "cristae": {
+          "name": "Crêtes",
+          "def": "Des replis de la membrane interne qui augmentent fortement sa surface."
+        },
+        "matrix": {
+          "name": "Matrice",
+          "def": "L’intérieur, où les molécules-carburants sont dégradées et où se trouve l’ADN mitochondrial."
+        },
+        "mtdna": {
+          "name": "ADN mitochondrial",
+          "def": "Un petit génome circulaire, hérité de la mère."
+        },
+        "etc": {
+          "name": "Chaîne de transport des électrons",
+          "def": "Des complexes protéiques qui se transmettent les électrons et pompent des protons."
+        },
+        "atp-synthase": {
+          "name": "ATP synthase",
+          "def": "Une enzyme rotative qui utilise le flux de protons pour fabriquer de l’ATP."
+        },
+        "protons": {
+          "name": "Protons (H⁺)",
+          "def": "Des ions hydrogène dont la différence de concentration actionne l’ATP synthase."
+        }
+      },
+      "simplifications": [
+        "Les mitochondries sont dessinées comme des tubes séparés ; dans de nombreuses cellules, elles forment des réseaux ramifiés qui fusionnent et se divisent sans cesse.",
+        "Le gros plan montre une seule ATP synthase et un seul exemplaire de chaque pompe ; les vraies crêtes en sont densément garnies.",
+        "Les transporteurs d’électrons (ubiquinone, cytochrome c) et la chimie de la dégradation des carburants ne sont pas représentés."
+      ],
+      "sizeContext": "Diamètre typique ; en longueur, elles vont de courts bâtonnets à de longs réseaux ramifiés.",
+      "quantityContext": "Cellules du foie de rat (hépatocytes), dénombrement sur des micrographies électroniques ; les nombres varient fortement selon le type et la taille des cellules.",
+      "facts": {
+        "volume": {
+          "label": "Part du volume d’une cellule du foie",
+          "context": "Le plus vaste compartiment d’organites de cette cellule."
+        },
+        "inner-membrane": {
+          "label": "Part de la membrane mitochondriale interne dans l’ensemble des membranes de la cellule",
+          "context": "Cellule du foie ; presque autant que le RE rugueux ({rough})."
+        },
+        "mtdna": {
+          "label": "Longueur de l’ADN mitochondrial humain",
+          "context": "Il code {proteins} protéines, {trnas} ARN de transfert et {rrnas} ARN ribosomiques."
+        },
+        "atp-per-turn": {
+          "label": "ATP produits par tour complet de l’ATP synthase",
+          "context": "Un sur chacun de ses trois sites catalytiques ; la rotation a été observée directement pour la première fois en 1997."
+        },
+        "protons": {
+          "label": "Protons utilisés par ATP",
+          "context": "Mitochondries de cœur de bœuf : l’anneau du rotor compte {csub} sous-unités ; {csub} protons entraînent donc un tour qui produit trois ATP."
+        }
+      },
+      "interesting": "Dans une cellule du foie, les mitochondries occupent {mito} du volume — plus que le noyau ({nucleus}) et le RE rugueux ({rough}) réunis."
+    },
+    "lysosomes": {
+      "name": "Lysosomes",
+      "synonyms": [
+        "lysosome",
+        "lysosomal",
+        "lysosomale",
+        "vésicule digestive",
+        "centre de recyclage",
+        "autophagie",
+        "autolysosome"
+      ],
+      "short": "Des sacs acides entourés d’une membrane et remplis d’enzymes, qui dégradent les éléments usés de la cellule et les matériaux qu’elle a absorbés.",
+      "function": "Les lysosomes sont les principaux compartiments de digestion et de recyclage de la cellule. Des pompes à protons situées dans leur membrane maintiennent leur intérieur acide ; celui-ci contient des dizaines de types d’hydrolases — des enzymes qui utilisent l’eau pour découper protéines, acides nucléiques, sucres et graisses en leurs éléments de base. Ces enzymes fonctionnent mieux en milieu acide, ce qui contribue à protéger le reste de la cellule en cas de fuite d’un lysosome. Les matériaux arrivent des endosomes (cargaison absorbée depuis l’extérieur de la cellule), de l’autophagie (éléments cellulaires usés enveloppés d’une membrane) et, dans des cellules spécialisées, de particules englouties. Des transporteurs de la membrane lysosomale renvoient les éléments de base — acides aminés, sucres et nucléotides — vers le cytosol pour qu’ils soient réutilisés. Les lysosomes servent aussi de plaques tournantes de signalisation, qui renseignent sur l’approvisionnement de la cellule en nutriments.",
+      "seeingCell": "Les petites sphères violettes dispersées dans le cytoplasme sont les lysosomes, dessinés à peu près à leur taille réelle. Leur intérieur dense et granuleux évoque les matériaux en cours de digestion.",
+      "sampling": "Un échantillon de lysosomes est dessiné.",
+      "views": {
+        "digestion": {
+          "title": "Digestion et recyclage",
+          "seeing": "Un lysosome ouvert, dessiné à l’échelle. Des pompes à protons de la membrane (V-ATPases, en orange) font entrer des protons et maintiennent l’intérieur acide. Des enzymes hydrolases (en violet) découpent la cargaison qui arrive lorsqu’un endosome tardif fusionne avec le lysosome (à gauche) ; les fragments deviennent de plus en plus petits, et des transporteurs renvoient les acides aminés vers le cytosol. Un revêtement de sucres tapisse la face interne de la membrane et la protège des enzymes."
+        }
+      },
+      "parts": {
+        "membrane": {
+          "name": "Membrane lysosomale",
+          "def": "Une membrane simple qui maintient les enzymes digestives confinées."
+        },
+        "lumen": {
+          "name": "Lumière acide",
+          "def": "L’intérieur, maintenu bien plus acide que le cytosol."
+        },
+        "v-atpase": {
+          "name": "Pompe à protons V-ATPase",
+          "def": "Une pompe qui utilise l’ATP pour faire entrer des protons dans le lysosome, ce qui l’acidifie."
+        },
+        "hydrolase": {
+          "name": "Hydrolases",
+          "def": "Des enzymes qui scindent les grosses molécules à l’aide d’eau."
+        },
+        "membrane-glycans": {
+          "name": "Revêtement de sucres protecteur",
+          "def": "Des protéines membranaires fortement glycosylées qui tapissent la face interne et protègent la membrane de la digestion."
+        },
+        "transporter": {
+          "name": "Transporteur de nutriments",
+          "def": "Une protéine membranaire qui exporte les acides aminés et d’autres produits vers le cytosol."
+        }
+      },
+      "simplifications": [
+        "Les lysosomes varient beaucoup en taille et en forme ; ils sont dessinés comme de simples sphères.",
+        "Un seul événement de fusion est montré à la fois ; l’autophagie est décrite, mais pas animée.",
+        "Les enzymes sont représentées par quelques formes génériques."
+      ],
+      "sizeContext": "Fourchette observée au microscope électronique dans les cellules eucaryotes ; typiquement {typical}. La taille varie selon le type cellulaire et l’apport en nutriments.",
+      "quantityContext": "Large fourchette pour les cellules de mammifères ; généralement plusieurs centaines, et moins de {low} lorsque les cellules sont privées de nutriments.",
+      "facts": {
+        "ph": {
+          "label": "pH à l’intérieur d’un lysosome",
+          "context": "Lysosomes de mammifères ; maintenus acides par les pompes à protons V-ATPases."
+        },
+        "enzymes": {
+          "label": "Enzymes digestives différentes",
+          "context": "Décompte tiré d’un article de synthèse de 2015 (un manuel plus ancien en indique {older}) ; ensemble, elles dégradent protéines, acides nucléiques, sucres et graisses."
+        },
+        "membrane-proteins": {
+          "label": "Protéines différentes dans la membrane du lysosome",
+          "context": "Dont des transporteurs qui exportent les produits de la digestion vers le cytosol."
+        },
+        "volume": {
+          "label": "Part du volume d’une cellule du foie",
+          "context": "Hépatocyte (tableau d’un manuel)."
+        },
+        "diseases": {
+          "label": "Maladies héréditaires de surcharge lysosomale",
+          "context": "Chacune est rare, mais ensemble elles touchent environ 1 naissance vivante sur {births}."
+        }
+      },
+      "interesting": "Christian de Duve a découvert les lysosomes en 1955 ; il a partagé le prix Nobel de physiologie ou médecine 1974 avec Albert Claude et George Palade pour leurs découvertes sur l’organisation de la cellule."
+    },
+    "endosomes": {
+      "name": "Endosomes",
+      "synonyms": [
+        "endosome",
+        "endosome précoce",
+        "endosome tardif",
+        "endosome de recyclage",
+        "endosome de tri",
+        "corps multivésiculaire",
+        "CMV",
+        "endocytose",
+        "clathrine"
+      ],
+      "short": "Des compartiments membranaires qui reçoivent les matériaux absorbés par la cellule et les trient, soit pour les recycler, soit pour les détruire.",
+      "function": "Les cellules absorbent en permanence des fragments de leur membrane plasmique, avec du liquide et certaines molécules — un processus appelé endocytose. Dans la voie la mieux étudiée, des récepteurs chargés de leur cargaison se rassemblent dans des puits recouverts d’une protéine, la clathrine ; ces puits se détachent sous forme de vésicules, perdent leur manteau et fusionnent avec des endosomes précoces, près de la surface cellulaire. Les endosomes précoces sont légèrement acides, ce qui amène de nombreuses molécules de cargaison à se détacher de leurs récepteurs. Vient ensuite le tri : les protéines membranaires telles que les récepteurs sont renvoyées vers la membrane plasmique dans des tubes étroits (recyclage), tandis que les matériaux destinés à la destruction restent sur place. À mesure qu’un endosome précoce mûrit pour devenir un endosome tardif, il se déplace vers le centre de la cellule, s’acidifie davantage et forme par bourgeonnement de petites vésicules dans son propre intérieur, devenant un corps multivésiculaire. Les endosomes tardifs fusionnent enfin avec les lysosomes, qui digèrent leur contenu.",
+      "seeingCell": "Les compartiments bleu ciel près du bord de la cellule sont des endosomes précoces, dont certains portent des bras tubulaires. Les plus grands et plus sombres, situés plus en profondeur, sont des endosomes tardifs, à l’intérieur desquels on distingue de petites vésicules. Lorsque les endosomes sont sélectionnés, trois événements se répètent à tour de rôle : l’internalisation à la membrane, le recyclage vers la surface et la livraison à un lysosome.",
+      "sampling": "Un échantillon d’endosomes précoces et tardifs est dessiné.",
+      "views": {
+        "sorting": {
+          "title": "Trier, recycler ou dégrader",
+          "seeing": "Trois événements numérotés, montrés l’un après l’autre. 1 Internalisation : des récepteurs (en bleu) chargés de cargaison (en jaune) se rassemblent dans un puits recouvert de clathrine, qui se détache sous forme de vésicule et fusionne avec un endosome précoce. 2 Recyclage : dans l’intérieur acide de l’endosome, la cargaison se détache, et les récepteurs vides regagnent la membrane plasmique par un tube de recyclage. 3 Dégradation : l’endosome mûrit, se remplit de vésicules internes et fusionne avec un lysosome (en violet), où la cargaison est dégradée."
+        }
+      },
+      "parts": {
+        "coated-pit": {
+          "name": "Puits recouvert de clathrine",
+          "def": "Une zone de membrane recouverte de clathrine qui s’incurve vers l’intérieur pour former une vésicule."
+        },
+        "early-endosome": {
+          "name": "Endosome précoce (de tri)",
+          "def": "La première étape des vésicules entrantes, près de la surface cellulaire."
+        },
+        "recycling-tubule": {
+          "name": "Tube de recyclage",
+          "def": "Un prolongement étroit qui ramène les récepteurs vers la membrane plasmique."
+        },
+        "late-endosome": {
+          "name": "Endosome tardif",
+          "def": "Un endosome mûr, plus acide, qui fusionnera avec un lysosome."
+        },
+        "intraluminal-vesicle": {
+          "name": "Vésicules intraluminales",
+          "def": "De petites vésicules formées par bourgeonnement vers l’intérieur de l’endosome, qui emportent des protéines membranaires destinées à être détruites."
+        },
+        "receptor": {
+          "name": "Récepteur",
+          "def": "Une protéine membranaire qui fixe une cargaison spécifique à la surface de la cellule."
+        },
+        "cargo": {
+          "name": "Cargaison",
+          "def": "Des molécules absorbées par la cellule, comme des nutriments liés à leurs transporteurs."
+        }
+      },
+      "simplifications": [
+        "Les endosomes forment un continuum de compartiments en constante évolution ; le modèle n’en montre que deux types bien distincts.",
+        "Seule l’internalisation dépendante de la clathrine est représentée ; les cellules utilisent plusieurs autres voies.",
+        "Les trois événements sont montrés successivement ; dans une vraie cellule, ils se produisent en permanence, partout à la fois."
+      ],
+      "sizeContext": "Les endosomes vont de petites vésicules à de grands compartiments tubulaires ; les vésicules recouvertes entrantes mesurent {vesicle} de diamètre.",
+      "quantityContext": "Part du volume d’une cellule du foie occupée par les endosomes ; le nombre par cellule n’a pas pu être vérifié.",
+      "facts": {
+        "early-ph": {
+          "label": "pH des endosomes précoces",
+          "context": "Cellules de mammifères (article de synthèse)."
+        },
+        "late-ph": {
+          "label": "pH des endosomes tardifs",
+          "context": "Sur le chemin des lysosomes, qui sont à {lysosome} (cellules de mammifères, article de synthèse)."
+        },
+        "ldl-receptor": {
+          "label": "Aller-retour d’un récepteur des LDL entre la surface et l’intérieur de la cellule",
+          "context": "Chaque récepteur est réutilisé de nombreuses fois au cours de sa vie, qui dure {life} (cellules en culture)."
+        },
+        "mvb": {
+          "label": "Les endosomes tardifs se remplissent de vésicules internes",
+          "context": "La machinerie ESCRT fait bourgeonner des protéines membranaires vers l’intérieur de l’endosome en vue de leur destruction."
+        },
+        "maturation": {
+          "label": "Les endosomes mûrissent en se déplaçant vers l’intérieur",
+          "context": "Ils migrent vers le noyau, s’acidifient et acquièrent des composants lysosomaux avant de fusionner avec les lysosomes."
+        }
+      },
+      "interesting": "Les cellules recyclent leur surface à une vitesse étonnante : un macrophage en culture internalise {macrophage} de sa membrane plasmique chaque minute par pinocytose — l’équivalent de toute sa surface en {whole}. Les cellules L, de type fibroblaste, sont plus lentes : {lcell} par minute (toute leur surface en {lwhole}).",
+      "events": {
+        "uptake": "1 Internalisation",
+        "recycling": "2 Recyclage",
+        "degradation": "3 Dégradation"
+      }
+    },
+    "peroxisomes": {
+      "name": "Peroxysomes",
+      "synonyms": [
+        "peroxysome",
+        "peroxisome",
+        "microcorps",
+        "catalase",
+        "oxydation des acides gras",
+        "bêta-oxydation",
+        "β-oxydation"
+      ],
+      "short": "De petits organites à membrane simple qui effectuent des réactions d’oxydation, dégradent certaines graisses et détruisent le peroxyde d’hydrogène.",
+      "function": "Les peroxysomes contiennent des enzymes qui utilisent l’oxygène pour oxyder diverses molécules. Certaines de ces réactions produisent du peroxyde d’hydrogène (H₂O₂), un composé réactif qui pourrait endommager la cellule ; une autre enzyme peroxysomale, la catalase, le transforme rapidement en eau et en oxygène. Les peroxysomes raccourcissent les acides gras à très longue chaîne, que les mitochondries ne peuvent pas prendre en charge directement, et ils fabriquent des lipides particuliers appelés plasmalogènes, abondants dans les gaines isolantes (la myéline) qui entourent les fibres nerveuses. Les protéines peroxysomales sont fabriquées sur des ribosomes libres du cytosol, puis importées une fois achevées, guidées par de courts signaux d’adressage. Les peroxysomes peuvent grandir et se diviser, et de nouveaux peroxysomes peuvent aussi se former à partir du RE.",
+      "seeingCell": "Les petites sphères vert citron réparties dans tout le cytoplasme sont les peroxysomes, dessinés à peu près à leur taille réelle. Leur intérieur est uniformément granuleux : contrairement à ceux du foie du rat ou de la souris, les peroxysomes humains ne possèdent pas de cœur d’aspect cristallin.",
+      "sampling": "Un échantillon de peroxysomes est dessiné.",
+      "views": {
+        "reactions": {
+          "title": "Oxydation et détoxification",
+          "seeing": "Une partie de peroxysome, ouverte et dessinée à l’échelle. Une oxydase (en bleu) utilise l’oxygène pour dégrader une molécule et libère du peroxyde d’hydrogène (paires pâles). La catalase (grande, en vert) convertit aussitôt le peroxyde d’hydrogène en eau et en oxygène. Une longue chaîne d’acide gras entre par un transporteur membranaire et est raccourcie étape par étape. Sur le bord, un récepteur d’importation (en jaune) fait traverser la membrane à une enzyme nouvellement fabriquée."
+        }
+      },
+      "parts": {
+        "membrane": {
+          "name": "Membrane peroxysomale",
+          "def": "Une membrane simple qui délimite l’organite."
+        },
+        "matrix": {
+          "name": "Matrice",
+          "def": "L’intérieur riche en protéines, qui contient les enzymes d’oxydation."
+        },
+        "catalase": {
+          "name": "Catalase",
+          "def": "Une enzyme qui décompose le peroxyde d’hydrogène en eau et en oxygène."
+        },
+        "oxidase": {
+          "name": "Oxydase",
+          "def": "Une enzyme qui oxyde des molécules grâce à l’oxygène, en libérant du peroxyde d’hydrogène."
+        },
+        "import-receptor": {
+          "name": "Récepteur d’importation (PEX5)",
+          "def": "Un récepteur qui reconnaît le signal d’adressage des enzymes peroxysomales et les fait entrer."
+        },
+        "fatty-acid": {
+          "name": "Acide gras à très longue chaîne",
+          "def": "Une molécule de graisse raccourcie dans les peroxysomes avant que les mitochondries n’achèvent sa dégradation."
+        }
+      },
+      "simplifications": [
+        "Seules quelques enzymes représentatives sont montrées ; les peroxysomes en contiennent des dizaines.",
+        "Le raccourcissement des acides gras est représenté par des morceaux détachés un à un, sans les réactions chimiques intermédiaires.",
+        "Le nombre et la taille des peroxysomes varient beaucoup selon les types cellulaires."
+      ],
+      "sizeContext": "Fourchette de diamètre typique ; les cellules du foie sont riches en peroxysomes.",
+      "quantityContext": "Part du volume d’une cellule du foie occupée par les peroxysomes ; le nombre par cellule n’a pas pu être vérifié.",
+      "facts": {
+        "catalase-role": {
+          "label": "Les oxydases produisent du peroxyde d’hydrogène ; la catalase le détruit",
+          "context": "La catalase le transforme en eau et en oxygène, ou l’utilise pour oxyder d’autres molécules."
+        },
+        "fatty-acids": {
+          "label": "Les acides gras à très longue chaîne y sont raccourcis",
+          "context": "Par β-oxydation, avant que les mitochondries n’achèvent leur dégradation."
+        },
+        "plasmalogens": {
+          "label": "Premières étapes de la fabrication des plasmalogènes",
+          "context": "Les phospholipides les plus abondants de la myéline, qui isole les fibres nerveuses."
+        },
+        "pts1": {
+          "label": "Acides aminés de l’« étiquette d’adresse » peroxysomale (SKL)",
+          "context": "Ajouter cette étiquette à l’extrémité d’une protéine cytosolique l’envoie dans les peroxysomes (expériences avec des protéines rapporteuses)."
+        },
+        "urate-oxidase": {
+          "label": "L’être humain est dépourvu d’urate oxydase fonctionnelle",
+          "context": "Elle a été inactivée par des mutations au cours de l’évolution des singes hominoïdes ; chez le rat, la souris et quelques autres mammifères, elle forme un cœur d’aspect cristallin dans les peroxysomes du foie."
+        }
+      },
+      "interesting": "La catalase est l’une des enzymes les plus rapides que l’on connaisse : une seule molécule de catalase peut décomposer des millions de molécules de peroxyde d’hydrogène chaque seconde."
+    },
+    "microtubules": {
+      "name": "Microtubules",
+      "synonyms": [
+        "microtubule",
+        "tubuline",
+        "MT",
+        "instabilité dynamique",
+        "fuseau",
+        "fuseau mitotique",
+        "cytosquelette"
+      ],
+      "short": "Des tubes protéiques creux qui rayonnent depuis le centre de la cellule, servent de rails au transport et ne cessent de s’allonger et de raccourcir.",
+      "function": "Les microtubules sont des tubes creux faits de tubuline — des paires de protéines (α-tubuline et β-tubuline) qui s’alignent bout à bout en brins appelés protofilaments ; le plus souvent, {protofilaments} brins forment la paroi du tube. Leurs extrémités moins sont ancrées au centrosome, près du noyau ; leurs extrémités plus s’allongent vers l’extérieur. Les microtubules sont dynamiques : une extrémité en croissance peut brusquement se mettre à raccourcir rapidement (une catastrophe), puis recommencer plus tard à croître (un sauvetage). Cette instabilité dynamique permet au réseau d’explorer la cellule et de se réorganiser rapidement. Les microtubules servent de rails aux protéines motrices, positionnent les organites, contribuent à donner sa forme à la cellule, forment le fuseau qui sépare les chromosomes lors de la division et constituent l’armature des cils.",
+      "seeingCell": "Les lignes bleu pâle qui rayonnent à partir du centrosome, près du noyau, sont les microtubules. Observez leurs extrémités : chacune s’allonge vers l’extérieur avec une coiffe brillante, se rétracte rapidement de temps à autre, puis s’allonge de nouveau.",
+      "sampling": "Le modèle ne dessine qu’une centaine de microtubules environ.",
+      "views": {
+        "dynamics": {
+          "title": "L’instabilité dynamique",
+          "seeing": "L’extrémité en croissance d’un microtubule, dessinée à l’échelle. Des dimères de tubuline (α en bleu pâle, β en bleu plus foncé) s’ajoutent au bout des {protofilaments} protofilaments. Les dimères fraîchement ajoutés portent encore du GTP (lumineux) et forment une coiffe stabilisatrice. Quand la coiffe est perdue, les protofilaments s’incurvent vers l’extérieur et se séparent (une catastrophe), et le microtubule raccourcit rapidement jusqu’à ce qu’un sauvetage le fasse repartir en croissance."
+        }
+      },
+      "parts": {
+        "protofilament": {
+          "name": "Protofilament",
+          "def": "Un brin de dimères de tubuline ; plusieurs brins côte à côte forment la paroi du tube."
+        },
+        "tubulin-dimer": {
+          "name": "Dimère de tubuline",
+          "def": "Une α-tubuline et une β-tubuline : l’unité de construction, longue d’environ {dimerLength}."
+        },
+        "plus-end": {
+          "name": "Extrémité plus",
+          "def": "L’extrémité dynamique qui s’allonge et raccourcit, généralement tournée vers le bord de la cellule."
+        },
+        "minus-end": {
+          "name": "Extrémité moins",
+          "def": "L’extrémité ancrée au centrosome."
+        },
+        "gtp-cap": {
+          "name": "Coiffe GTP",
+          "def": "De la tubuline liée au GTP, fraîchement ajoutée, qui stabilise l’extrémité en croissance."
+        }
+      },
+      "simplifications": [
+        "Dans la vue de la cellule entière, les microtubules sont dessinés comme des tubes lisses.",
+        "Dans le modèle, croissance et raccourcissement suivent un rythme régulier ; dans les cellules, ils sont aléatoires.",
+        "Les protéines qui se fixent aux extrémités des microtubules et les régulent ne sont pas représentées."
+      ],
+      "sizeContext": "Diamètre externe du tube creux.",
+      "quantityContext": "Protofilaments dans la paroi de la plupart des microtubules cellulaires. Le nombre de microtubules d’une cellule varie énormément et il est rarement compté.",
+      "facts": {
+        "dimer": {
+          "label": "Longueur d’un dimère de tubuline",
+          "context": "Une α-tubuline plus une β-tubuline ; chaque protofilament est une chaîne de dimères."
+        },
+        "instability": {
+          "label": "Les microtubules alternent entre croissance et raccourcissement",
+          "context": "C’est l’« instabilité dynamique », découverte en 1984 avec de la tubuline purifiée."
+        },
+        "gtp-cap": {
+          "label": "Une coiffe de tubuline-GTP stabilise les extrémités en croissance",
+          "context": "Quand la coiffe est perdue, l’extrémité commence à raccourcir rapidement."
+        },
+        "anchoring": {
+          "label": "Les extrémités moins sont ancrées au centrosome",
+          "context": "Dans une cellule typique en interphase, les extrémités plus pointent vers le bord de la cellule."
+        }
+      },
+      "interesting": "La découverte de l’instabilité dynamique a créé la surprise : des microtubules en croissance et en raccourcissement coexistent côte à côte, chacun passant de manière imprévisible d’un état à l’autre."
+    },
+    "actin": {
+      "name": "Filaments d’actine",
+      "synonyms": [
+        "actine",
+        "microfilament",
+        "microfilaments",
+        "actine F",
+        "cortex d’actine",
+        "cortex cellulaire",
+        "fibres de stress",
+        "lamellipode",
+        "cytosquelette d’actine"
+      ],
+      "short": "De fins filaments protéiques souples qui forment un maillage de soutien sous la membrane et sont à l’origine des changements de forme et des mouvements de la cellule.",
+      "function": "Les filaments d’actine, aussi appelés microfilaments, sont les fibres les plus fines du cytosquelette. Chacun est un double brin torsadé de protéines d’actine. Ses deux extrémités diffèrent : les sous-unités s’ajoutent beaucoup plus vite à l’extrémité « barbée » (plus) qu’à l’extrémité « pointue » (moins). L’actine porteuse d’ATP s’ajoute à l’extrémité barbée, convertit progressivement son ATP en ADP et a davantage tendance à se détacher à l’extrémité pointue ; un filament peut ainsi fonctionner en tapis roulant — s’allonger à une extrémité tout en raccourcissant à l’autre. Juste sous la membrane plasmique, un maillage dense d’actine appelé cortex confère à la surface cellulaire sa solidité et sa forme. Des réseaux ramifiés poussent la membrane vers l’avant lorsque les cellules rampent, des faisceaux forment des protrusions en forme de doigt, et l’actine, en association avec les moteurs de type myosine, produit la contraction.",
+      "seeingCell": "Le fin maillage rose qui tapisse l’intérieur de la membrane plasmique est le cortex d’actine. Les filaments scintillent à mesure qu’ils s’allongent et raccourcissent.",
+      "sampling": "Un échantillon de courts segments de filaments corticaux est dessiné.",
+      "views": {
+        "treadmilling": {
+          "title": "Tapis roulant et ramification",
+          "seeing": "Des filaments d’actine qui poussent contre la membrane au front de migration d’une cellule, dessinés à l’échelle. Des sous-unités d’actine-ATP lumineuses s’ajoutent aux extrémités barbées près de la membrane (en haut), tandis que l’actine-ADP, plus ancienne et plus terne, se détache des extrémités pointues. Le complexe Arp2/3 (en orange) amorce de nouvelles ramifications à environ {branchAngle} des filaments existants, construisant un réseau qui pousse la membrane vers l’avant."
+        }
+      },
+      "parts": {
+        "filament": {
+          "name": "Filament d’actine",
+          "def": "Un double brin torsadé de sous-unités d’actine, large d’environ {width}."
+        },
+        "barbed-end": {
+          "name": "Extrémité barbée (plus)",
+          "def": "L’extrémité à croissance rapide."
+        },
+        "pointed-end": {
+          "name": "Extrémité pointue (moins)",
+          "def": "L’extrémité à croissance lente, d’où les sous-unités ont tendance à se détacher."
+        },
+        "arp23": {
+          "name": "Complexe Arp2/3",
+          "def": "Un complexe protéique qui amorce un nouveau filament sous forme de ramification sur un filament existant."
+        },
+        "cortex": {
+          "name": "Cortex d’actine",
+          "def": "Le maillage d’actine qui tapisse la face interne de la membrane plasmique."
+        },
+        "subunit": {
+          "name": "Sous-unité d’actine",
+          "def": "Une protéine d’actine isolée (actine G), qui porte de l’ATP ou de l’ADP."
+        }
+      },
+      "simplifications": [
+        "Le cortex est dessiné sous forme de courts segments droits ; les vrais filaments sont plus longs et reliés entre eux par des pontages.",
+        "Les fibres de stress et les protrusions qui permettent de ramper sont décrites, mais pas dessinées dans la cellule arrondie du modèle.",
+        "Les moteurs de type myosine ne sont pas représentés."
+      ],
+      "sizeContext": "Diamètre du filament (fourchette des manuels).",
+      "quantityContext": "L’actine est l’une des protéines les plus abondantes dans de nombreuses cellules animales ; le nombre de filaments par cellule n’est pas une mesure courante.",
+      "facts": {
+        "barbed-rate": {
+          "label": "Constante de vitesse d’association de l’actine-ATP à l’extrémité barbée",
+          "context": "Contre {pointed} à l’extrémité pointue : les extrémités barbées croissent donc environ dix fois plus vite (actine purifiée, in vitro)."
+        },
+        "branch-angle": {
+          "label": "Angle des ramifications formées par Arp2/3",
+          "context": "Protéines purifiées observées au microscope électronique."
+        },
+        "treadmilling": {
+          "label": "Les filaments peuvent fonctionner en tapis roulant",
+          "context": "Les sous-unités s’ajoutent à l’extrémité barbée et partent de l’extrémité pointue : un filament peut ainsi se déplacer tout en gardant sa longueur."
+        },
+        "cortex": {
+          "label": "Un maillage d’actine tapisse la membrane plasmique",
+          "context": "Le cortex confère à la surface cellulaire sa solidité et sa forme."
+        }
+      },
+      "interesting": "Presque tous les mouvements d’une cellule animale — ramper, se diviser, changer de forme, avaler des particules — dépendent de filaments d’actine qui s’assemblent et se désassemblent au bon endroit et au bon moment."
+    },
+    "intermediate-filaments": {
+      "name": "Filaments intermédiaires",
+      "synonyms": [
+        "filament intermédiaire",
+        "FI",
+        "vimentine",
+        "kératine",
+        "kératines",
+        "lamine",
+        "lamines",
+        "neurofilament",
+        "desmine"
+      ],
+      "short": "Des filaments protéiques résistants, semblables à des cordes, qui aident les cellules à supporter l’étirement et maintiennent le noyau en place.",
+      "function": "Les filaments intermédiaires doivent leur nom à leur diamètre, intermédiaire entre celui des filaments d’actine et celui des microtubules. Contrairement à ces deux derniers, ils sont faits de longues protéines en forme de corde qui s’enroulent deux à deux, s’associent ensuite en groupes décalés, puis se tassent en filaments — comme des fibres torsadées pour former une corde. Ils sont ainsi souples mais très difficiles à rompre, et répartissent les contraintes mécaniques dans toute la cellule. Les différentes cellules utilisent différents membres de la famille : les kératines dans la peau et les autres cellules épithéliales, la vimentine dans les cellules du tissu conjonctif comme les fibroblastes, la desmine dans le muscle et les neurofilaments dans les neurones. Les lamines nucléaires, qui tapissent l’intérieur du noyau, appartiennent à la même famille. Les filaments intermédiaires n’ont pas d’orientation fixe, et aucune protéine motrice ne se déplace le long d’eux.",
+      "seeingCell": "Des filaments or pâle, légèrement ondulés, forment une cage autour du noyau et s’étendent vers le bord de la cellule ; le modèle suppose un réseau de vimentine typique des cellules de type fibroblaste. Ils oscillent légèrement mais restent en place, ce qui reflète leur rôle de soutien plutôt que de transport.",
+      "sampling": "Un échantillon de filaments est dessiné.",
+      "views": {
+        "assembly": {
+          "title": "Un assemblage en corde",
+          "seeing": "La construction d’un filament intermédiaire, dessinée à l’échelle, de gauche à droite. Deux protéines s’enroulent l’une autour de l’autre pour former un dimère ; deux dimères s’associent côte à côte, décalés et orientés en sens opposés (un tétramère) ; huit tétramères s’alignent pour former un court filament de longueur unitaire ; enfin, les filaments de longueur unitaire se raccordent bout à bout et se compactent pour donner le filament mature. Une légère traction à l’extrémité montre comment le filament s’étire sans se rompre."
+        }
+      },
+      "parts": {
+        "filament": {
+          "name": "Filament mature",
+          "def": "Une fibre semblable à une corde, large d’environ {width}."
+        },
+        "dimer": {
+          "name": "Dimère en superhélice",
+          "def": "Deux protéines de filament enroulées l’une autour de l’autre."
+        },
+        "tetramer": {
+          "name": "Tétramère",
+          "def": "Deux dimères côte à côte, décalés et orientés en sens opposés."
+        },
+        "ulf": {
+          "name": "Filament de longueur unitaire",
+          "def": "Un court segment d’environ huit tétramères ; l’unité de construction qui permet l’allongement."
+        },
+        "perinuclear-cage": {
+          "name": "Cage périnucléaire",
+          "def": "La corbeille dense de filaments qui entoure le noyau."
+        }
+      },
+      "simplifications": [
+        "Les vrais réseaux de filaments intermédiaires sont plus denses et plus entrelacés.",
+        "Un seul type de filament (la vimentine) est représenté ; les cellules peuvent en contenir plusieurs.",
+        "L’assemblage est présenté comme une séquence bien ordonnée ; dans les cellules, les étapes se déroulent en parallèle, et les filaments échangent aussi des sous-unités."
+      ],
+      "sizeContext": "Diamètre du filament — entre celui des filaments d’actine et celui des microtubules.",
+      "quantityContext": "Gènes humains codant des protéines de filaments intermédiaires ; chaque type cellulaire en utilise un ensemble particulier.",
+      "facts": {
+        "ulf": {
+          "label": "Longueur d’un filament de longueur unitaire",
+          "context": "L’unité de construction d’un filament, formée d’environ {tetramers} tétramères (vimentine, protéine purifiée)."
+        },
+        "no-polarity": {
+          "label": "Ni orientation fixe ni moteurs",
+          "context": "Contrairement aux filaments d’actine et aux microtubules, les filaments intermédiaires ne sont pas polarisés, et aucune protéine motrice ne se déplace le long d’eux."
+        },
+        "lamins": {
+          "label": "Les lamines nucléaires appartiennent à cette famille",
+          "context": "Elles forment la lamina qui tapisse l’intérieur de l’enveloppe nucléaire."
+        },
+        "types": {
+          "label": "Les différentes cellules utilisent différents membres de la famille",
+          "context": "Les kératines dans les cellules épithéliales, la vimentine dans les fibroblastes et les autres cellules du tissu conjonctif, la desmine dans le muscle, les neurofilaments dans les neurones."
+        }
+      },
+      "interesting": "Pris individuellement, les filaments intermédiaires peuvent être étirés à plus du double de leur longueur d’origine sans se rompre (mesure réalisée en laboratoire sur des filaments isolés)."
+    },
+    "centrosome": {
+      "name": "Centrosome",
+      "synonyms": [
+        "centrosomes",
+        "centriole",
+        "centrioles",
+        "diplosome",
+        "centre organisateur des microtubules",
+        "COMT",
+        "MTOC",
+        "corps basal",
+        "matériel péricentriolaire"
+      ],
+      "short": "Le principal centre organisateur des microtubules des cellules animales : une paire de centrioles entourée d’un nuage de protéines.",
+      "function": "Le centrosome se trouve à côté du noyau et ancre les extrémités moins des microtubules : le réseau de microtubules rayonne donc à partir de lui. En son cœur se trouvent deux centrioles — de courts cylindres disposés à angle droit, constitués chacun de neuf triplets de microtubules. Autour d’eux s’étend le matériel péricentriolaire, une matrice protéique qui contient des complexes en anneau de γ-tubuline, lesquels amorcent (nucléent) de nouveaux microtubules. Le centrosome est dupliqué une fois par cycle cellulaire et, pendant la division, les deux centrosomes organisent les pôles du fuseau. Dans de nombreuses cellules qui ne se divisent pas, le centriole le plus ancien (le centriole mère) se déplace vers la surface cellulaire et forme la base d’un cil primaire, une antenne sensorielle.",
+      "seeingCell": "Le nuage lilas pâle à côté du noyau, où convergent tous les microtubules, est le centrosome. À l’intérieur, deux petits cylindres disposés à angle droit — les centrioles — sont dessinés à peu près à leur taille réelle. Le ruban golgien s’incurve autour de lui.",
+      "sampling": "Un seul centrosome avec deux centrioles, comme dans une cellule avant la réplication de l’ADN.",
+      "views": {
+        "centrioles": {
+          "title": "Une paire de centrioles",
+          "seeing": "Les deux centrioles dessinés à l’échelle. Chacun est un cylindre de neuf triplets de microtubules disposés comme les pales d’un moulinet. Le centriole mère porte des appendices à l’une de ses extrémités ; le centriole fille est placé à angle droit par rapport à lui. Le matériel péricentriolaire qui les entoure contient des complexes en anneau de γ-tubuline (en orange), à partir desquels de nouveaux microtubules poussent vers l’extérieur."
+        }
+      },
+      "parts": {
+        "mother-centriole": {
+          "name": "Centriole mère",
+          "def": "Le centriole le plus ancien, muni d’appendices ; il peut former la base d’un cil."
+        },
+        "daughter-centriole": {
+          "name": "Centriole fille",
+          "def": "Le centriole le plus jeune, disposé à angle droit par rapport au centriole mère."
+        },
+        "triplets": {
+          "name": "Triplets de microtubules",
+          "def": "Neuf groupes de trois microtubules soudés qui forment la paroi du centriole."
+        },
+        "pcm": {
+          "name": "Matériel péricentriolaire",
+          "def": "Une matrice protéique entourant les centrioles, qui amorce et ancre les microtubules."
+        },
+        "gamma-turc": {
+          "name": "Complexe en anneau de γ-tubuline",
+          "def": "Un gabarit en forme d’anneau à partir duquel pousse un nouveau microtubule."
+        },
+        "appendages": {
+          "name": "Appendices",
+          "def": "Des saillies du centriole mère qui ancrent des microtubules et l’aident à s’amarrer à la membrane."
+        }
+      },
+      "simplifications": [
+        "Le matériel péricentriolaire est dessiné comme un nuage diffus ; c’est en réalité un échafaudage protéique ordonné.",
+        "Seuls quelques complexes d’amorçage des microtubules sont représentés.",
+        "La duplication du centrosome au cours du cycle cellulaire est décrite, mais pas animée."
+      ],
+      "sizeContext": "Largeur de chaque centriole ; chacun mesure {length} de long (cellules de vertébrés).",
+      "quantityContext": "Centrioles d’une cellule avant la copie de son ADN : une paire, qui forme un centrosome. Ils sont dupliqués une fois par cycle cellulaire.",
+      "facts": {
+        "triplets": {
+          "label": "Triplets de microtubules dans chaque centriole",
+          "context": "Disposés en anneau, avec une symétrie d’ordre neuf."
+        },
+        "duplication": {
+          "label": "Le centrosome est copié une fois par cycle cellulaire",
+          "context": "Pendant la division, les deux centrosomes organisent les deux pôles du fuseau."
+        },
+        "nucleation": {
+          "label": "Les complexes en anneau de γ-tubuline amorcent de nouveaux microtubules",
+          "context": "Ils se trouvent dans le matériel péricentriolaire, autour des centrioles."
+        },
+        "cilium": {
+          "label": "Le centriole mère peut former la base d’un cil",
+          "context": "Dans de nombreuses cellules qui ne se divisent pas, il s’amarre à la surface cellulaire et fait pousser un cil primaire."
+        }
+      },
+      "interesting": "Les nouveaux centrioles se forment à angle droit par rapport aux centrioles existants : c’est pourquoi les deux centrioles d’un centrosome sont dessinés perpendiculairement l’un à l’autre."
+    }
+  }
+}

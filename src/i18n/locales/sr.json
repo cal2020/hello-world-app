@@ -1,0 +1,2025 @@
+{
+  "meta": {
+    "languageName": "Srpski (latinica)",
+    "translationStatus": "Prevedeno sa engleskog uz pomoć veštačke inteligencije i provereno radi doslednosti; prevod još nije pregledao stručnjak iz ove oblasti kome je srpski maternji jezik."
+  },
+  "app": {
+    "title": "Atlas ljudske ćelije",
+    "tagline": "Ilustrovano putovanje kroz ljudsku ćeliju",
+    "metaDescription": "Istražite ilustrativni 3D model ljudske ćelije: 19 struktura, prikazi molekula izbliza, vođeni obilazak i objašnjenja potkrepljena izvorima, na sedam jezika.",
+    "structureMetaDescription": "{name}: {short} Istražite ovu strukturu u ilustrativnom 3D modelu ljudske ćelije.",
+    "aboutMetaDescription": "Kako je napravljen model Atlasa ljudske ćelije: pretpostavke, pojednostavljenja, izvori, zasluge i licence.",
+    "titleSeparator": " — "
+  },
+  "loading": {
+    "title": "Pripremamo ćeliju",
+    "progress": "Spremno: {percent}%",
+    "opening": "Otvaranje: {name}",
+    "steps": {
+      "locale": "Učitavanje teksta",
+      "engine": "Učitavanje 3D grafike",
+      "structure": "Izgradnja: {name}",
+      "materials": "Priprema materijala",
+      "done": "Spremno"
+    },
+    "enter": "Uđi u ćeliju",
+    "enterHint": "Prevucite da okrenete ćeliju, skrolujte ili koristite pokret sa dva prsta da zumirate, a izaberite bilo koju strukturu da saznate više o njoj.",
+    "readText": "Umesto toga otvori tekstualni atlas",
+    "previewAlt": "Ilustracija prosečene ljudske ćelije u kojoj se vide jedro i organele"
+  },
+  "nav": {
+    "skipToExplanation": "Pređi na objašnjenje",
+    "skipToStructures": "Pređi na spisak struktura",
+    "wholeCell": "Cela ćelija",
+    "wholeCellHint": "Vrati se na celu ćeliju",
+    "structures": "Strukture",
+    "showList": "Prikaži spisak struktura",
+    "hideList": "Sakrij spisak struktura",
+    "previous": "Prethodna struktura",
+    "next": "Sledeća struktura",
+    "previousNamed": "Prethodna: {name}",
+    "nextNamed": "Sledeća: {name}",
+    "wrapNote": "Kretanje napred i nazad je kružno: posle poslednje strukture dolazi prva.",
+    "breadcrumb": "Lokacija",
+    "selected": "izabrano",
+    "groupCount": {
+      "one": "{count} struktura",
+      "few": "{count} strukture",
+      "other": "{count} struktura"
+    }
+  },
+  "search": {
+    "label": "Pretraži strukture",
+    "placeholder": "Pretraga, npr. „ćelijska membrana“",
+    "clear": "Obriši pretragu",
+    "results": {
+      "one": "{count} rezultat",
+      "few": "{count} rezultata",
+      "other": "{count} rezultata"
+    },
+    "matched": "odgovara pojmu „{term}“",
+    "empty": "Nijedna struktura ne odgovara upitu „{query}“.",
+    "emptyHint": "Pokušajte sa nazivom kao što je „jedro“, „mitohondrija“ ili „ER“, ili pregledajte grupe ispod.",
+    "suggestions": "Predlozi"
+  },
+  "panel": {
+    "region": "Objašnjenje",
+    "inTheCell": "U ćeliji",
+    "closeup": "Izbliza",
+    "viewSwitch": "Izaberi prikaz",
+    "subviews": "Prikazi izbliza",
+    "whatYouSee": "Šta vidite",
+    "whatItDoes": "Čemu služi",
+    "numbers": "U brojevima",
+    "typicalSize": "Tipična veličina",
+    "typicalQuantity": "Tipična količina u navedenom tipu ćelije",
+    "drawnInModel": "Objekti nacrtani u ovom modelu",
+    "drawnCount": {
+      "one": "{count} nacrtan objekat (trenutni kvalitet: {quality})",
+      "few": "{count} nacrtana objekta (trenutni kvalitet: {quality})",
+      "other": "{count} nacrtanih objekata (trenutni kvalitet: {quality})"
+    },
+    "drawnContinuous": "Nacrtano kao jedna neprekidna struktura.",
+    "drawnSymbolic": "Prikazano kao blede čestice koje dočaravaju zbijenost molekula; to nisu pojedinačni molekuli.",
+    "enlarged": "Prikaz je oko {factor} puta veći od stvarne veličine, da bi ostao vidljiv.",
+    "trueScale": "Prikaz je približno u stvarnoj razmeri.",
+    "symbolic": "Prikazano simboličnim oznakama, ne u razmeri.",
+    "renderedSize": "Veličina u modelu ({dimension}): {size}",
+    "facts": "Ključne činjenice",
+    "interesting": "Da li ste znali?",
+    "parts": "Delovi",
+    "related": "Veze",
+    "simplifications": "Pojednostavljenja u modelu",
+    "sources": "Izvori",
+    "sourceRef": "Izvor {n}",
+    "sourcesLabel": "Izvori:",
+    "openCloseup": "Otvori prikaz izbliza",
+    "backToCell": "Nazad na prikaz ćelije",
+    "closeupLoading": "Učitavanje prikaza izbliza…",
+    "closeupError": "Prikaz izbliza nije mogao da se učita.",
+    "slowdown": "Animacija je usporena oko {factor} puta u odnosu na stvarno vreme.",
+    "noTimescale": "Kretanje je ilustrativno i znatno usporeno.",
+    "toScale": "Molekuli su nacrtani u međusobno vernoj razmeri.",
+    "moleculesEnlarged": "Neke komponente su nacrtane oko {factor} puta veće nego što odgovara razmeri ovog prikaza.",
+    "frozen": "Biološka animacija je zamrznuta.",
+    "expand": "Proširi objašnjenje",
+    "collapse": "Skupi objašnjenje",
+    "dragHandle": "Promeni veličinu objašnjenja",
+    "groupLabel": "Grupa",
+    "pending": "Čeka proveru",
+    "pendingHint": "Izvor za ovu tvrdnju nije bilo moguće proveriti kada je pravljena ova verzija.",
+    "sourcePending": "još nije proveren",
+    "noValue": "Ne može se izraziti jednim brojem; pogledajte napomenu.",
+    "drawnFixed": {
+      "one": "{count} nacrtan objekat na svakom nivou kvaliteta",
+      "few": "{count} nacrtana objekta na svakom nivou kvaliteta",
+      "other": "{count} nacrtanih objekata na svakom nivou kvaliteta"
+    },
+    "drawnRange": "{low}–{high} nacrtanih objekata, zavisno od podešenog kvaliteta",
+    "locationInset": "Gde se ovaj prikaz izbliza nalazi u celoj ćeliji"
+  },
+  "overview": {
+    "title": "Reprezentativna ljudska ćelija",
+    "lead": "Ovo je ilustrativni model jedne ljudske ćelije prečnika oko {cellWidth}, prosečene tako da možete da zavirite unutra.",
+    "model": "Prikazuje uopštenu ljudsku ćeliju između dve deobe (u interfazi). To nije portret nekog određenog tipa ćelije: stvarne ljudske ćelije veoma se razlikuju — od crvenih krvnih zrnaca širokih nekoliko mikrometara do nervnih ćelija čija vlakna mogu biti duža od ruke. Model podrazumeva zaobljenu, diploidnu ćeliju — sa dve garniture od po 23 hromozoma — i to žensku (XX), kako bi mogla da se prikaže inaktivacija X hromozoma.",
+    "how": "Prevucite da okrenete ćeliju, skrolujte ili koristite pokret sa dva prsta da zumirate, a izaberite bilo koju strukturu — u sceni, na spisku, preko oznake ili pretragom — da biste otputovali do nje. Svaka struktura ima prikaz „U ćeliji“ i prikaz izbliza.",
+    "colors": "Boje su ilustrativne: većina ćelijskih struktura je bezbojna. Objekata koji se ponavljaju nacrtano je daleko manje nego što ih sadrži prava ćelija, a najmanji su uvećani, kako bi sve ostalo vidljivo. Uz svaki broj naveden je tip ćelije u kojoj je izmeren.",
+    "units": "1 µm (mikrometar) je milioniti deo metra; 1 nm (nanometar) je hiljaditi deo mikrometra.",
+    "groupsTitle": "19 struktura u pet grupa",
+    "startTour": "Započni vođeni obilazak"
+  },
+  "controls": {
+    "toolbar": "Kontrole prikaza",
+    "tour": "Obilazak",
+    "startTour": "Započni vođeni obilazak",
+    "labels": "Oznake",
+    "labelsHint": "Prikaži ili sakrij oznake",
+    "bio": "Biološka animacija",
+    "freeze": "Zamrzni",
+    "play": "Pokreni",
+    "freezeHint": "Zamrzni biološku animaciju (kamera, čitanje i biranje struktura i dalje rade)",
+    "playHint": "Pokreni biološku animaciju",
+    "bioPlaying": "Pokrenuta",
+    "bioFrozen": "Zamrznuta",
+    "quality": "Kvalitet",
+    "qualityAuto": "Automatski",
+    "qualityAutoCurrent": "Automatski ({level})",
+    "qualityLow": "Nizak",
+    "qualityMedium": "Srednji",
+    "qualityHigh": "Visok",
+    "qualityHint": "Kvalitet prikaza: menja oštrinu, efekte i broj nacrtanih objekata koji se ponavljaju. Svih 19 struktura ostaje vidljivo.",
+    "motion": "Kretanje",
+    "motionSystem": "Prema sistemu",
+    "motionReduce": "Smanji kretanje",
+    "motionAllow": "Dozvoli kretanje",
+    "motionHint": "Opcija „Smanji kretanje“ čini pomeranje kamere trenutnim, zaustavlja ukrasno kretanje, a biološka animacija na početku ostaje zamrznuta.",
+    "language": "Jezik",
+    "export": "Sačuvaj sliku",
+    "help": "Pomoć",
+    "about": "O atlasu",
+    "zoomIn": "Uvećaj",
+    "zoomOut": "Umanji",
+    "resetView": "Vrati prikaz",
+    "settings": "Podešavanja",
+    "more": "Još",
+    "textAtlas": "Tekstualni atlas",
+    "view3d": "3D prikaz",
+    "close": "Zatvori",
+    "on": "Uključeno",
+    "off": "Isključeno",
+    "freezeLabel": "Zamrzni biološku animaciju",
+    "zoomGroup": "Zumiranje"
+  },
+  "tour": {
+    "title": "Vođeni obilazak",
+    "start": "Započni obilazak",
+    "pause": "Pauziraj obilazak",
+    "resume": "Nastavi obilazak",
+    "next": "Sledeća stanica",
+    "previous": "Prethodna stanica",
+    "exit": "Izađi iz obilaska",
+    "progress": "Stanica {current} od {total}",
+    "traveling": "Na putu…",
+    "reading": "Sledeća stanica za {seconds} s",
+    "paused": "Pauzirano",
+    "noWrap": "Obilazak ide od prve do poslednje stanice i ne počinje ponovo.",
+    "finished": "Obilazak je završen — posetili ste svih 19 struktura.",
+    "endedByManual": "Obilazak je završen jer ste sami izabrali strukturu."
+  },
+  "export": {
+    "title": "Sačuvaj sliku",
+    "intro": "Čuva PNG sliku trenutnog prikaza tačno onako kako ga kamera sada vidi.",
+    "clean": "Čista slika",
+    "cleanDescription": "Samo 3D prikaz, bez oznaka i dodatnih slojeva.",
+    "annotated": "Slika sa oznakama",
+    "annotatedDescription": "Dodaje oznake, mernu skalu sa stvarnim dimenzijama i natpis.",
+    "saving": "Pripremanje slike…",
+    "saved": "Sačuvano: {file}.",
+    "failed": "Slika nije mogla da se sačuva: {reason}",
+    "unavailable": "Za čuvanje slike potreban je 3D prikaz.",
+    "caption": "{title} · ilustrativni model · {app}",
+    "scaleNote": "Merna skala važi u tački fokusa."
+  },
+  "scale": {
+    "label": "Razmera",
+    "bar": "Merna skala: {length}",
+    "wholeCell": "Prikaz cele ćelije",
+    "closeup": "Izbliza · ×{factor} u odnosu na prikaz cele ćelije",
+    "focusNote": "Mereno u tački fokusa.",
+    "enlargedNote": "{name}: prikaz uvećan ×{factor} u odnosu na razmeru"
+  },
+  "closeupCaptions": {
+    "outside": "Van ćelije",
+    "cytosol": "Citosol",
+    "nucleoplasm": "Nukleoplazma",
+    "lumen": "Lumen",
+    "erLumen": "Lumen ER-a",
+    "cristaSpace": "Unutar kriste",
+    "atp": "ATP",
+    "adp": "ADP",
+    "calcium": "Joni kalcijuma",
+    "chaperone": "Šaperon",
+    "growing": "Rast",
+    "shrinking": "Skraćivanje",
+    "catastrophe": "Katastrofa",
+    "rescue": "Spasavanje",
+    "water": "Voda",
+    "oxygen": "Kiseonik",
+    "peroxide": "Vodonik-peroksid",
+    "aminoAcids": "Aminokiseline",
+    "cargo": "Teret",
+    "fromEr": "Iz ER-a",
+    "toSurface": "Ka površini ćelije",
+    "toLysosomes": "Ka lizozomima",
+    "plusDirection": "Ka plus kraju",
+    "minusDirection": "Ka minus kraju",
+    "linkerDna": "Vezna DNK",
+    "rnaChains": "Rastući lanci RNK",
+    "mitoRibosomes": "Mitohondrijski ribozomi",
+    "importReceptor": "Receptor za uvoz",
+    "newMicrotubule": "Nova mikrotubula",
+    "pull": "Povlačenje",
+    "spindle": "Mikrotubule deobnog vretena",
+    "aminoAcid": "Aminokiselina"
+  },
+  "help": {
+    "title": "Pomoć",
+    "intro": "Istražite ilustrativni 3D model ljudske ćelije. Sve što se vidi u 3D prikazu dostupno je i kao tekst.",
+    "exploreTitle": "Istraživanje",
+    "explore": "Prevucite da okrenete ćeliju. Za zumiranje skrolujte, koristite pokret sa dva prsta ili dugmad + i −. „Vrati prikaz“ ponovo kadrira ono što trenutno posmatrate.",
+    "selectTitle": "Biranje strukture",
+    "select": "Strukturu birate klikom ili dodirom u 3D prikazu, izborom sa spiska, klikom na njenu oznaku ili pretragom. Sva četiri načina daju isti rezultat: kamera putuje do strukture, otvara se objašnjenje i ažurira se adresna traka, pa link možete da podelite sa drugima.",
+    "viewsTitle": "U ćeliji i izbliza",
+    "views": "„U ćeliji“ prikazuje strukturu na njenom mestu, dok sve ostalo bledi. „Izbliza“ otvara zasebnu, uvećanu scenu sa detaljima na nivou molekula; njena merna skala i napomene govore koliko je uvećana i usporena. Mali umetak pokazuje gde se prikaz izbliza nalazi u celoj ćeliji.",
+    "tourTitle": "Vođeni obilazak",
+    "tour": "Obilazak vas redom vodi kroz svih 19 struktura. Na svakoj stanici čeka se da kamera stigne, a zatim imate oko {seconds} s za čitanje. Obilazak možete da pauzirate, nastavite, preskočite napred ili nazad, ili da iz njega izađete. Ako sami izaberete strukturu, obilazak se završava.",
+    "freezeTitle": "Zamrzavanje biološke animacije",
+    "freeze": "„Zamrzni“ zaustavlja biološko kretanje (filamente, transport, molekulske mašine). I dalje možete da pomerate kameru, čitate i birate strukture. Zamrzavanje nije isto što i pauziranje obilaska.",
+    "qualityTitle": "Kvalitet i kretanje",
+    "quality": "Kvalitet menja oštrinu, efekte i broj nacrtanih objekata koji se ponavljaju (kao što su ribozomi); nijedna struktura pritom ne nestaje. „Automatski“ se postepeno prilagođava kako bi kretanje ostalo glatko. „Smanji kretanje“ čini pomeranje kamere trenutnim, a biološka animacija na početku ostaje zamrznuta.",
+    "exportTitle": "Čuvanje slika",
+    "export": "„Sačuvaj sliku“ preuzima PNG sliku trenutnog prikaza, bilo čistu, bilo sa oznakama, mernom skalom i natpisom.",
+    "shortcutsTitle": "Prečice na tastaturi",
+    "shortcutsNote": "Prečice ne rade dok kucate u polje za pretragu ili koristite neki element obrasca.",
+    "shortcuts": {
+      "search": "Pretraži strukture",
+      "tour": "Započni, pauziraj ili nastavi obilazak",
+      "labels": "Prikaži ili sakrij oznake",
+      "freeze": "Zamrzni ili pokreni biološku animaciju",
+      "overview": "Cela ćelija (pregled)",
+      "closeup": "Prebaci između prikaza „U ćeliji“ i „Izbliza“",
+      "prevNext": "Prethodna ili sledeća struktura (kružno); tokom obilaska, prethodna ili sledeća stanica",
+      "zoom": "Uvećaj ili umanji",
+      "reset": "Vrati prikaz",
+      "help": "Otvori ovu pomoć",
+      "escape": "Zatvori dijalog; inače se vrati za jedan nivo (izbliza → u ćeliji → cela ćelija)"
+    },
+    "keys": {
+      "slash": "/",
+      "t": "T",
+      "l": "L",
+      "f": "F",
+      "o": "O",
+      "c": "C",
+      "arrows": "← / →",
+      "plusMinus": "+ / −",
+      "zero": "0",
+      "question": "?",
+      "escape": "Esc"
+    },
+    "sourcesTitle": "Svi izvori",
+    "sourcesFilter": "Filtriraj izvore",
+    "sourcesEmpty": "Nijedan izvor ne odgovara upitu „{query}“.",
+    "sourcesGeneral": "Model ćelije i opšti izvori",
+    "sourcesCount": {
+      "one": "{count} izvor",
+      "few": "{count} izvora",
+      "other": "{count} izvora"
+    },
+    "aboutLink": "O modelu, zaslugama i licencama",
+    "sourcePendingNote": "Izvori označeni sa „još nije proveren“ su poznate publikacije koje nije bilo moguće automatski proveriti kada je pravljena ova verzija."
+  },
+  "about": {
+    "title": "O ovom atlasu",
+    "modelTitle": "Model",
+    "model": "Atlas ljudske ćelije je ilustrativni, a ne fotografski verni model jedne reprezentativne ljudske ćelije. Nacrtan je u mikrometrima: ćelija ima prečnik od oko {cellWidth}, a njeno jedro oko {nucleusWidth}. Strukture je rasporedio proceduralni generator sa fiksnim semenom, pa svaka poseta prikazuje isti raspored.",
+    "assumptionsTitle": "Pretpostavke",
+    "assumptions": [
+      "Uopštena ljudska ćelija, a ne određeni tip ćelije; uz brojeve u objašnjenjima navedeni su tip ćelije, vrsta ili eksperimentalni uslovi u kojima su izmereni.",
+      "Interfaza (G1 faza): ćelija je između dve deobe, pa su hromozomi u obliku rastresitog hromatina, a postoji jedan centrozom sa dve centriole.",
+      "Diploidna (dve garniture od po 23 hromozoma) i ženska (XX), pa je jedan X hromozom prikazan kao neaktivni X (Barovo telo).",
+      "Mreža intermedijarnih filamenata od vimentina, tipična za ćelije nalik fibroblastima; epitelske ćelije bi umesto njega imale keratine.",
+      "Zaobljen oblik sa otvorom preseka koji je uvek okrenut ka posmatraču."
+    ],
+    "simplificationsTitle": "Pojednostavljenja",
+    "simplifications": [
+      "Boje su ilustrativne.",
+      "Objekti koji se ponavljaju (ribozomi, mitohondrije, vezikule, filamenti) nacrtani su u mnogo manjem broju nego u pravim ćelijama, a veoma mali objekti su uvećani; svako objašnjenje navodi broj nacrtanih objekata i uvećanje.",
+      "Animacije su obrazovne ilustracije: usporene su, pojednostavljene i obično prikazuju jedan po jedan događaj. Uz prikaze izbliza navedeno je koliko su usporeni.",
+      "Prikazi izbliza su zasebne scene u drugačijoj razmeri; oni se ne nalaze doslovno unutar scene cele ćelije."
+    ],
+    "improvementsTitle": "Poboljšanja u izvedbi",
+    "improvements": "U poređenju sa referentnom aplikacijom opisanom u projektnom zadatku, ova izvedba dodaje pretragu sa sinonimima, vidljivu kontrolu kvaliteta prikaza i posebno podešavanje za smanjeno kretanje.",
+    "sourcesTitle": "Izvori",
+    "sources": "Svaka ključna činjenica povezana je sa svojim izvorom. Većina izvora je, kada je pravljena ova verzija, proverena prema zapisima pretraživača o stranicama izdavača ili biblioteka; malobrojni koje nije bilo moguće proveriti označeni su sa „još nije proveren“, a tvrdnje koje se na njih oslanjaju označene su sa „Čeka proveru“. Uz brojeve je naveden kontekst merenja dat u izvoru.",
+    "translationTitle": "Prevodi",
+    "translation": "{status}",
+    "creditsTitle": "Zasluge",
+    "credits": "Koncept je inspirisan interaktivnim projektom Cellula Humana. Kôd, geometrija, ilustracije i tekst u ovom projektu su originalni. Napravljeno pomoću biblioteka React, Three.js, React Three Fiber i camera-controls.",
+    "licensesTitle": "Licence",
+    "licenses": "Fontovi: Alegreya i Alegreya Sans (Huerta Tipográfica) i Noto Sans SC (Google, Adobe), svi pod licencom SIL Open Font License 1.1. Softverske biblioteke su pod MIT licencom. Ne koriste se spoljne slike niti 3D modeli; pogledajte ASSET_LICENSES.md u repozitorijumu izvornog koda.",
+    "close": "Zatvori"
+  },
+  "errors": {
+    "title": "3D prikaz nije dostupan",
+    "webgl": "Vaš pregledač ili uređaj nije mogao da pokrene 3D grafiku (WebGL 2).",
+    "webglHelp": "Pokušajte da uključite hardversko ubrzanje u podešavanjima pregledača, ažurirate pregledač ili upotrebite drugi uređaj. Kompletan atlas dostupan je u tekstualnom obliku ispod.",
+    "engineLoad": "3D prikaz nije mogao da se učita.",
+    "engineLoadHelp": "Proverite vezu i pokušajte ponovo. Kompletan atlas dostupan je u tekstualnom obliku ispod.",
+    "contextLost": "Grafički sistem je zaustavio 3D prikaz.",
+    "contextLostHelp": "To može da se desi kada uređaju ponestane grafičke memorije ili kada se njegov grafički drajver ponovo pokrene. Ponovo pokrenite 3D prikaz ili nastavite da čitate tekstualni atlas.",
+    "runtime": "3D prikaz se zaustavio zbog neočekivane greške.",
+    "runtimeHelp": "Ponovo pokrenite 3D prikaz ili nastavite sa tekstualnim atlasom ispod.",
+    "simulated": "3D prikaz je isključen radi testiranja.",
+    "simulatedHelp": "Uklonite „renderer=fail“ iz adrese da biste koristili 3D prikaz.",
+    "retry": "Pokušaj ponovo",
+    "restart3d": "Ponovo pokreni 3D prikaz",
+    "localeFailed": "Jezik {language} nije mogao da se učita.",
+    "localeStandIn": "Jezik {language} nije mogao da se učita, pa je ova stranica prikazana na engleskom.",
+    "notFound": "Ta stranica ne postoji, pa je umesto nje prikazana cela ćelija.",
+    "dismiss": "Odbaci"
+  },
+  "atlas": {
+    "title": "Tekstualni atlas",
+    "intro": "Kompletan atlas u tekstualnom obliku: svaka struktura sa objašnjenjem, brojevima i izvorima.",
+    "contents": "Sadržaj",
+    "backToTop": "Nazad na vrh",
+    "noJs": "Za interaktivni 3D prikaz potreban je JavaScript. Sva objašnjenja nalaze se ispod.",
+    "openIn3d": "Otvori u 3D prikazu",
+    "illustration": "Ilustracija prikaza izbliza iz 3D modela: {name}"
+  },
+  "dimensions": {
+    "diameter": "prečnik",
+    "thickness": "debljina",
+    "width": "širina",
+    "length": "dužina"
+  },
+  "quantity": {
+    "approx": "približno {q}",
+    "over": "više od {q}",
+    "upTo": "do {q}",
+    "under": "manje od {q}"
+  },
+  "units": {
+    "nm": "{n} nm",
+    "um": "{n} µm",
+    "mm": "{n} mm",
+    "m": "{n} m",
+    "pg": "{n} pg",
+    "bp": {
+      "one": "{n} par baza",
+      "few": "{n} para baza",
+      "other": "{n} parova baza"
+    },
+    "kb": "{n} kb",
+    "Gb": {
+      "one": "{n} milijarda parova baza",
+      "few": "{n} milijarde parova baza",
+      "other": "{n} milijardi parova baza"
+    },
+    "MDa": "{n} MDa",
+    "pH": "pH {n}",
+    "percent": "{n}%",
+    "percentVolume": "{n}% zapremine ćelije",
+    "percentMembrane": "{n}% svih membrana ćelije",
+    "percentMass": "{n}% mase membrane",
+    "percentIncrease": "+{n}%",
+    "percentPerMinute": "{n}% u minutu",
+    "perCell": "{n} po ćeliji",
+    "perUm2": "{n} po µm²",
+    "perSecond": "{n} u sekundi",
+    "perMinute": "{n} u minutu",
+    "timesPerSecond": {
+      "one": "{n} put u sekundi",
+      "few": "{n} puta u sekundi",
+      "other": "{n} puta u sekundi"
+    },
+    "aaPerSecond": {
+      "one": "{n} aminokiselina u sekundi",
+      "few": "{n} aminokiseline u sekundi",
+      "other": "{n} aminokiselina u sekundi"
+    },
+    "bpPerDivision": {
+      "one": "{n} par baza po deobi",
+      "few": "{n} para baza po deobi",
+      "other": "{n} parova baza po deobi"
+    },
+    "rateConstant": "{n} µM⁻¹ s⁻¹",
+    "minutes": "{n} min",
+    "hours": "{n} h",
+    "seconds": "{n} s",
+    "days": {
+      "one": "{n} dan",
+      "few": "{n} dana",
+      "other": "{n} dana"
+    },
+    "degrees": "{n}°",
+    "uM": "{n} µM",
+    "nMolar": "{n} nM",
+    "gPerL": "{n} g/L",
+    "molecules": {
+      "one": "{n} molekul",
+      "few": "{n} molekula",
+      "other": "{n} molekula"
+    },
+    "proteins": {
+      "one": "{n} protein",
+      "few": "{n} proteina",
+      "other": "{n} proteina"
+    },
+    "genes": {
+      "one": "{n} gen",
+      "few": "{n} gena",
+      "other": "{n} gena"
+    },
+    "chromosomes": {
+      "one": "{n} hromozom",
+      "few": "{n} hromozoma",
+      "other": "{n} hromozoma"
+    },
+    "enzymes": {
+      "one": "{n} enzim",
+      "few": "{n} enzima",
+      "other": "{n} enzima"
+    },
+    "diseases": {
+      "one": "{n} bolest",
+      "few": "{n} bolesti",
+      "other": "{n} bolesti"
+    },
+    "protofilaments": {
+      "one": "{n} protofilament",
+      "few": "{n} protofilamenta",
+      "other": "{n} protofilamenata"
+    },
+    "ratio": "{n} : 1",
+    "times": "×{n}",
+    "protonsPerAtp": {
+      "one": "{n} proton po ATP-u",
+      "few": "{n} protona po ATP-u",
+      "other": "{n} protona po ATP-u"
+    },
+    "atpPerTurn": {
+      "one": "{n} molekul ATP-a po obrtaju",
+      "few": "{n} molekula ATP-a po obrtaju",
+      "other": "{n} molekula ATP-a po obrtaju"
+    },
+    "count": "{n}"
+  },
+  "groups": {
+    "boundary": "Granica i unutrašnjost ćelije",
+    "genetic": "Genetički materijal i strukture jedra",
+    "protein": "Sinteza i transport proteina",
+    "energy": "Energija, varenje i hemijska prerada",
+    "support": "Strukturna potpora i kretanje"
+  },
+  "relations": {
+    "partOf": "Deo strukture:",
+    "contains": "Sadrži:",
+    "enclosedBy": "Nalazi se unutar:",
+    "continuousWith": "Nastavlja se na:",
+    "attachesTo": "Vezuje se za:",
+    "receivesFrom": "Prima materijal od:",
+    "sendsTo": "Šalje materijal u:",
+    "travelsAlong": "Kreće se duž:",
+    "organizes": "Organizuje:",
+    "organizedBy": "Organizator:",
+    "fusesWith": "Stapa se sa:",
+    "supports": "Podupire:",
+    "supportedBy": "Potpora:",
+    "suppliesEnergyTo": "Snabdeva energijom:",
+    "madeIn": "Mesto nastanka:",
+    "makes": "Stvara:",
+    "protects": "Štiti:",
+    "anchors": "Učvršćuje:",
+    "worksWith": "Sarađuje sa:"
+  },
+  "structures": {
+    "plasma-membrane": {
+      "name": "Plazma membrana",
+      "synonyms": [
+        "ćelijska membrana",
+        "plazmalema",
+        "plazmatična membrana",
+        "citoplazmatična membrana",
+        "površina ćelije",
+        "lipidni dvosloj",
+        "membrana",
+        "dvosloj",
+        "ćelijska opna"
+      ],
+      "short": "Tanka, savitljiva granica koja obavija ćeliju i kontroliše šta u nju ulazi i šta iz nje izlazi.",
+      "function": "Plazma membrana (ćelijska membrana) je dvostruki sloj lipidnih molekula — lipidni dvosloj — u koji su uronjeni proteini. Svaki lipid ima glavu koja privlači vodu (hidrofilnu) i dva repa koja izbegavaju vodu (hidrofobna), pa se lipidi slažu tako da su im repovi okrenuti ka unutra i obrazuju barijeru koju većina molekula rastvorljivih u vodi ne može sama da pređe. Proteini ugrađeni u dvosloj deluju kao kanali, pumpe, nosači i receptori: propuštaju određene jone i hranljive materije, registruju signale kao što su hormoni i pričvršćuju ćeliju za susedne ćelije i okolinu. Lanci šećera na spoljašnjoj površini obrazuju omotač koji se naziva glikokaliks i pomaže ćelijama da prepoznaju jedna drugu.",
+      "seeingCell": "Poluprovidna plava spoljašnja površina je plazma membrana. Otvor preseka uvek je okrenut ka vama, kako biste mogli da vidite unutrašnjost; svetleća ivica označava mesto gde je membrana presečena. Membrana je nacrtana višestruko deblja nego što zaista jeste, da bi njena ivica ostala vidljiva.",
+      "sampling": "Nacrtana kao jedna neprekidna površina.",
+      "views": {
+        "bilayer": {
+          "title": "Lipidni dvosloj",
+          "seeing": "Deo membrane širok oko {patch}, nacrtan u razmeri. Blede glave sa parovima repova čine dva sloja fosfolipida; mala žuta tela uvučena između njih su holesterol. Kanalni protein (tirkizni) prolazi kroz membranu i propušta jone (male varnice), receptor (ljubičasti) pruža se ka spolja, a razgranati lanci šećera na vrhu obrazuju glikokaliks. Odozdo membranu podupire aktinski filament ćelijskog korteksa. Lipidi podrhtavaju i klize u stranu jer se dvosloj ponaša kao dvodimenzionalna tečnost."
+        }
+      },
+      "parts": {
+        "bilayer": {
+          "name": "Lipidni dvosloj",
+          "def": "Dva sloja lipida čiji su repovi okrenuti ka unutra; osnovna barijera svake ćelijske membrane."
+        },
+        "phospholipid": {
+          "name": "Fosfolipid",
+          "def": "Najčešći membranski lipid: glava koja sadrži fosfat i dva repa od masnih kiselina."
+        },
+        "cholesterol": {
+          "name": "Holesterol",
+          "def": "Krut lipid koji se uvlači između fosfolipida i podešava koliko je membrana fluidna."
+        },
+        "channel": {
+          "name": "Jonski kanal",
+          "def": "Protein sa porom koja, kada je otvorena, omogućava određenim jonima da brzo pređu membranu."
+        },
+        "receptor": {
+          "name": "Receptor",
+          "def": "Protein koji vezuje signalni molekul izvan ćelije i prenosi poruku u njenu unutrašnjost."
+        },
+        "glycocalyx": {
+          "name": "Glikokaliks",
+          "def": "Omotač bogat šećerima koji obrazuju ugljenohidratni lanci vezani za membranske proteine i lipide."
+        }
+      },
+      "simplifications": [
+        "Prave membrane su mnogo gušće ispunjene proteinima nego što je prikazano.",
+        "U prikazu cele ćelije membrana je nacrtana oko deset puta deblja nego u stvarnosti.",
+        "Kretanje lipida u prikazu izbliza usporeno je otprilike milion puta ili više."
+      ],
+      "sizeContext": "Debljina samog lipidnog dvosloja; proteini i lanci šećera štrče izvan njega. Okvirna vrednost (BioNumbers, prema knjizi Physical Biology of the Cell).",
+      "quantityContext": "Molekuli lipida u plazma membrani male životinjske ćelije — udžbenička procena reda veličine. Veće ćelije ih imaju srazmerno više.",
+      "facts": {
+        "lipid-density": {
+          "label": "Molekuli lipida po kvadratnom mikrometru dvosloja",
+          "context": "Uračunata su oba sloja; udžbenička procena."
+        },
+        "protein-share": {
+          "label": "Udeo proteina u masi tipične plazma membrane",
+          "context": "Poređenja radi: {myelin} u mijelinu, izolacionom omotaču oko nervnih vlakana, i {inner} u unutrašnjoj membrani mitohondrija."
+        },
+        "lipids-per-protein": {
+          "label": "Broj molekula lipida na jedan molekul proteina",
+          "context": "U membrani u kojoj proteini čine polovinu mase; lipidi su mnogo manji od proteina."
+        },
+        "cholesterol": {
+          "label": "Odnos holesterola i fosfolipida",
+          "context": "Plazma membrane životinjskih ćelija sadrže holesterol u približno istoj molarnoj količini kao fosfolipide."
+        },
+        "small-share": {
+          "label": "Površina membrane endoplazmatičnog retikuluma u poređenju sa plazma membranom",
+          "context": "Ćelija jetre (hepatocit); {pancreas} u egzokrinoj ćeliji pankreasa. Plazma membrana je samo mali deo ukupnih membrana ćelije."
+        }
+      },
+      "interesting": "Membranski lipidi nikada ne miruju. U veštačkim lipidnim dvoslojevima lipid zamenjuje mesto sa susedom {swaps}, pa za {time} može da pređe {distance} — dužinu velike bakterije."
+    },
+    "cytoplasm": {
+      "name": "Citoplazma",
+      "synonyms": [
+        "citosol",
+        "citoplazmatični matriks",
+        "hijaloplazma",
+        "osnovna citoplazma",
+        "unutrašnjost ćelije",
+        "ćelijska tečnost",
+        "unutarćelijska tečnost",
+        "protoplazma"
+      ],
+      "short": "Sve što se nalazi unutar plazma membrane osim jedra: gusto ispunjen, vodenast gel u kome su smeštene organele i u kome se odvija veliki deo hemijskih procesa ćelije.",
+      "function": "Citoplazmu čine citosol — njen tečni deo — i organele i citoskelet koji u njemu lebde. Citosol nije razblažena supa: prepun je proteina, RNK, šećera, soli i mnogih drugih molekula. U njemu se odvijaju mnoge hemijske reakcije, kao što su prvi koraci razgradnje glukoze (glikoliza), a slobodni ribozomi u citosolu sintetišu proteine koji ostaju unutar ćelije. Molekuli se kroz citoplazmu kreću difuzijom — nasumičnim komešanjem — a prenose se i aktivno, duž citoskeletnih šina.",
+      "seeingCell": "Blede tačkice koje lebde ispunjavaju prostor između organela i predstavljaju gusto ispunjen citosol; one su samo vizuelni nagoveštaj, a ne pojedinačni molekuli. Kliknite ili dodirnite prazan prostor unutar ćelije da biste izabrali citoplazmu.",
+      "sampling": "Blede čestice dočaravaju zbijenost; to nisu pojedinačni molekuli.",
+      "views": {
+        "crowding": {
+          "title": "Prenatrpan citosol",
+          "seeing": "Kocka citosola široka oko {cube}, nacrtana u razmeri. Proteini i enzimi raznih veličina (plavi i zeleni), ribozomi (zlatni), male transportne RNK u obliku slova L i lanac informacione RNK ispunjavaju prostor, a kroz njega prolazi aktinski filament. Sve se nasumično komeša. Voda, joni i mali molekuli su izostavljeni da bi se videli veći molekuli."
+        }
+      },
+      "parts": {
+        "cytosol": {
+          "name": "Citosol",
+          "def": "Tečni deo citoplazme, izvan organela."
+        },
+        "enzyme": {
+          "name": "Enzimi i drugi proteini",
+          "def": "Proteini koji ubrzavaju hemijske reakcije; u citosolu lebde hiljade njihovih vrsta."
+        },
+        "free-ribosome": {
+          "name": "Slobodni ribozom",
+          "def": "Ribozom u citosolu koji sintetiše protein koji će ostati u ćeliji."
+        },
+        "mrna": {
+          "name": "Informaciona RNK (iRNK)",
+          "def": "RNK kopija gena koja nosi uputstva za izgradnju proteina."
+        },
+        "filament": {
+          "name": "Citoskeletni filament",
+          "def": "Proteinsko vlakno koje prolazi kroz citosol; ovde aktinski filament."
+        }
+      },
+      "simplifications": [
+        "Voda, joni i mali molekuli su izostavljeni.",
+        "Tačkice u prikazu cele ćelije samo nagoveštavaju zbijenost.",
+        "Kretanje molekula je izuzetno usporeno."
+      ],
+      "sizeContext": "Udeo zapremine ćelije jetre (hepatocita) koji zauzima citosol, tečni deo citoplazme. Odnosi se razlikuju među tipovima ćelija.",
+      "quantityContext": "Količina proteina po litru ćelije: radna vrednost pretpostavljena u procenama BioNumbers za ćeliju jetre i ćeliju timusa, a ne direktno merenje citosola.",
+      "facts": {
+        "mito-share": {
+          "label": "Mitohondrije",
+          "context": "Udeo u zapremini ćelije jetre — u toj ćeliji to je najveći odeljak među organelama."
+        },
+        "er-share": {
+          "label": "Cisterne granuliranog ER-a",
+          "context": "Udeo u zapremini ćelije jetre; cisterne glatkog ER-a i Goldžijevog aparata zajedno dodaju još {smooth}."
+        },
+        "small-share": {
+          "label": "Peroksizomi, lizozomi i endozomi, pojedinačno",
+          "context": "Udeo u zapremini ćelije jetre."
+        },
+        "ph": {
+          "label": "pH citosola",
+          "context": "Blizu neutralnog (udžbenička vrednost); uporedite sa kiselom unutrašnjošću lizozoma."
+        }
+      },
+      "interesting": "Organele zauzimaju mnogo prostora: u tipičnoj ćeliji odeljci obavijeni membranom ispunjavaju skoro polovinu zapremine, a citosol popunjava prostor između njih."
+    },
+    "nucleus": {
+      "name": "Jedro",
+      "synonyms": [
+        "ćelijsko jedro",
+        "nukleus",
+        "jedra",
+        "jedrov omotač",
+        "jedrova membrana",
+        "nuklearni omotač",
+        "jedrove pore",
+        "nuklearna pora",
+        "kompleks jedrove pore",
+        "kontrolni centar ćelije"
+      ],
+      "short": "Najveći odeljak ćelije, u kome se čuva DNK i koji kontroliše koji će se geni koristiti.",
+      "function": "Jedro sadrži gotovo svu DNK ćelije, upakovanu zajedno sa proteinima u hromozome. Obavija ga jedrov omotač: dve membrane razdvojene uskim prostorom, pri čemu se spoljašnja membrana nastavlja u endoplazmatični retikulum. Omotač je probijen hiljadama kompleksa jedrovih pora — velikih proteinskih kapija. Mali molekuli kroz njih prolaze slobodno, ali se veći proveravaju: proteini potrebni u jedru unose se unutra, dok se informacione RNK i podjedinice ribozoma nastale u jedru iznose napolje. Mreža laminskih proteina, nazvana jedrova lamina, oblaže unutrašnju membranu i pomaže jedru da zadrži oblik.",
+      "seeingCell": "Veliko ljubičasto telo blizu središta je jedro. Njegov omotač je otvoren prema vama, tako da se unutra vide hromatin i jedarca. Mali prstenovi rasuti po površini su kompleksi jedrovih pora, nacrtani u stvarnoj veličini od oko {poreSize}. Tirkizne čestice koje se kreću ka unutra predstavljaju unete proteine; ćilibarne čestice koje se kreću ka spolja predstavljaju iznetu RNK i podjedinice ribozoma.",
+      "sampling": "Jedno jedro, nacrtano približno u stvarnoj veličini; prikazan je samo deo njegovih kompleksa pora.",
+      "views": {
+        "pore": {
+          "title": "Kompleks jedrove pore",
+          "seeing": "Presek kroz jedrov omotač na kome se vide spoljašnja i unutrašnja membrana, prostor između njih i kompleks jedrove pore prečnika oko {poreSize}. Prstenovi sa osmostrukom simetrijom učvršćuju poru; vlakna se gore pružaju u citoplazmu, a dole, sa strane jedra, visi korpica. Tirkizni teret vezan za receptor za uvoz kreće se naniže u jedro, dok se ćilibarni paket informacione RNK kreće naviše i napolje. Mreža lamine podupire unutrašnju membranu."
+        }
+      },
+      "parts": {
+        "outer-membrane": {
+          "name": "Spoljašnja jedrova membrana",
+          "def": "Spoljašnja membrana omotača; nastavlja se u endoplazmatični retikulum i na njoj mogu da se nalaze ribozomi."
+        },
+        "inner-membrane": {
+          "name": "Unutrašnja jedrova membrana",
+          "def": "Unutrašnja membrana omotača, okrenuta ka hromatinu, za koju je pričvršćena lamina."
+        },
+        "perinuclear-space": {
+          "name": "Perinuklearni prostor",
+          "def": "Uzan prostor između dve membrane, koji se nastavlja u unutrašnjost endoplazmatičnog retikuluma."
+        },
+        "pore-complex": {
+          "name": "Kompleks jedrove pore",
+          "def": "Veliki prstenasti sklop proteina (nukleoporina) koji obrazuje kanal sa kontrolisanim prolazom kroz obe membrane."
+        },
+        "lamina": {
+          "name": "Jedrova lamina",
+          "def": "Mreža laminskih filamenata koja podupire omotač i pomaže u organizaciji hromatina."
+        },
+        "import": {
+          "name": "Uvoz",
+          "def": "Proteine koji nose signal jedrove lokalizacije unose receptori za uvoz."
+        },
+        "export": {
+          "name": "Izvoz",
+          "def": "Informacione RNK i podjedinice ribozoma iznose u citoplazmu receptori za izvoz."
+        }
+      },
+      "simplifications": [
+        "Nacrtano je samo nekoliko stotina kompleksa pora; ljudsko jedro ih ima na hiljade.",
+        "Uvoz i izvoz prikazani su kao pojedinačne čestice koje se ravnomerno kreću; pravi transport koristi receptore koji kruže, energiju iz sistema Ran i vrlo brze događaje.",
+        "Jedro je nacrtano kao glatki elipsoid; prava jedra mogu imati nabore i udubljenja."
+      ],
+      "sizeContext": "Udeo zapremine ćelije jetre koji zauzima jedro; {range} kod hepatocita u tkivu jetre. Veličina jedra razlikuje se među tipovima ćelija.",
+      "quantityContext": "Parovi baza DNK u jednom ženskom (XX) diploidnom jedru, izračunato na osnovu referentnog genoma; {male} u muškoj ćeliji.",
+      "facts": {
+        "dna-length": {
+          "label": "Dužina DNK iz jednog jedra kada bi se ispružila",
+          "context": "Ženska diploidna ćelija ({male} u muškoj ćeliji), izračunato na osnovu sekvence genoma."
+        },
+        "dna-mass": {
+          "label": "Masa DNK u jednom jedru",
+          "context": "Ženska diploidna ćelija, izračunato na osnovu sekvence genoma."
+        },
+        "pore-size": {
+          "label": "Širina kompleksa jedrove pore",
+          "context": "Kompleksi pora kičmenjaka, među najvećim proteinskim sklopovima u ćeliji."
+        },
+        "pore-traffic": {
+          "label": "Transportni događaji koje jedan kompleks pore može da obavi u sekundi",
+          "context": "Procenjeno na osnovu merenja transporta u permeabilizovanim ćelijama i izolovanim jedrima."
+        },
+        "territories": {
+          "label": "Svaki hromozom ima svoju teritoriju",
+          "context": "U interfaznom jedru hromozomi zauzimaju odvojene oblasti koje nisu nasumično raspoređene (pregledni rad)."
+        }
+      },
+      "interesting": "Jedro koje zauzima samo {share} zapremine ćelije jetre sadrži {length} DNK."
+    },
+    "chromosomes": {
+      "name": "Hromozomi",
+      "synonyms": [
+        "hromozom",
+        "hromatin",
+        "DNK",
+        "genom",
+        "hromatida",
+        "centromera",
+        "Barovo telo",
+        "X hromozom",
+        "nukleozom",
+        "histon"
+      ],
+      "short": "Dugački molekuli DNK upakovani sa proteinima. U ovoj ćeliji, koja je između dve deobe, oni su rastresiti i u obliku hromatina ispunjavaju jedro.",
+      "function": "Hromozom je jedan veoma dugačak molekul DNK zajedno sa proteinima koji ga pakuju. Ljudske ćelije normalno imaju {chromosomeCount} hromozoma raspoređenih u {pairCount} para — po jednu garnituru od svakog roditelja. DNK se namotava oko grupa proteina histona i tako obrazuje nukleozome, kao konac oko kalemova, a oni se zatim dalje savijaju. Tokom interfaze — perioda između ćelijskih deoba, kada ćelija raste i obavlja svoje funkcije — hromozomi su relativno rastresiti (hromatin), tako da geni mogu da se čitaju, a svaki hromozom zauzima sopstvenu oblast jedra, koja se naziva hromozomska teritorija. Tek kada se ćelija pripremi za deobu, hromozomi se kondenzuju u kompaktne oblike nalik slovu X kakve viđamo u udžbenicima: svaki se tada sastoji od dve identične kopije (sestrinske hromatide) spojene u suženom delu koji se naziva centromera.",
+      "seeingCell": "Unutar otvorenog jedra {chromosomeCount} obojenih klupčića prikazuje hromozomske teritorije interfazne ćelije; obe kopije svakog para hromozoma iste su boje. Pošto se pretpostavlja da je ćelija u ovom modelu ženska (XX), jedan X hromozom prikazan je kao neaktivni X — kompaktno, gusto telo koje se naziva Barovo telo, ovde nacrtano uz jedrov omotač.",
+      "sampling": "Nacrtano je svih {chromosomeCount} hromozoma, kao vlakna nekoliko puta deblja od pravog hromatina.",
+      "views": {
+        "metaphase": {
+          "title": "Kondenzovani hromozom (mitoza)",
+          "seeing": "Ovaj oblik ne postoji u interfaznoj ćeliji: prikazuje jedan hromozom u metafazi mitoze, nakon što je DNK udvojena i kondenzovana. Dve sestrinske hromatide spojene su u centromeri, gde se nalazi kinetohor — proteinska platforma koja se vezuje za mikrotubule deobnog vretena. Svetleći krajevi su telomere."
+        },
+        "nucleosomes": {
+          "title": "Pakovanje DNK",
+          "seeing": "Kratak deo hromatina nacrtan u razmeri. Dvostruki heliks DNK, širok oko {dnaWidth}, obavija se skoro dva puta oko svakog jezgra nukleozoma — kalema od osam histonskih proteina prečnika oko {nucleosomeWidth} — a između kalemova su kratki delovi vezne DNK, kao perle na niski."
+        }
+      },
+      "parts": {
+        "territory": {
+          "name": "Hromozomska teritorija",
+          "def": "Oblast interfaznog jedra koju zauzima jedan hromozom."
+        },
+        "inactive-x": {
+          "name": "Neaktivni X (Barovo telo)",
+          "def": "U ženskim (XX) ćelijama jedan X hromozom je utišan i spakovan u gusto telo koje se naziva Barovo telo."
+        },
+        "chromatid": {
+          "name": "Sestrinska hromatida",
+          "def": "Jedna od dve identične kopije hromozoma nastale udvajanjem DNK; one se razdvajaju tokom deobe."
+        },
+        "centromere": {
+          "name": "Centromera",
+          "def": "Suženi deo u kome su sestrinske hromatide spojene."
+        },
+        "kinetochore": {
+          "name": "Kinetohor",
+          "def": "Proteinski kompleks na centromeri koji se tokom deobe vezuje za mikrotubule deobnog vretena."
+        },
+        "chromosome-end": {
+          "name": "Telomera",
+          "def": "Zaštitna kapa od ponovljene DNK na svakom kraju hromozoma."
+        },
+        "nucleosome": {
+          "name": "Nukleozom",
+          "def": "DNK namotana oko jezgra od osam histonskih proteina; osnovna jedinica hromatina."
+        },
+        "dna": {
+          "name": "Dvostruki heliks DNK",
+          "def": "Dva komplementarna lanca DNK uvijena jedan oko drugog."
+        }
+      },
+      "simplifications": [
+        "Teritorije su nacrtane kao zapetljana vlakna u zaobljenim oblastima; prave teritorije su nepravilne i na ivicama se prepliću.",
+        "Vlakna hromatina nacrtana su nekoliko puta deblja nego u stvarnosti.",
+        "Kondenzovani hromozom u prikazu izbliza pripada ćeliji u deobi, a ne ovoj interfaznoj ćeliji."
+      ],
+      "sizeContext": "Ukupna dužina DNK iz svih hromozoma ženske diploidne ćelije kada bi se ispružila i nadovezala. U ovoj interfaznoj ćeliji ona je složena u jedro prečnika nekoliko mikrometara.",
+      "quantityContext": "Normalna ljudska diploidna ćelija: {pairs} para — {autosomePairs} para autozoma i dva polna hromozoma (XX kod žena, XY kod muškaraca).",
+      "facts": {
+        "genome-size": {
+          "label": "Jedna kompletna kopija ljudskog genoma",
+          "context": "Prva sekvenca genoma bez praznina (od telomere do telomere), objavljena 2022. godine; starije udžbeničke procene iznose {older}."
+        },
+        "diploid-content": {
+          "label": "DNK u jednom ženskom diploidnom jedru",
+          "context": "U muškoj ćeliji: {male} (izračunato na osnovu sekvence genoma)."
+        },
+        "kinds": {
+          "label": "Različite vrste ljudskih hromozoma",
+          "context": "Hromozomi od 1 do 22, plus X i Y."
+        },
+        "x-inactivation": {
+          "label": "U ženskim ćelijama jedan X hromozom je isključen",
+          "context": "Predložila Meri Lajon (Mary Lyon) 1961. godine, na osnovu istraživanja na miševima."
+        },
+        "nucleosome": {
+          "label": "DNK namotana oko jednog jezgra nukleozoma",
+          "context": "Oko {turns} navoja oko osam histonskih proteina, prema kristalnoj strukturi iz 1997. godine."
+        }
+      },
+      "interesting": "Neaktivni X je uočen mnogo pre nego što je shvaćen. Godine 1949. Mari Bar (Murray Barr) i Juart Bertram (Ewart Bertram) primetili su dodatno tamno telo u jedrima nervnih ćelija mačaka ženskog — ali ne i muškog — pola. Godine 1961. Meri Lajon (Mary Lyon) je predložila da je u svakoj ženskoj ćeliji jedan X hromozom isključen."
+    },
+    "telomeres": {
+      "name": "Telomere",
+      "synonyms": [
+        "telomera",
+        "krajevi hromozoma",
+        "završeci hromozoma",
+        "kape hromozoma",
+        "TTAGGG",
+        "šelterin",
+        "telomeraza",
+        "T-petlja"
+      ],
+      "short": "Zaštitne kape od ponovljene DNK na krajevima svakog hromozoma.",
+      "function": "Svaki kraj hromozoma nosi mnogo kopija kratke sekvence DNK TTAGGG, za koje se vezuje zaštitni proteinski kompleks nazvan šelterin. Sam kraj se savija unazad u petlju (T-petlju) i uvlači svoj jednolančani vrh u dvostruki heliks. Tako se prirodni krajevi skrivaju od ćelijskog sistema za popravku DNK, koji bi ih inače zamenio za prekinutu DNK i međusobno spojio hromozome. Pošto mašinerija za kopiranje DNK ne može potpuno da kopira same krajeve linearnog molekula DNK, telomere se kod većine telesnih ćelija pri svakoj deobi pomalo skraćuju; veoma kratke telomere signaliziraju ćeliji da prestane da se deli. Enzim nazvan telomeraza može ponovo da dodaje ponovljene sekvence; aktivan je u matičnim ćelijama, u ćelijama koje stvaraju jajne ćelije i spermatozoide i u većini ćelija raka.",
+      "seeingCell": "Jarke žute tačke na krajevima hromatinskih vlakana označavaju telomere: ima ih {telomereCount}, po dve za svaki hromozom. To su simbolične oznake: prava telomera je deo DNK suviše mali da bi se video u ovoj razmeri.",
+      "sampling": "Označene su sve {telomereCount} telomere diploidne ćelije.",
+      "views": {
+        "t-loop": {
+          "title": "Telomerna petlja",
+          "seeing": "Kraj DNK jednog hromozoma, nacrtan u razmeri. Svaki obojeni segment duž dvostrukog heliksa je jedno ponavljanje TTAGGG. Jednolančani produžetak na vrhu savija se unazad i uvlači u dvostruki heliks, obrazujući T-petlju. Proteini šelterina (ljubičasti i tirkizni) prekrivaju ponavljanja i drže petlju na mestu."
+        }
+      },
+      "parts": {
+        "repeats": {
+          "name": "Ponavljanja TTAGGG",
+          "def": "Mnogo kopija DNK sekvence od šest slova koje čine ljudske telomere."
+        },
+        "overhang": {
+          "name": "3′ produžetak",
+          "def": "Jednolančani deo lanca bogatog guaninom (G) koji štrči na samom kraju."
+        },
+        "t-loop": {
+          "name": "T-petlja",
+          "def": "Petlja koja nastaje kada se produžetak uvuče nazad među dvolančana ponavljanja i tako sakrije kraj."
+        },
+        "shelterin": {
+          "name": "Šelterin",
+          "def": "Kompleks od šest proteina koji se vezuje za telomernu DNK i štiti krajeve hromozoma."
+        },
+        "chromosome-end": {
+          "name": "Kraj hromozoma",
+          "def": "Vrh kraka hromozoma, gde se nalazi telomera."
+        }
+      },
+      "simplifications": [
+        "U prikazu cele ćelije telomere su prikazane kao svetleće tačke; u stvarnosti su to delovi DNK određene dužine.",
+        "Prikaz izbliza pokazuje samo nekoliko ponavljanja; prava telomera ih sadrži od nekoliko stotina do nekoliko hiljada.",
+        "Šelterin je prikazan pojednostavljenim oblicima, a ne kao pojedinačni proteini."
+      ],
+      "sizeContext": "Dužina niza ponavljanja na svakom kraju hromozoma u ljudskim somatskim ćelijama; razlikuje se u zavisnosti od starosti, tkiva i osobe.",
+      "quantityContext": "Telomere u diploidnoj ćeliji pre udvajanja DNK: po jedna na svakom kraju svih {chromosomes} hromozoma.",
+      "facts": {
+        "repeat": {
+          "label": "Dužina ponovljene jedinice TTAGGG",
+          "context": "Ista sekvenca od šest slova nalazi se na krajevima svih ljudskih hromozoma."
+        },
+        "shelterin": {
+          "label": "Proteini u kompleksu šelterina",
+          "context": "TRF1, TRF2, POT1, TIN2, TPP1 i RAP1."
+        },
+        "shortening": {
+          "label": "Gubitak telomera pri svakoj ćelijskoj deobi",
+          "context": "Ljudski fibroblasti u kulturi, mereno po udvajanju populacije."
+        },
+        "t-loop": {
+          "label": "Telomere se završavaju petljom",
+          "context": "T-petlja je uočena elektronskom mikroskopijom telomerne DNK iz ljudskih i mišjih ćelija."
+        },
+        "telomerase": {
+          "label": "Telomeraza, enzim koji produžava telomere, otkrivena je 1985. godine",
+          "context": "Prvi put pronađena u ekstraktima jednoćelijskog organizma Tetrahymena."
+        }
+      },
+      "interesting": "Prvu potpunu sekvencu ljudskog genoma bez praznina objavio je tek 2022. godine konzorcijum Telomere-to-Telomere (T2T): svaki hromozom osim Y pročitan je od jedne telomere do druge."
+    },
+    "nucleolus": {
+      "name": "Jedarce",
+      "synonyms": [
+        "jedarca",
+        "nukleolus",
+        "fabrika ribozoma",
+        "organizator jedarca",
+        "region organizatora jedarca",
+        "nukleolusni organizator",
+        "NOR"
+      ],
+      "short": "Gusta oblast unutar jedra u kojoj se grade podjedinice ribozoma.",
+      "function": "Jedarce se obrazuje oko gena za ribozomsku RNK (rRNK), koji se nalaze u grupama na {norPairs} parova hromozoma. Nema membranu: njegovi molekuli okupljaju se u poseban odeljak nalik kapljici. Enzim nazvan RNK polimeraza I prepisuje gene za rRNK; dugačka RNK koju on stvara zatim se seče, hemijski modifikuje i savija, dok joj se pridružuju ribozomski proteini — uneti iz citoplazme. Gotove male i velike podjedinice ribozoma iznose se odvojeno kroz jedrove pore i tek se u citoplazmi spajaju u funkcionalne ribozome. Jedarca su veća u ćelijama koje stvaraju mnogo proteina.",
+      "seeingCell": "Narandžasta tela unutar jedra su jedarca; ova ćelija ima jedno veliko i jedno malo. Na preseku se vide tri sloja: bledi fibrilarni centri, gust fibrilarni omotač oko svakog od njih i granularna spoljašnja oblast. Male čestice koje napuštaju jedarce su nove podjedinice ribozoma na putu ka jedrovim porama.",
+      "sampling": "Nacrtana su dva jedarca, približno u stvarnoj veličini.",
+      "views": {
+        "assembly": {
+          "title": "Izgradnja podjedinica ribozoma",
+          "seeing": "Presek kroz jedarce. Na granici između fibrilarnog centra i guste fibrilarne komponente prepisuju se geni za ribozomsku RNK: rastući lanci RNK granaju se iz DNK kao jelka. Dok se kreće ka spolja, RNK se obrađuje i pridružuju joj se proteini, a u granularnoj komponenti oblikuju se male (40S) i velike (60S) podjedinice koje zatim odlaze ka nukleoplazmi."
+        }
+      },
+      "parts": {
+        "fibrillar-center": {
+          "name": "Fibrilarni centar",
+          "def": "Blede središnje oblasti u kojima se nalazi ribozomska DNK."
+        },
+        "dense-fibrillar": {
+          "name": "Gusta fibrilarna komponenta",
+          "def": "Omotač oko svakog fibrilarnog centra, gde se stvara rRNK i prvi put obrađuje."
+        },
+        "granular": {
+          "name": "Granularna komponenta",
+          "def": "Spoljašnja oblast u kojoj se sklapaju podjedinice ribozoma."
+        },
+        "rdna": {
+          "name": "Ribozomska DNK",
+          "def": "Geni za ribozomsku RNK, ponovljeni mnogo puta."
+        },
+        "small-subunit": {
+          "name": "Mala podjedinica (40S)",
+          "def": "Manji deo ribozoma, koji čita informacionu RNK."
+        },
+        "large-subunit": {
+          "name": "Velika podjedinica (60S)",
+          "def": "Veći deo ribozoma, koji povezuje aminokiseline."
+        }
+      },
+      "simplifications": [
+        "Tri sloja nacrtana su kao uredni omotači; u pravim jedarcima oni su nepravilni i isprepletani.",
+        "Razgranati lanci RNK su uvećani da bi se videli.",
+        "U sklapanju podjedinica učestvuju stotine pomoćnih molekula koji nisu prikazani."
+      ],
+      "sizeContext": "Veličina jedaraca zavisi od toga koliko aktivno ćelija stvara ribozome: ćelije koje brzo rastu imaju veća jedarca. Ćelija može imati jedno ili više jedaraca.",
+      "quantityContext": "Hromozomi koji nose grupe gena za ribozomsku RNK u diploidnoj ćeliji: kratki kraci hromozoma 13, 14, 15, 21 i 22, svaki u dve kopije.",
+      "facts": {
+        "production": {
+          "label": "Broj podjedinica ribozoma stvorenih u minutu",
+          "context": "HeLa ćelija u rastu (linija ljudskih ćelija raka)."
+        },
+        "layers": {
+          "label": "Jasno odvojeni slojevi unutar jedarca",
+          "context": "Fibrilarni centri, gusta fibrilarna komponenta i granularna komponenta."
+        },
+        "liquid": {
+          "label": "Slojevi se ponašaju kao zasebne tečne kapljice",
+          "context": "Pokazano na jedarcima jajnih ćelija žabe (Xenopus) i sa prečišćenim proteinima."
+        },
+        "firre": {
+          "label": "Jedna RNK drži neaktivni X pored jedarca",
+          "context": "U mišjim ćelijama nekodirajuća RNK Firre pomaže da se on tu učvrsti."
+        }
+      },
+      "interesting": "Neaktivni X hromozom otkriven je pored jedarca: 1949. godine prvi put je opisan kao mali „satelit jedarca“ u nervnim ćelijama mačaka ženskog pola."
+    },
+    "ribosomes": {
+      "name": "Ribozomi",
+      "synonyms": [
+        "ribozom",
+        "polizom",
+        "polizomi",
+        "poliribozom",
+        "80S",
+        "translacija",
+        "sinteza proteina",
+        "rRNK"
+      ],
+      "short": "Molekulske mašine koje čitaju informacionu RNK i grade proteine, aminokiselinu po aminokiselinu.",
+      "function": "Ribozom ima dve podjedinice, od kojih je svaka izgrađena od ribozomske RNK i desetina proteina. Translacija — sinteza proteina na osnovu informacione (glasničke) RNK (iRNK) — počinje kada mala podjedinica pronađe početak iRNK i kada joj se pridruži velika podjedinica. Transportne RNK (tRNK) donose aminokiseline; svaka tRNK sparuje se sa kodnom reči od tri slova (kodonom) na iRNK. Ribozom drži tRNK jednu pored druge, vezuje rastući lanac za najnoviju aminokiselinu, a zatim se pomera za jedan kodon dalje. Novi proteinski lanac izlazi kroz tunel u velikoj podjedinici. Slobodni ribozomi u citosolu sintetišu proteine koji ostaju u citosolu, jedru ili mitohondrijama; ribozomi na granuliranom endoplazmatičnom retikulumu sintetišu proteine namenjene membranama ili izlučivanju iz ćelije. Često nekoliko ribozoma istovremeno čita istu iRNK i tako obrazuje polizom.",
+      "seeingCell": "Brojne sićušne zlatne čestice su ribozomi. Neki slobodno lebde, često u spiralama i nizovima (polizomi); drugi su posuti po granuliranom endoplazmatičnom retikulumu.",
+      "sampling": "Nacrtan je samo sićušan deo ribozoma prave ćelije.",
+      "views": {
+        "translation": {
+          "title": "Translacija",
+          "seeing": "Ribozom nacrtan u razmeri, prečnika oko {size}. Mala podjedinica (bledozlatna) obuhvata informacionu RNK, čiji su kodoni prikazani kao obojeni segmenti. Transportne RNK (u obliku slova L) stižu jedna za drugom, predaju svoje aminokiseline i odlaze. Rastući proteinski lanac (perle) izlazi iz izlaznog tunela velike podjedinice (tamnozlatne)."
+        }
+      },
+      "parts": {
+        "large-subunit": {
+          "name": "Velika podjedinica (60S)",
+          "def": "Povezuje aminokiseline; sadrži izlazni tunel."
+        },
+        "small-subunit": {
+          "name": "Mala podjedinica (40S)",
+          "def": "Vezuje iRNK i proverava da li svaki kodon odgovara svojoj tRNK."
+        },
+        "mrna": {
+          "name": "Informaciona RNK",
+          "def": "Kodirana uputstva, koja se čitaju po tri slova (jedan kodon) odjednom."
+        },
+        "trna": {
+          "name": "Transportna RNK",
+          "def": "Adapterski molekul koji nosi određenu aminokiselinu i sparuje se sa kodonom."
+        },
+        "polypeptide": {
+          "name": "Rastući proteinski lanac",
+          "def": "Novi lanac aminokiselina, koji počinje da se savija čim izađe."
+        },
+        "exit-tunnel": {
+          "name": "Izlazni tunel",
+          "def": "Kanal kroz veliku podjedinicu kroz koji novi lanac izlazi."
+        }
+      },
+      "simplifications": [
+        "Ribozomi u prikazu cele ćelije su uvećani i ima ih daleko manje nego u pravoj ćeliji.",
+        "Prikaz izbliza pokazuje samo glavne korake; inicijacija i mnogi pomoćni proteini su izostavljeni.",
+        "tRNK su prikazane kao jednostavni oblici slova L."
+      ],
+      "sizeContext": "Ukupna širina; ribozomi nisu kugle. Za ribozome sisara navodi se oko 25 nm.",
+      "quantityContext": "HeLa ćelije (linija ljudskih ćelija raka) koje rastu u kulturi, procenjeno na osnovu sadržaja RNK. Brojevi se razlikuju među tipovima ćelija i u zavisnosti od faze rasta.",
+      "facts": {
+        "mass": {
+          "label": "Masa ljudskog ribozoma 80S",
+          "context": "Na osnovu strukture ljudskog ribozoma skoro atomske rezolucije."
+        },
+        "parts": {
+          "label": "Proteini u ljudskom ribozomu",
+          "context": "Uz to i {rnas} ribozomske RNK: velika podjedinica ima {large} proteina i tri rRNK, a mala {small} proteina i jednu rRNK."
+        },
+        "speed": {
+          "label": "Brzina translacije",
+          "context": "Prosečna brzina izmerena metodom profilisanja ribozoma u embrionalnim matičnim ćelijama miša, a ne u ljudskim ćelijama."
+        },
+        "modifications": {
+          "label": "Hemijski modifikovani gradivni elementi rRNK vidljivi u strukturi",
+          "context": "Struktura ljudskog ribozoma visoke rezolucije."
+        },
+        "polysomes": {
+          "label": "Nekoliko ribozoma obično istovremeno čita jednu iRNK",
+          "context": "Takve grupe nazivaju se poliribozomi ili polizomi."
+        }
+      },
+      "interesting": "Ribozom je ribozim — enzim izgrađen od RNK. Mesto koje povezuje aminokiseline obrazuje ribozomska RNK, a nijedan protein ne prilazi vezi koja nastaje bliže od {distance} (izmereno u velikoj podjedinici arheje Haloarcula marismortui)."
+    },
+    "rough-er": {
+      "name": "Granulirani endoplazmatični retikulum",
+      "synonyms": [
+        "hrapavi endoplazmatični retikulum",
+        "zrnasti endoplazmatični retikulum",
+        "granulirani ER",
+        "hrapavi ER",
+        "GER",
+        "endoplazmatični retikulum",
+        "endoplazmatična mreža",
+        "ER",
+        "cisterne ER-a",
+        "retikulum"
+      ],
+      "short": "Naslagane, spljoštene membranske kesice posute ribozomima, u kojima se sintetišu i savijaju proteini namenjeni membranama i izlučivanju.",
+      "function": "Endoplazmatični retikulum (ER) je jedna neprekidna mreža membrana koja počinje od jedrovog omotača. Njegov granulirani (hrapavi) deo obrazuje široke, spljoštene listove prekrivene ribozomima. Kada ribozom počne da sintetiše protein čiji je početak signalna sekvenca — kratka „adresna oznaka“ — on se usmerava ka membrani ER-a i provlači rastući lanac kroz proteinski kanal, translokon, u unutrašnjost ER-a (lumen) ili u samu membranu. U lumenu proteini šaperoni pomažu novom proteinu da se savije, dodaju se lanci šećera (glikozilacija), a sistemi kontrole kvaliteta zadržavaju pogrešno savijene proteine. Pravilno savijeni proteini napuštaju ER na izlaznim mestima, u malim vezikulama koje putuju ka Goldžijevom aparatu.",
+      "seeingCell": "Tirkizni listovi naslagani oko jedra su granulirani ER; spoljašnja membrana jedra nastavlja se u njih. Zlatne tačke na listovima su vezani ribozomi — upravo oni daju „hrapavu“, zrnastu teksturu. Na ivicama se listovi pretvaraju u cevčice glatkog ER-a, bez ribozoma. S vremena na vreme svetla čestica tereta napušta izlazno mesto i putuje do Goldžijevog aparata: to je prva etapa sekretornog puta.",
+      "sampling": "Nekoliko naslaganih listova predstavlja granulirani ER; sekretorne ćelije ih mogu imati daleko više.",
+      "views": {
+        "translocation": {
+          "title": "Sinteza sekretornog proteina",
+          "seeing": "Poprečni presek membrane ER-a, sa citosolom iznad i lumenom ispod. Ribozom sedi na kanalu translokona i provlači novi proteinski lanac (perle) kroz membranu. Signalna sekvenca (crvena perla na čelu lanca) se odseca, dodaje se lanac šećera (zelene grančice), a šaperon pomaže lancu da se savije. Desno, na izlaznom mestu pupi obložena vezikula koja će gotove proteine odneti do Goldžijevog aparata."
+        }
+      },
+      "parts": {
+        "er-sheet": {
+          "name": "List ER-a (cisterna)",
+          "def": "Spljoštena membranska kesica; granulirani ER se uglavnom sastoji od naslaganih listova."
+        },
+        "lumen": {
+          "name": "Lumen ER-a",
+          "def": "Prostor ograničen membranom ER-a, koji se nastavlja u perinuklearni prostor."
+        },
+        "bound-ribosome": {
+          "name": "Ribozom vezan za membranu",
+          "def": "Ribozom pričvršćen za ER dok sintetiše protein koji ulazi u njega."
+        },
+        "translocon": {
+          "name": "Translokon",
+          "def": "Proteinski kanal (Sec61) kroz koji novi proteini ulaze u ER."
+        },
+        "signal-peptide": {
+          "name": "Signalna sekvenca",
+          "def": "Kratak deo na početku proteina koji ga usmerava ka ER-u; obično se odseca."
+        },
+        "glycan": {
+          "name": "Lanac šećera (glikan)",
+          "def": "Razgranati ugljeni hidrat vezan za mnoge proteine u ER-u."
+        },
+        "exit-site": {
+          "name": "Izlazno mesto ER-a",
+          "def": "Mesto na kome se odvajaju obložene (COPII) vezikule, koje nose teret do Goldžijevog aparata."
+        }
+      },
+      "simplifications": [
+        "ER je nacrtan kao nekoliko urednih listova; u pravim ćelijama to je daleko veća mreža koja se stalno menja.",
+        "Sekretorni put ilustruje jedna po jedna čestica tereta; prave ćelije istovremeno prenose ogroman broj proteina.",
+        "Mašinerija za usmeravanje (čestica za prepoznavanje signala i njen receptor) nije prikazana."
+      ],
+      "sizeContext": "Rastojanje između dve membrane lista ER-a u ćelijama sisara ({yeast} kod kvasca).",
+      "quantityContext": "Udeo zapremine ćelije jetre koji zauzimaju cisterne granuliranog ER-a; ćelije koje izlučuju mnogo proteina imaju ga mnogo više.",
+      "facts": {
+        "membrane-share": {
+          "label": "Udeo ER-a u ukupnim membranama životinjske ćelije",
+          "context": "Udžbenici navode od „oko polovine“ do „više od polovine“, u zavisnosti od ćelije."
+        },
+        "lumen-volume": {
+          "label": "Unutrašnjost ER-a kao udeo zapremine ćelije",
+          "context": "Uopštena eukariotska ćelija (udžbenička procena)."
+        },
+        "rough-membrane": {
+          "label": "Udeo granuliranog ER-a u ukupnim membranama ćelije jetre",
+          "context": "U egzokrinoj ćeliji pankreasa, koja izlučuje velike količine digestivnih enzima: {pancreas}."
+        },
+        "spacer": {
+          "label": "Protein odstojnik održava ujednačenu debljinu listova",
+          "context": "Climp63 premošćava lumen, dok proteini koji oblikuju zakrivljenost oblažu ivice listova (ćelije sisara u kulturi)."
+        }
+      },
+      "interesting": "Naslagani listovi granuliranog ER-a povezani su spiralnim rampama, pa je ceo niz jedna neprekidna membrana — sagrađena kao garaža na više spratova. Ove „Terasakijeve rampe“ uočene su u sekretornim ćelijama i neuronima miša."
+    },
+    "smooth-er": {
+      "name": "Glatki endoplazmatični retikulum",
+      "synonyms": [
+        "glatki ER",
+        "agranulirani endoplazmatični retikulum",
+        "agranulirani ER",
+        "glatka endoplazmatična mreža",
+        "cevčice ER-a",
+        "tubularni ER"
+      ],
+      "short": "Mreža membranskih cevčica bez ribozoma koja stvara lipide, skladišti kalcijum i pomaže u neutralisanju štetnih supstanci.",
+      "function": "Glatki ER je deo endoplazmatičnog retikuluma bez ribozoma, obično mreža uskih cevčica spojenih u trokrake čvorove. On stvara većinu membranskih lipida ćelije, a u specijalizovanim ćelijama i steroidne hormone. Skladišti jone kalcijuma i oslobađa ih kada ćelija primi određene signale — na primer, da bi se pokrenula kontrakcija mišića ili lučenje. U ćelijama jetre enzimi glatkog ER-a hemijski menjaju lekove i toksine tako da mogu da se uklone, a jedan tamošnji enzim pomaže oslobađanje glukoze u krv. Glatki ER takođe dodiruje mitohondrije, peroksizome i plazma membranu na mestima kontakta, gde se razmenjuju lipidi i kalcijum.",
+      "seeingCell": "Svetlozelene cevčice boje nane koje se granaju kroz spoljašnji deo citoplazme čine mrežu glatkog ER-a. One se povezuju sa ivicama tirkiznih listova granuliranog ER-a: to je jedan neprekidni sistem membrana, a ovde se dva dela razlikuju po tome da li su za njih vezani ribozomi.",
+      "sampling": "Pojednostavljena mreža cevčica predstavlja glatki ER.",
+      "views": {
+        "calcium": {
+          "title": "Skladište kalcijuma",
+          "seeing": "Čvor u kome se spajaju cevčice ER-a, svaka široka oko {tubeWidth}, nacrtan u razmeri. Kalcijumove pumpe (zelene) koriste energiju iz ATP-a da prebace jone kalcijuma (svetle tačke) iz citosola u cevčice. Na svakih nekoliko sekundi otvara se kanal za oslobađanje kalcijuma (narandžasti) i nalet jona ističe napolje — to je vrsta signala koja pokreće kontrakciju mišića ili lučenje. U membrani se nalaze enzimi koji stvaraju lipide (svetloplavi)."
+        }
+      },
+      "parts": {
+        "tubule": {
+          "name": "Cevčica ER-a",
+          "def": "Uska membranska cev; cevčice čine mrežu glatkog ER-a."
+        },
+        "junction": {
+          "name": "Trokraki čvor",
+          "def": "Mesto gde se sastaju tri cevčice, što mreži daje izgled mnogouglova."
+        },
+        "calcium-pump": {
+          "name": "Kalcijumova pumpa (SERCA)",
+          "def": "Pumpa koja pomoću ATP-a prebacuje jone kalcijuma u ER."
+        },
+        "calcium-channel": {
+          "name": "Kanal za oslobađanje kalcijuma",
+          "def": "Kanal koji oslobađa uskladišteni kalcijum kada ćelija primi signal."
+        },
+        "lipid-enzyme": {
+          "name": "Enzim za sintezu lipida",
+          "def": "Enzimi koji grade fosfolipide i druge lipide za membrane ćelije."
+        }
+      },
+      "simplifications": [
+        "Mreža cevčica je mnogo ređa nego u pravim ćelijama.",
+        "Oslobađanje kalcijuma prikazano je kao pravilni naleti; pravi signali razlikuju se po vremenu i jačini.",
+        "Enzimi za detoksikaciju, kojih ima mnogo u ćelijama jetre, nisu posebno prikazani."
+      ],
+      "sizeContext": "Prečnik cevčica ER-a u ćelijama sisara.",
+      "quantityContext": "Udeo zapremine ćelije jetre koji zajedno zauzimaju cisterne glatkog ER-a i Goldžijevog aparata; udžbenička tabela ih ne razdvaja.",
+      "facts": {
+        "calcium": {
+          "label": "Slobodni kalcijum unutar ER-a",
+          "context": "Naspram {cytosol} u citosolu ćelije u mirovanju — skladište je stotinama do hiljadama puta koncentrovanije. Vrednosti zavise od tipa ćelije i metode."
+        },
+        "scarce": {
+          "label": "Većina ćelija ima malo glatkog ER-a",
+          "context": "Često se javlja kao oblasti koje su delom glatke, a delom granulirane."
+        },
+        "steroids": {
+          "label": "Ćelije koje stvaraju hormone imaju mnogo glatkog ER-a",
+          "context": "U njemu se nalaze enzimi koji stvaraju holesterol i pretvaraju ga u steroidne hormone."
+        },
+        "phenobarbital": {
+          "label": "Zapremina glatkog ER-a posle tretmana lekom",
+          "context": "Ćelije jetre pacova posle {days} primanja fenobarbitala; površina membrane povećala se za {area}."
+        },
+        "exit-sites": {
+          "label": "Izlazna mesta ER-a",
+          "context": "Delimično glatke „prelazne“ oblasti iz kojih se odvajaju vezikule ka Goldžijevom aparatu."
+        }
+      },
+      "interesting": "Ćelije uklanjaju glatki ER koji im više nije potreban: kada su pacovi prestali da dobijaju lek fenobarbital, njihove ćelije jetre su višak glatkog ER-a uklonile autofagijom u roku od {days}."
+    },
+    "golgi": {
+      "name": "Goldžijev aparat",
+      "synonyms": [
+        "Goldži",
+        "Goldžijev kompleks",
+        "Goldžijevo telo",
+        "diktiozom",
+        "diktiozomi",
+        "trans-Goldžijeva mreža",
+        "TGN",
+        "Goldžijeva traka"
+      ],
+      "short": "Naslage spljoštenih membranskih kesica koje modifikuju, razvrstavaju i otpremaju proteine i lipide nastale u ER-u.",
+      "function": "Proteini koji stižu iz ER-a ulaze u Goldžijev aparat na njegovoj cis strani, onoj koja je najbliža ER-u. Dok prolaze kroz naslagane cisterne — cis, medijalni i trans odeljak — enzimi skraćuju i produžavaju njihove lance šećera i obavljaju druge hemijske izmene. Na suprotnoj strani trans-Goldžijeva mreža razvrstava gotove proizvode u različite transportne nosače: neki odlaze do plazma membrane da bi bili izlučeni ili postali membranski proteini, a drugi do endozoma i lizozoma. U mnogim ljudskim ćelijama pojedinačne naslage cisterni (diktiozomi) bočno su povezane u traku pored jedra, blizu centrozoma.",
+      "seeingCell": "Ćilibarne naslage u obliku šolje pored centrozoma — diktiozomi — čine Goldžijevu traku. Svaki diktiozom ima pet zakrivljenih cisterni (spljoštenih kesica), čije se nijanse menjaju od cis strane, okrenute ka jedru i ER-u, do trans strane, okrenute ka spolja. Male vezikule okupljaju se na njihovim ivicama, a istaknuta čestica tereta iz ER-a prolazi kroz diktiozom pre nego što ga napusti u sekretornoj vezikuli.",
+      "sampling": "Tri povezana diktiozoma predstavljaju Goldžijevu traku.",
+      "views": {
+        "stack": {
+          "title": "Put kroz diktiozom",
+          "seeing": "Poprečni presek jednog diktiozoma. Vezikule koje stižu iz ER-a stapaju se sa cis stranom (levo). Proteini tereta (perle) pomeraju se ka trans strani dok svaka cisterna postepeno sazreva, a njihovi lanci šećera (zeleni) usput rastu i menjaju se. Male COPI vezikule prenose enzime unazad, a u trans-Goldžijevoj mreži (desno) teret se pakuje u sekretorne vezikule i u vezikule namenjene lizozomima."
+        }
+      },
+      "parts": {
+        "cis": {
+          "name": "Cis strana",
+          "def": "Prijemna strana, najbliža endoplazmatičnom retikulumu."
+        },
+        "medial": {
+          "name": "Medijalne cisterne",
+          "def": "Srednji odeljci u kojima se lanci šećera dalje obrađuju."
+        },
+        "trans": {
+          "name": "Trans strana",
+          "def": "Izlazna strana diktiozoma."
+        },
+        "tgn": {
+          "name": "Trans-Goldžijeva mreža",
+          "def": "Mreža cevčica koja razvrstava teret u različite transportne nosače."
+        },
+        "copii": {
+          "name": "COPII vezikula",
+          "def": "Obložena vezikula koja prenosi teret iz ER-a ka Goldžijevom aparatu."
+        },
+        "copi": {
+          "name": "COPI vezikula",
+          "def": "Obložena vezikula koja prenosi materijal unazad unutar Goldžijevog aparata ili do ER-a."
+        },
+        "secretory-vesicle": {
+          "name": "Sekretorna vezikula",
+          "def": "Nosač koji odnosi proizvode do plazma membrane, gde se oslobađaju iz ćelije."
+        }
+      },
+      "simplifications": [
+        "Način na koji se teret kreće kroz diktiozom još je predmet rasprave; prikaz izbliza prikazuje široko prihvaćen model sazrevanja cisterni.",
+        "Prava Goldžijeva traka sadrži više diktiozoma i mnogo cevastih veza.",
+        "Glikozilacija je prikazana kao jednostavna promena boje lanaca šećera."
+      ],
+      "sizeContext": "Približna širina diktiozoma u životinjskim ćelijama; diktiozom obično ima svega nekoliko cisterni.",
+      "quantityContext": "Udeo zapremine ćelije jetre koji zajedno zauzimaju cisterne Goldžijevog aparata i glatkog ER-a; udžbenička tabela ih ne razdvaja.",
+      "facts": {
+        "ergic": {
+          "label": "Teret prvo ulazi u prelazni odeljak",
+          "context": "Vezikule iz ER-a stapaju se u prelazni odeljak između ER-a i Goldžijevog aparata pre nego što teret stigne do cis-Goldžijeve mreže."
+        },
+        "sorting": {
+          "label": "Trans-Goldžijeva mreža razvrstava proizvode",
+          "context": "Ka plazma membrani, za izlučivanje ili ka lizozomima."
+        },
+        "glycans": {
+          "label": "Glavno mesto izgradnje lanaca šećera",
+          "context": "Lanci šećera koji su prvo dodati u ER-u ovde se skraćuju i produžavaju."
+        },
+        "residence": {
+          "label": "Prosečno vreme koje je modelni teret proveo u Goldžijevom aparatu",
+          "context": "Ćelije bubrega majmuna (COS-7) koje stvaraju fluorescentni virusni glikoprotein; svakog minuta iz Goldžijevog aparata izlazilo je {rate} prisutnog tereta."
+        },
+        "tac": {
+          "label": "Vreme koje reporterski protein Tac provodi u Goldžijevom aparatu",
+          "context": "Ljudske HeLa ćelije; vreme se produžilo na {long} kada je luminalni deo proteina skraćen — važna je i priroda samog tereta."
+        }
+      },
+      "interesting": "Kamilo Goldži (Camillo Golgi) opisao je ovu organelu 1898. godine pomoću svoje metode bojenja srebrom, ali su mnogi naučnici oko pola veka sumnjali da ona zaista postoji — sve dok elektronski mikroskopi nisu otkrili njene naslagane membrane."
+    },
+    "vesicles-motors": {
+      "name": "Vezikule i motorni proteini",
+      "synonyms": [
+        "vezikula",
+        "mehurići",
+        "motorni protein",
+        "motorni proteini",
+        "kinezin",
+        "dinein",
+        "miozin",
+        "transportna vezikula",
+        "sekretorna vezikula",
+        "unutarćelijski transport"
+      ],
+      "short": "Mali membranski mehurići koji prenose teret, a koje motorni proteini vuku duž citoskeletnih šina.",
+      "function": "Vezikule su sićušni paketi obavijeni membranom koji se odvajaju (pupe) od jednog odeljka i stapaju sa drugim, prenoseći proteine i lipide između ER-a, Goldžijevog aparata, endozoma, lizozoma i plazma membrane. Na kratkim rastojanjima mogu da se pomeraju i pasivno, ali duga putovanja zavise od motornih proteina: molekulskih mašina koje hemijsku energiju ATP-a pretvaraju u kretanje. Kinezini koračaju duž mikrotubula, uglavnom ka njihovim plus krajevima, koji su u tipičnoj ćeliji okrenuti ka spolja, prema ivici ćelije; dinein korača ka minus krajevima, blizu centrozoma u središtu ćelije. Miozini prenose teret duž aktinskih filamenata blizu površine ćelije.",
+      "seeingCell": "Ružičaste vezikule klize duž svetloplavih mikrotubula. One koje se kreću ka spolja, prema ivici ćelije, predstavljaju teret koji nosi kinezin; one koje se kreću ka unutra, prema centrozomu, teret koji nosi dinein. Sami motorni proteini su suviše mali da bi se ovde prikazali i vide se u prikazu izbliza.",
+      "sampling": "Nacrtan je samo uzorak vezikula u pokretu; motorni proteini se vide samo u prikazu izbliza.",
+      "views": {
+        "kinesin": {
+          "title": "Kinezin u hodu",
+          "seeing": "Motorni protein kinezin-1 nosi vezikulu duž mikrotubule; nacrtan je u razmeri i kreće se ka plus kraju mikrotubule — ka spolja, prema ivici ćelije. Njegove dve glave se smenjuju: zadnja glava zamahne napred, pored prednje, pa se svaka glava pomeri za {headStep}, dok teret po koraku napreduje za {step}, uz utrošak jednog molekula ATP-a po koraku. Dinein u pozadini putuje u suprotnom smeru, ka minus kraju."
+        }
+      },
+      "parts": {
+        "vesicle": {
+          "name": "Transportna vezikula",
+          "def": "Mali membranski mehurić koji prenosi teret između odeljaka."
+        },
+        "kinesin": {
+          "name": "Kinezin",
+          "def": "Motorni protein koji korača ka plus krajevima mikrotubula."
+        },
+        "motor-heads": {
+          "name": "Motorne glave",
+          "def": "Dva dela pokretana ATP-om koja se naizmenično vezuju za mikrotubulu."
+        },
+        "neck-linker": {
+          "name": "Vratni segment",
+          "def": "Kratak segment koji zamahne napred i prenese zadnju glavu ispred prednje."
+        },
+        "stalk": {
+          "name": "Drška",
+          "def": "Dugačak uvijeni rep koji povezuje glave sa teretom."
+        },
+        "dynein": {
+          "name": "Dinein",
+          "def": "Veliki motorni protein koji korača ka minus krajevima mikrotubula."
+        },
+        "track": {
+          "name": "Mikrotubulska šina",
+          "def": "Šuplja cev duž koje motorni proteini koračaju."
+        },
+        "plus-end": {
+          "name": "Plus kraj",
+          "def": "Kraj mikrotubule koji brzo raste, obično okrenut ka ivici ćelije."
+        }
+      },
+      "simplifications": [
+        "Vezikule se u prikazu cele ćelije kreću ravnomerno; pravi transport se zaustavlja, ponovo kreće i ponekad menja smer.",
+        "Svaka vezikula prikazana je sa jednom vrstom motornog proteina; pravi teret često istovremeno nosi nekoliko vrsta.",
+        "Transport miozinom duž aktina je opisan, ali nije animiran."
+      ],
+      "sizeContext": "Vezikule obložene klatrinom koje nastaju na plazma membrani ćelija sisara; drugi transportni nosači su različiti — od manjih vezikula do dugačkih cevi.",
+      "quantityContext": "Broj kopija proteina tereta u jednom nosaču koji napušta Goldžijev aparat, u ćelijama bubrega majmuna (COS) koje stvaraju fluorescentni virusni teret.",
+      "facts": {
+        "step": {
+          "label": "Dužina koraka kinezina",
+          "context": "Pojedinačni molekuli kinezina koji pomeraju kuglice u optičkoj zamci (in vitro)."
+        },
+        "atp": {
+          "label": "Molekuli ATP-a utrošeni po koraku od {step}",
+          "context": "Kinezin-1, merenja na pojedinačnim molekulima (in vitro)."
+        },
+        "head-step": {
+          "label": "Rastojanje koje svaka glava kinezina pređe po koraku",
+          "context": "Glave naizmenično menjaju mesta, „ruku preko ruke“ (fluorescencija pojedinačnih molekula, in vitro)."
+        },
+        "rates": {
+          "label": "Udeo tereta na čekanju koji svakog minuta krene dalje",
+          "context": "Iz ER-a u Goldžijev aparat i iz Goldžijevog aparata do površine ćelije, u ćelijama bubrega majmuna (COS)."
+        },
+        "lifetime": {
+          "label": "Životni vek nosača koji putuje od Goldžijevog aparata do površine",
+          "context": "Prosečno vreme do stapanja sa plazma membranom, u ćelijama COS-7."
+        }
+      },
+      "interesting": "Teret koji iz Goldžijevog aparata kreće ka površini ćelije često ne putuje u malim okruglim vezikulama, već u velikim, nepravilnim cevima koje se duž mikrotubula prenose do ivice ćelije, kako je pokazalo snimanje živih ćelija bubrega majmuna."
+    },
+    "mitochondria": {
+      "name": "Mitohondrije",
+      "synonyms": [
+        "mitohondrija",
+        "mitohondrijski",
+        "elektrana ćelije",
+        "energetska centrala",
+        "kriste",
+        "ATP sintaza",
+        "mtDNK",
+        "ćelijsko disanje",
+        "disanje"
+      ],
+      "short": "Organele sa dve membrane koje oslobađaju energiju iz molekula hrane i skladište je u ATP-u.",
+      "function": "Mitohondrije uz pomoć kiseonika razgrađuju molekule goriva koji potiču iz šećera, masti i aminokiselina. Elektroni oduzeti tim gorivima prolaze duž niza proteinskih kompleksa u unutrašnjoj membrani — lanca prenosa elektrona. Dok se elektroni kreću, kompleksi ispumpavaju protone (jone vodonika) iz unutrašnjosti i tako stvaraju razliku u koncentraciji protona i u električnom naelektrisanju sa dve strane unutrašnje membrane. Protoni se vraćaju kroz ATP sintazu, rotacioni motor koji taj tok koristi za sintezu ATP-a — molekula koji ćelijama služi kao energetska valuta. Mitohondrije takođe proizvode toplotu, učestvuju u sintezi nekih molekula, skladište kalcijum i pomažu u odlučivanju da li ćelija treba da se samouništi. One imaju sopstvenu malu kružnu DNK, ostatak svog bakterijskog porekla.",
+      "seeingCell": "Izdužena koralnocrvena tela rasuta po citoplazmi su mitohondrije, nacrtane približno u stvarnoj veličini. Kod izabrane mitohondrije spoljašnja membrana je uzdužno presečena, tako da se vidi unutrašnja membrana koja se savija ka unutra u pločaste kriste, a između njih matriks.",
+      "sampling": "Nacrtano je daleko manje mitohondrija nego što ih sadrži prava ćelija, kako bi unutrašnjost ostala vidljiva.",
+      "views": {
+        "organelle": {
+          "title": "Unutar mitohondrije",
+          "seeing": "Presečena mitohondrija. Glatka spoljašnja membrana okružuje unutrašnju membranu, koja se savija ka unutra u kriste. Uzan prostor između dve membrane je međumembranski prostor; unutrašnjost je matriks, u kome se nalaze mitohondrijska DNK (mali prstenovi) i mitohondrijski ribozomi (zrnca)."
+        },
+        "atp-synthase": {
+          "title": "Protonski gradijent i ATP sintaza",
+          "seeing": "Mali deo membrane kriste nacrtan u razmeri. Kompleksi I, III i IV lanca prenosa elektrona (purpurni) pumpaju protone (crvene varnice) iz matriksa (dole) u prostor unutar kriste (gore). Protoni se vraćaju kroz ATP sintazu (zlatnu) i okreću njen rotor; svaki pun obrtaj oslobađa u matriks {atp} molekula ATP-a (zeleni)."
+        }
+      },
+      "parts": {
+        "outer-membrane": {
+          "name": "Spoljašnja membrana",
+          "def": "Glatka spoljašnja granica, propustljiva za male molekule."
+        },
+        "inner-membrane": {
+          "name": "Unutrašnja membrana",
+          "def": "Gotovo nepropusna membrana na kojoj se nalazi mašinerija za pretvaranje energije."
+        },
+        "intermembrane-space": {
+          "name": "Međumembranski prostor",
+          "def": "Prostor između spoljašnje i unutrašnje membrane."
+        },
+        "cristae": {
+          "name": "Kriste",
+          "def": "Nabori unutrašnje membrane koji znatno povećavaju njenu površinu."
+        },
+        "matrix": {
+          "name": "Matriks",
+          "def": "Unutrašnjost, u kojoj se razgrađuju molekuli goriva i čuva mitohondrijska DNK."
+        },
+        "mtdna": {
+          "name": "Mitohondrijska DNK",
+          "def": "Mali kružni genom, nasleđen od majke."
+        },
+        "etc": {
+          "name": "Lanac prenosa elektrona",
+          "def": "Proteinski kompleksi koji prenose elektrone i pumpaju protone."
+        },
+        "atp-synthase": {
+          "name": "ATP sintaza",
+          "def": "Rotacioni enzim koji koristi tok protona za sintezu ATP-a."
+        },
+        "protons": {
+          "name": "Protoni (H⁺)",
+          "def": "Joni vodonika čija razlika u koncentraciji pokreće ATP sintazu."
+        }
+      },
+      "simplifications": [
+        "Mitohondrije su nacrtane kao odvojene cevi; u mnogim ćelijama one obrazuju razgranate mreže koje se neprestano stapaju i dele.",
+        "Prikaz izbliza pokazuje jednu ATP sintazu i po jednu kopiju svake pumpe; prave kriste su njima gusto ispunjene.",
+        "Prenosioci elektrona (ubihinon, citohrom c) i hemija razgradnje goriva nisu prikazani."
+      ],
+      "sizeContext": "Tipičan prečnik; po dužini se kreću od kratkih štapića do dugačkih, razgranatih mreža.",
+      "quantityContext": "Ćelije jetre pacova (hepatociti), prebrojano na elektronskim mikrografijama; brojevi se znatno razlikuju u zavisnosti od tipa i veličine ćelije.",
+      "facts": {
+        "volume": {
+          "label": "Udeo u zapremini ćelije jetre",
+          "context": "Najveći odeljak među organelama u toj ćeliji."
+        },
+        "inner-membrane": {
+          "label": "Udeo unutrašnje mitohondrijske membrane u ukupnim membranama ćelije",
+          "context": "Ćelija jetre; skoro koliko i granulirani ER ({rough})."
+        },
+        "mtdna": {
+          "label": "Dužina ljudske mitohondrijske DNK",
+          "context": "Kodira {proteins} proteina, {trnas} transportne RNK i {rrnas} ribozomske RNK."
+        },
+        "atp-per-turn": {
+          "label": "ATP nastao tokom jednog punog obrtaja ATP sintaze",
+          "context": "Po jedan na svakom od njena tri katalitička mesta; rotacija je prvi put direktno uočena 1997. godine."
+        },
+        "protons": {
+          "label": "Protoni utrošeni po molekulu ATP-a",
+          "context": "Mitohondrije iz goveđeg srca: prsten rotora ima {csub} podjedinica, pa {csub} protona pokreće jedan obrtaj u kome nastaju tri molekula ATP-a."
+        }
+      },
+      "interesting": "U ćeliji jetre mitohondrije zauzimaju {mito} zapremine — više nego jedro ({nucleus}) i granulirani ER ({rough}) zajedno."
+    },
+    "lysosomes": {
+      "name": "Lizozomi",
+      "synonyms": [
+        "lizozom",
+        "lizozomski",
+        "vezikula za varenje",
+        "centar za reciklažu",
+        "autofagija",
+        "autolizozom",
+        "unutarćelijsko varenje"
+      ],
+      "short": "Kisele kesice enzima obavijene membranom koje razgrađuju istrošene delove ćelije i materijal unet u ćeliju.",
+      "function": "Lizozomi su glavni odeljci ćelije za varenje i reciklažu. Protonske pumpe u njihovoj membrani održavaju kiselu unutrašnjost, u kojoj se nalaze desetine vrsta hidrolaza — enzima koji uz pomoć vode razlažu proteine, nukleinske kiseline, šećere i masti na njihove gradivne jedinice. Ovi enzimi najbolje rade u kiseloj sredini, što pomaže da ostatak ćelije bude zaštićen ako lizozom procuri. Materijal stiže iz endozoma (teret unet spolja), putem autofagije (istrošeni delovi ćelije obavijeni membranom) i, u specijalizovanim ćelijama, iz progutanih čestica. Transporteri u membrani lizozoma vraćaju gradivne jedinice — aminokiseline, šećere i nukleotide — u citosol radi ponovne upotrebe. Lizozomi služe i kao signalna čvorišta koja izveštavaju o tome koliko hranljivih materija ćelija ima na raspolaganju.",
+      "seeingCell": "Male ljubičaste kuglice rasute po citoplazmi su lizozomi, nacrtani približno u stvarnoj veličini. Njihova gusta, zrnasta unutrašnjost nagoveštava materijal koji se vari.",
+      "sampling": "Nacrtan je samo uzorak lizozoma.",
+      "views": {
+        "digestion": {
+          "title": "Varenje i reciklaža",
+          "seeing": "Presečen lizozom, nacrtan u razmeri. Protonske pumpe (V-ATPaze, narandžaste) u membrani ubacuju protone unutra i održavaju unutrašnjost kiselom. Enzimi hidrolaze (purpurni) seckaju teret koji stiže kada se kasni endozom stopi sa lizozomom (levo); delići postaju sve manji, a transporteri vraćaju aminokiseline u citosol. Omotač od šećera oblaže unutrašnju stranu membrane i štiti je od enzima."
+        }
+      },
+      "parts": {
+        "membrane": {
+          "name": "Membrana lizozoma",
+          "def": "Jednostruka membrana koja drži enzime za varenje zatvorene unutra."
+        },
+        "lumen": {
+          "name": "Kiseli lumen",
+          "def": "Unutrašnjost, koja se održava mnogo kiselijom od citosola."
+        },
+        "v-atpase": {
+          "name": "Protonska pumpa V-ATPaza",
+          "def": "Pumpa koja pomoću ATP-a ubacuje protone u lizozom i tako ga zakišeljava."
+        },
+        "hydrolase": {
+          "name": "Hidrolaze",
+          "def": "Enzimi koji razlažu velike molekule uz pomoć vode."
+        },
+        "membrane-glycans": {
+          "name": "Zaštitni omotač od šećera",
+          "def": "Jako glikozilovani membranski proteini koji oblažu unutrašnju stranu i štite membranu od varenja."
+        },
+        "transporter": {
+          "name": "Transporter hranljivih materija",
+          "def": "Membranski protein koji iznosi aminokiseline i druge proizvode u citosol."
+        }
+      },
+      "simplifications": [
+        "Lizozomi se veoma razlikuju po veličini i obliku; nacrtani su kao jednostavne kugle.",
+        "Prikazuje se jedan po jedan događaj stapanja; autofagija je opisana, ali nije animirana.",
+        "Enzimi su prikazani pomoću nekoliko uopštenih oblika."
+      ],
+      "sizeContext": "Raspon uočen elektronskom mikroskopijom u eukariotskim ćelijama; tipično {typical}. Veličina se menja u zavisnosti od tipa ćelije i dostupnosti hranljivih materija.",
+      "quantityContext": "Širok raspon za ćelije sisara; obično ih ima nekoliko stotina, a broj pada ispod {low} kada ćelijama nedostaju hranljive materije.",
+      "facts": {
+        "ph": {
+          "label": "pH unutar lizozoma",
+          "context": "Lizozomi sisara; kiselost održavaju protonske pumpe V-ATPaze."
+        },
+        "enzymes": {
+          "label": "Različiti enzimi za varenje",
+          "context": "Broj prema preglednom radu iz 2015. godine (stariji udžbenik navodi {older}); zajedno razgrađuju proteine, nukleinske kiseline, šećere i masti."
+        },
+        "membrane-proteins": {
+          "label": "Različiti proteini u membrani lizozoma",
+          "context": "Uključujući transportere koji iznose svarene proizvode u citosol."
+        },
+        "volume": {
+          "label": "Udeo u zapremini ćelije jetre",
+          "context": "Hepatocit (udžbenička tabela)."
+        },
+        "diseases": {
+          "label": "Nasledne lizozomske bolesti nakupljanja",
+          "context": "Svaka je pojedinačno retka, ali zajedno pogađaju otprilike 1 na {births} živorođenih."
+        }
+      },
+      "interesting": "Kristijan de Div (Christian de Duve) otkrio je lizozome 1955. godine; Nobelovu nagradu za fiziologiju ili medicinu za 1974. godinu podelio je sa Alberom Klodom (Albert Claude) i Džordžom Paladeom (George Palade) za otkrića o tome kako je ćelija organizovana."
+    },
+    "endosomes": {
+      "name": "Endozomi",
+      "synonyms": [
+        "endozom",
+        "rani endozom",
+        "kasni endozom",
+        "endozom za reciklažu",
+        "sortirajući endozom",
+        "multivezikularno telo",
+        "endocitoza",
+        "klatrin",
+        "obložena jamica"
+      ],
+      "short": "Membranski odeljci koji primaju materijal unet u ćeliju i razvrstavaju ga — za ponovnu upotrebu ili za razgradnju.",
+      "function": "Ćelije neprestano unose delove svoje plazma membrane zajedno sa tečnošću i određenim molekulima — taj proces se naziva endocitoza. Na najbolje proučenom putu receptori sa svojim teretom okupljaju se u jamicama obloženim proteinom klatrinom; jamice se otkidaju kao vezikule, odbacuju svoj omotač i stapaju se sa ranim endozomima blizu površine ćelije. Rani endozomi su blago kiseli, zbog čega mnogi molekuli tereta otpuštaju svoje receptore. Zatim sledi razvrstavanje: membranski proteini kao što su receptori vraćaju se do plazma membrane kroz uske cevčice (reciklaža), dok materijal namenjen razgradnji ostaje. Dok rani endozom sazreva u kasni, on se pomera ka središtu ćelije, postaje kiseliji i pupljenjem stvara male vezikule u sopstvenoj unutrašnjosti, pa postaje multivezikularno telo. Kasni endozomi se na kraju stapaju sa lizozomima, koji vare njihov sadržaj.",
+      "seeingCell": "Nebeskoplavi odeljci blizu ivice ćelije su rani endozomi, neki sa cevastim kracima. Veći i tamniji odeljci dublje u unutrašnjosti su kasni endozomi, u kojima se vide male vezikule. Kada su endozomi izabrani, naizmenično se ponavljaju tri događaja: unošenje na membrani, vraćanje na površinu i isporuka u lizozom.",
+      "sampling": "Nacrtan je samo uzorak ranih i kasnih endozoma.",
+      "views": {
+        "sorting": {
+          "title": "Razvrstavanje, reciklaža ili razgradnja",
+          "seeing": "Tri numerisana događaja, prikazana jedan za drugim. 1 Unošenje: receptori (plavi) sa teretom (žutim) okupljaju se u jamici obloženoj klatrinom, koja se otkida kao vezikula i stapa sa ranim endozomom. 2 Reciklaža: u kiseloj unutrašnjosti endozoma teret se otpušta, a prazni receptori vraćaju se do plazma membrane kroz cevčicu za reciklažu. 3 Razgradnja: endozom sazreva, ispunjava se unutrašnjim vezikulama i stapa sa lizozomom (ljubičastim), u kome se teret razgrađuje."
+        }
+      },
+      "parts": {
+        "coated-pit": {
+          "name": "Jamica obložena klatrinom",
+          "def": "Deo membrane obložen klatrinom koji se uvija ka unutra i obrazuje vezikulu."
+        },
+        "early-endosome": {
+          "name": "Rani (sortirajući) endozom",
+          "def": "Prva stanica za pristigle vezikule, blizu površine ćelije."
+        },
+        "recycling-tubule": {
+          "name": "Cevčica za reciklažu",
+          "def": "Uski produžetak koji vraća receptore do plazma membrane."
+        },
+        "late-endosome": {
+          "name": "Kasni endozom",
+          "def": "Kiseliji, zreli endozom koji će se stopiti sa lizozomom."
+        },
+        "intraluminal-vesicle": {
+          "name": "Intraluminalne vezikule",
+          "def": "Male vezikule nastale pupljenjem u unutrašnjost endozoma, koje nose membranske proteine namenjene razgradnji."
+        },
+        "receptor": {
+          "name": "Receptor",
+          "def": "Membranski protein koji na površini ćelije vezuje određeni teret."
+        },
+        "cargo": {
+          "name": "Teret",
+          "def": "Molekuli uneti u ćeliju, kao što su hranljive materije vezane za svoje nosače."
+        }
+      },
+      "simplifications": [
+        "Endozomi čine kontinuum odeljaka koji se menjaju; model prikazuje samo dva jasno odvojena tipa.",
+        "Prikazano je samo unošenje posredovano klatrinom; ćelije koriste i nekoliko drugih puteva.",
+        "Tri događaja prikazana su redom; u pravoj ćeliji odvijaju se neprestano, svuda istovremeno."
+      ],
+      "sizeContext": "Endozomi su različiti — od malih vezikula do velikih cevastih odeljaka; pristigle obložene vezikule imaju prečnik od {vesicle}.",
+      "quantityContext": "Udeo zapremine ćelije jetre koji zauzimaju endozomi; broj po ćeliji nije proveren.",
+      "facts": {
+        "early-ph": {
+          "label": "pH u ranim endozomima",
+          "context": "Ćelije sisara (pregledni rad)."
+        },
+        "late-ph": {
+          "label": "pH u kasnim endozomima",
+          "context": "Na putu ka lizozomima, gde je {lysosome} (ćelije sisara, pregledni rad)."
+        },
+        "ldl-receptor": {
+          "label": "Kružni put LDL receptora u ćeliju i nazad",
+          "context": "Svaki receptor se mnogo puta ponovo koristi tokom svog životnog veka od {life} (ćelije u kulturi)."
+        },
+        "mvb": {
+          "label": "Kasni endozomi se ispunjavaju unutrašnjim vezikulama",
+          "context": "Mašinerija ESCRT pupljenjem prenosi membranske proteine u unutrašnjost endozoma radi razgradnje."
+        },
+        "maturation": {
+          "label": "Endozomi sazrevaju dok se kreću ka unutra",
+          "context": "Putuju ka jedru, postaju kiseliji i dobijaju lizozomske komponente pre nego što se stope sa lizozomima."
+        }
+      },
+      "interesting": "Ćelije obnavljaju svoju površinu zapanjujućom brzinom: makrofag u kulturi pinocitozom svakog minuta unese {macrophage} svoje plazma membrane — što je ekvivalent cele njegove površine za {whole}. L ćelije, nalik fibroblastima, sporije su: {lcell} u minutu (cela površina za {lwhole}).",
+      "events": {
+        "uptake": "1 Unošenje",
+        "recycling": "2 Reciklaža",
+        "degradation": "3 Razgradnja"
+      }
+    },
+    "peroxisomes": {
+      "name": "Peroksizomi",
+      "synonyms": [
+        "peroksizom",
+        "mikrotelo",
+        "mikrotela",
+        "katalaza",
+        "oksidacija masnih kiselina",
+        "beta-oksidacija",
+        "β-oksidacija"
+      ],
+      "short": "Male organele obavijene jednom membranom koje obavljaju reakcije oksidacije, razgrađuju određene masti i uništavaju vodonik-peroksid.",
+      "function": "Peroksizomi sadrže enzime koji pomoću kiseonika oksiduju različite molekule. U nekim od tih reakcija nastaje vodonik-peroksid (H₂O₂), reaktivno jedinjenje koje bi moglo da ošteti ćeliju; drugi peroksizomski enzim, katalaza, brzo ga pretvara u vodu i kiseonik. Peroksizomi skraćuju masne kiseline veoma dugih lanaca, koje mitohondrije ne mogu direktno da obrade, i stvaraju posebne lipide zvane plazmalogeni, kojih ima u izobilju u izolacionim omotačima (mijelinu) oko nervnih vlakana. Peroksizomski proteini sintetišu se na slobodnim ribozomima u citosolu i unose se tek kada su gotovi, vođeni kratkim signalima za usmeravanje. Peroksizomi mogu da rastu i da se dele, a novi mogu nastati i iz ER-a.",
+      "seeingCell": "Male kuglice boje limete po celoj citoplazmi su peroksizomi, nacrtani približno u stvarnoj veličini. Unutrašnjost im je ravnomerno zrnasta: za razliku od peroksizoma iz jetre pacova ili miša, ljudski peroksizomi nemaju kristaloidno jezgro.",
+      "sampling": "Nacrtan je samo uzorak peroksizoma.",
+      "views": {
+        "reactions": {
+          "title": "Oksidacija i detoksikacija",
+          "seeing": "Deo presečenog peroksizoma, nacrtan u razmeri. Oksidaza (plava) pomoću kiseonika razgrađuje jedan molekul i oslobađa vodonik-peroksid (bledi parovi). Katalaza (velika, zelena) odmah pretvara vodonik-peroksid u vodu i kiseonik. Dugačak lanac masne kiseline ulazi kroz membranski transporter i skraćuje se korak po korak. Na ivici receptor za uvoz (žuti) unosi kroz membranu novosintetisani enzim."
+        }
+      },
+      "parts": {
+        "membrane": {
+          "name": "Membrana peroksizoma",
+          "def": "Jednostruka membrana koja ograničava organelu."
+        },
+        "matrix": {
+          "name": "Matriks",
+          "def": "Unutrašnjost bogata proteinima, u kojoj se nalaze oksidativni enzimi."
+        },
+        "catalase": {
+          "name": "Katalaza",
+          "def": "Enzim koji razlaže vodonik-peroksid na vodu i kiseonik."
+        },
+        "oxidase": {
+          "name": "Oksidaza",
+          "def": "Enzim koji oksiduje molekule kiseonikom i pritom oslobađa vodonik-peroksid."
+        },
+        "import-receptor": {
+          "name": "Receptor za uvoz (PEX5)",
+          "def": "Receptor koji prepoznaje signal za usmeravanje peroksizomskih enzima i unosi ih unutra."
+        },
+        "fatty-acid": {
+          "name": "Masna kiselina veoma dugog lanca",
+          "def": "Molekul masti koji se skraćuje u peroksizomima pre nego što ga mitohondrije potpuno razgrade."
+        }
+      },
+      "simplifications": [
+        "Prikazano je samo nekoliko reprezentativnih enzima; peroksizomi ih sadrže desetine.",
+        "Skraćivanje masnih kiselina prikazano je kao otkidanje delova jednog po jednog, bez međukoraka hemijskih reakcija.",
+        "Broj i veličina peroksizoma veoma se razlikuju među tipovima ćelija."
+      ],
+      "sizeContext": "Tipičan raspon prečnika; ćelije jetre su bogate peroksizomima.",
+      "quantityContext": "Udeo zapremine ćelije jetre koji zauzimaju peroksizomi; broj po ćeliji nije proveren.",
+      "facts": {
+        "catalase-role": {
+          "label": "Oksidaze stvaraju vodonik-peroksid, a katalaza ga uništava",
+          "context": "Katalaza ga pretvara u vodu i kiseonik ili ga koristi za oksidaciju drugih molekula."
+        },
+        "fatty-acids": {
+          "label": "Ovde se skraćuju masne kiseline veoma dugih lanaca",
+          "context": "Putem β-oksidacije, pre nego što ih mitohondrije potpuno razgrade."
+        },
+        "plasmalogens": {
+          "label": "Prvi koraci u sintezi plazmalogena",
+          "context": "To su najzastupljeniji fosfolipidi u mijelinu, koji izoluje nervna vlakna."
+        },
+        "pts1": {
+          "label": "Aminokiseline u peroksizomskoj „adresnoj oznaci“ (SKL)",
+          "context": "Dodavanje ove oznake na kraj citosolnog proteina šalje ga u peroksizome (eksperimenti sa reporterskim proteinima)."
+        },
+        "urate-oxidase": {
+          "label": "Ljudi nemaju funkcionalnu urat-oksidazu",
+          "context": "Mutacije su je onesposobile tokom evolucije čovekolikih majmuna; kod pacova, miševa i nekih drugih sisara ona obrazuje kristaloidno jezgro u peroksizomima jetre."
+        }
+      },
+      "interesting": "Katalaza je jedan od najbržih poznatih enzima: jedan molekul katalaze može da razgradi milione molekula vodonik-peroksida u sekundi."
+    },
+    "microtubules": {
+      "name": "Mikrotubule",
+      "synonyms": [
+        "mikrotubula",
+        "tubulin",
+        "dinamička nestabilnost",
+        "deobno vreteno",
+        "vreteno",
+        "citoskelet"
+      ],
+      "short": "Šuplje proteinske cevi koje se zrakasto šire iz središta ćelije, služe kao šine za transport i neprestano rastu i skraćuju se.",
+      "function": "Mikrotubule su šuplje cevi izgrađene od tubulina — parova proteina α- i β-tubulina koji se nadovezuju jedan na drugi u niti zvane protofilamenti; zid cevi obično čini {protofilaments} niti. Njihovi minus krajevi učvršćeni su u centrozomu blizu jedra, a plus krajevi rastu ka spolja. Mikrotubule su dinamične: kraj koji raste može naglo da pređe u brzo skraćivanje (katastrofa), a kasnije ponovo da počne da raste (spasavanje). Ova dinamička nestabilnost omogućava mreži da istražuje ćeliju i da se brzo preuređuje. Mikrotubule su šine za motorne proteine, određuju položaj organela, pomažu u održavanju oblika ćelije, obrazuju deobno vreteno koje razdvaja hromozome tokom deobe i čine osnovu treplji.",
+      "seeingCell": "Svetloplave linije koje se zrakasto šire iz centrozoma blizu jedra su mikrotubule. Pratite njihove vrhove: svaki raste ka spolja sa svetlom kapom, s vremena na vreme se brzo povuče, a zatim ponovo raste.",
+      "sampling": "Nacrtano je samo stotinak mikrotubula.",
+      "views": {
+        "dynamics": {
+          "title": "Dinamička nestabilnost",
+          "seeing": "Kraj mikrotubule koji raste, nacrtan u razmeri. Dimeri tubulina (α bledi, β tamnije plavi) dodaju se na vrhove {protofilaments} protofilamenata. Tek dodati dimeri još nose GTP (svetli) i obrazuju stabilizujuću kapu. Kada se kapa izgubi, protofilamenti se savijaju ka spolja i razdvajaju (katastrofa), a mikrotubula se brzo skraćuje sve dok ne bude spasena i ponovo ne počne da raste."
+        }
+      },
+      "parts": {
+        "protofilament": {
+          "name": "Protofilament",
+          "def": "Niz dimera tubulina; nekoliko njih jedan pored drugog čini zid cevi."
+        },
+        "tubulin-dimer": {
+          "name": "Dimer tubulina",
+          "def": "Jedan α-tubulin i jedan β-tubulin — gradivna jedinica dužine oko {dimerLength}."
+        },
+        "plus-end": {
+          "name": "Plus kraj",
+          "def": "Dinamični kraj koji raste i skraćuje se, obično okrenut ka ivici ćelije."
+        },
+        "minus-end": {
+          "name": "Minus kraj",
+          "def": "Kraj učvršćen u centrozomu."
+        },
+        "gtp-cap": {
+          "name": "GTP kapa",
+          "def": "Tek dodati tubulin sa vezanim GTP-om, koji stabilizuje kraj koji raste."
+        }
+      },
+      "simplifications": [
+        "U prikazu cele ćelije mikrotubule su nacrtane kao glatke cevi.",
+        "U modelu rast i skraćivanje prate pravilan ritam; u ćelijama su nasumični.",
+        "Proteini koji se vezuju za krajeve mikrotubula i regulišu ih nisu prikazani."
+      ],
+      "sizeContext": "Spoljašnji prečnik šuplje cevi.",
+      "quantityContext": "Protofilamenti u zidu većine mikrotubula u ćelijama. Broj mikrotubula u ćeliji veoma varira i retko se prebrojava.",
+      "facts": {
+        "dimer": {
+          "label": "Dužina jednog dimera tubulina",
+          "context": "Jedan α-tubulin i jedan β-tubulin; svaki protofilament je lanac dimera."
+        },
+        "instability": {
+          "label": "Mikrotubule naizmenično rastu i skraćuju se",
+          "context": "„Dinamička nestabilnost“, otkrivena 1984. godine pomoću prečišćenog tubulina."
+        },
+        "gtp-cap": {
+          "label": "Kapa od GTP-tubulina stabilizuje krajeve koji rastu",
+          "context": "Kada se kapa izgubi, kraj počinje brzo da se skraćuje."
+        },
+        "anchoring": {
+          "label": "Minus krajevi su učvršćeni u centrozomu",
+          "context": "U tipičnoj interfaznoj ćeliji plus krajevi su okrenuti ka ivici ćelije."
+        }
+      },
+      "interesting": "Kada je otkrivena dinamička nestabilnost, iznenađenje je bilo to što mikrotubule koje rastu i one koje se skraćuju postoje jedna pored druge, a svaka nepredvidivo prelazi iz jednog stanja u drugo."
+    },
+    "actin": {
+      "name": "Aktinski filamenti",
+      "synonyms": [
+        "aktin",
+        "aktinski filament",
+        "mikrofilament",
+        "mikrofilamenti",
+        "F-aktin",
+        "aktinski korteks",
+        "ćelijski korteks",
+        "stresna vlakna",
+        "lamelipodija"
+      ],
+      "short": "Tanki, savitljivi proteinski filamenti koji ispod membrane obrazuju potpornu mrežu i pokreću promene oblika ćelije i njeno kretanje.",
+      "function": "Aktinski filamenti, koji se nazivaju i mikrofilamenti, najtanja su vlakna citoskeleta. Svaki je uvijeni dvostruki niz proteina aktina. Njegova dva kraja se razlikuju: podjedinice se mnogo brže dodaju na „bodljikavi“ (plus) kraj nego na „šiljasti“ (minus) kraj. Aktin sa vezanim ATP-om priključuje se na bodljikavi kraj, postepeno pretvara ATP u ADP i verovatnije otpada sa šiljastog kraja, pa filament može da se ponaša kao pokretna traka — da raste na jednom kraju, a da se skraćuje na drugom. Neposredno ispod plazma membrane gusta mreža aktina, nazvana korteks, daje površini ćelije čvrstinu i oblik. Razgranate mreže guraju membranu napred kada ćelije puze, snopovi obrazuju izraštaje nalik prstima, a aktin u sadejstvu sa motornim proteinima miozinima proizvodi kontrakciju.",
+      "seeingCell": "Fina mreža boje ruže koja oblaže unutrašnju stranu plazma membrane je aktinski korteks. Filamenti trepere dok rastu i skraćuju se.",
+      "sampling": "Nacrtan je samo uzorak kratkih segmenata kortikalnih filamenata.",
+      "views": {
+        "treadmilling": {
+          "title": "Pokretna traka i grananje",
+          "seeing": "Aktinski filamenti koji potiskuju membranu na prednjoj ivici ćelije, nacrtani u razmeri. Svetle podjedinice ATP-aktina dodaju se na bodljikave krajeve blizu membrane (gore), dok stariji, manje sjajni ADP-aktin otpada sa šiljastih krajeva. Kompleks Arp2/3 (narandžasti) započinje nove grane pod uglom od oko {branchAngle} u odnosu na postojeće filamente i tako gradi mrežu koja gura membranu napred."
+        }
+      },
+      "parts": {
+        "filament": {
+          "name": "Aktinski filament",
+          "def": "Uvijeni dvostruki niz aktinskih podjedinica, širok oko {width}."
+        },
+        "barbed-end": {
+          "name": "Bodljikavi (plus) kraj",
+          "def": "Kraj koji brzo raste."
+        },
+        "pointed-end": {
+          "name": "Šiljasti (minus) kraj",
+          "def": "Kraj koji sporo raste i sa koga podjedinice lakše otpadaju."
+        },
+        "arp23": {
+          "name": "Kompleks Arp2/3",
+          "def": "Proteinski kompleks koji započinje novi filament kao granu na postojećem."
+        },
+        "cortex": {
+          "name": "Aktinski korteks",
+          "def": "Mreža aktina koja oblaže unutrašnju stranu plazma membrane."
+        },
+        "subunit": {
+          "name": "Aktinska podjedinica",
+          "def": "Pojedinačni protein aktin (G-aktin) koji nosi ATP ili ADP."
+        }
+      },
+      "simplifications": [
+        "Korteks je nacrtan kao kratki pravi segmenti; pravi filamenti su duži i međusobno umreženi.",
+        "Stresna vlakna i izraštaji za puzanje opisani su, ali nisu nacrtani u zaobljenoj ćeliji modela.",
+        "Motorni proteini miozini nisu prikazani."
+      ],
+      "sizeContext": "Prečnik filamenta (udžbenički raspon).",
+      "quantityContext": "Aktin je jedan od najzastupljenijih proteina u mnogim životinjskim ćelijama; broj filamenata po ćeliji nije standardno merilo.",
+      "facts": {
+        "barbed-rate": {
+          "label": "Konstanta brzine vezivanja ATP-aktina za bodljikavi kraj",
+          "context": "Naspram {pointed} na šiljastom kraju, pa bodljikavi krajevi rastu oko deset puta brže (prečišćeni aktin, in vitro)."
+        },
+        "branch-angle": {
+          "label": "Ugao grana koje stvara Arp2/3",
+          "context": "Prečišćeni proteini posmatrani elektronskom mikroskopijom."
+        },
+        "treadmilling": {
+          "label": "Filamenti mogu da se ponašaju kao pokretna traka",
+          "context": "Podjedinice se dodaju na bodljikavom kraju i odlaze sa šiljastog, pa filament može da se pomera, a da zadrži svoju dužinu."
+        },
+        "cortex": {
+          "label": "Mreža aktina oblaže plazma membranu",
+          "context": "Korteks daje površini ćelije čvrstinu i oblik."
+        }
+      },
+      "interesting": "Gotovo svaki pokret životinjske ćelije — puzanje, deoba, promena oblika, gutanje čestica — zavisi od toga da li se aktinski filamenti sklapaju i rasklapaju na pravom mestu u pravo vreme."
+    },
+    "intermediate-filaments": {
+      "name": "Intermedijarni filamenti",
+      "synonyms": [
+        "intermedijarni filament",
+        "srednji filamenti",
+        "vimentin",
+        "keratin",
+        "keratini",
+        "lamin",
+        "lamini",
+        "neurofilament",
+        "dezmin"
+      ],
+      "short": "Čvrsti proteinski filamenti nalik užetu koji pomažu ćelijama da izdrže istezanje i drže jedro na mestu.",
+      "function": "Intermedijarni filamenti dobili su ime po svojoj širini, koja je između širine aktinskih filamenata i mikrotubula. Za razliku od njih, izgrađeni su od dugačkih proteina nalik užetu, koji se uvijaju u parove, zatim se spajaju u međusobno smaknute grupe i na kraju pakuju u filamente — kao vlakna upredena u uže. Zbog toga su savitljivi, ali veoma teško pucaju, pa raspoređuju mehaničko opterećenje po celoj ćeliji. Različite ćelije koriste različite članove ove porodice: keratine u koži i drugim epitelskim ćelijama, vimentin u ćelijama vezivnog tkiva kao što su fibroblasti, dezmin u mišićima, a neurofilamente u neuronima. Istoj porodici pripadaju i jedrovi lamini, koji oblažu unutrašnjost jedra. Intermedijarni filamenti nemaju određen smer i nijedan motorni protein ne korača duž njih.",
+      "seeingCell": "Bledozlatni, blago talasasti filamenti obrazuju kavez oko jedra i pružaju se ka ivici ćelije; model pretpostavlja mrežu od vimentina, tipičnu za ćelije nalik fibroblastima. Blago se njišu, ali ostaju na mestu, što odražava njihovu potpornu, a ne transportnu ulogu.",
+      "sampling": "Nacrtan je samo uzorak filamenata.",
+      "views": {
+        "assembly": {
+          "title": "Sklapanje nalik upredanju užeta",
+          "seeing": "Kako se gradi intermedijarni filament, nacrtano u razmeri sleva nadesno. Dva proteina uvijaju se jedan oko drugog u dimer; dva dimera se slažu jedan pored drugog, smaknuto i u suprotnim smerovima (tetramer); osam tetramera se ređa u kratak filament jedinične dužine; a filamenti jedinične dužine spajaju se kraj uz kraj i zbijaju u zreli filament. Blago povlačenje na kraju pokazuje kako se filament isteže, a ne puca."
+        }
+      },
+      "parts": {
+        "filament": {
+          "name": "Zreli filament",
+          "def": "Vlakno nalik užetu, široko oko {width}."
+        },
+        "dimer": {
+          "name": "Dimer namotane zavojnice",
+          "def": "Dva proteina filamenta uvijena jedan oko drugog."
+        },
+        "tetramer": {
+          "name": "Tetramer",
+          "def": "Dva dimera jedan pored drugog, smaknuta i okrenuta u suprotnim smerovima."
+        },
+        "ulf": {
+          "name": "Filament jedinične dužine",
+          "def": "Kratak segment od oko osam tetramera; gradivna jedinica za rast."
+        },
+        "perinuclear-cage": {
+          "name": "Perinuklearni kavez",
+          "def": "Gusta korpa od filamenata oko jedra."
+        }
+      },
+      "simplifications": [
+        "Prave mreže intermedijarnih filamenata su gušće i više isprepletane.",
+        "Predstavljen je samo jedan tip filamenta (vimentin); ćelije mogu sadržati nekoliko tipova.",
+        "Sklapanje je prikazano kao uredan niz koraka; u ćelijama se odvija paralelno, a filamenti i razmenjuju podjedinice."
+      ],
+      "sizeContext": "Prečnik filamenta — između prečnika aktinskih filamenata i mikrotubula.",
+      "quantityContext": "Ljudski geni koji kodiraju proteine intermedijarnih filamenata; svaki tip ćelije koristi određen skup.",
+      "facts": {
+        "ulf": {
+          "label": "Dužina filamenta jedinične dužine",
+          "context": "Gradivna jedinica filamenta, sastavljena od oko {tetramers} tetramera (vimentin, prečišćeni protein)."
+        },
+        "no-polarity": {
+          "label": "Bez određenog smera i bez motornih proteina",
+          "context": "Za razliku od aktinskih filamenata i mikrotubula, intermedijarni filamenti nisu polarni i nijedan motorni protein ne korača duž njih."
+        },
+        "lamins": {
+          "label": "Jedrovi lamini pripadaju ovoj porodici",
+          "context": "Oni obrazuju laminu koja oblaže unutrašnju stranu jedrovog omotača."
+        },
+        "types": {
+          "label": "Različite ćelije koriste različite članove porodice",
+          "context": "Keratini u epitelskim ćelijama, vimentin u fibroblastima i drugim ćelijama vezivnog tkiva, dezmin u mišićima, neurofilamenti u neuronima."
+        }
+      },
+      "interesting": "Pojedinačni intermedijarni filamenti mogu se istegnuti na više od dvostruke prvobitne dužine, a da ne puknu (izmereno na izolovanim filamentima u laboratoriji)."
+    },
+    "centrosome": {
+      "name": "Centrozom",
+      "synonyms": [
+        "centrozomi",
+        "centriola",
+        "centriole",
+        "centar za organizaciju mikrotubula",
+        "bazalno telo",
+        "pericentriolarni materijal",
+        "ćelijski centar",
+        "citocentar"
+      ],
+      "short": "Glavni centar za organizaciju mikrotubula u životinjskim ćelijama: par centriola okružen oblakom proteina.",
+      "function": "Centrozom se nalazi pored jedra i učvršćuje minus krajeve mikrotubula, pa se mreža mikrotubula zrakasto širi iz njega. U njegovom središtu su dve centriole — kratki cilindri postavljeni pod pravim uglom, od kojih je svaki izgrađen od devet tripleta mikrotubula. Oko njih se nalazi pericentriolarni materijal, proteinski matriks koji sadrži prstenaste komplekse γ-tubulina, koji započinju (nukleiraju) nove mikrotubule. Centrozom se udvaja jednom u svakom ćelijskom ciklusu, a tokom deobe dva centrozoma organizuju polove deobnog vretena. U mnogim ćelijama koje se ne dele starija centriola (centriola majka) premešta se na površinu ćelije i obrazuje osnovu primarne treplje, čulne antene.",
+      "seeingCell": "Centrozom je bledi oblak boje jorgovana pored jedra, u kome se stiču sve mikrotubule. U njemu su dva mala cilindra pod pravim uglom — centriole — nacrtana približno u stvarnoj veličini. Goldžijeva traka savija se oko njega.",
+      "sampling": "Jedan centrozom sa dve centriole, kao u ćeliji pre replikacije DNK.",
+      "views": {
+        "centrioles": {
+          "title": "Par centriola",
+          "seeing": "Dve centriole nacrtane u razmeri. Svaka je cilindar od devet tripleta mikrotubula raspoređenih poput lopatica dečje vetrenjače. Centriola majka na jednom kraju nosi nastavke; centriola ćerka leži pod pravim uglom u odnosu na nju. Okolni pericentriolarni materijal sadrži prstenaste komplekse γ-tubulina (narandžaste), iz kojih nove mikrotubule rastu ka spolja."
+        }
+      },
+      "parts": {
+        "mother-centriole": {
+          "name": "Centriola majka",
+          "def": "Starija centriola, sa nastavcima; može da obrazuje osnovu treplje."
+        },
+        "daughter-centriole": {
+          "name": "Centriola ćerka",
+          "def": "Mlađa centriola, postavljena pod pravim uglom u odnosu na centriolu majku."
+        },
+        "triplets": {
+          "name": "Tripleti mikrotubula",
+          "def": "Devet grupa od po tri spojene mikrotubule koje čine zid centriole."
+        },
+        "pcm": {
+          "name": "Pericentriolarni materijal",
+          "def": "Proteinski matriks oko centriola koji započinje i učvršćuje mikrotubule."
+        },
+        "gamma-turc": {
+          "name": "Prstenasti kompleks γ-tubulina",
+          "def": "Kalup u obliku prstena iz koga raste nova mikrotubula."
+        },
+        "appendages": {
+          "name": "Nastavci",
+          "def": "Izraštaji na centrioli majci koji učvršćuju mikrotubule i pomažu joj da se pričvrsti za membranu."
+        }
+      },
+      "simplifications": [
+        "Pericentriolarni materijal nacrtan je kao mekani oblak; u stvarnosti je to uređena proteinska skela.",
+        "Prikazano je samo nekoliko kompleksa koji započinju mikrotubule.",
+        "Udvajanje centrozoma tokom ćelijskog ciklusa je opisano, ali nije animirano."
+      ],
+      "sizeContext": "Širina svake centriole; svaka je dugačka {length} (ćelije kičmenjaka).",
+      "quantityContext": "Centriole u ćeliji pre udvajanja DNK: jedan par, koji čini jedan centrozom. Udvajaju se jednom u svakom ćelijskom ciklusu.",
+      "facts": {
+        "triplets": {
+          "label": "Tripleti mikrotubula u svakoj centrioli",
+          "context": "Raspoređeni u prsten sa devetostrukom simetrijom."
+        },
+        "duplication": {
+          "label": "Centrozom se udvaja jednom u svakom ćelijskom ciklusu",
+          "context": "Tokom deobe dva centrozoma organizuju dva pola deobnog vretena."
+        },
+        "nucleation": {
+          "label": "Prstenasti kompleksi γ-tubulina započinju nove mikrotubule",
+          "context": "Nalaze se u pericentriolarnom materijalu oko centriola."
+        },
+        "cilium": {
+          "label": "Centriola majka može da obrazuje osnovu treplje",
+          "context": "U mnogim ćelijama koje se ne dele ona se pričvršćuje za površinu ćelije i iz nje izrasta primarna treplja."
+        }
+      },
+      "interesting": "Nove centriole rastu pod pravim uglom u odnosu na postojeće, i zato su dve centriole jednog centrozoma nacrtane pod pravim uglom jedna prema drugoj."
+    }
+  }
+}

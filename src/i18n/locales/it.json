@@ -1,0 +1,1991 @@
+{
+  "meta": {
+    "languageName": "Italiano",
+    "translationStatus": "Tradotto dall’inglese con l’assistenza dell’intelligenza artificiale e verificato per coerenza; non ancora rivisto da un esperto della materia di madrelingua italiana."
+  },
+  "app": {
+    "title": "Atlante della cellula umana",
+    "tagline": "Un viaggio illustrato dentro una cellula umana",
+    "metaDescription": "Esplora un modello 3D illustrativo di una cellula umana: 19 strutture, primi piani molecolari, una visita guidata e spiegazioni corredate di fonti in sette lingue.",
+    "structureMetaDescription": "{name}: {short} Esplora questa struttura in un modello 3D illustrativo di una cellula umana.",
+    "aboutMetaDescription": "Come è stato costruito il modello dell’Atlante della cellula umana: presupposti, semplificazioni, fonti, riconoscimenti e licenze.",
+    "titleSeparator": " — "
+  },
+  "loading": {
+    "title": "Preparazione della cellula",
+    "progress": "{percent}% completato",
+    "opening": "Apertura: {name}",
+    "steps": {
+      "locale": "Caricamento dei testi",
+      "engine": "Caricamento del motore 3D",
+      "structure": "Costruzione: {name}",
+      "materials": "Preparazione dei materiali",
+      "done": "Pronto"
+    },
+    "enter": "Entra nella cellula",
+    "enterHint": "Trascina per ruotare la cellula, scorri o usa due dita per lo zoom e seleziona una struttura qualsiasi per scoprirne di più.",
+    "readText": "Leggi invece l’atlante testuale",
+    "previewAlt": "Illustrazione di una cellula umana aperta in sezione per mostrare il nucleo e gli organelli"
+  },
+  "nav": {
+    "skipToExplanation": "Vai alla spiegazione",
+    "skipToStructures": "Vai all’elenco delle strutture",
+    "wholeCell": "Cellula intera",
+    "wholeCellHint": "Torna alla cellula intera",
+    "structures": "Strutture",
+    "showList": "Mostra l’elenco delle strutture",
+    "hideList": "Nascondi l’elenco delle strutture",
+    "previous": "Struttura precedente",
+    "next": "Struttura successiva",
+    "previousNamed": "Precedente: {name}",
+    "nextNamed": "Successiva: {name}",
+    "wrapNote": "Lo scorrimento è circolare: dopo l’ultima struttura si ritorna alla prima.",
+    "breadcrumb": "Posizione",
+    "selected": "selezionata",
+    "groupCount": {
+      "one": "{count} struttura",
+      "many": "{count} di strutture",
+      "other": "{count} strutture"
+    }
+  },
+  "search": {
+    "label": "Cerca strutture",
+    "placeholder": "Cerca, ad es. «membrana cellulare»",
+    "clear": "Cancella la ricerca",
+    "results": {
+      "one": "{count} risultato",
+      "many": "{count} di risultati",
+      "other": "{count} risultati"
+    },
+    "matched": "corrisponde a «{term}»",
+    "empty": "Nessuna struttura corrisponde a «{query}».",
+    "emptyHint": "Prova con un nome come «nucleo», «mitocondrio» o «RE», oppure sfoglia i gruppi qui sotto.",
+    "suggestions": "Suggerimenti"
+  },
+  "panel": {
+    "region": "Spiegazione",
+    "inTheCell": "Nella cellula",
+    "closeup": "Primo piano",
+    "viewSwitch": "Scegli una vista",
+    "subviews": "Viste in primo piano",
+    "whatYouSee": "Che cosa stai vedendo",
+    "whatItDoes": "Che cosa fa",
+    "numbers": "In cifre",
+    "typicalSize": "Dimensioni tipiche",
+    "typicalQuantity": "Quantità tipica nel tipo cellulare citato",
+    "drawnInModel": "Oggetti disegnati in questo modello",
+    "drawnCount": {
+      "one": "{count} disegnato (qualità attuale: {quality})",
+      "many": "{count} disegnati (qualità attuale: {quality})",
+      "other": "{count} disegnati (qualità attuale: {quality})"
+    },
+    "drawnContinuous": "Un’unica struttura continua.",
+    "drawnSymbolic": "Rappresentato da tenui particelle che suggeriscono l’affollamento; non sono singole molecole.",
+    "enlarged": "Disegno ingrandito circa ×{factor} rispetto alla scala reale, perché resti visibile.",
+    "trueScale": "Disegno all’incirca in scala reale.",
+    "symbolic": "Disegno con indicatori simbolici, non in scala.",
+    "renderedSize": "Nel modello: {dimension} di {size}",
+    "facts": "Dati chiave",
+    "interesting": "Lo sapevi?",
+    "parts": "Componenti",
+    "related": "Collegamenti",
+    "simplifications": "Semplificazioni del modello",
+    "sources": "Fonti",
+    "sourceRef": "Fonte {n}",
+    "sourcesLabel": "Fonti:",
+    "openCloseup": "Apri il primo piano",
+    "backToCell": "Torna alla vista della cellula",
+    "closeupLoading": "Caricamento del primo piano…",
+    "closeupError": "Impossibile caricare il primo piano.",
+    "slowdown": "Animazione rallentata circa ×{factor} rispetto al tempo reale.",
+    "noTimescale": "Il movimento è illustrativo e molto rallentato.",
+    "toScale": "Le molecole sono disegnate in scala tra loro.",
+    "moleculesEnlarged": "Alcuni componenti sono disegnati circa ×{factor} più grandi rispetto alla scala di questa vista.",
+    "frozen": "L’animazione biologica è bloccata.",
+    "expand": "Espandi la spiegazione",
+    "collapse": "Comprimi la spiegazione",
+    "dragHandle": "Ridimensiona la spiegazione",
+    "groupLabel": "Gruppo",
+    "pending": "Verifica in sospeso",
+    "pendingHint": "Non è stato possibile controllare la fonte di questa affermazione quando è stata creata questa versione.",
+    "sourcePending": "non ancora verificata",
+    "noValue": "Non esiste un valore unico; vedi la nota.",
+    "drawnFixed": {
+      "one": "{count} disegnato a ogni livello di qualità",
+      "many": "{count} disegnati a ogni livello di qualità",
+      "other": "{count} disegnati a ogni livello di qualità"
+    },
+    "drawnRange": "{low}–{high} disegnati, a seconda dell’impostazione di qualità",
+    "locationInset": "Dove si trova questo primo piano nella cellula intera"
+  },
+  "overview": {
+    "title": "Una cellula umana rappresentativa",
+    "lead": "Questo è un modello illustrativo di una singola cellula umana, larga circa {cellWidth} e aperta in sezione perché tu possa guardarci dentro.",
+    "model": "Mostra una cellula umana generica tra una divisione e l’altra (interfase). Non è il ritratto di un tipo cellulare specifico: le cellule umane reali vanno dai globuli rossi, larghi pochi micrometri, alle cellule nervose, le cui fibre possono essere più lunghe di un braccio. Il modello presuppone una cellula arrotondata e diploide, cioè con due corredi di 23 cromosomi, e femminile (XX), così da poter mostrare l’inattivazione del cromosoma X.",
+    "how": "Trascina per ruotare la cellula, scorri o usa due dita per lo zoom e seleziona una struttura (nella scena, nell’elenco, su un’etichetta o con la ricerca) per raggiungerla. Ogni struttura ha una vista «Nella cellula» e un primo piano.",
+    "colors": "I colori sono illustrativi: la maggior parte delle strutture cellulari è incolore. Degli oggetti ripetuti sono disegnate molte meno copie di quante ne contenga una cellula reale, e i più piccoli sono ingranditi, così che tutto resti visibile. Ogni valore numerico indica il tipo di cellula in cui è stato misurato.",
+    "units": "1 µm (micrometro) è un milionesimo di metro; 1 nm (nanometro) è un millesimo di micrometro.",
+    "groupsTitle": "19 strutture in cinque gruppi",
+    "startTour": "Inizia la visita guidata"
+  },
+  "controls": {
+    "toolbar": "Comandi del visualizzatore",
+    "tour": "Visita",
+    "startTour": "Inizia la visita guidata",
+    "labels": "Etichette",
+    "labelsHint": "Mostra o nascondi le etichette",
+    "bio": "Animazione biologica",
+    "freeze": "Blocca",
+    "play": "Riproduci",
+    "freezeHint": "Blocca l’animazione biologica (telecamera, lettura e selezione continuano a funzionare)",
+    "playHint": "Riproduci l’animazione biologica",
+    "bioPlaying": "In riproduzione",
+    "bioFrozen": "Bloccata",
+    "quality": "Qualità",
+    "qualityAuto": "Automatica",
+    "qualityAutoCurrent": "Automatica ({level})",
+    "qualityLow": "Bassa",
+    "qualityMedium": "Media",
+    "qualityHigh": "Alta",
+    "qualityHint": "Qualità di rendering: modifica la nitidezza, gli effetti e il numero di oggetti ripetuti disegnati. Tutte le 19 strutture restano visibili.",
+    "motion": "Movimento",
+    "motionSystem": "Segui il sistema",
+    "motionReduce": "Riduci il movimento",
+    "motionAllow": "Consenti il movimento",
+    "motionHint": "«Riduci il movimento» rende istantanei gli spostamenti della telecamera, ferma i movimenti decorativi e fa partire l’animazione biologica già bloccata.",
+    "language": "Lingua",
+    "export": "Salva immagine",
+    "help": "Aiuto",
+    "about": "Informazioni",
+    "zoomIn": "Ingrandisci",
+    "zoomOut": "Riduci",
+    "resetView": "Ripristina la vista",
+    "settings": "Impostazioni",
+    "more": "Altro",
+    "textAtlas": "Atlante testuale",
+    "view3d": "Vista 3D",
+    "close": "Chiudi",
+    "on": "Attivo",
+    "off": "Disattivo",
+    "freezeLabel": "Blocca l’animazione biologica",
+    "zoomGroup": "Zoom"
+  },
+  "tour": {
+    "title": "Visita guidata",
+    "start": "Inizia la visita",
+    "pause": "Metti in pausa la visita",
+    "resume": "Riprendi la visita",
+    "next": "Tappa successiva",
+    "previous": "Tappa precedente",
+    "exit": "Esci dalla visita",
+    "progress": "Tappa {current} di {total}",
+    "traveling": "In viaggio…",
+    "reading": "Prossima tappa tra {seconds} s",
+    "paused": "In pausa",
+    "noWrap": "La visita va dalla prima all’ultima tappa senza ricominciare da capo.",
+    "finished": "Visita completata: hai visto tutte le 19 strutture.",
+    "endedByManual": "La visita è terminata perché hai scelto tu una struttura."
+  },
+  "export": {
+    "title": "Salva un’immagine",
+    "intro": "Salva un’immagine PNG della vista attuale, esattamente come la inquadra ora la telecamera.",
+    "clean": "Immagine pulita",
+    "cleanDescription": "Solo la vista 3D, senza etichette né sovrapposizioni.",
+    "annotated": "Immagine annotata",
+    "annotatedDescription": "Aggiunge le etichette, la barra di scala fisica e una didascalia.",
+    "saving": "Preparazione dell’immagine…",
+    "saved": "File {file} salvato.",
+    "failed": "Impossibile salvare l’immagine: {reason}",
+    "unavailable": "Per esportare l’immagine serve la vista 3D.",
+    "caption": "{title} · modello illustrativo · {app}",
+    "scaleNote": "Barra di scala valida nel punto messo a fuoco."
+  },
+  "scale": {
+    "label": "Scala",
+    "bar": "Barra di scala: {length}",
+    "wholeCell": "Vista della cellula intera",
+    "closeup": "Primo piano · ×{factor} rispetto alla vista della cellula intera",
+    "focusNote": "Misura riferita al punto messo a fuoco.",
+    "enlargedNote": "{name}: disegno ingrandito ×{factor} rispetto alla scala"
+  },
+  "closeupCaptions": {
+    "outside": "Esterno della cellula",
+    "cytosol": "Citosol",
+    "nucleoplasm": "Nucleoplasma",
+    "lumen": "Lume",
+    "erLumen": "Lume del RE",
+    "cristaSpace": "Interno della cresta",
+    "atp": "ATP",
+    "adp": "ADP",
+    "calcium": "Ioni calcio",
+    "chaperone": "Chaperone molecolare",
+    "growing": "In crescita",
+    "shrinking": "In accorciamento",
+    "catastrophe": "Catastrofe",
+    "rescue": "Salvataggio",
+    "water": "Acqua",
+    "oxygen": "Ossigeno",
+    "peroxide": "Perossido di idrogeno",
+    "aminoAcids": "Amminoacidi",
+    "cargo": "Carico",
+    "fromEr": "Dal RE",
+    "toSurface": "Verso la superficie cellulare",
+    "toLysosomes": "Verso i lisosomi",
+    "plusDirection": "Verso l’estremità più",
+    "minusDirection": "Verso l’estremità meno",
+    "linkerDna": "DNA linker",
+    "rnaChains": "Catene di RNA in crescita",
+    "mitoRibosomes": "Ribosomi mitocondriali",
+    "importReceptor": "Recettore di importazione",
+    "newMicrotubule": "Nuovo microtubulo",
+    "pull": "Trazione",
+    "spindle": "Microtubuli del fuso",
+    "aminoAcid": "Amminoacido"
+  },
+  "help": {
+    "title": "Aiuto",
+    "intro": "Esplora un modello 3D illustrativo di una cellula umana. Tutto ciò che compare nella vista 3D è disponibile anche come testo.",
+    "exploreTitle": "Esplorare",
+    "explore": "Trascina per ruotare la cellula. Scorri, usa due dita o i pulsanti + e − per lo zoom. «Ripristina la vista» inquadra di nuovo il soggetto attuale.",
+    "selectTitle": "Selezionare una struttura",
+    "select": "Per selezionare una struttura, fai clic su di essa o toccala nella vista 3D, sceglila nell’elenco, fai clic sulla sua etichetta oppure cercala. Tutti e quattro i modi hanno lo stesso effetto: la telecamera raggiunge la struttura, si apre la spiegazione e la barra degli indirizzi si aggiorna, così puoi condividere il link.",
+    "viewsTitle": "Nella cellula e primo piano",
+    "views": "«Nella cellula» mostra la struttura al suo posto, mentre tutto il resto sfuma. «Primo piano» apre una scena separata e ingrandita, con i dettagli molecolari; la sua barra di scala e le sue note indicano di quanto è ingrandita e rallentata. Un piccolo riquadro mostra dove si trova il primo piano nella cellula intera.",
+    "tourTitle": "Visita guidata",
+    "tour": "La visita passa in ordine per tutte le 19 strutture. A ogni tappa aspetta che la telecamera sia arrivata, poi ti lascia circa {seconds} secondi per leggere. Puoi mettere in pausa, riprendere, andare avanti o indietro, oppure uscire. Se scegli tu una struttura, la visita termina.",
+    "freezeTitle": "Bloccare l’animazione biologica",
+    "freeze": "«Blocca» ferma il movimento biologico (filamenti, trasporto, macchine molecolari). Puoi comunque muovere la telecamera, leggere e selezionare le strutture. Il blocco dell’animazione è indipendente dalla pausa della visita.",
+    "qualityTitle": "Qualità e movimento",
+    "quality": "La qualità modifica la nitidezza, gli effetti e il numero di oggetti ripetuti disegnati (come i ribosomi); non elimina mai una struttura. «Automatica» si regola gradualmente per mantenere fluido il movimento. «Riduci il movimento» rende istantanei gli spostamenti della telecamera e fa partire l’animazione biologica già bloccata.",
+    "exportTitle": "Salvare le immagini",
+    "export": "«Salva immagine» scarica un PNG della vista attuale, pulito oppure annotato con etichette, barra di scala e didascalia.",
+    "shortcutsTitle": "Scorciatoie da tastiera",
+    "shortcutsNote": "Le scorciatoie vengono ignorate mentre scrivi nella casella di ricerca o usi un elemento di un modulo.",
+    "shortcuts": {
+      "search": "Cerca strutture",
+      "tour": "Avvia, metti in pausa o riprendi la visita",
+      "labels": "Mostra o nascondi le etichette",
+      "freeze": "Blocca o riproduci l’animazione biologica",
+      "overview": "Cellula intera (panoramica)",
+      "closeup": "Passa da «Nella cellula» a «Primo piano» e viceversa",
+      "prevNext": "Struttura precedente o successiva (lo scorrimento è circolare); durante la visita, tappa precedente o successiva",
+      "zoom": "Ingrandisci o riduci",
+      "reset": "Ripristina la vista",
+      "help": "Apri questa pagina di aiuto",
+      "escape": "Chiudi una finestra di dialogo; altrimenti risali di un livello (primo piano → nella cellula → cellula intera)"
+    },
+    "keys": {
+      "slash": "/",
+      "t": "T",
+      "l": "L",
+      "f": "F",
+      "o": "O",
+      "c": "C",
+      "arrows": "← / →",
+      "plusMinus": "+ / −",
+      "zero": "0",
+      "question": "?",
+      "escape": "Esc"
+    },
+    "sourcesTitle": "Tutte le fonti",
+    "sourcesFilter": "Filtra le fonti",
+    "sourcesEmpty": "Nessuna fonte corrisponde a «{query}».",
+    "sourcesGeneral": "Modello cellulare e fonti generali",
+    "sourcesCount": {
+      "one": "{count} fonte",
+      "many": "{count} di fonti",
+      "other": "{count} fonti"
+    },
+    "aboutLink": "Informazioni sul modello, riconoscimenti e licenze",
+    "sourcePendingNote": "Le fonti contrassegnate come «non ancora verificata» sono pubblicazioni ben note che non è stato possibile controllare automaticamente quando è stata creata questa versione."
+  },
+  "about": {
+    "title": "Informazioni su questo atlante",
+    "modelTitle": "Il modello",
+    "model": "L’Atlante della cellula umana è un modello illustrativo, non fotografico, di una cellula umana rappresentativa. È disegnato in micrometri: la cellula è larga circa {cellWidth} e il suo nucleo circa {nucleusWidth}. Le strutture sono state disposte da un generatore procedurale con seme fisso, perciò a ogni visita la disposizione è la stessa.",
+    "assumptionsTitle": "Presupposti",
+    "assumptions": [
+      "Una cellula umana generica, non un tipo cellulare specifico; i valori numerici nelle spiegazioni indicano il tipo cellulare, la specie o il contesto sperimentale in cui sono stati misurati.",
+      "Interfase (fase G1): la cellula si trova tra una divisione e l’altra, quindi i cromosomi sono sotto forma di cromatina decondensata e c’è un solo centrosoma con due centrioli.",
+      "Diploide (due corredi di 23 cromosomi) e femminile (XX), quindi uno dei due cromosomi X è mostrato come X inattivo (corpo di Barr).",
+      "Una rete di filamenti intermedi di vimentina, tipica delle cellule simili ai fibroblasti; le cellule epiteliali userebbero invece le cheratine.",
+      "Una forma arrotondata con un’apertura in sezione sempre rivolta verso chi guarda."
+    ],
+    "simplificationsTitle": "Semplificazioni",
+    "simplifications": [
+      "I colori sono illustrativi.",
+      "Gli oggetti ripetuti (ribosomi, mitocondri, vescicole, filamenti) sono disegnati in numero molto inferiore rispetto alle cellule reali, e gli oggetti molto piccoli sono ingranditi; ogni spiegazione indica quanti oggetti sono disegnati e di quanto sono ingranditi.",
+      "Le animazioni sono illustrazioni didattiche: sono rallentate, semplificate e di solito mostrano un evento alla volta. I primi piani indicano di quanto sono rallentati.",
+      "I primi piani sono scene separate, a una scala diversa; non si trovano letteralmente all’interno della scena della cellula intera."
+    ],
+    "improvementsTitle": "Miglioramenti dell’implementazione",
+    "improvements": "Rispetto all’esperienza di riferimento descritta nelle specifiche del progetto, questa implementazione aggiunge la ricerca con sinonimi, un controllo visibile della qualità di rendering e un’impostazione esplicita per ridurre il movimento.",
+    "sourcesTitle": "Fonti",
+    "sources": "Ogni dato chiave rimanda alla sua fonte. Quando è stata creata questa versione, la maggior parte delle fonti è stata controllata confrontandola con i risultati dei motori di ricerca relativi alle pagine dell’editore o della biblioteca; le poche che non è stato possibile controllare sono contrassegnate come «non ancora verificata», e le affermazioni che si basano su di esse sono contrassegnate come «Verifica in sospeso». I valori numerici mantengono il contesto di misura indicato nella fonte.",
+    "translationTitle": "Traduzioni",
+    "translation": "{status}",
+    "creditsTitle": "Riconoscimenti",
+    "credits": "Idea ispirata all’esperienza Cellula Humana. Il codice, la geometria, le illustrazioni e i testi di questo progetto sono originali. Realizzato con React, Three.js, React Three Fiber e camera-controls.",
+    "licensesTitle": "Licenze",
+    "licenses": "Caratteri: Alegreya e Alegreya Sans (Huerta Tipográfica) e Noto Sans SC (Google, Adobe), tutti con licenza SIL Open Font License 1.1. Le librerie software sono distribuite con licenza MIT. Non vengono usati immagini o modelli 3D esterni; vedi ASSET_LICENSES.md nel repository del codice sorgente.",
+    "close": "Chiudi"
+  },
+  "errors": {
+    "title": "La vista 3D non è disponibile",
+    "webgl": "Il browser o il dispositivo non è riuscito ad avviare la grafica 3D (WebGL 2).",
+    "webglHelp": "Prova ad attivare l’accelerazione hardware nelle impostazioni del browser, ad aggiornare il browser o a usare un altro dispositivo. L’atlante completo è disponibile come testo qui sotto.",
+    "engineLoad": "Impossibile caricare la vista 3D.",
+    "engineLoadHelp": "Controlla la connessione e riprova. L’atlante completo è disponibile come testo qui sotto.",
+    "contextLost": "Il sistema grafico ha interrotto la vista 3D.",
+    "contextLostHelp": "Può succedere quando un dispositivo sta esaurendo la memoria grafica o quando il suo driver grafico si riavvia. Riavvia la vista 3D o continua a leggere l’atlante testuale.",
+    "runtime": "La vista 3D si è interrotta a causa di un errore imprevisto.",
+    "runtimeHelp": "Riavvia la vista 3D o continua con l’atlante testuale qui sotto.",
+    "simulated": "La vista 3D è stata disattivata per un test.",
+    "simulatedHelp": "Rimuovi «renderer=fail» dall’indirizzo per usare la vista 3D.",
+    "retry": "Riprova",
+    "restart3d": "Riavvia la vista 3D",
+    "localeFailed": "Impossibile caricare la lingua {language}.",
+    "localeStandIn": "Impossibile caricare la lingua {language}, perciò questa pagina è mostrata in inglese.",
+    "notFound": "Questa pagina non esiste, perciò viene mostrata la cellula intera.",
+    "dismiss": "Ignora"
+  },
+  "atlas": {
+    "title": "Atlante testuale",
+    "intro": "L’atlante completo in forma di testo: ogni struttura con la sua spiegazione, i valori numerici e le fonti.",
+    "contents": "Indice",
+    "backToTop": "Torna all’inizio",
+    "noJs": "La vista 3D interattiva richiede JavaScript. Tutte le spiegazioni si trovano qui sotto.",
+    "openIn3d": "Apri nella vista 3D",
+    "illustration": "Illustrazione del primo piano tratta dal modello 3D: {name}"
+  },
+  "dimensions": {
+    "diameter": "diametro",
+    "thickness": "spessore",
+    "width": "larghezza",
+    "length": "lunghezza"
+  },
+  "quantity": {
+    "approx": "circa {q}",
+    "over": "più di {q}",
+    "upTo": "fino a {q}",
+    "under": "meno di {q}"
+  },
+  "units": {
+    "nm": "{n} nm",
+    "um": "{n} µm",
+    "mm": "{n} mm",
+    "m": "{n} m",
+    "pg": "{n} pg",
+    "bp": {
+      "one": "{n} paio di basi",
+      "many": "{n} di paia di basi",
+      "other": "{n} paia di basi"
+    },
+    "kb": "{n} kb",
+    "Gb": "{n} miliardi di paia di basi",
+    "MDa": "{n} MDa",
+    "pH": "pH {n}",
+    "percent": "{n}%",
+    "percentVolume": "{n}% del volume cellulare",
+    "percentMembrane": "{n}% di tutte le membrane della cellula",
+    "percentMass": "{n}% della massa della membrana",
+    "percentIncrease": "+{n}%",
+    "percentPerMinute": "{n}% al minuto",
+    "perCell": "{n} per cellula",
+    "perUm2": "{n} per µm²",
+    "perSecond": "{n} al secondo",
+    "perMinute": "{n} al minuto",
+    "timesPerSecond": "{n} al secondo",
+    "aaPerSecond": "{n} amminoacidi al secondo",
+    "bpPerDivision": "{n} paia di basi per divisione",
+    "rateConstant": "{n} µM⁻¹ s⁻¹",
+    "minutes": "{n} min",
+    "hours": "{n} h",
+    "seconds": "{n} s",
+    "days": {
+      "one": "{n} giorno",
+      "many": "{n} di giorni",
+      "other": "{n} giorni"
+    },
+    "degrees": "{n}°",
+    "uM": "{n} µM",
+    "nMolar": "{n} nM",
+    "gPerL": "{n} g/L",
+    "molecules": {
+      "one": "{n} molecola",
+      "many": "{n} di molecole",
+      "other": "{n} molecole"
+    },
+    "proteins": {
+      "one": "{n} proteina",
+      "many": "{n} di proteine",
+      "other": "{n} proteine"
+    },
+    "genes": {
+      "one": "{n} gene",
+      "many": "{n} di geni",
+      "other": "{n} geni"
+    },
+    "chromosomes": {
+      "one": "{n} cromosoma",
+      "many": "{n} di cromosomi",
+      "other": "{n} cromosomi"
+    },
+    "enzymes": {
+      "one": "{n} enzima",
+      "many": "{n} di enzimi",
+      "other": "{n} enzimi"
+    },
+    "diseases": {
+      "one": "{n} malattia",
+      "many": "{n} di malattie",
+      "other": "{n} malattie"
+    },
+    "protofilaments": {
+      "one": "{n} protofilamento",
+      "many": "{n} di protofilamenti",
+      "other": "{n} protofilamenti"
+    },
+    "ratio": "{n} : 1",
+    "times": "×{n}",
+    "protonsPerAtp": "{n} protoni per ATP",
+    "atpPerTurn": "{n} ATP per giro",
+    "count": "{n}"
+  },
+  "groups": {
+    "boundary": "Confine e interno della cellula",
+    "genetic": "Materiale genetico e strutture nucleari",
+    "protein": "Produzione e trasporto delle proteine",
+    "energy": "Energia, digestione e trasformazioni chimiche",
+    "support": "Sostegno strutturale e movimento"
+  },
+  "relations": {
+    "partOf": "Fa parte di",
+    "contains": "Contiene",
+    "enclosedBy": "All’interno di",
+    "continuousWith": "In continuità con",
+    "attachesTo": "Si lega a",
+    "receivesFrom": "Riceve materiale da",
+    "sendsTo": "Invia materiale a",
+    "travelsAlong": "Si sposta lungo",
+    "organizes": "Organizza",
+    "organizedBy": "Organizzatore",
+    "fusesWith": "Si fonde con",
+    "supports": "Sostiene",
+    "supportedBy": "Riceve sostegno da",
+    "suppliesEnergyTo": "Fornisce energia a",
+    "madeIn": "Si forma in",
+    "makes": "Produce",
+    "protects": "Protegge",
+    "anchors": "Fa da ancoraggio a",
+    "worksWith": "Collabora con"
+  },
+  "structures": {
+    "plasma-membrane": {
+      "name": "Membrana plasmatica",
+      "synonyms": [
+        "membrana cellulare",
+        "membrana citoplasmatica",
+        "plasmalemma",
+        "superficie cellulare",
+        "doppio strato lipidico",
+        "bilayer lipidico",
+        "membrana",
+        "doppio strato"
+      ],
+      "short": "Il confine sottile e flessibile che racchiude la cellula e controlla che cosa entra e che cosa esce.",
+      "function": "La membrana plasmatica è formata da due strati di molecole lipidiche (un doppio strato lipidico) costellati di proteine. Ogni lipide ha una testa che attrae l’acqua (idrofila) e due code che la evitano (idrofobe): per questo i lipidi si dispongono con le code rivolte verso l’interno e formano una barriera che la maggior parte delle molecole solubili in acqua non riesce ad attraversare da sola. Le proteine inserite nel doppio strato funzionano da canali, pompe, trasportatori e recettori: lasciano passare determinati ioni e nutrienti, percepiscono segnali come gli ormoni e ancorano la cellula alle cellule vicine e all’ambiente circostante. Le catene di zuccheri sulla superficie esterna formano un rivestimento chiamato glicocalice, che aiuta le cellule a riconoscersi a vicenda.",
+      "seeingCell": "La superficie esterna blu e traslucida è la membrana plasmatica. Un’apertura in sezione è sempre rivolta verso di te, così puoi vedere l’interno; il bordo luminoso indica dove la membrana è tagliata. La membrana è disegnata molte volte più spessa di quanto sia in realtà, perché il suo bordo resti visibile.",
+      "sampling": "Disegnata come un’unica superficie continua.",
+      "views": {
+        "bilayer": {
+          "title": "Doppio strato lipidico",
+          "seeing": "Un tratto di membrana largo circa {patch}, disegnato in scala. Le teste chiare con le loro code appaiate formano i due strati di fosfolipidi; i piccoli corpi gialli inseriti tra di essi sono molecole di colesterolo. Una proteina canale (verde acqua) attraversa la membrana e lascia passare gli ioni (piccole scintille), un recettore (viola) sporge verso l’esterno e le catene ramificate di zuccheri in alto formano il glicocalice. Sotto, un filamento di actina della corteccia sostiene la membrana. I lipidi vibrano e scivolano lateralmente perché il doppio strato si comporta come un fluido bidimensionale."
+        }
+      },
+      "parts": {
+        "bilayer": {
+          "name": "Doppio strato lipidico",
+          "def": "Due strati di lipidi con le code rivolte verso l’interno: la barriera di base di ogni membrana cellulare."
+        },
+        "phospholipid": {
+          "name": "Fosfolipide",
+          "def": "Il lipide di membrana più comune: una testa contenente un gruppo fosfato, con due code di acidi grassi."
+        },
+        "cholesterol": {
+          "name": "Colesterolo",
+          "def": "Un lipide rigido che si inserisce tra i fosfolipidi e regola la fluidità della membrana."
+        },
+        "channel": {
+          "name": "Canale ionico",
+          "def": "Una proteina con un poro che, quando è aperto, permette a determinati ioni di attraversare rapidamente la membrana."
+        },
+        "receptor": {
+          "name": "Recettore",
+          "def": "Una proteina che lega una molecola segnale all’esterno della cellula e trasmette il messaggio all’interno."
+        },
+        "glycocalyx": {
+          "name": "Glicocalice",
+          "def": "Il rivestimento ricco di zuccheri formato dalle catene di carboidrati legate alle proteine e ai lipidi di membrana."
+        }
+      },
+      "simplifications": [
+        "Nelle membrane reali le proteine sono molto più fitte di quanto mostrato.",
+        "Nella vista della cellula intera la membrana è disegnata circa dieci volte più spessa che nella realtà.",
+        "Nel primo piano il movimento dei lipidi è rallentato all’incirca di un milione di volte o più."
+      ],
+      "sizeContext": "Spessore del solo doppio strato lipidico; le proteine e le catene di zuccheri sporgono oltre. Valore indicativo (BioNumbers, da Physical Biology of the Cell).",
+      "quantityContext": "Molecole lipidiche nella membrana plasmatica di una piccola cellula animale: una stima da manuale dell’ordine di grandezza. Le cellule più grandi ne hanno proporzionalmente di più.",
+      "facts": {
+        "lipid-density": {
+          "label": "Molecole lipidiche per micrometro quadrato di doppio strato",
+          "context": "Contando entrambi gli strati; stima da manuale."
+        },
+        "protein-share": {
+          "label": "Quota proteica della massa di una tipica membrana plasmatica",
+          "context": "Per confronto, nella mielina (la guaina isolante che avvolge le fibre nervose): {myelin}; nella membrana mitocondriale interna: {inner}."
+        },
+        "lipids-per-protein": {
+          "label": "Molecole lipidiche per ogni molecola proteica",
+          "context": "In una membrana composta per metà da proteine (in massa); i lipidi sono molto più piccoli delle proteine."
+        },
+        "cholesterol": {
+          "label": "Rapporto tra colesterolo e fosfolipidi",
+          "context": "Le membrane plasmatiche animali contengono colesterolo in quantità molare all’incirca pari a quella dei fosfolipidi."
+        },
+        "small-share": {
+          "label": "Superficie della membrana del reticolo endoplasmatico rispetto a quella della membrana plasmatica",
+          "context": "Cellula del fegato (epatocita); {pancreas} in una cellula esocrina del pancreas. La membrana plasmatica è solo una piccola parte della membrana totale di una cellula."
+        }
+      },
+      "interesting": "I lipidi di membrana non stanno mai fermi. Nei doppi strati lipidici artificiali un lipide si scambia di posto con un vicino con una frequenza di {swaps}, così può percorrere {distance} (la lunghezza di un grosso batterio) in {time}."
+    },
+    "cytoplasm": {
+      "name": "Citoplasma",
+      "synonyms": [
+        "citosol",
+        "matrice citoplasmatica",
+        "ialoplasma",
+        "interno della cellula",
+        "fluido cellulare",
+        "liquido intracellulare",
+        "protoplasma"
+      ],
+      "short": "Tutto ciò che si trova all’interno della membrana plasmatica, tranne il nucleo: un gel acquoso e affollato in cui sono immersi gli organelli e in cui avviene gran parte della chimica della cellula.",
+      "function": "Il citoplasma è costituito dal citosol, la sua parte fluida, insieme agli organelli e al citoscheletro sospesi al suo interno. Il citosol non è un brodo diluito: è affollato di proteine, RNA, zuccheri, sali e molte altre molecole. Qui avvengono molte reazioni chimiche, come le prime tappe della demolizione del glucosio (glicolisi), e i ribosomi liberi nel citosol producono le proteine destinate a restare all’interno della cellula. Le molecole si muovono nel citoplasma per diffusione, cioè urtandosi a caso, e vengono anche trasportate attivamente lungo i binari del citoscheletro.",
+      "seeingCell": "Tenui granelli fluttuanti riempiono lo spazio tra gli organelli e rappresentano il citosol affollato; sono un segnale visivo, non singole molecole. Per selezionare il citoplasma, fai clic su uno spazio vuoto all’interno della cellula o toccalo.",
+      "sampling": "Tenui particelle suggeriscono l’affollamento; non sono singole molecole.",
+      "views": {
+        "crowding": {
+          "title": "Citosol affollato",
+          "seeing": "Un cubo di citosol largo circa {cube}, disegnato in scala. Proteine ed enzimi di molte dimensioni (blu e verdi), ribosomi (dorati), piccoli RNA transfer a forma di L e un filamento di RNA messaggero affollano lo spazio, attraversato da un filamento di actina. Tutto si urta in modo casuale. Acqua, ioni e piccole molecole sono stati omessi per lasciar vedere le molecole più grandi."
+        }
+      },
+      "parts": {
+        "cytosol": {
+          "name": "Citosol",
+          "def": "La parte fluida del citoplasma, all’esterno degli organelli."
+        },
+        "enzyme": {
+          "name": "Enzimi e altre proteine",
+          "def": "Proteine che accelerano le reazioni chimiche; nel citosol ne fluttuano migliaia di tipi diversi."
+        },
+        "free-ribosome": {
+          "name": "Ribosoma libero",
+          "def": "Un ribosoma nel citosol che produce una proteina destinata a restare nella cellula."
+        },
+        "mrna": {
+          "name": "RNA messaggero (mRNA)",
+          "def": "Una copia in RNA di un gene, che porta le istruzioni per costruire una proteina."
+        },
+        "filament": {
+          "name": "Filamento del citoscheletro",
+          "def": "Una fibra proteica che attraversa il citosol; qui, un filamento di actina."
+        }
+      },
+      "simplifications": [
+        "Acqua, ioni e piccole molecole sono omessi.",
+        "I granelli nella vista della cellula intera danno solo un’idea dell’affollamento.",
+        "Il movimento molecolare è enormemente rallentato."
+      ],
+      "sizeContext": "Quota del volume di una cellula del fegato (epatocita) occupata dal citosol, la parte fluida del citoplasma. Le proporzioni variano tra i diversi tipi cellulari.",
+      "quantityContext": "Proteine per litro di cellula: un valore di lavoro assunto nelle stime di BioNumbers per una cellula del fegato e per una cellula del timo, non una misura diretta del citosol.",
+      "facts": {
+        "mito-share": {
+          "label": "Mitocondri",
+          "context": "Quota del volume di una cellula del fegato: in quella cellula è il compartimento di organelli più grande."
+        },
+        "er-share": {
+          "label": "Cisterne del RE ruvido",
+          "context": "Quota del volume di una cellula del fegato. Cisterne del RE liscio e del Golgi, insieme: {smooth} in più."
+        },
+        "small-share": {
+          "label": "Perossisomi, lisosomi ed endosomi (ciascuno)",
+          "context": "Quota del volume di una cellula del fegato."
+        },
+        "ph": {
+          "label": "pH del citosol",
+          "context": "Vicino alla neutralità (valore da manuale); a confronto, l’interno dei lisosomi è acido."
+        }
+      },
+      "interesting": "Gli organelli occupano molto spazio: in una cellula tipica i compartimenti delimitati da membrane riempiono quasi metà del volume, e il citosol occupa lo spazio che resta tra di essi."
+    },
+    "nucleus": {
+      "name": "Nucleo",
+      "synonyms": [
+        "nucleo cellulare",
+        "nuclei",
+        "involucro nucleare",
+        "membrana nucleare",
+        "poro nucleare",
+        "pori nucleari",
+        "complesso del poro nucleare",
+        "centro di controllo"
+      ],
+      "short": "Il compartimento più grande della cellula, che custodisce il DNA e controlla quali geni vengono usati.",
+      "function": "Il nucleo contiene quasi tutto il DNA della cellula, impacchettato insieme a proteine nei cromosomi. È racchiuso dall’involucro nucleare: due membrane separate da uno stretto spazio, delle quali quella esterna è in continuità con il reticolo endoplasmatico. L’involucro è perforato da migliaia di complessi del poro nucleare, grandi varchi fatti di proteine. Le piccole molecole li attraversano liberamente, mentre quelle più grandi vengono controllate: le proteine necessarie nel nucleo vengono trasportate all’interno, mentre gli RNA messaggeri e le subunità ribosomiali prodotti nel nucleo vengono trasportati all’esterno. Una rete di proteine chiamate lamine, la lamina nucleare, riveste la membrana interna e aiuta il nucleo a mantenere la sua forma.",
+      "seeingCell": "Il grande corpo viola vicino al centro è il nucleo. Il suo involucro è aperto verso di te e mostra la cromatina e i nucleoli all’interno. I piccoli anelli sparsi sulla superficie sono complessi del poro nucleare, disegnati alle loro dimensioni reali di circa {poreSize}. Le particelle verde acqua che si muovono verso l’interno rappresentano le proteine importate; quelle color ambra che si muovono verso l’esterno rappresentano l’RNA e le subunità ribosomiali esportati.",
+      "sampling": "Un solo nucleo, disegnato all’incirca a grandezza reale; dei suoi complessi del poro è mostrato solo un campione.",
+      "views": {
+        "pore": {
+          "title": "Complesso del poro nucleare",
+          "seeing": "Una sezione dell’involucro nucleare che mostra la membrana esterna e quella interna, lo spazio tra le due e un complesso del poro nucleare largo circa {poreSize}. Anelli con simmetria di ordine otto ancorano il poro; in alto delle fibre si protendono nel citoplasma, mentre in basso, sul lato nucleare, pende un canestro. Un carico verde acqua legato a un recettore di importazione scende nel nucleo, mentre un pacchetto color ambra di RNA messaggero sale ed esce. La rete della lamina sostiene la membrana interna."
+        }
+      },
+      "parts": {
+        "outer-membrane": {
+          "name": "Membrana nucleare esterna",
+          "def": "La membrana esterna dell’involucro; è in continuità con il reticolo endoplasmatico e può portare ribosomi."
+        },
+        "inner-membrane": {
+          "name": "Membrana nucleare interna",
+          "def": "La membrana interna dell’involucro: è rivolta verso la cromatina e vi è ancorata la lamina."
+        },
+        "perinuclear-space": {
+          "name": "Spazio perinucleare",
+          "def": "Lo stretto spazio tra le due membrane, in continuità con l’interno del reticolo endoplasmatico."
+        },
+        "pore-complex": {
+          "name": "Complesso del poro nucleare",
+          "def": "Un grande assemblaggio di proteine (nucleoporine) a forma di anello, che forma un canale regolato attraverso entrambe le membrane."
+        },
+        "lamina": {
+          "name": "Lamina nucleare",
+          "def": "Una rete di filamenti di lamine che sostiene l’involucro e contribuisce a organizzare la cromatina."
+        },
+        "import": {
+          "name": "Importazione",
+          "def": "Le proteine dotate di un segnale di localizzazione nucleare vengono portate all’interno da recettori di importazione."
+        },
+        "export": {
+          "name": "Esportazione",
+          "def": "Gli RNA messaggeri e le subunità ribosomiali vengono trasportati nel citoplasma da recettori di esportazione."
+        }
+      },
+      "simplifications": [
+        "Sono disegnati solo poche centinaia di complessi del poro; un nucleo umano ne ha migliaia.",
+        "Importazione ed esportazione sono mostrate come singole particelle che si muovono in modo regolare; il trasporto reale si basa su recettori che compiono cicli continui, sull’energia fornita dal sistema Ran e su eventi molto rapidi.",
+        "Il nucleo è disegnato come un ellissoide liscio; i nuclei reali possono avere pieghe e solchi."
+      ],
+      "sizeContext": "Quota del volume di una cellula del fegato occupata dal nucleo; negli epatociti all’interno del tessuto epatico: {range}. Le dimensioni del nucleo variano tra i diversi tipi cellulari.",
+      "quantityContext": "Paia di basi di DNA in un nucleo diploide femminile (XX), calcolate dal genoma di riferimento; {male} in una cellula maschile.",
+      "facts": {
+        "dna-length": {
+          "label": "Lunghezza del DNA di un nucleo, se fosse disteso",
+          "context": "Cellula diploide femminile ({male} in una cellula maschile); valore calcolato dalla sequenza del genoma."
+        },
+        "dna-mass": {
+          "label": "Massa del DNA di un nucleo",
+          "context": "Cellula diploide femminile; valore calcolato dalla sequenza del genoma."
+        },
+        "pore-size": {
+          "label": "Larghezza di un complesso del poro nucleare",
+          "context": "Complessi del poro dei vertebrati, tra i più grandi assemblaggi proteici della cellula."
+        },
+        "pore-traffic": {
+          "label": "Eventi di trasporto che un complesso del poro può gestire ogni secondo",
+          "context": "Stima basata su misure di trasporto in cellule permeabilizzate e in nuclei isolati."
+        },
+        "territories": {
+          "label": "Ogni cromosoma ha il suo territorio",
+          "context": "Nel nucleo in interfase i cromosomi occupano regioni separate, disposte in modo non casuale (articolo di rassegna)."
+        }
+      },
+      "interesting": "Un nucleo che occupa appena una piccola frazione del volume di una cellula del fegato ({share}) contiene {length} di DNA."
+    },
+    "chromosomes": {
+      "name": "Cromosomi",
+      "synonyms": [
+        "cromosoma",
+        "cromatina",
+        "genoma",
+        "cromatidio",
+        "centromero",
+        "corpo di Barr",
+        "X inattivo",
+        "cromosoma X",
+        "nucleosoma",
+        "istoni"
+      ],
+      "short": "Lunghe molecole di DNA impacchettate con proteine. In questa cellula, che si trova tra una divisione e l’altra, sono decondensate in cromatina, che riempie il nucleo.",
+      "function": "Un cromosoma è una singola, lunghissima molecola di DNA insieme alle proteine che la impacchettano. Le cellule umane hanno normalmente {chromosomeCount} cromosomi, riuniti in {pairCount} coppie: un corredo da ciascun genitore. Il DNA si avvolge attorno a gruppi di proteine chiamate istoni e forma i nucleosomi, come un filo avvolto su dei rocchetti; questi vengono poi ripiegati ulteriormente. Durante l’interfase (il periodo tra una divisione cellulare e l’altra, in cui la cellula cresce e svolge le sue funzioni) i cromosomi sono relativamente distesi (cromatina), così che i geni possano essere letti, e ogni cromosoma occupa una propria regione del nucleo, detta territorio cromosomico. Solo quando la cellula si prepara a dividersi i cromosomi si condensano nelle forme compatte a X che si vedono nei libri di testo: ciascuno è allora formato da due copie identiche (i cromatidi fratelli) unite in una regione ristretta chiamata centromero.",
+      "seeingCell": "Dentro il nucleo aperto, {chromosomeCount} grovigli colorati mostrano i territori cromosomici di una cellula in interfase; le due copie di ogni coppia di cromosomi hanno lo stesso colore. Poiché si presume che questa cellula modello sia femminile (XX), uno dei cromosomi X è mostrato come X inattivo: un corpo compatto e denso chiamato corpo di Barr, disegnato qui a ridosso dell’involucro nucleare.",
+      "sampling": "Sono disegnati tutti i {chromosomeCount} cromosomi, come fibre parecchie volte più spesse della cromatina reale.",
+      "views": {
+        "metaphase": {
+          "title": "Cromosoma condensato (mitosi)",
+          "seeing": "Questa forma non esiste nella cellula in interfase: mostra un cromosoma durante la metafase della mitosi, dopo che il DNA è stato duplicato e condensato. I due cromatidi fratelli sono uniti a livello del centromero, dove si trova il cinetocore, una piattaforma proteica che si aggancia ai microtubuli del fuso. Le estremità luminose sono i telomeri."
+        },
+        "nucleosomes": {
+          "title": "Impacchettamento del DNA",
+          "seeing": "Un breve tratto di cromatina disegnato in scala. La doppia elica del DNA, larga circa {dnaWidth}, compie quasi due giri attorno al nucleo proteico di ogni nucleosoma (un rocchetto di otto proteine istoniche, largo circa {nucleosomeWidth}), con brevi tratti di DNA linker tra un rocchetto e l’altro, come perle infilate su un filo."
+        }
+      },
+      "parts": {
+        "territory": {
+          "name": "Territorio cromosomico",
+          "def": "La regione del nucleo in interfase occupata da un cromosoma."
+        },
+        "inactive-x": {
+          "name": "X inattivo (corpo di Barr)",
+          "def": "Nelle cellule femminili (XX) uno dei cromosomi X viene silenziato e compattato in un corpo denso chiamato corpo di Barr."
+        },
+        "chromatid": {
+          "name": "Cromatidio fratello",
+          "def": "Ciascuna delle due copie identiche di un cromosoma dopo la duplicazione del DNA; si separano durante la divisione."
+        },
+        "centromere": {
+          "name": "Centromero",
+          "def": "La regione ristretta in cui i cromatidi fratelli sono tenuti uniti."
+        },
+        "kinetochore": {
+          "name": "Cinetocore",
+          "def": "Un complesso proteico sul centromero che durante la divisione si aggancia ai microtubuli del fuso."
+        },
+        "chromosome-end": {
+          "name": "Telomero",
+          "def": "Il cappuccio protettivo di DNA ripetuto presente a ciascuna estremità di un cromosoma."
+        },
+        "nucleosome": {
+          "name": "Nucleosoma",
+          "def": "DNA avvolto attorno a un nucleo di otto proteine istoniche; l’unità di base della cromatina."
+        },
+        "dna": {
+          "name": "Doppia elica del DNA",
+          "def": "Due filamenti complementari di DNA avvolti l’uno attorno all’altro."
+        }
+      },
+      "simplifications": [
+        "I territori sono disegnati come fibre aggrovigliate in regioni arrotondate; i territori reali sono irregolari e si mescolano ai bordi.",
+        "Le fibre di cromatina sono disegnate parecchie volte più spesse del reale.",
+        "Il cromosoma condensato del primo piano appartiene a una cellula in divisione, non a questa cellula in interfase."
+      ],
+      "sizeContext": "Lunghezza complessiva del DNA di tutti i cromosomi di una cellula diploide femminile, se fosse disteso da un capo all’altro. In questa cellula in interfase è ripiegato in un nucleo largo pochi micrometri.",
+      "quantityContext": "Cellula umana diploide normale: {pairs} coppie, cioè {autosomePairs} coppie di autosomi più due cromosomi sessuali (XX nelle femmine, XY nei maschi).",
+      "facts": {
+        "genome-size": {
+          "label": "Una copia completa del genoma umano",
+          "context": "Primo assemblaggio senza lacune (da telomero a telomero), pubblicato nel 2022; le stime più vecchie dei manuali indicano {older}."
+        },
+        "diploid-content": {
+          "label": "DNA in un nucleo diploide femminile",
+          "context": "In una cellula maschile: {male} (valore calcolato dalla sequenza del genoma)."
+        },
+        "kinds": {
+          "label": "Tipi diversi di cromosomi umani",
+          "context": "I cromosomi da 1 a 22, più X e Y."
+        },
+        "x-inactivation": {
+          "label": "Nelle cellule femminili un cromosoma X è disattivato",
+          "context": "Ipotesi proposta da Mary Lyon nel 1961 sulla base di studi sui topi."
+        },
+        "nucleosome": {
+          "label": "DNA avvolto attorno al nucleo di un nucleosoma",
+          "context": "Circa {turns} giri attorno a otto proteine istoniche, secondo la struttura cristallografica del 1997."
+        }
+      },
+      "interesting": "L’X inattivo fu osservato molto prima di essere compreso. Nel 1949 Murray Barr ed Ewart Bertram notarono un corpicciolo scuro in più nei nuclei delle cellule nervose di gatti femmina, ma non di gatti maschi. Nel 1961 Mary Lyon propose che in ogni cellula femminile un cromosoma X sia disattivato."
+    },
+    "telomeres": {
+      "name": "Telomeri",
+      "synonyms": [
+        "telomero",
+        "estremità dei cromosomi",
+        "cappucci dei cromosomi",
+        "shelterina",
+        "telomerasi",
+        "ansa T",
+        "ansa telomerica"
+      ],
+      "short": "Cappucci protettivi di DNA ripetuto alle estremità di ogni cromosoma.",
+      "function": "Ogni estremità cromosomica porta molte copie della breve sequenza di DNA TTAGGG, legate da un complesso proteico protettivo chiamato shelterina. La punta estrema si ripiega su se stessa formando un’ansa (l’ansa T, o T-loop) e infila la sua estremità a filamento singolo nella doppia elica. In questo modo le estremità naturali restano nascoste al macchinario di riparazione del DNA della cellula, che altrimenti le scambierebbe per DNA rotto e unirebbe i cromosomi tra loro. Poiché il macchinario che copia il DNA non riesce a copiare completamente le ultimissime estremità di una molecola di DNA lineare, nella maggior parte delle cellule del corpo i telomeri si accorciano un po’ a ogni divisione; telomeri molto corti segnalano alla cellula di smettere di dividersi. Un enzima chiamato telomerasi può aggiungere di nuovo le ripetizioni; è attivo nelle cellule staminali, nelle cellule che producono ovuli e spermatozoi e nella maggior parte delle cellule tumorali.",
+      "seeingCell": "I punti giallo brillante alle estremità delle fibre di cromatina indicano i telomeri: sono {telomereCount}, due per ogni cromosoma. Sono indicatori simbolici: un telomero reale è un tratto di DNA troppo piccolo per essere visto a questa scala.",
+      "sampling": "Sono indicati tutti i {telomereCount} telomeri di una cellula diploide.",
+      "views": {
+        "t-loop": {
+          "title": "L’ansa telomerica",
+          "seeing": "L’estremità del DNA di un cromosoma, disegnata in scala. Ogni segmento colorato lungo la doppia elica è una ripetizione TTAGGG. La sporgenza a filamento singolo sulla punta si ripiega all’indietro e si infila nella doppia elica, formando l’ansa T. Le proteine della shelterina (viola e verde acqua) rivestono le ripetizioni e tengono l’ansa in posizione."
+        }
+      },
+      "parts": {
+        "repeats": {
+          "name": "Ripetizioni TTAGGG",
+          "def": "Molte copie di una sequenza di DNA di sei lettere, che costituiscono i telomeri umani."
+        },
+        "overhang": {
+          "name": "Sporgenza 3′",
+          "def": "Un tratto a filamento singolo del filamento ricco di G che sporge proprio all’estremità."
+        },
+        "t-loop": {
+          "name": "Ansa T",
+          "def": "Un’ansa che si forma quando la sporgenza si reinserisce tra le ripetizioni a doppio filamento, nascondendo l’estremità."
+        },
+        "shelterin": {
+          "name": "Shelterina",
+          "def": "Un complesso di sei proteine che lega il DNA telomerico e protegge le estremità dei cromosomi."
+        },
+        "chromosome-end": {
+          "name": "Estremità del cromosoma",
+          "def": "La punta di un braccio cromosomico, dove si trova il telomero."
+        }
+      },
+      "simplifications": [
+        "Nella vista della cellula intera i telomeri sono mostrati come punti luminosi; in realtà sono tratti di DNA.",
+        "Il primo piano mostra solo poche ripetizioni; un telomero reale ne contiene da centinaia a migliaia.",
+        "La shelterina è rappresentata con forme semplificate anziché come singole proteine."
+      ],
+      "sizeContext": "Lunghezza del tratto ripetuto a ciascuna estremità cromosomica nelle cellule somatiche umane; varia con l’età, il tessuto e l’individuo.",
+      "quantityContext": "Telomeri in una cellula diploide prima che il suo DNA venga duplicato: uno a ciascuna estremità di tutti i {chromosomes} cromosomi.",
+      "facts": {
+        "repeat": {
+          "label": "Lunghezza dell’unità ripetuta, TTAGGG",
+          "context": "La stessa sequenza di sei lettere chiude le estremità di ogni cromosoma umano."
+        },
+        "shelterin": {
+          "label": "Proteine del complesso shelterina",
+          "context": "TRF1, TRF2, POT1, TIN2, TPP1 e RAP1."
+        },
+        "shortening": {
+          "label": "Perdita di telomero a ogni divisione cellulare",
+          "context": "Fibroblasti umani in coltura; misura riferita a ogni raddoppiamento della popolazione."
+        },
+        "t-loop": {
+          "label": "I telomeri terminano con un’ansa",
+          "context": "L’ansa T è stata osservata al microscopio elettronico nel DNA telomerico di cellule umane e di topo."
+        },
+        "telomerase": {
+          "label": "La telomerasi, l’enzima che allunga i telomeri, è stata scoperta nel 1985",
+          "context": "Fu individuata per la prima volta in estratti dell’organismo unicellulare Tetrahymena."
+        }
+      },
+      "interesting": "La prima sequenza completa e senza lacune di un genoma umano è stata pubblicata solo nel 2022, dal consorzio Telomere-to-Telomere (T2T): ogni cromosoma, tranne l’Y, è stato letto da un telomero all’altro."
+    },
+    "nucleolus": {
+      "name": "Nucleolo",
+      "synonyms": [
+        "nucleoli",
+        "fabbrica dei ribosomi",
+        "organizzatore nucleolare",
+        "regione organizzatrice nucleolare",
+        "NOR"
+      ],
+      "short": "Una regione densa all’interno del nucleo in cui vengono costruite le subunità dei ribosomi.",
+      "function": "Il nucleolo si forma attorno ai geni per l’RNA ribosomiale (rRNA), che si trovano raggruppati su {norPairs} coppie di cromosomi. Non ha una membrana: le sue molecole si raccolgono in un compartimento distinto, simile a una goccia. Un enzima chiamato RNA polimerasi I copia i geni dell’rRNA; il lungo RNA che produce viene poi tagliato, modificato chimicamente e ripiegato, mentre vi si uniscono le proteine ribosomiali, importate dal citoplasma. Le subunità ribosomiali minore e maggiore, una volta completate, vengono esportate separatamente attraverso i pori nucleari e si uniscono in ribosomi funzionanti solo nel citoplasma. I nucleoli sono più grandi nelle cellule che producono molte proteine.",
+      "seeingCell": "I corpi arancioni all’interno del nucleo sono i nucleoli; questa cellula ne ha uno grande e uno piccolo. Sezionati, mostrano tre strati: centri fibrillari chiari, un guscio fibrillare denso attorno a ciascuno di essi e una regione esterna granulare. Le piccole particelle che lasciano il nucleolo sono nuove subunità ribosomiali dirette verso i pori nucleari.",
+      "sampling": "Sono disegnati due nucleoli, all’incirca a grandezza reale.",
+      "views": {
+        "assembly": {
+          "title": "La costruzione delle subunità ribosomiali",
+          "seeing": "Una sezione di un nucleolo. Al confine tra un centro fibrillare e la componente fibrillare densa, i geni dell’RNA ribosomiale vengono copiati: le catene di RNA in crescita si diramano dal DNA come un albero di Natale. Mentre si sposta verso l’esterno, l’RNA viene elaborato e vi si uniscono proteine; nella componente granulare prendono forma le subunità minori (40S) e maggiori (60S), che si allontanano verso il nucleoplasma."
+        }
+      },
+      "parts": {
+        "fibrillar-center": {
+          "name": "Centro fibrillare",
+          "def": "Regioni centrali chiare che contengono il DNA ribosomiale."
+        },
+        "dense-fibrillar": {
+          "name": "Componente fibrillare densa",
+          "def": "Il guscio attorno a ciascun centro fibrillare, dove l’rRNA viene prodotto e subisce le prime fasi di elaborazione."
+        },
+        "granular": {
+          "name": "Componente granulare",
+          "def": "La regione esterna in cui vengono assemblate le subunità ribosomiali."
+        },
+        "rdna": {
+          "name": "DNA ribosomiale",
+          "def": "Geni per l’RNA ribosomiale, ripetuti molte volte."
+        },
+        "small-subunit": {
+          "name": "Subunità minore (40S)",
+          "def": "La parte più piccola del ribosoma, che legge l’RNA messaggero."
+        },
+        "large-subunit": {
+          "name": "Subunità maggiore (60S)",
+          "def": "La parte più grande del ribosoma, che unisce tra loro gli amminoacidi."
+        }
+      },
+      "simplifications": [
+        "I tre strati sono disegnati come gusci regolari; nei nucleoli reali sono irregolari e intrecciati.",
+        "Le catene ramificate di RNA sono ingrandite per renderle visibili.",
+        "L’assemblaggio delle subunità coinvolge centinaia di molecole ausiliarie che non sono mostrate."
+      ],
+      "sizeContext": "Le dimensioni dei nucleoli variano a seconda di quanto attivamente la cellula produce ribosomi: le cellule in rapida crescita li hanno più grandi. Una cellula può avere uno o più nucleoli.",
+      "quantityContext": "Cromosomi che portano gruppi di geni dell’RNA ribosomiale in una cellula diploide: i bracci corti dei cromosomi 13, 14, 15, 21 e 22, in due copie ciascuno.",
+      "facts": {
+        "production": {
+          "label": "Subunità ribosomiali prodotte al minuto",
+          "context": "Una cellula HeLa in crescita (una linea cellulare tumorale umana)."
+        },
+        "layers": {
+          "label": "Strati distinti all’interno di un nucleolo",
+          "context": "Centri fibrillari, componente fibrillare densa e componente granulare."
+        },
+        "liquid": {
+          "label": "Gli strati si comportano come gocce liquide separate",
+          "context": "Dimostrato nei nucleoli delle cellule uovo di rana (Xenopus) e con proteine purificate."
+        },
+        "firre": {
+          "label": "Un RNA tiene l’X inattivo accanto al nucleolo",
+          "context": "Nelle cellule di topo, l’RNA non codificante Firre contribuisce ad ancorarlo lì."
+        }
+      },
+      "interesting": "Il cromosoma X inattivo fu scoperto accanto al nucleolo: nel 1949 venne descritto per la prima volta come un piccolo «satellite nucleolare» nelle cellule nervose di gatti femmina."
+    },
+    "ribosomes": {
+      "name": "Ribosomi",
+      "synonyms": [
+        "ribosoma",
+        "polisoma",
+        "polisomi",
+        "poliribosoma",
+        "traduzione",
+        "sintesi proteica",
+        "RNA ribosomiale"
+      ],
+      "short": "Macchine molecolari che leggono l’RNA messaggero e costruiscono le proteine un amminoacido alla volta.",
+      "function": "Un ribosoma è formato da due subunità, ciascuna costituita da RNA ribosomiale e da decine di proteine. La traduzione, cioè la produzione di una proteina a partire da un RNA messaggero (mRNA), inizia quando la subunità minore trova l’inizio di un mRNA e vi si unisce la subunità maggiore. Gli RNA transfer (tRNA) portano gli amminoacidi; ogni tRNA si appaia con una parola in codice di tre lettere (un codone) sull’mRNA. Il ribosoma tiene i tRNA uno accanto all’altro, lega la catena in crescita all’amminoacido appena arrivato e poi avanza di un codone. La nuova catena proteica esce attraverso un tunnel nella subunità maggiore. I ribosomi liberi nel citosol producono proteine che restano nel citosol, nel nucleo o nei mitocondri; i ribosomi sul reticolo endoplasmatico ruvido producono proteine destinate alle membrane o all’esportazione. Spesso più ribosomi leggono contemporaneamente lo stesso mRNA, formando un polisoma.",
+      "seeingCell": "Le tante minuscole particelle dorate sono i ribosomi. Alcuni fluttuano liberi, spesso disposti a spirale o in catene (polisomi); altri sono disseminati sul reticolo endoplasmatico ruvido.",
+      "sampling": "È disegnata solo una minima parte dei ribosomi di una cellula reale.",
+      "views": {
+        "translation": {
+          "title": "Traduzione",
+          "seeing": "Un ribosoma disegnato in scala, largo circa {size}. La subunità minore (oro pallido) trattiene l’RNA messaggero, i cui codoni sono mostrati come segmenti colorati. Gli RNA transfer (a forma di L) arrivano uno dopo l’altro, cedono il loro amminoacido e se ne vanno. La catena proteica in crescita (perline) emerge dal tunnel di uscita della subunità maggiore (oro intenso)."
+        }
+      },
+      "parts": {
+        "large-subunit": {
+          "name": "Subunità maggiore (60S)",
+          "def": "Unisce tra loro gli amminoacidi; contiene il tunnel di uscita."
+        },
+        "small-subunit": {
+          "name": "Subunità minore (40S)",
+          "def": "Lega l’mRNA e controlla che ogni codone corrisponda al suo tRNA."
+        },
+        "mrna": {
+          "name": "RNA messaggero",
+          "def": "Le istruzioni in codice, lette tre lettere (un codone) alla volta."
+        },
+        "trna": {
+          "name": "RNA transfer",
+          "def": "Una molecola adattatrice che trasporta un amminoacido specifico e si appaia con un codone."
+        },
+        "polypeptide": {
+          "name": "Catena proteica in crescita",
+          "def": "La nuova catena di amminoacidi, che inizia a ripiegarsi mentre emerge."
+        },
+        "exit-tunnel": {
+          "name": "Tunnel di uscita",
+          "def": "Un canale che attraversa la subunità maggiore e da cui esce la nuova catena."
+        }
+      },
+      "simplifications": [
+        "Nella vista della cellula intera i ribosomi sono ingranditi e molto meno numerosi che in una cellula reale.",
+        "Il primo piano mostra solo le fasi principali; la fase di inizio e molte proteine ausiliarie sono omesse.",
+        "I tRNA sono rappresentati come semplici forme a L."
+      ],
+      "sizeContext": "Larghezza complessiva; i ribosomi non sono sferici. Per i ribosomi dei mammiferi si indica un valore di circa 25 nm.",
+      "quantityContext": "Cellule HeLa (una linea cellulare tumorale umana) in crescita in coltura; stima basata sul loro contenuto di RNA. I numeri variano tra i tipi cellulari e a seconda dello stato di crescita.",
+      "facts": {
+        "mass": {
+          "label": "Massa di un ribosoma umano 80S",
+          "context": "Dalla struttura a risoluzione quasi atomica del ribosoma umano."
+        },
+        "parts": {
+          "label": "Proteine di un ribosoma umano",
+          "context": "Più {rnas} RNA ribosomiali: la subunità maggiore ha {large} proteine e tre rRNA, la subunità minore {small} proteine e un rRNA."
+        },
+        "speed": {
+          "label": "Velocità di traduzione",
+          "context": "Velocità media misurata mediante profilazione dei ribosomi (ribosome profiling) in cellule staminali embrionali di topo, non in cellule umane."
+        },
+        "modifications": {
+          "label": "Unità costitutive dell’rRNA modificate chimicamente, visibili nella struttura",
+          "context": "Struttura ad alta risoluzione del ribosoma umano."
+        },
+        "polysomes": {
+          "label": "Di solito più ribosomi leggono contemporaneamente lo stesso mRNA",
+          "context": "Questi gruppi si chiamano poliribosomi o polisomi."
+        }
+      },
+      "interesting": "Il ribosoma è un ribozima, cioè un enzima fatto di RNA. Il sito che unisce tra loro gli amminoacidi è formato dall’RNA ribosomiale, e nessuna proteina si avvicina a meno di {distance} dal legame che si sta formando (misura effettuata nella subunità maggiore dell’archeo Haloarcula marismortui)."
+    },
+    "rough-er": {
+      "name": "Reticolo endoplasmatico ruvido",
+      "synonyms": [
+        "RE ruvido",
+        "RER",
+        "reticolo endoplasmatico",
+        "RE",
+        "reticolo endoplasmatico rugoso",
+        "reticolo endoplasmatico granulare",
+        "cisterne del RE",
+        "reticolo"
+      ],
+      "short": "Sacche membranose appiattite e impilate, costellate di ribosomi, dove vengono prodotte e ripiegate le proteine destinate alle membrane e all’esportazione.",
+      "function": "Il reticolo endoplasmatico (RE) è un’unica rete continua di membrane che parte dall’involucro nucleare. La sua parte ruvida forma ampie lamine appiattite ricoperte di ribosomi. Quando un ribosoma inizia a produrre una proteina che comincia con una sequenza segnale (una breve «etichetta con l’indirizzo»), viene guidato verso la membrana del RE e fa passare la catena in crescita attraverso un canale proteico, il traslocone, fino all’interno del RE (il lume) o nella membrana stessa. Nel lume, proteine chaperone aiutano la nuova proteina a ripiegarsi, vengono aggiunte catene di zuccheri (glicosilazione) e sistemi di controllo della qualità trattengono le proteine ripiegate in modo errato. Le proteine ripiegate correttamente lasciano il RE dai siti di uscita, in piccole vescicole dirette all’apparato di Golgi.",
+      "seeingCell": "Le lamine verde acqua stratificate attorno al nucleo sono il RE ruvido; la membrana esterna del nucleo prosegue in esse. I puntini dorati sulle lamine sono i ribosomi legati, che danno l’aspetto «ruvido». Ai bordi, le lamine si trasformano nei tubuli privi di ribosomi del RE liscio. Di tanto in tanto una particella di carico luminosa lascia un sito di uscita e si dirige verso l’apparato di Golgi: è la prima tappa del percorso di secrezione.",
+      "sampling": "Poche lamine impilate rappresentano il RE ruvido; le cellule secernenti possono averne molte di più.",
+      "views": {
+        "translocation": {
+          "title": "La produzione di una proteina secreta",
+          "seeing": "Una sezione trasversale della membrana del RE, con il citosol in alto e il lume in basso. Un ribosoma è posato su un canale traslocone e fa passare una nuova catena proteica (perline) attraverso la membrana. La sequenza segnale (la perlina rossa in testa) viene tagliata via, viene aggiunta una catena di zuccheri (ramificazioni verdi) e una proteina chaperone aiuta la catena a ripiegarsi. A destra, da un sito di uscita gemma una vescicola rivestita che porterà le proteine finite all’apparato di Golgi."
+        }
+      },
+      "parts": {
+        "er-sheet": {
+          "name": "Lamina del RE (cisterna)",
+          "def": "Una sacca membranosa appiattita; il RE ruvido è formato soprattutto da lamine impilate."
+        },
+        "lumen": {
+          "name": "Lume",
+          "def": "Lo spazio racchiuso dalla membrana del RE, in continuità con lo spazio perinucleare."
+        },
+        "bound-ribosome": {
+          "name": "Ribosoma legato alla membrana",
+          "def": "Un ribosoma attaccato al RE mentre produce una proteina che vi entra."
+        },
+        "translocon": {
+          "name": "Traslocone",
+          "def": "Un canale proteico (Sec61) attraverso cui le nuove proteine entrano nel RE."
+        },
+        "signal-peptide": {
+          "name": "Sequenza segnale",
+          "def": "Un breve tratto all’inizio di una proteina che la indirizza al RE; di solito viene tagliato via."
+        },
+        "glycan": {
+          "name": "Catena di zuccheri (glicano)",
+          "def": "Un carboidrato ramificato che nel RE viene attaccato a molte proteine."
+        },
+        "exit-site": {
+          "name": "Sito di uscita del RE",
+          "def": "Un punto da cui gemmano vescicole rivestite (COPII) che trasportano il carico all’apparato di Golgi."
+        }
+      },
+      "simplifications": [
+        "Il RE è disegnato come poche lamine ordinate; nelle cellule reali è una rete molto più grande e in continuo cambiamento.",
+        "Una sola particella di carico alla volta illustra il percorso di secrezione; le cellule reali trasportano contemporaneamente enormi quantità di proteine.",
+        "Il macchinario di indirizzamento (la particella di riconoscimento del segnale e il suo recettore) non è mostrato."
+      ],
+      "sizeContext": "Distanza tra le due membrane di una lamina del RE nelle cellule di mammifero ({yeast} nel lievito).",
+      "quantityContext": "Quota del volume di una cellula del fegato occupata dalle cisterne del RE ruvido; le cellule che secernono molte proteine ne hanno molto di più.",
+      "facts": {
+        "membrane-share": {
+          "label": "Quota del RE sul totale delle membrane di una cellula animale",
+          "context": "I manuali indicano da «circa la metà» a «più della metà», a seconda della cellula."
+        },
+        "lumen-volume": {
+          "label": "Interno del RE come quota del volume cellulare",
+          "context": "Cellula eucariotica generica (stima da manuale)."
+        },
+        "rough-membrane": {
+          "label": "Quota del RE ruvido sul totale delle membrane di una cellula del fegato",
+          "context": "In una cellula esocrina del pancreas, che secerne grandi quantità di enzimi digestivi: {pancreas}."
+        },
+        "spacer": {
+          "label": "Una proteina distanziatrice mantiene uniforme lo spessore delle lamine",
+          "context": "Climp63 fa da ponte attraverso il lume, mentre proteine che modellano la curvatura rivestono i bordi delle lamine (cellule di mammifero in coltura)."
+        }
+      },
+      "interesting": "Le lamine impilate del RE ruvido sono collegate da rampe a spirale, perciò l’intera pila è un’unica membrana continua, costruita come un parcheggio multipiano. Queste «rampe di Terasaki» sono state osservate in cellule secretorie e in neuroni di topo."
+    },
+    "smooth-er": {
+      "name": "Reticolo endoplasmatico liscio",
+      "synonyms": [
+        "RE liscio",
+        "REL",
+        "reticolo endoplasmatico agranulare",
+        "tubuli del RE",
+        "RE tubulare",
+        "reticolo"
+      ],
+      "short": "Una rete di tubuli membranosi privi di ribosomi che produce lipidi, immagazzina calcio e aiuta a detossificare le sostanze.",
+      "function": "Il RE liscio è la parte del reticolo endoplasmatico priva di ribosomi, di solito una trama di tubuli sottili uniti da giunzioni a tre vie. Produce la maggior parte dei lipidi delle membrane della cellula e, nelle cellule specializzate, gli ormoni steroidei. Immagazzina ioni calcio e li rilascia quando la cellula riceve determinati segnali, per esempio per avviare la contrazione muscolare o la secrezione. Nelle cellule del fegato gli enzimi del RE liscio modificano farmaci e tossine in modo che possano essere eliminati, e un enzima presente qui aiuta a rilasciare glucosio nel sangue. Il RE liscio tocca inoltre mitocondri, perossisomi e membrana plasmatica in punti chiamati siti di contatto, dove si scambiano lipidi e calcio.",
+      "seeingCell": "I tubuli verde menta che si ramificano nella parte esterna del citoplasma formano la rete del RE liscio. Sono collegati ai bordi delle lamine verde acqua del RE ruvido: i due formano un unico sistema di membrane continuo, che qui si distingue in base alla presenza o meno di ribosomi attaccati.",
+      "sampling": "Una rete semplificata di tubuli rappresenta il RE liscio.",
+      "views": {
+        "calcium": {
+          "title": "Riserva di calcio",
+          "seeing": "Una giunzione di tubuli del RE, ciascuno largo circa {tubeWidth}, disegnata in scala. Le pompe del calcio (verdi) usano l’energia dell’ATP per spostare gli ioni calcio (punti luminosi) dal citosol all’interno dei tubuli. A intervalli di pochi secondi un canale di rilascio del calcio (arancione) si apre e ne esce un fiotto di ioni: il tipo di segnale che avvia la contrazione muscolare o la secrezione. Nella membrana si trovano enzimi che producono lipidi (azzurro pallido)."
+        }
+      },
+      "parts": {
+        "tubule": {
+          "name": "Tubulo del RE",
+          "def": "Un sottile tubo membranoso; i tubuli formano la rete del RE liscio."
+        },
+        "junction": {
+          "name": "Giunzione a tre vie",
+          "def": "Un punto in cui si incontrano tre tubuli, che conferisce alla rete il suo disegno a poligoni."
+        },
+        "calcium-pump": {
+          "name": "Pompa del calcio (SERCA)",
+          "def": "Una pompa che usa l’ATP per spostare gli ioni calcio all’interno del RE."
+        },
+        "calcium-channel": {
+          "name": "Canale di rilascio del calcio",
+          "def": "Un canale che rilascia il calcio immagazzinato quando la cellula riceve un segnale."
+        },
+        "lipid-enzyme": {
+          "name": "Enzima di sintesi dei lipidi",
+          "def": "Enzimi che costruiscono fosfolipidi e altri lipidi per le membrane della cellula."
+        }
+      },
+      "simplifications": [
+        "La rete tubulare è molto più rada che nelle cellule reali.",
+        "Il rilascio di calcio è mostrato come fiotti regolari; i segnali reali variano per tempi e intensità.",
+        "Gli enzimi detossificanti, abbondanti nelle cellule del fegato, non sono mostrati a parte."
+      ],
+      "sizeContext": "Diametro dei tubuli del RE nelle cellule di mammifero.",
+      "quantityContext": "Quota del volume di una cellula del fegato occupata dalle cisterne del RE liscio e del Golgi insieme; la tabella del manuale non le distingue.",
+      "facts": {
+        "calcium": {
+          "label": "Calcio libero all’interno del RE",
+          "context": "Contro {cytosol} nel citosol a riposo: una riserva da centinaia a migliaia di volte più concentrata. I valori variano con il tipo cellulare e il metodo."
+        },
+        "scarce": {
+          "label": "La maggior parte delle cellule ha poco RE liscio",
+          "context": "Spesso si presenta come regioni in parte lisce e in parte ruvide."
+        },
+        "steroids": {
+          "label": "Le cellule che producono ormoni hanno RE liscio abbondante",
+          "context": "Contiene gli enzimi che producono il colesterolo e lo trasformano in ormoni steroidei."
+        },
+        "phenobarbital": {
+          "label": "Volume del RE liscio dopo un trattamento farmacologico",
+          "context": "Cellule del fegato di ratto dopo {days} di fenobarbital; aumento della superficie di membrana: {area}."
+        },
+        "exit-sites": {
+          "label": "Siti di uscita del RE",
+          "context": "Regioni «di transizione», in parte lisce, da cui gemmano vescicole dirette all’apparato di Golgi."
+        }
+      },
+      "interesting": "Le cellule eliminano il RE liscio che non serve più: dopo che dei ratti avevano smesso di ricevere il farmaco fenobarbital, le loro cellule del fegato rimossero il RE liscio in eccesso mediante autofagia entro {days}."
+    },
+    "golgi": {
+      "name": "Apparato di Golgi",
+      "synonyms": [
+        "complesso di Golgi",
+        "corpo di Golgi",
+        "Golgi",
+        "dittiosoma",
+        "rete trans-Golgi",
+        "rete del trans-Golgi",
+        "pila del Golgi"
+      ],
+      "short": "Pile di sacche membranose appiattite che modificano, smistano e spediscono le proteine e i lipidi prodotti nel RE.",
+      "function": "Le proteine provenienti dal RE entrano nell’apparato di Golgi dalla sua faccia cis, il lato più vicino al RE. Mentre attraversano la pila (i compartimenti cis, mediale e trans), alcuni enzimi rimuovono zuccheri dalle loro catene e ne aggiungono di nuovi, oltre ad apportare altre modifiche chimiche. Sul lato opposto, la rete trans-Golgi smista i prodotti finiti in diversi trasportatori: alcuni vanno alla membrana plasmatica per essere secreti o per diventare proteine di membrana, altri vanno agli endosomi e ai lisosomi. In molte cellule umane le pile del Golgi sono collegate fianco a fianco in un nastro vicino al nucleo, accanto al centrosoma.",
+      "seeingCell": "Le pile color ambra a forma di coppa accanto al centrosoma formano il nastro del Golgi. Ogni pila ha cinque cisterne curve (sacche appiattite), con sfumature che vanno dal lato cis, rivolto verso il nucleo e il RE, al lato trans, rivolto verso l’esterno. Piccole vescicole si raccolgono ai loro bordi, e la particella di carico evidenziata, proveniente dal RE, attraversa la pila prima di uscire in una vescicola secretoria.",
+      "sampling": "Tre pile collegate rappresentano il nastro del Golgi.",
+      "views": {
+        "stack": {
+          "title": "Attraverso la pila",
+          "seeing": "Una sezione trasversale di una pila del Golgi. Le vescicole provenienti dal RE si fondono con la faccia cis (a sinistra). Le proteine di carico (perline) si spostano verso la faccia trans mentre ogni cisterna matura gradualmente, e lungo il percorso le loro catene di zuccheri (verdi) crescono e cambiano. Piccole vescicole COPI riportano indietro gli enzimi, e nella rete trans-Golgi (a destra) il carico viene impacchettato in vescicole secretorie e in vescicole dirette ai lisosomi."
+        }
+      },
+      "parts": {
+        "cis": {
+          "name": "Faccia cis",
+          "def": "Il lato di ricezione, il più vicino al reticolo endoplasmatico."
+        },
+        "medial": {
+          "name": "Cisterne mediali",
+          "def": "Compartimenti intermedi in cui le catene di zuccheri vengono ulteriormente elaborate."
+        },
+        "trans": {
+          "name": "Faccia trans",
+          "def": "Il lato di uscita della pila."
+        },
+        "tgn": {
+          "name": "Rete trans-Golgi",
+          "def": "Una rete tubulare che smista il carico in diversi trasportatori."
+        },
+        "copii": {
+          "name": "Vescicola COPII",
+          "def": "Una vescicola rivestita che trasporta il carico dal RE verso l’apparato di Golgi."
+        },
+        "copi": {
+          "name": "Vescicola COPI",
+          "def": "Una vescicola rivestita che riporta materiale all’indietro all’interno del Golgi o verso il RE."
+        },
+        "secretory-vesicle": {
+          "name": "Vescicola secretoria",
+          "def": "Un trasportatore che porta i prodotti alla membrana plasmatica perché vengano rilasciati."
+        }
+      },
+      "simplifications": [
+        "Il modo in cui il carico attraversa la pila è ancora dibattuto; il primo piano mostra il modello, molto diffuso, della maturazione delle cisterne.",
+        "Il vero nastro del Golgi contiene più pile e molte connessioni tubulari.",
+        "La glicosilazione è mostrata come un semplice cambiamento di colore delle catene di zuccheri."
+      ],
+      "sizeContext": "Larghezza approssimativa di una pila del Golgi nelle cellule animali; una pila ha di solito una manciata di cisterne.",
+      "quantityContext": "Quota del volume di una cellula del fegato occupata dalle cisterne del Golgi e del RE liscio insieme; la tabella del manuale non le distingue.",
+      "facts": {
+        "ergic": {
+          "label": "Il carico entra prima in un compartimento intermedio",
+          "context": "Le vescicole provenienti dal RE si fondono nel compartimento intermedio tra RE e Golgi prima che il carico raggiunga la rete cis del Golgi."
+        },
+        "sorting": {
+          "label": "La rete trans-Golgi smista i prodotti",
+          "context": "Verso la membrana plasmatica, verso la secrezione o verso i lisosomi."
+        },
+        "glycans": {
+          "label": "Un sito importante per la costruzione delle catene di zuccheri",
+          "context": "Le catene di zuccheri aggiunte inizialmente nel RE vengono qui rifinite e allungate."
+        },
+        "residence": {
+          "label": "Tempo medio trascorso nel Golgi da un carico modello",
+          "context": "Cellule di rene di scimmia (COS-7) che producono una glicoproteina virale fluorescente; quota del carico presente nel Golgi che ne usciva ogni minuto: {rate}."
+        },
+        "tac": {
+          "label": "Tempo di permanenza nel Golgi della proteina reporter Tac",
+          "context": "Cellule umane HeLa; saliva a {long} quando la parte luminale della proteina veniva accorciata: conta anche la natura del carico stesso."
+        }
+      },
+      "interesting": "Camillo Golgi descrisse questo organello nel 1898 grazie al suo metodo di colorazione all’argento, eppure molti scienziati dubitarono della sua esistenza per circa mezzo secolo, finché i microscopi elettronici non ne rivelarono le membrane impilate."
+    },
+    "vesicles-motors": {
+      "name": "Vescicole e proteine motrici",
+      "synonyms": [
+        "vescicola",
+        "vescicole",
+        "proteina motrice",
+        "proteine motrici",
+        "chinesina",
+        "dineina",
+        "miosina",
+        "vescicola di trasporto",
+        "trasporto intracellulare",
+        "motori molecolari"
+      ],
+      "short": "Piccole bolle membranose che trasportano un carico, trainate lungo i binari del citoscheletro da proteine motrici.",
+      "function": "Le vescicole sono minuscoli pacchetti delimitati da una membrana che gemmano da un compartimento e si fondono con un altro, trasportando proteine e lipidi tra il RE, l’apparato di Golgi, gli endosomi, i lisosomi e la membrana plasmatica. Su brevi distanze possono spostarsi passivamente, ma i viaggi lunghi dipendono dalle proteine motrici: macchine molecolari che trasformano l’energia chimica dell’ATP in movimento. Le chinesine camminano lungo i microtubuli, per lo più verso le loro estremità più, che in una cellula tipica sono rivolte verso l’esterno, verso il margine della cellula; la dineina cammina verso le estremità meno, vicine al centrosoma, al centro della cellula. Le miosine trasportano il carico lungo i filamenti di actina vicino alla superficie cellulare.",
+      "seeingCell": "Vescicole rosa scivolano lungo i microtubuli azzurro pallido. Quelle che si muovono verso l’esterno, verso il margine della cellula, rappresentano il carico trasportato dalla chinesina; quelle che si muovono verso l’interno, verso il centrosoma, il carico trasportato dalla dineina. Le proteine motrici vere e proprie sono troppo piccole per essere mostrate qui e compaiono nel primo piano.",
+      "sampling": "È disegnato un campione di vescicole in movimento; i motori compaiono solo nel primo piano.",
+      "views": {
+        "kinesin": {
+          "title": "Una chinesina in cammino",
+          "seeing": "Un motore di chinesina-1, disegnato in scala, che trasporta una vescicola lungo un microtubulo muovendosi verso la sua estremità più, cioè verso l’esterno, in direzione del margine della cellula. Le sue due teste si alternano: la testa posteriore oscilla in avanti e supera quella anteriore, così ogni testa si sposta di {headStep} mentre il carico avanza di {step} a ogni passo, consumando una molecola di ATP per passo. Sullo sfondo, un motore di dineina viaggia nella direzione opposta, verso l’estremità meno."
+        }
+      },
+      "parts": {
+        "vesicle": {
+          "name": "Vescicola di trasporto",
+          "def": "Una piccola bolla membranosa che trasporta un carico tra i compartimenti."
+        },
+        "kinesin": {
+          "name": "Chinesina",
+          "def": "Una proteina motrice che cammina verso le estremità più dei microtubuli."
+        },
+        "motor-heads": {
+          "name": "Teste motrici",
+          "def": "Le due parti, alimentate dall’ATP, che si legano a turno al microtubulo."
+        },
+        "neck-linker": {
+          "name": "Linker del collo",
+          "def": "Un breve segmento che oscilla in avanti e porta la testa posteriore davanti all’altra."
+        },
+        "stalk": {
+          "name": "Stelo",
+          "def": "Una lunga coda attorcigliata che collega le teste al carico."
+        },
+        "dynein": {
+          "name": "Dineina",
+          "def": "Una grande proteina motrice che cammina verso le estremità meno dei microtubuli."
+        },
+        "track": {
+          "name": "Binario di microtubulo",
+          "def": "Il tubo cavo lungo il quale camminano i motori."
+        },
+        "plus-end": {
+          "name": "Estremità più",
+          "def": "L’estremità a crescita rapida di un microtubulo, di solito rivolta verso il margine della cellula."
+        }
+      },
+      "simplifications": [
+        "Nella vista della cellula intera le vescicole si muovono in modo regolare; il trasporto reale si ferma, riparte e a volte inverte la direzione.",
+        "Ogni vescicola è mostrata con un solo tipo di motore; il carico reale spesso ne porta diversi tipi contemporaneamente.",
+        "Il trasporto da parte della miosina lungo l’actina è descritto ma non animato."
+      ],
+      "sizeContext": "Vescicole rivestite di clatrina che si formano alla membrana plasmatica delle cellule di mammifero; gli altri trasportatori vanno da vescicole più piccole a lunghi tubi.",
+      "quantityContext": "Copie di una proteina di carico in un singolo trasportatore che lascia l’apparato di Golgi, in cellule di rene di scimmia (COS) che producono un carico virale fluorescente.",
+      "facts": {
+        "step": {
+          "label": "Lunghezza del passo della chinesina",
+          "context": "Singole molecole di chinesina che spostano sferette in una trappola ottica (in vitro)."
+        },
+        "atp": {
+          "label": "Molecole di ATP consumate per ogni passo di {step}",
+          "context": "Chinesina-1, misure su singola molecola (in vitro)."
+        },
+        "head-step": {
+          "label": "Distanza percorsa da ciascuna testa della chinesina a ogni passo",
+          "context": "Le teste si scavalcano a vicenda, «una mano dopo l’altra» (fluorescenza su singola molecola, in vitro)."
+        },
+        "rates": {
+          "label": "Quota del carico in attesa che riparte ogni minuto",
+          "context": "Dal RE al Golgi e dal Golgi alla superficie cellulare, in cellule di rene di scimmia (COS)."
+        },
+        "lifetime": {
+          "label": "Durata di vita di un trasportatore che viaggia dal Golgi alla superficie",
+          "context": "Tempo medio prima che si fonda con la membrana plasmatica, in cellule COS-7."
+        }
+      },
+      "interesting": "Il carico che lascia il Golgi diretto alla superficie cellulare spesso non viaggia in piccole vescicole rotonde, ma in grandi tubi irregolari trasportati lungo i microtubuli fino al margine della cellula, come hanno rivelato le osservazioni al microscopio di cellule vive di rene di scimmia."
+    },
+    "mitochondria": {
+      "name": "Mitocondri",
+      "synonyms": [
+        "mitocondrio",
+        "mitocondriale",
+        "centrale energetica",
+        "creste mitocondriali",
+        "ATP sintasi",
+        "DNA mitocondriale",
+        "mtDNA",
+        "respirazione cellulare",
+        "respirazione"
+      ],
+      "short": "Organelli a doppia membrana che liberano l’energia contenuta nelle molecole degli alimenti e la immagazzinano nell’ATP.",
+      "function": "I mitocondri demoliscono, usando l’ossigeno, molecole combustibili derivate da zuccheri, grassi e amminoacidi. Gli elettroni sottratti a questi combustibili passano lungo una catena di complessi proteici situati nella membrana interna, la catena di trasporto degli elettroni. Mentre gli elettroni si spostano, i complessi pompano protoni (ioni idrogeno) fuori dallo spazio interno, creando ai due lati della membrana interna una differenza di concentrazione di protoni e di carica elettrica. I protoni rifluiscono attraverso l’ATP sintasi, un motore rotante che sfrutta questo flusso per produrre ATP, la molecola che le cellule usano come moneta energetica. I mitocondri producono anche calore, contribuiscono alla sintesi di alcune molecole, immagazzinano calcio e aiutano a decidere se una cellula debba autodistruggersi. Possiedono un proprio piccolo DNA circolare, residuo della loro origine batterica.",
+      "seeingCell": "I corpi allungati rosso corallo sparsi nel citoplasma sono i mitocondri, disegnati all’incirca a grandezza reale. Nel mitocondrio selezionato la membrana esterna è aperta per il lungo e mostra la membrana interna che si ripiega verso l’interno formando creste lamellari, con la matrice nel mezzo.",
+      "sampling": "Sono disegnati molti meno mitocondri di quanti ne contenga una cellula reale, perché l’interno resti visibile.",
+      "views": {
+        "organelle": {
+          "title": "Dentro un mitocondrio",
+          "seeing": "Un mitocondrio sezionato. La membrana esterna liscia circonda la membrana interna, che si ripiega verso l’interno formando le creste. Lo stretto spazio tra le due membrane è lo spazio intermembrana; l’interno è la matrice, che contiene il DNA mitocondriale (piccoli anelli) e i ribosomi mitocondriali (granuli)."
+        },
+        "atp-synthase": {
+          "title": "Gradiente protonico e ATP sintasi",
+          "seeing": "Un piccolo tratto di membrana di una cresta, disegnato in scala. I complessi I, III e IV della catena di trasporto degli elettroni (porpora) pompano protoni (scintille rosse) dalla matrice (in basso) nello spazio all’interno della cresta (in alto). I protoni rifluiscono attraverso l’ATP sintasi (oro) e ne fanno girare il rotore; ogni giro completo libera nella matrice {atp} molecole di ATP (verdi)."
+        }
+      },
+      "parts": {
+        "outer-membrane": {
+          "name": "Membrana esterna",
+          "def": "Il confine esterno liscio, permeabile alle piccole molecole."
+        },
+        "inner-membrane": {
+          "name": "Membrana interna",
+          "def": "Una membrana molto impermeabile che ospita il macchinario di conversione dell’energia."
+        },
+        "intermembrane-space": {
+          "name": "Spazio intermembrana",
+          "def": "Lo spazio tra la membrana esterna e quella interna."
+        },
+        "cristae": {
+          "name": "Creste",
+          "def": "Pieghe della membrana interna che ne aumentano notevolmente la superficie."
+        },
+        "matrix": {
+          "name": "Matrice",
+          "def": "L’interno, dove vengono demolite le molecole combustibili e si trova il DNA mitocondriale."
+        },
+        "mtdna": {
+          "name": "DNA mitocondriale",
+          "def": "Un piccolo genoma circolare, ereditato dalla madre."
+        },
+        "etc": {
+          "name": "Catena di trasporto degli elettroni",
+          "def": "Complessi proteici che si passano gli elettroni e pompano protoni."
+        },
+        "atp-synthase": {
+          "name": "ATP sintasi",
+          "def": "Un enzima rotante che usa il flusso di protoni per produrre ATP."
+        },
+        "protons": {
+          "name": "Protoni (H⁺)",
+          "def": "Ioni idrogeno la cui differenza di concentrazione aziona l’ATP sintasi."
+        }
+      },
+      "simplifications": [
+        "I mitocondri sono disegnati come tubi separati; in molte cellule formano reti ramificate che si fondono e si dividono di continuo.",
+        "Il primo piano mostra una sola ATP sintasi e una copia di ciascuna pompa; le creste reali ne sono densamente gremite.",
+        "I trasportatori di elettroni (ubichinone, citocromo c) e la chimica della demolizione dei combustibili non sono mostrati."
+      ],
+      "sizeContext": "Diametro tipico; la lunghezza va da bastoncelli corti a lunghe reti ramificate.",
+      "quantityContext": "Cellule del fegato di ratto (epatociti), conteggio su micrografie elettroniche; i numeri variano molto a seconda del tipo e delle dimensioni della cellula.",
+      "facts": {
+        "volume": {
+          "label": "Quota del volume di una cellula del fegato",
+          "context": "In quella cellula è il compartimento di organelli più grande."
+        },
+        "inner-membrane": {
+          "label": "Quota della membrana mitocondriale interna sul totale delle membrane della cellula",
+          "context": "Cellula del fegato; quasi quanto il RE ruvido ({rough})."
+        },
+        "mtdna": {
+          "label": "Lunghezza del DNA mitocondriale umano",
+          "context": "Codifica {proteins} proteine, {trnas} RNA transfer e {rrnas} RNA ribosomiali."
+        },
+        "atp-per-turn": {
+          "label": "Molecole di ATP prodotte per ogni giro completo dell’ATP sintasi",
+          "context": "Una per ciascuno dei suoi tre siti catalitici; la rotazione è stata osservata direttamente per la prima volta nel 1997."
+        },
+        "protons": {
+          "label": "Protoni usati per ogni ATP",
+          "context": "Mitocondri di cuore bovino: l’anello del rotore ha {csub} subunità, quindi {csub} protoni azionano un giro che produce tre ATP."
+        }
+      },
+      "interesting": "In una cellula del fegato i mitocondri occupano una quota del volume ({mito}) superiore a quella del nucleo ({nucleus}) e del RE ruvido ({rough}) messi insieme."
+    },
+    "lysosomes": {
+      "name": "Lisosomi",
+      "synonyms": [
+        "lisosoma",
+        "lisosomiale",
+        "vescicola digestiva",
+        "centro di riciclo",
+        "centro di riciclaggio",
+        "autofagia",
+        "autolisosoma"
+      ],
+      "short": "Sacche acide delimitate da una membrana, piene di enzimi che demoliscono le parti usurate della cellula e il materiale introdotto al suo interno.",
+      "function": "I lisosomi sono i principali compartimenti di digestione e riciclo della cellula. Le pompe protoniche della loro membrana mantengono acido l’interno, che contiene decine di tipi di idrolasi: enzimi che usano l’acqua per scomporre proteine, acidi nucleici, zuccheri e grassi nei loro mattoni costitutivi. Questi enzimi lavorano meglio in ambiente acido, il che aiuta a proteggere il resto della cellula se un lisosoma perde il suo contenuto. Il materiale arriva dagli endosomi (carico introdotto dall’esterno della cellula), dall’autofagia (parti usurate della cellula avvolte in una membrana) e, nelle cellule specializzate, da particelle inglobate. Trasportatori nella membrana del lisosoma restituiscono i mattoni (amminoacidi, zuccheri e nucleotidi) al citosol perché vengano riutilizzati. I lisosomi fungono anche da centri di segnalazione che informano sulla disponibilità di nutrienti della cellula.",
+      "seeingCell": "Le piccole sfere viola sparse nel citoplasma sono i lisosomi, disegnati all’incirca a grandezza reale. Il loro interno denso e granuloso richiama il materiale in corso di digestione.",
+      "sampling": "È disegnato un campione di lisosomi.",
+      "views": {
+        "digestion": {
+          "title": "Digestione e riciclo",
+          "seeing": "Un lisosoma sezionato, disegnato in scala. Le pompe protoniche (V-ATPasi, arancioni) nella membrana spingono i protoni verso l’interno e mantengono acido il lume. Gli enzimi idrolasi (porpora) sminuzzano il carico che arriva quando un endosoma tardivo si fonde con il lisosoma (a sinistra); i pezzi diventano sempre più piccoli, e i trasportatori restituiscono gli amminoacidi al citosol. Un rivestimento di zuccheri tappezza la faccia interna della membrana e la protegge dagli enzimi."
+        }
+      },
+      "parts": {
+        "membrane": {
+          "name": "Membrana lisosomiale",
+          "def": "Una membrana singola che tiene racchiusi gli enzimi digestivi."
+        },
+        "lumen": {
+          "name": "Lume acido",
+          "def": "L’interno, mantenuto molto più acido del citosol."
+        },
+        "v-atpase": {
+          "name": "Pompa protonica V-ATPasi",
+          "def": "Una pompa che usa l’ATP per spostare protoni all’interno del lisosoma, acidificandolo."
+        },
+        "hydrolase": {
+          "name": "Idrolasi",
+          "def": "Enzimi che scompongono le grandi molecole usando l’acqua."
+        },
+        "membrane-glycans": {
+          "name": "Rivestimento protettivo di zuccheri",
+          "def": "Proteine di membrana fortemente glicosilate che tappezzano l’interno e proteggono la membrana dalla digestione."
+        },
+        "transporter": {
+          "name": "Trasportatore di nutrienti",
+          "def": "Una proteina di membrana che esporta amminoacidi e altri prodotti nel citosol."
+        }
+      },
+      "simplifications": [
+        "I lisosomi variano molto per dimensioni e forma; sono disegnati come semplici sfere.",
+        "È mostrato un solo evento di fusione alla volta; l’autofagia è descritta ma non animata.",
+        "Gli enzimi sono rappresentati da poche forme generiche."
+      ],
+      "sizeContext": "Intervallo osservato al microscopio elettronico nelle cellule eucariotiche; tipicamente {typical}. Le dimensioni cambiano con il tipo cellulare e la disponibilità di nutrienti.",
+      "quantityContext": "Ampio intervallo per le cellule di mammifero; di solito diverse centinaia, che scendono sotto {low} quando le cellule sono private di nutrienti.",
+      "facts": {
+        "ph": {
+          "label": "pH all’interno di un lisosoma",
+          "context": "Lisosomi di mammifero; mantenuti acidi dalle pompe protoniche V-ATPasi."
+        },
+        "enzymes": {
+          "label": "Enzimi digestivi diversi",
+          "context": "Conteggio tratto da una rassegna del 2015 (un manuale più vecchio ne indica {older}); insieme demoliscono proteine, acidi nucleici, zuccheri e grassi."
+        },
+        "membrane-proteins": {
+          "label": "Proteine diverse nella membrana del lisosoma",
+          "context": "Tra cui i trasportatori che esportano nel citosol i prodotti della digestione."
+        },
+        "volume": {
+          "label": "Quota del volume di una cellula del fegato",
+          "context": "Epatocita (tabella del manuale)."
+        },
+        "diseases": {
+          "label": "Malattie ereditarie da accumulo lisosomiale",
+          "context": "Ciascuna è rara, ma nel complesso colpiscono circa 1 nato vivo su {births}."
+        }
+      },
+      "interesting": "Christian de Duve scoprì i lisosomi nel 1955; nel 1974 condivise il premio Nobel per la fisiologia o la medicina con Albert Claude e George Palade per le scoperte su come è organizzata la cellula."
+    },
+    "endosomes": {
+      "name": "Endosomi",
+      "synonyms": [
+        "endosoma",
+        "endosoma precoce",
+        "endosoma tardivo",
+        "endosoma di riciclo",
+        "endosoma di smistamento",
+        "corpo multivescicolare",
+        "MVB",
+        "endocitosi",
+        "clatrina"
+      ],
+      "short": "Compartimenti membranosi che ricevono il materiale introdotto nella cellula e lo smistano, avviandolo al riciclo o alla distruzione.",
+      "function": "Le cellule inglobano di continuo porzioni della loro membrana plasmatica insieme a liquido e a determinate molecole: un processo chiamato endocitosi. Nella via meglio studiata, i recettori con il loro carico si raccolgono in fossette rivestite dalla proteina clatrina; le fossette si staccano formando vescicole, perdono il rivestimento e si fondono con gli endosomi precoci vicino alla superficie cellulare. Gli endosomi precoci sono leggermente acidi, e questo fa sì che molte molecole di carico si stacchino dai loro recettori. Segue lo smistamento: le proteine di membrana, come i recettori, vengono rimandate alla membrana plasmatica in tubuli sottili (riciclo), mentre il materiale destinato alla distruzione resta indietro. Man mano che un endosoma precoce matura in endosoma tardivo, si sposta verso il centro della cellula, diventa più acido e forma piccole vescicole che gemmano verso il proprio interno, diventando un corpo multivescicolare. Alla fine gli endosomi tardivi si fondono con i lisosomi, che ne digeriscono il contenuto.",
+      "seeingCell": "I compartimenti azzurro cielo vicino al margine della cellula sono endosomi precoci, alcuni con bracci tubulari. Quelli più grandi e scuri, più all’interno, sono endosomi tardivi, al cui interno si vedono piccole vescicole. Quando gli endosomi sono selezionati, si ripetono a turno tre eventi: l’internalizzazione alla membrana, il riciclo verso la superficie e la consegna a un lisosoma.",
+      "sampling": "È disegnato un campione di endosomi precoci e tardivi.",
+      "views": {
+        "sorting": {
+          "title": "Smistare, riciclare o degradare",
+          "seeing": "Tre eventi numerati, mostrati uno dopo l’altro. 1 Internalizzazione: i recettori (blu) con il loro carico (giallo) si raccolgono in una fossetta rivestita di clatrina, che si stacca formando una vescicola e si fonde con un endosoma precoce. 2 Riciclo: nell’interno acido dell’endosoma il carico si stacca e i recettori vuoti tornano alla membrana plasmatica attraverso un tubulo di riciclo. 3 Degradazione: l’endosoma matura, si riempie di vescicole interne e si fonde con un lisosoma (viola), dove il carico viene demolito."
+        }
+      },
+      "parts": {
+        "coated-pit": {
+          "name": "Fossetta rivestita di clatrina",
+          "def": "Una porzione di membrana rivestita di clatrina che si incurva verso l’interno per formare una vescicola."
+        },
+        "early-endosome": {
+          "name": "Endosoma precoce (di smistamento)",
+          "def": "La prima tappa delle vescicole in arrivo, vicino alla superficie cellulare."
+        },
+        "recycling-tubule": {
+          "name": "Tubulo di riciclo",
+          "def": "Un’estensione sottile che riporta i recettori alla membrana plasmatica."
+        },
+        "late-endosome": {
+          "name": "Endosoma tardivo",
+          "def": "Un endosoma maturo e più acido, che si fonderà con un lisosoma."
+        },
+        "intraluminal-vesicle": {
+          "name": "Vescicole intraluminali",
+          "def": "Piccole vescicole che gemmano verso l’interno dell’endosoma, portando proteine di membrana destinate alla distruzione."
+        },
+        "receptor": {
+          "name": "Recettore",
+          "def": "Una proteina di membrana che lega un carico specifico sulla superficie cellulare."
+        },
+        "cargo": {
+          "name": "Carico",
+          "def": "Molecole introdotte nella cellula, come i nutrienti legati ai loro trasportatori."
+        }
+      },
+      "simplifications": [
+        "Gli endosomi formano un continuum di compartimenti in trasformazione; il modello ne mostra solo due tipi ben distinti.",
+        "È mostrata solo l’internalizzazione mediata da clatrina; le cellule usano diverse altre vie.",
+        "I tre eventi sono mostrati in sequenza; in una cellula reale avvengono di continuo, ovunque e contemporaneamente."
+      ],
+      "sizeContext": "Gli endosomi vanno da piccole vescicole a grandi compartimenti tubulari; le vescicole rivestite in arrivo sono larghe {vesicle}.",
+      "quantityContext": "Quota del volume di una cellula del fegato occupata dagli endosomi; non è stato possibile verificare un conteggio per cellula.",
+      "facts": {
+        "early-ph": {
+          "label": "pH negli endosomi precoci",
+          "context": "Cellule di mammifero (articolo di rassegna)."
+        },
+        "late-ph": {
+          "label": "pH negli endosomi tardivi",
+          "context": "Tappa intermedia verso i lisosomi, che raggiungono {lysosome} (cellule di mammifero, articolo di rassegna)."
+        },
+        "ldl-receptor": {
+          "label": "Viaggio di andata e ritorno di un recettore LDL nella cellula",
+          "context": "Ogni recettore viene riutilizzato molte volte nel corso di una vita di {life} (cellule in coltura)."
+        },
+        "mvb": {
+          "label": "Gli endosomi tardivi si riempiono di vescicole interne",
+          "context": "Il macchinario ESCRT fa gemmare le proteine di membrana verso l’interno dell’endosoma, dove verranno distrutte."
+        },
+        "maturation": {
+          "label": "Gli endosomi maturano mentre si spostano verso l’interno",
+          "context": "Migrano verso il nucleo, diventano più acidi e acquisiscono componenti lisosomiali prima di fondersi con i lisosomi."
+        }
+      },
+      "interesting": "Le cellule riciclano la propria superficie a una velocità sorprendente: ogni minuto un macrofago in coltura internalizza per pinocitosi una parte della sua membrana plasmatica ({macrophage}), l’equivalente dell’intera superficie in {whole}. Le cellule L, simili ai fibroblasti, sono più lente: {lcell} al minuto (l’intera superficie in {lwhole}).",
+      "events": {
+        "uptake": "1 Internalizzazione",
+        "recycling": "2 Riciclo",
+        "degradation": "3 Degradazione"
+      }
+    },
+    "peroxisomes": {
+      "name": "Perossisomi",
+      "synonyms": [
+        "perossisoma",
+        "microcorpo",
+        "microcorpi",
+        "catalasi",
+        "ossidazione degli acidi grassi",
+        "beta-ossidazione",
+        "β-ossidazione"
+      ],
+      "short": "Piccoli organelli a membrana singola che svolgono reazioni di ossidazione, demoliscono alcuni grassi e distruggono il perossido di idrogeno.",
+      "function": "I perossisomi contengono enzimi che usano l’ossigeno per ossidare varie molecole. Alcune di queste reazioni producono perossido di idrogeno (H₂O₂), una sostanza chimica reattiva che potrebbe danneggiare la cellula; un altro enzima perossisomiale, la catalasi, lo trasforma rapidamente in acqua e ossigeno. I perossisomi accorciano gli acidi grassi a catena molto lunga, che i mitocondri non riescono a trattare direttamente, e producono lipidi speciali chiamati plasmalogeni, abbondanti nelle guaine isolanti (la mielina) che avvolgono le fibre nervose. Le proteine perossisomiali sono prodotte dai ribosomi liberi nel citosol e importate una volta completate, guidate da brevi segnali di indirizzamento. I perossisomi possono crescere e dividersi, e se ne possono formare di nuovi anche a partire dal RE.",
+      "seeingCell": "Le piccole sfere verde lime sparse nel citoplasma sono i perossisomi, disegnati all’incirca a grandezza reale. Il loro interno è uniformemente granulare: a differenza dei perossisomi del fegato di ratto o di topo, quelli umani non hanno un nucleo centrale di aspetto cristallino.",
+      "sampling": "È disegnato un campione di perossisomi.",
+      "views": {
+        "reactions": {
+          "title": "Ossidazione e detossificazione",
+          "seeing": "Una parte di un perossisoma, sezionata e disegnata in scala. Un’ossidasi (blu) usa l’ossigeno per demolire una molecola e libera perossido di idrogeno (coppie chiare). La catalasi (grande, verde) converte subito il perossido di idrogeno in acqua e ossigeno. Una lunga catena di acido grasso entra attraverso un trasportatore di membrana e viene accorciata un passo alla volta. Sul bordo, un recettore di importazione (giallo) porta attraverso la membrana un enzima appena prodotto."
+        }
+      },
+      "parts": {
+        "membrane": {
+          "name": "Membrana perossisomiale",
+          "def": "Una membrana singola che delimita l’organello."
+        },
+        "matrix": {
+          "name": "Matrice",
+          "def": "L’interno ricco di proteine, che contiene gli enzimi ossidativi."
+        },
+        "catalase": {
+          "name": "Catalasi",
+          "def": "Un enzima che scinde il perossido di idrogeno in acqua e ossigeno."
+        },
+        "oxidase": {
+          "name": "Ossidasi",
+          "def": "Un enzima che ossida le molecole con l’ossigeno, liberando perossido di idrogeno."
+        },
+        "import-receptor": {
+          "name": "Recettore di importazione (PEX5)",
+          "def": "Un recettore che riconosce il segnale di indirizzamento degli enzimi perossisomiali e li porta all’interno."
+        },
+        "fatty-acid": {
+          "name": "Acido grasso a catena molto lunga",
+          "def": "Una molecola di grasso che viene accorciata nei perossisomi prima che i mitocondri ne completino la demolizione."
+        }
+      },
+      "simplifications": [
+        "Sono mostrati solo pochi enzimi rappresentativi; i perossisomi ne contengono decine.",
+        "L’accorciamento degli acidi grassi è mostrato come pezzi staccati uno alla volta, senza la chimica intermedia.",
+        "Il numero e le dimensioni dei perossisomi variano molto tra i tipi cellulari."
+      ],
+      "sizeContext": "Intervallo tipico del diametro; le cellule del fegato sono ricche di perossisomi.",
+      "quantityContext": "Quota del volume di una cellula del fegato occupata dai perossisomi; non è stato possibile verificare un conteggio per cellula.",
+      "facts": {
+        "catalase-role": {
+          "label": "Le ossidasi producono perossido di idrogeno; la catalasi lo distrugge",
+          "context": "La catalasi lo trasforma in acqua e ossigeno, oppure lo usa per ossidare altre molecole."
+        },
+        "fatty-acids": {
+          "label": "Qui vengono accorciati gli acidi grassi a catena molto lunga",
+          "context": "Mediante β-ossidazione, prima che i mitocondri ne completino la demolizione."
+        },
+        "plasmalogens": {
+          "label": "Primi passaggi della sintesi dei plasmalogeni",
+          "context": "Sono i fosfolipidi più abbondanti nella mielina, che isola le fibre nervose."
+        },
+        "pts1": {
+          "label": "Amminoacidi dell’«etichetta con l’indirizzo» dei perossisomi (SKL)",
+          "context": "Aggiungere questa etichetta all’estremità di una proteina citosolica basta a inviarla nei perossisomi (esperimenti con proteine reporter)."
+        },
+        "urate-oxidase": {
+          "label": "Gli esseri umani non hanno un’urato ossidasi funzionante",
+          "context": "È stata disattivata da mutazioni durante l’evoluzione delle scimmie antropomorfe; nei ratti, nei topi e in alcuni altri mammiferi forma un nucleo di aspetto cristallino nei perossisomi del fegato."
+        }
+      },
+      "interesting": "La catalasi è uno degli enzimi più veloci che si conoscano: una singola molecola di catalasi può demolire milioni di molecole di perossido di idrogeno ogni secondo."
+    },
+    "microtubules": {
+      "name": "Microtubuli",
+      "synonyms": [
+        "microtubulo",
+        "tubulina",
+        "MT",
+        "instabilità dinamica",
+        "fuso",
+        "fuso mitotico",
+        "citoscheletro"
+      ],
+      "short": "Tubi proteici cavi che si irradiano dal centro della cellula, fanno da binari per il trasporto e di continuo crescono e si accorciano.",
+      "function": "I microtubuli sono tubi cavi costituiti da tubulina: coppie di proteine, α- e β-tubulina, che si allineano una dopo l’altra in file chiamate protofilamenti; di solito la parete del tubo è formata da {protofilaments} protofilamenti. Le loro estremità meno sono ancorate al centrosoma, vicino al nucleo; le estremità più crescono verso l’esterno. I microtubuli sono dinamici: un’estremità in crescita può passare improvvisamente a un rapido accorciamento (una catastrofe) e in seguito ricominciare a crescere (un salvataggio). Questa instabilità dinamica permette alla rete di esplorare la cellula e di riorganizzarsi rapidamente. I microtubuli fanno da binari per le proteine motrici, posizionano gli organelli, contribuiscono a dare forma alla cellula, formano il fuso che separa i cromosomi durante la divisione e costituiscono l’asse portante delle ciglia.",
+      "seeingCell": "Le linee azzurro pallido che si irradiano dal centrosoma, vicino al nucleo, sono i microtubuli. Osserva le loro punte: ognuna cresce verso l’esterno con un cappuccio luminoso, di tanto in tanto si ritira rapidamente e poi ricomincia a crescere.",
+      "sampling": "Sono disegnati solo un centinaio di microtubuli.",
+      "views": {
+        "dynamics": {
+          "title": "Instabilità dinamica",
+          "seeing": "L’estremità in crescita di un microtubulo, disegnata in scala. I dimeri di tubulina (α in colore chiaro, β in blu più scuro) si aggiungono alle punte dei {protofilaments} protofilamenti. I dimeri appena aggiunti portano ancora GTP (luminosi) e formano un cappuccio stabilizzante. Quando il cappuccio si perde, i protofilamenti si incurvano verso l’esterno e si separano (una catastrofe), e il microtubulo si accorcia rapidamente finché non viene salvato e ricomincia a crescere."
+        }
+      },
+      "parts": {
+        "protofilament": {
+          "name": "Protofilamento",
+          "def": "Una fila di dimeri di tubulina; diverse file affiancate formano la parete del tubo."
+        },
+        "tubulin-dimer": {
+          "name": "Dimero di tubulina",
+          "def": "Una α-tubulina e una β-tubulina: l’unità costitutiva, lunga circa {dimerLength}."
+        },
+        "plus-end": {
+          "name": "Estremità più",
+          "def": "L’estremità dinamica che cresce e si accorcia, di solito rivolta verso il margine della cellula."
+        },
+        "minus-end": {
+          "name": "Estremità meno",
+          "def": "L’estremità ancorata al centrosoma."
+        },
+        "gtp-cap": {
+          "name": "Cappuccio di GTP",
+          "def": "Tubulina legata al GTP, appena aggiunta, che stabilizza l’estremità in crescita."
+        }
+      },
+      "simplifications": [
+        "Nella vista della cellula intera i microtubuli sono disegnati come tubi lisci.",
+        "Nel modello crescita e accorciamento seguono un ritmo regolare; nelle cellule sono casuali.",
+        "Le proteine che si legano alle estremità dei microtubuli e le regolano non sono mostrate."
+      ],
+      "sizeContext": "Diametro esterno del tubo cavo.",
+      "quantityContext": "Protofilamenti nella parete della maggior parte dei microtubuli cellulari. Il numero di microtubuli di una cellula varia molto e viene contato di rado.",
+      "facts": {
+        "dimer": {
+          "label": "Lunghezza di un dimero di tubulina",
+          "context": "Una α-tubulina più una β-tubulina; ogni protofilamento è una catena di dimeri."
+        },
+        "instability": {
+          "label": "I microtubuli alternano crescita e accorciamento",
+          "context": "È l’«instabilità dinamica», scoperta nel 1984 con tubulina purificata."
+        },
+        "gtp-cap": {
+          "label": "Un cappuccio di GTP-tubulina stabilizza le estremità in crescita",
+          "context": "Quando il cappuccio si perde, l’estremità inizia ad accorciarsi rapidamente."
+        },
+        "anchoring": {
+          "label": "Le estremità meno sono ancorate al centrosoma",
+          "context": "In una tipica cellula in interfase le estremità più sono rivolte verso il margine della cellula."
+        }
+      },
+      "interesting": "Quando fu scoperta l’instabilità dinamica, fu una sorpresa constatare che microtubuli in crescita e in accorciamento coesistono fianco a fianco, e che ciascuno passa in modo imprevedibile da uno stato all’altro."
+    },
+    "actin": {
+      "name": "Filamenti di actina",
+      "synonyms": [
+        "actina",
+        "microfilamento",
+        "microfilamenti",
+        "actina F",
+        "F-actina",
+        "corteccia di actina",
+        "corteccia cellulare",
+        "fibre da stress",
+        "lamellipodio"
+      ],
+      "short": "Filamenti proteici sottili e flessibili che formano una rete di sostegno sotto la membrana e guidano i cambiamenti di forma e il movimento della cellula.",
+      "function": "I filamenti di actina, detti anche microfilamenti, sono le fibre più sottili del citoscheletro. Ciascuno è un doppio filamento ritorto di proteine di actina. Le sue due estremità sono diverse: le subunità si aggiungono molto più velocemente all’estremità «spinata» (più) che a quella «appuntita» (meno). L’actina che porta ATP si unisce all’estremità spinata, converte gradualmente l’ATP in ADP ed è più probabile che si stacchi all’estremità appuntita: così un filamento può fare «treadmilling», cioè crescere a un’estremità mentre si accorcia all’altra. Appena sotto la membrana plasmatica, una fitta rete di actina chiamata corteccia conferisce resistenza e forma alla superficie della cellula. Reti ramificate spingono in avanti la membrana quando le cellule strisciano, fasci di filamenti formano sporgenze simili a dita e l’actina, lavorando insieme ai motori di miosina, produce la contrazione.",
+      "seeingCell": "La sottile rete color rosa che riveste l’interno della membrana plasmatica è la corteccia di actina. I filamenti tremolano mentre crescono e si accorciano.",
+      "sampling": "È disegnato un campione di brevi segmenti di filamenti corticali.",
+      "views": {
+        "treadmilling": {
+          "title": "Treadmilling e ramificazione",
+          "seeing": "Filamenti di actina che spingono contro la membrana al margine anteriore di una cellula, disegnati in scala. Le subunità luminose di actina-ATP si aggiungono alle estremità spinate vicino alla membrana (in alto), mentre l’actina-ADP più vecchia e opaca si stacca dalle estremità appuntite. Il complesso Arp2/3 (arancione) avvia nuove ramificazioni a circa {branchAngle} rispetto ai filamenti esistenti, costruendo una rete che spinge in avanti la membrana."
+        }
+      },
+      "parts": {
+        "filament": {
+          "name": "Filamento di actina",
+          "def": "Un doppio filamento ritorto di subunità di actina, largo circa {width}."
+        },
+        "barbed-end": {
+          "name": "Estremità spinata (più)",
+          "def": "L’estremità a crescita rapida."
+        },
+        "pointed-end": {
+          "name": "Estremità appuntita (meno)",
+          "def": "L’estremità a crescita lenta, dove le subunità tendono a staccarsi."
+        },
+        "arp23": {
+          "name": "Complesso Arp2/3",
+          "def": "Un complesso proteico che avvia un nuovo filamento come ramificazione di uno già esistente."
+        },
+        "cortex": {
+          "name": "Corteccia di actina",
+          "def": "La rete di actina che riveste la faccia interna della membrana plasmatica."
+        },
+        "subunit": {
+          "name": "Subunità di actina",
+          "def": "Una singola proteina di actina (actina G) che porta ATP o ADP."
+        }
+      },
+      "simplifications": [
+        "La corteccia è disegnata come brevi segmenti rettilinei; i filamenti reali sono più lunghi e uniti da legami trasversali.",
+        "Le fibre da stress e le sporgenze usate per strisciare sono descritte ma non disegnate nella cellula modello arrotondata.",
+        "I motori di miosina non sono mostrati."
+      ],
+      "sizeContext": "Diametro del filamento (intervallo indicato dai manuali).",
+      "quantityContext": "L’actina è una delle proteine più abbondanti in molte cellule animali; il numero di filamenti per cellula non è una misura standard.",
+      "facts": {
+        "barbed-rate": {
+          "label": "Costante di velocità con cui l’actina-ATP si aggiunge all’estremità spinata",
+          "context": "Contro {pointed} all’estremità appuntita: le estremità spinate crescono quindi circa dieci volte più velocemente (actina purificata, in vitro)."
+        },
+        "branch-angle": {
+          "label": "Angolo delle ramificazioni prodotte da Arp2/3",
+          "context": "Proteine purificate osservate al microscopio elettronico."
+        },
+        "treadmilling": {
+          "label": "I filamenti possono fare treadmilling",
+          "context": "Le subunità si aggiungono all’estremità spinata e si staccano da quella appuntita, così un filamento può spostarsi mantenendo la stessa lunghezza."
+        },
+        "cortex": {
+          "label": "Una rete di actina riveste la membrana plasmatica",
+          "context": "La corteccia conferisce resistenza e forma alla superficie della cellula."
+        }
+      },
+      "interesting": "Quasi ogni movimento di una cellula animale (strisciare, dividersi, cambiare forma, inglobare particelle) dipende dai filamenti di actina che si assemblano e si disassemblano nel posto giusto al momento giusto."
+    },
+    "intermediate-filaments": {
+      "name": "Filamenti intermedi",
+      "synonyms": [
+        "filamento intermedio",
+        "IF",
+        "vimentina",
+        "cheratina",
+        "cheratine",
+        "lamina",
+        "lamine",
+        "neurofilamento",
+        "desmina"
+      ],
+      "short": "Filamenti proteici robusti, simili a corde, che aiutano le cellule a resistere agli stiramenti e tengono il nucleo al suo posto.",
+      "function": "I filamenti intermedi devono il nome al loro spessore, intermedio tra quello dei filamenti di actina e quello dei microtubuli. A differenza di questi, sono costruiti da lunghe proteine simili a corde che si attorcigliano a coppie, poi si uniscono in gruppi sfalsati e infine si compattano in filamenti, come fibre ritorte a formare una fune. Questo li rende flessibili ma molto difficili da rompere, così distribuiscono gli sforzi meccanici in tutta la cellula. Cellule diverse usano membri diversi della famiglia: le cheratine nella pelle e in altre cellule epiteliali, la vimentina nelle cellule del tessuto connettivo come i fibroblasti, la desmina nei muscoli e i neurofilamenti nei neuroni. Anche le lamine nucleari, che rivestono l’interno del nucleo, appartengono alla stessa famiglia. I filamenti intermedi non hanno una direzione fissa e nessuna proteina motrice cammina lungo di essi.",
+      "seeingCell": "I filamenti color oro pallido, leggermente ondulati, formano una gabbia attorno al nucleo e si allungano verso il margine della cellula; il modello presuppone una rete di vimentina, tipica delle cellule simili ai fibroblasti. Oscillano un poco ma restano al loro posto, a riflettere il loro ruolo di sostegno più che di trasporto.",
+      "sampling": "È disegnato un campione di filamenti.",
+      "views": {
+        "assembly": {
+          "title": "Un assemblaggio a corda",
+          "seeing": "Come si costruisce un filamento intermedio, disegnato in scala da sinistra a destra. Due proteine si avvolgono l’una attorno all’altra formando un dimero; due dimeri si affiancano, sfalsati e orientati in direzioni opposte (un tetramero); otto tetrameri si allineano in un breve filamento di lunghezza unitaria; infine i filamenti di lunghezza unitaria si uniscono testa a coda e si compattano nel filamento maturo. Una leggera trazione all’estremità mostra come il filamento si allunghi senza rompersi."
+        }
+      },
+      "parts": {
+        "filament": {
+          "name": "Filamento maturo",
+          "def": "Una fibra simile a una corda, larga circa {width}."
+        },
+        "dimer": {
+          "name": "Dimero a superelica",
+          "def": "Due proteine del filamento avvolte l’una attorno all’altra."
+        },
+        "tetramer": {
+          "name": "Tetramero",
+          "def": "Due dimeri affiancati, sfalsati e orientati in direzioni opposte."
+        },
+        "ulf": {
+          "name": "Filamento di lunghezza unitaria",
+          "def": "Un breve segmento di circa otto tetrameri; l’unità di base per la crescita."
+        },
+        "perinuclear-cage": {
+          "name": "Gabbia perinucleare",
+          "def": "Il fitto canestro di filamenti attorno al nucleo."
+        }
+      },
+      "simplifications": [
+        "Le reti reali di filamenti intermedi sono più fitte e intrecciate.",
+        "È rappresentato un solo tipo di filamento (vimentina); le cellule possono contenerne diversi.",
+        "L’assemblaggio è mostrato come una sequenza ordinata; nelle cellule avviene in parallelo, e i filamenti si scambiano anche subunità."
+      ],
+      "sizeContext": "Diametro del filamento, intermedio tra quello dei filamenti di actina e quello dei microtubuli.",
+      "quantityContext": "Geni umani che codificano proteine dei filamenti intermedi; ogni tipo cellulare ne usa un insieme particolare.",
+      "facts": {
+        "ulf": {
+          "label": "Lunghezza di un filamento di lunghezza unitaria",
+          "context": "L’unità di base di un filamento, formata da circa {tetramers} tetrameri (vimentina, proteina purificata)."
+        },
+        "no-polarity": {
+          "label": "Nessuna direzione fissa e nessun motore",
+          "context": "A differenza dei filamenti di actina e dei microtubuli, i filamenti intermedi non sono polarizzati, e nessuna proteina motrice cammina lungo di essi."
+        },
+        "lamins": {
+          "label": "Le lamine nucleari appartengono a questa famiglia",
+          "context": "Formano la lamina che riveste l’interno dell’involucro nucleare."
+        },
+        "types": {
+          "label": "Cellule diverse usano membri diversi della famiglia",
+          "context": "Cheratine nelle cellule epiteliali, vimentina nei fibroblasti e in altre cellule del tessuto connettivo, desmina nei muscoli, neurofilamenti nei neuroni."
+        }
+      },
+      "interesting": "I singoli filamenti intermedi possono essere stirati fino a oltre il doppio della loro lunghezza originale senza rompersi (misure su filamenti isolati in laboratorio)."
+    },
+    "centrosome": {
+      "name": "Centrosoma",
+      "synonyms": [
+        "centrosomi",
+        "centriolo",
+        "centrioli",
+        "centro organizzatore dei microtubuli",
+        "MTOC",
+        "corpo basale",
+        "materiale pericentriolare",
+        "PCM"
+      ],
+      "short": "Il principale centro organizzatore dei microtubuli delle cellule animali: una coppia di centrioli circondata da una nube di proteine.",
+      "function": "Il centrosoma si trova accanto al nucleo e ancora le estremità meno dei microtubuli, così la rete dei microtubuli si irradia da esso. Al suo centro ci sono due centrioli, brevi cilindri disposti ad angolo retto, ciascuno costituito da nove triplette di microtubuli. Attorno a essi si trova il materiale pericentriolare, una matrice proteica che contiene i complessi ad anello della γ-tubulina, che avviano (nucleano) nuovi microtubuli. Il centrosoma si duplica una volta in ogni ciclo cellulare e, durante la divisione, i due centrosomi organizzano i poli del fuso. In molte cellule che non si dividono il centriolo più vecchio (madre) si sposta verso la superficie cellulare e forma la base di un ciglio primario, un’antenna sensoriale.",
+      "seeingCell": "La nube lilla pallido accanto al nucleo, dove convergono tutti i microtubuli, è il centrosoma. Al suo interno, due piccoli cilindri ad angolo retto, i centrioli, sono disegnati all’incirca a grandezza reale. Il nastro del Golgi gli si curva attorno.",
+      "sampling": "Un centrosoma con due centrioli, come in una cellula prima della replicazione del DNA.",
+      "views": {
+        "centrioles": {
+          "title": "Una coppia di centrioli",
+          "seeing": "I due centrioli disegnati in scala. Ciascuno è un cilindro di nove triplette di microtubuli disposte come le pale di una girandola. Il centriolo madre porta delle appendici a un’estremità; il centriolo figlio è disposto ad angolo retto rispetto a esso. Il materiale pericentriolare circostante contiene i complessi ad anello della γ-tubulina (arancioni), dai quali nuovi microtubuli crescono verso l’esterno."
+        }
+      },
+      "parts": {
+        "mother-centriole": {
+          "name": "Centriolo madre",
+          "def": "Il centriolo più vecchio, dotato di appendici; può formare la base di un ciglio."
+        },
+        "daughter-centriole": {
+          "name": "Centriolo figlio",
+          "def": "Il centriolo più giovane, disposto ad angolo retto rispetto al centriolo madre."
+        },
+        "triplets": {
+          "name": "Triplette di microtubuli",
+          "def": "Nove gruppi di tre microtubuli fusi tra loro che formano la parete del centriolo."
+        },
+        "pcm": {
+          "name": "Materiale pericentriolare",
+          "def": "Una matrice proteica attorno ai centrioli che avvia e ancora i microtubuli."
+        },
+        "gamma-turc": {
+          "name": "Complesso ad anello della γ-tubulina",
+          "def": "Uno stampo ad anello da cui cresce un nuovo microtubulo."
+        },
+        "appendages": {
+          "name": "Appendici",
+          "def": "Sporgenze del centriolo madre che ancorano i microtubuli e lo aiutano ad attraccare alla membrana."
+        }
+      },
+      "simplifications": [
+        "Il materiale pericentriolare è disegnato come una nube soffice; in realtà è un’impalcatura proteica ordinata.",
+        "Sono mostrati solo pochi complessi che avviano i microtubuli.",
+        "La duplicazione del centrosoma durante il ciclo cellulare è descritta ma non animata."
+      ],
+      "sizeContext": "Larghezza di ciascun centriolo; ognuno è lungo {length} (cellule di vertebrati).",
+      "quantityContext": "Centrioli in una cellula prima che il suo DNA venga duplicato: una coppia, che forma un centrosoma. Si duplicano una volta per ciclo cellulare.",
+      "facts": {
+        "triplets": {
+          "label": "Triplette di microtubuli in ogni centriolo",
+          "context": "Disposte ad anello con simmetria di ordine nove."
+        },
+        "duplication": {
+          "label": "Il centrosoma si duplica una volta per ciclo cellulare",
+          "context": "Durante la divisione, i due centrosomi organizzano i due poli del fuso."
+        },
+        "nucleation": {
+          "label": "I complessi ad anello della γ-tubulina avviano nuovi microtubuli",
+          "context": "Si trovano nel materiale pericentriolare attorno ai centrioli."
+        },
+        "cilium": {
+          "label": "Il centriolo madre può formare la base di un ciglio",
+          "context": "In molte cellule che non si dividono attracca alla superficie cellulare e fa crescere un ciglio primario."
+        }
+      },
+      "interesting": "I nuovi centrioli crescono ad angolo retto rispetto a quelli esistenti: per questo i due centrioli di un centrosoma sono disegnati perpendicolari l’uno all’altro."
+    }
+  }
+}

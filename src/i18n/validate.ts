@@ -71,12 +71,35 @@ export function validateLocale(
     }
   };
 
+  const checkPlural = (prefix: string, englishOther: string, value: MessageTree) => {
+    for (const category of required) {
+      if (typeof value[category] !== 'string') {
+        issues.push({ kind: 'plural', key: `${prefix}.${category}`, detail: `plural category "${category}" is required for ${tag}` });
+      }
+    }
+    const want = placeholders(englishOther).join(',');
+    for (const [category, text] of Object.entries(value)) {
+      if (!required.includes(category)) {
+        issues.push({ kind: 'plural', key: `${prefix}.${category}`, detail: `"${category}" is not a plural category of ${tag}` });
+        continue;
+      }
+      const got = placeholders(text as string).join(',');
+      if (got !== want) issues.push({ kind: 'placeholder', key: `${prefix}.${category}`, detail: `expected {${want}} but found {${got}}` });
+      if (!(text as string).trim()) issues.push({ kind: 'empty', key: `${prefix}.${category}`, detail: 'empty string' });
+    }
+  };
+
   const walk = (prefix: string, en: Node, value: Node | undefined) => {
     if (value === undefined) {
       issues.push({ kind: 'missing', key: prefix, detail: 'missing' });
       return;
     }
     if (typeof en === 'string') {
+      if (prefix.startsWith('units.') && isPluralObject(value)) {
+        // Units may be plural objects in languages whose grammar needs it.
+        checkPlural(prefix, en, value as MessageTree);
+        return;
+      }
       if (typeof value !== 'string') issues.push({ kind: 'type', key: prefix, detail: 'expected a string' });
       else compareString(prefix, en, value);
       return;
@@ -107,21 +130,7 @@ export function validateLocale(
         issues.push({ kind: 'type', key: prefix, detail: 'expected a plural object' });
         return;
       }
-      for (const category of required) {
-        if (typeof value[category] !== 'string') {
-          issues.push({ kind: 'plural', key: `${prefix}.${category}`, detail: `plural category "${category}" is required for ${tag}` });
-        }
-      }
-      const want = placeholders((en as MessageTree).other as string).join(',');
-      for (const [category, text] of Object.entries(value)) {
-        if (!required.includes(category)) {
-          issues.push({ kind: 'plural', key: `${prefix}.${category}`, detail: `"${category}" is not a plural category of ${tag}` });
-          continue;
-        }
-        const got = placeholders(text as string).join(',');
-        if (got !== want) issues.push({ kind: 'placeholder', key: `${prefix}.${category}`, detail: `expected {${want}} but found {${got}}` });
-        if (!(text as string).trim()) issues.push({ kind: 'empty', key: `${prefix}.${category}`, detail: 'empty string' });
-      }
+      checkPlural(prefix, (en as MessageTree).other as string, value);
       return;
     }
     if (typeof value !== 'object' || Array.isArray(value)) {

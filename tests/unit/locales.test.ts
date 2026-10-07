@@ -61,6 +61,14 @@ describe('locale validator', () => {
     expect(kinds).toContain('extra:extra');
   });
 
+  it('lets units be plural objects where the grammar needs it', () => {
+    const units: MessageTree = { units: { molecules: '{n} molecules' } };
+    const fr: MessageTree = { units: { molecules: { one: '{n} molécule', many: '{n} de molécules', other: '{n} molécules' } } };
+    expect(validateLocale(units, fr, 'fr')).toEqual([]);
+    const missing: MessageTree = { units: { molecules: { one: '{n} molécule', other: '{n} molécules' } } };
+    expect(validateLocale(units, missing, 'fr').map((i) => i.key)).toEqual(['units.molecules.many']);
+  });
+
   it('extracts placeholders', () => {
     expect(placeholders('{b} and {a} and {b}')).toEqual(['a', 'b']);
   });
@@ -69,5 +77,18 @@ describe('locale validator', () => {
     expect(requiredPluralCategories('ru')).toEqual(expect.arrayContaining(['one', 'few', 'many', 'other']));
     expect(requiredPluralCategories('zh-Hans')).toEqual(['other']);
     expect(requiredPluralCategories('sr-Latn')).toEqual(expect.arrayContaining(['one', 'few', 'other']));
+  });
+});
+
+describe('plural-aware units', () => {
+  it('picks the grammatical form for large compact numbers', async () => {
+    const { createTranslator } = await import('../../src/i18n/translator');
+    const messages: MessageTree = {
+      units: { molecules: { one: '{n} molécule', many: '{n} de molécules', other: '{n} molécules' } },
+    };
+    const t = createTranslator('fr', messages, english);
+    expect(t.formatQuantity({ value: 1e9, unit: 'molecules' })).toBe('1 milliard de molécules');
+    expect(t.formatQuantity({ value: 10000, unit: 'molecules' })).toMatch(/^10\s000 molécules$/);
+    expect(t.formatQuantity({ value: 1, unit: 'molecules' })).toBe('1 molécule');
   });
 });

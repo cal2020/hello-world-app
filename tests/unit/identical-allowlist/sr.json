@@ -1,5 +1,7 @@
 [
   "closeupCaptions.lumen",
   "structures.plasma-membrane.parts.receptor.name",
-  "structures.endosomes.parts.receptor.name"
+  "structures.endosomes.parts.receptor.name",
+  "structures.microtubules.parts.protofilament.name",
+  "structures.intermediate-filaments.parts.tetramer.name"
 ]

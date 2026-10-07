@@ -13,5 +13,9 @@
   "structures.mitochondria.parts.protons.name",
   "structures.lysosomes.name",
   "structures.lysosomes.parts.hydrolase.name",
-  "structures.endosomes.name"
+  "structures.endosomes.name",
+  "structures.peroxisomes.parts.catalase.name",
+  "structures.microtubules.name",
+  "structures.microtubules.parts.protofilament.name",
+  "structures.centrosome.name"
 ]

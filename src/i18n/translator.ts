@@ -130,7 +130,17 @@ export function createTranslator(
       if (q.value !== undefined) number = formatNumber(q.value);
       else if (q.min !== undefined && q.max !== undefined) number = q.min === q.max ? formatNumber(q.min) : formatRange(q.min, q.max);
       else number = '';
-      let text = q.unit === 'none' ? number : t(`units.${q.unit}`, { n: number });
+      let text: string;
+      const unit = q.unit === 'none' ? undefined : resolve(`units.${q.unit}`).value;
+      if (unit === undefined) text = number;
+      else if (typeof unit === 'object' && !Array.isArray(unit)) {
+        // Plural-aware unit (e.g. French "1 milliard de molécules" but "10 000 molécules").
+        const ranged = q.min !== undefined && q.max !== undefined && q.min !== q.max;
+        const rules = pluralRules as Intl.PluralRules & { selectRange?: (a: number, b: number) => Intl.LDMLPluralRule };
+        const category = ranged && rules.selectRange ? rules.selectRange(q.min!, q.max!) : pluralRules.select(q.value ?? q.max ?? q.min ?? 0);
+        const template = typeof unit[category] === 'string' ? unit[category] : unit.other;
+        text = typeof template === 'string' ? interpolate(template, { n: number }) : number;
+      } else text = t(`units.${q.unit}`, { n: number });
       if (q.approx) text = t('quantity.approx', { q: text });
       if (q.qualifier) text = t(`quantity.${q.qualifier}`, { q: text });
       return text;
