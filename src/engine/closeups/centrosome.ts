@@ -11,8 +11,8 @@ import type { CloseupFactory } from './types';
 /**
  * A pair of centrioles in a G1 cell (1 unit = 10 nm). Each centriole is a
  * 250 nm-wide barrel of nine microtubule triplets (complete A tubule plus
- * partial B and C tubules, C ending short of the distal end) tilted like a
- * pinwheel. The 500 nm mother carries nine distal and nine subdistal
+ * partial B and C tubules; C stops short, leaving distal doublets) tilted
+ * like a pinwheel. The 500 nm mother carries nine distal and nine subdistal
  * appendages; the slightly shorter daughter lies at right angles beside the
  * mother's proximal end. Around them the pericentriolar material (a faint
  * cloud) holds γ-tubulin ring complexes, from which microtubules grow
@@ -122,9 +122,9 @@ const create: CloseupFactory = (ctx) => {
     };
   };
   const motherProximal = M.clone().multiplyScalar(-MOTHER_LENGTH / 2);
-  const mother = makeCentriole(M, motherProximal, MOTHER_LENGTH, 34);
+  const mother = makeCentriole(M, motherProximal, MOTHER_LENGTH, 40);
   const daughterProximal = motherProximal.clone().addScaledVector(M, 9).addScaledVector(D, 14.6);
-  const daughter = makeCentriole(D, daughterProximal, DAUGHTER_LENGTH, 30);
+  const daughter = makeCentriole(D, daughterProximal, DAUGHTER_LENGTH, 36);
 
   // ── Appendages on the mother's distal end: nine distal blades, nine subdistal knobs ─
   const bladeGeometry = new THREE.BoxGeometry(7.2, 0.55, 2.4);
@@ -234,6 +234,14 @@ const create: CloseupFactory = (ctx) => {
     .sort((a, b) => b.score - a.score)
     .slice(0, mtCount)
     .map((e) => e.i);
+  // The labelled new microtubule: one growing down and to the left, into open space.
+  const screenRight = new THREE.Vector3().crossVectors(screenUp, view).normalize();
+  let newest = 0;
+  order.forEach((ring, k) => {
+    const score = (n: THREE.Vector3) => -n.dot(screenRight) * 0.7 - n.dot(screenUp) * 0.5 - Math.abs(n.dot(view)) * 0.6;
+    if (score(rings[ring].normal) > score(rings[order[newest]].normal)) newest = k;
+  });
+  [order[0], order[newest]] = [order[newest], order[0]];
   interface Tube {
     ring: number;
     phase: number;
@@ -292,7 +300,7 @@ const create: CloseupFactory = (ctx) => {
     tipMesh.instanceMatrix.needsUpdate = true;
     // The labelled new microtubule (index 0 starts from its ring every loop).
     newTubeVisible = growing[0] === 1 && lengths[0] > 6;
-    newTubeAnchor.copy(rings[tubes[0].ring].normal).multiplyScalar(lengths[0] * 0.6).add(rings[tubes[0].ring].position);
+    newTubeAnchor.copy(rings[tubes[0].ring].normal).multiplyScalar(Math.min(14, lengths[0] * 0.55)).add(rings[tubes[0].ring].position);
     // The PCM cloud shimmers very slowly.
     pcmGroup.setRotationFromAxisAngle(M, Math.sin(t * 0.05) * (calm ? 0.01 : 0.03));
   };
@@ -300,8 +308,8 @@ const create: CloseupFactory = (ctx) => {
   // ── Labels ────────────────────────────────────────────────────────────
   const motherAnchor = mother.surface(30, view, 13, new THREE.Vector3());
   const daughterAnchor = daughter.surface(24, view, 13, new THREE.Vector3());
-  // A triplet on the mother's distal end (seen end-on), on the side facing the daughter.
-  const tripletAnchor = mother.surface(MOTHER_LENGTH, D, A_RADIUS + 1.6, new THREE.Vector3());
+  // A triplet on the front of the mother's barrel, where all three tubules run (the C tubule stops short of the distal end).
+  const tripletAnchor = mother.surface(34, view.clone().addScaledVector(D, -0.6), 12.4, new THREE.Vector3());
   const appendageAnchor = mother.surface(MOTHER_LENGTH - 1, screenUp.clone().negate().addScaledVector(D, -1), 17.5, new THREE.Vector3());
   const pcmAnchor = pcmCentre.clone().addScaledVector(D, -16).addScaledVector(view, 14).addScaledVector(M, -6);
   let frontRing = 0;

@@ -337,3 +337,42 @@ export function glycanTree(rng: Rng, count: number, spacing: number): THREE.Vect
   }
   return beads;
 }
+
+/** Reverse the winding and the normals (an inward-facing copy of a closed surface). */
+export function flipFaces(geometry: THREE.BufferGeometry): THREE.BufferGeometry {
+  const normal = geometry.getAttribute('normal') as THREE.BufferAttribute | undefined;
+  if (normal) for (let i = 0; i < normal.count; i++) normal.setXYZ(i, -normal.getX(i), -normal.getY(i), -normal.getZ(i));
+  if (geometry.index) {
+    const index = geometry.index;
+    for (let i = 0; i < index.count; i += 3) {
+      const a = index.getX(i + 1);
+      index.setX(i + 1, index.getX(i + 2));
+      index.setX(i + 2, a);
+    }
+  } else {
+    for (const name of Object.keys(geometry.attributes)) {
+      const attribute = geometry.getAttribute(name) as THREE.BufferAttribute;
+      const size = attribute.itemSize;
+      const array = attribute.array as Float32Array;
+      for (let i = 0; i < attribute.count; i += 3) {
+        for (let k = 0; k < size; k++) {
+          const a = array[(i + 1) * size + k];
+          array[(i + 1) * size + k] = array[(i + 2) * size + k];
+          array[(i + 2) * size + k] = a;
+        }
+      }
+    }
+  }
+  return geometry;
+}
+
+/**
+ * Unit vesicle with a membrane wall: outer surface plus an inward-facing inner
+ * surface (radius `inner`, darker vertex colour). Cut open by a cutaway
+ * material, its lumen shows lit and only the wall gets the cap colour.
+ */
+export function hollowBallGeometry(detail: 'octa' | 0 | 1 | 2, inner: number): THREE.BufferGeometry {
+  const innerBall = ballGeometry(detail);
+  innerBall.scale(inner, inner, inner);
+  return mergeParts([paint(ballGeometry(detail), '#ffffff'), paint(flipFaces(innerBall), '#9a948c')]);
+}

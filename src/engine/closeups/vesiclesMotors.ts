@@ -53,7 +53,7 @@ const DYNEIN_CARGO_R = 18;
 
 const ALPHA = '#dcecff';
 const BETA = '#6f9fe0';
-const HEAD_COLORS = ['#ffb86b', '#ffaa58'];
+const HEAD_COLORS = ['#ffb86b', '#ffa04a'];
 const LINKER_DIM = new THREE.Color('#b99a62');
 const LINKER_BRIGHT = new THREE.Color('#fff2a8');
 const DYNEIN = '#a58bff';
@@ -329,6 +329,20 @@ const create: CloseupFactory = (ctx) => {
   const baseHeadQuat = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(X, up, side));
   const arcDir = up.clone().multiplyScalar(0.78).addScaledVector(side, 0.62).normalize();
   const arcAxis = new THREE.Vector3().crossVectors(X, arcDir).normalize();
+
+  // Faint trail of the swing: a semicircle over the bound head, revealed as the rear head travels it.
+  const TRAIL_SEGMENTS = 40;
+  const TRAIL_RADIAL = 5;
+  const trailPoints: THREE.Vector3[] = [];
+  for (let i = 0; i <= TRAIL_SEGMENTS; i++) {
+    const theta = (Math.PI * i) / TRAIL_SEGMENTS;
+    trailPoints.push(new THREE.Vector3().addScaledVector(X, -STEP * Math.cos(theta)).addScaledVector(arcDir, STEP * Math.sin(theta)));
+  }
+  const trailGeometry = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(trailPoints), TRAIL_SEGMENTS, 0.32, TRAIL_RADIAL, false);
+  const trailMaterial = new THREE.MeshBasicMaterial({ color: '#ffd08a', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const trail = new THREE.Mesh(trailGeometry, trailMaterial);
+  trail.renderOrder = 4;
+  root.add(trail);
   const downY = new THREE.Vector3(0, -1, 0);
   const stalkTop = new THREE.Vector3();
   const linkerColor = new THREE.Color();
@@ -398,6 +412,12 @@ const create: CloseupFactory = (ctx) => {
       setHead(swinging, v2, qa);
     }
     heads.instanceMatrix.needsUpdate = true;
+
+    // Swing trail: drawn up to the swinging head, then fading after it lands.
+    const swing = easeInOut((u - SWING_START) / (SWING_END - SWING_START));
+    trail.position.copy(headPos[bound]);
+    trailGeometry.setDrawRange(0, Math.round(swing * TRAIL_SEGMENTS) * TRAIL_RADIAL * 6);
+    trailMaterial.opacity = u < SWING_START ? 0 : (calm ? 0.4 : 0.7) * (1 - ramp(u, SWING_END, 0.98));
 
     // Neck junction: between the heads, carried forward 8 nm as the front linker docks.
     neck.set(STEP * (neckAdvance - slide), 0, 0).addScaledVector(up, HEAD_R + NECK_H);

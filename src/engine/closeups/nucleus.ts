@@ -383,8 +383,10 @@ const create: CloseupFactory = (ctx) => {
       } else if (local < I.exit) {
         const u = (local - I.channel) / (I.exit - I.channel);
         importComplex.position.copy(channelTop).lerp(channelBottom, sstep(0, 1, u));
-        importComplex.position.x += noise.noise(3.3, t * 0.9, 0) * 5 * amp;
-        importComplex.position.z += noise.noise(4.4, t * 0.9, 0) * 3 * amp;
+        // Hopping between FG repeats: sideways jitter that fades in and out with the passage.
+        const hop = Math.sin(Math.PI * u) * amp;
+        importComplex.position.x += noise.noise(3.3, t * 0.9, 0) * 5 * hop;
+        importComplex.position.z += noise.noise(4.4, t * 0.9, 0) * 3 * hop;
         importAlpha = 1;
       } else if (local < I.release) {
         const u = sstep(0, 1, (local - I.exit) / (I.release - I.exit));
@@ -424,7 +426,7 @@ const create: CloseupFactory = (ctx) => {
         tilt = 0;
       } else if (local >= E.channel && local < E.emerge) {
         mrnp.position.copy(channelBottom).lerp(channelTop, sstep(E.channel, E.emerge, local));
-        mrnp.position.x += noise.noise(5.5, t * 0.9, 0) * 3 * amp;
+        mrnp.position.x += noise.noise(5.5, t * 0.9, 0) * 3 * amp * Math.sin(Math.PI * ((local - E.channel) / (E.emerge - E.channel)));
         exportAlpha = 1;
         tilt = 0;
       } else if (local >= E.emerge && local < E.leave) {

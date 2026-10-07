@@ -5,7 +5,7 @@ import { blobGeometry, createCloseupScene, disposeScene } from './common';
 import { addInstanceGlow, anchorOn, instancedMaterial } from './kit';
 import { CISTERNA, cisternaColor, cisternaGeometry, coatDirections, cupOffset } from './golgiParts';
 import { debugTime } from './membranesDebug';
-import { ballGeometry, cutawayMaterial, glycanTree, sstep } from './membranesParts';
+import { ballGeometry, cutawayMaterial, glycanTree, hollowBallGeometry, sstep } from './membranesParts';
 import type { CloseupFactory } from './types';
 
 /**
@@ -107,12 +107,14 @@ const create: CloseupFactory = (ctx) => {
 
   // ── Vesicles: membrane bodies plus coat subunits ────────────────────────
   const dirs = coatDirections();
-  const bodyMaterial = instancedMaterial({ roughness: 0.5, transparent: true });
+  // Vesicles are cut open at the same plane as the cisternae, so their contents show.
+  const bodyMaterial = cutawayMaterial('#ffffff', '#f1e7d6', cut, { emissive: '#000000', roughness: 0.5, vertexColors: true });
   addInstanceGlow(bodyMaterial, 0.22, 'golgiVesicle');
-  const bodies = new THREE.InstancedMesh(ballGeometry(quality === 'low' ? 1 : 2), bodyMaterial, VESICLES.length);
-  VESICLES.forEach((v, i) => bodies.setColorAt(i, new THREE.Color(BODY[v.kind])));
+  const bodies = new THREE.InstancedMesh(hollowBallGeometry(quality === 'low' ? 1 : 2, 0.86), bodyMaterial, VESICLES.length);
+  // COPI vesicles carry Golgi enzymes back: a faint blue tint of their cargo.
+  VESICLES.forEach((v, i) => bodies.setColorAt(i, new THREE.Color(BODY[v.kind]).lerp(new THREE.Color('#3f8fd8'), v.kind === 'copi' ? 0.15 : 0)));
   const coated = VESICLES.filter((v) => COAT[v.kind]);
-  const coatMaterial = instancedMaterial({ roughness: 0.55 });
+  const coatMaterial = cutawayMaterial('#ffffff', '#e6dccb', cut, { emissive: '#000000', roughness: 0.55 });
   addInstanceGlow(coatMaterial, 0.25, 'golgiCoat');
   const coats = new THREE.InstancedMesh(blobGeometry(1, 'golgi-coat', 0.25, 1), coatMaterial, coated.length * dirs.length);
   coated.forEach((v, c) => {
@@ -121,8 +123,18 @@ const create: CloseupFactory = (ctx) => {
   });
   bodies.frustumCulled = false;
   coats.frustumCulled = false;
-  root.add(bodies, coats);
-  const enzymeColor = new THREE.Color('#3f8fd8');
+  // Contents: cargo (cream, with sugar) in COPII and secretory vesicles, Golgi enzymes (blue) in
+  // COPI vesicles, lysosomal enzymes (violet) in clathrin-coated vesicles.
+  const CONTENT = 3;
+  const contentOffsets = [new THREE.Vector3(-0.25, 0.35, -0.5), new THREE.Vector3(0.35, -0.25, -0.9), new THREE.Vector3(-0.1, -0.3, -0.25)];
+  const contentColor: Record<Kind, string> = { copii: '#fff0c4', copi: '#3f8fd8', secretory: '#fff0c4', clathrin: '#9a5ce0' };
+  const contents = new THREE.InstancedMesh(beadGeometry, cargoMaterial, VESICLES.length * CONTENT);
+  VESICLES.forEach((v, i) => {
+    for (let c = 0; c < CONTENT; c++) contents.setColorAt(i * CONTENT + c, new THREE.Color(contentColor[v.kind]));
+  });
+  contents.frustumCulled = false;
+  root.add(bodies, coats, contents);
+  const WHITE = new THREE.Color('#ffffff');
 
   // Moving label anchors.
   const marks = { copii: new THREE.Object3D(), copi: new THREE.Object3D(), secretory: new THREE.Object3D(), clathrin: new THREE.Object3D() };
@@ -167,10 +179,16 @@ const create: CloseupFactory = (ctx) => {
     }
     return { p, x: slotX(p), scale, opacity };
   };
+  /** A point on the trans-facing surface of cisterna j, in its upper (+1) or lower (−1) half, at the cut. */
+  const transFacePoint = (j: number, tau: number, fused: number, side: 1 | -1, target: THREE.Vector3) => {
+    const s = sacState(j, tau, fused);
+    const yRef = side * 0.5 * rimR;
+    return target.set(s.x + cupOffset(yRef) + CISTERNA.lumenHalf + CISTERNA.membrane, yRef * s.scale, 0);
+  };
   /** Top (+1) or bottom (−1) dilated rim of cisterna j, near the cut. */
   const rimPoint = (j: number, tau: number, fused: number, side: 1 | -1, target: THREE.Vector3) => {
     const s = sacState(j, tau, fused);
-    return target.set(s.x + cupOffset(rimR), side * rimR * s.scale, -2.5);
+    return target.set(s.x + cupOffset(rimR), side * rimR * s.scale, 0);
   };
 
   return {
@@ -188,6 +206,7 @@ const create: CloseupFactory = (ctx) => {
       const t = debugTime(rawTime);
       const local = ((t % LOOP) + LOOP) % LOOP;
       const tau = local / LOOP;
+      const generation = Math.floor(t / LOOP); // a cisterna keeps its identity j − generation as it moves along
       const amp = calm ? 0.4 : 1;
       // How much of the new cis cisterna has arrived (four COPII fusions per loop).
       let fused = 0;
@@ -204,7 +223,7 @@ const create: CloseupFactory = (ctx) => {
         sac.mesh.visible = st.opacity > 0.01;
         cisternaColor(st.p, sac.material.color);
         sac.material.emissive.copy(sac.material.color);
-        sac.cap.copy(sac.material.color).lerp(_color.set('#ffffff'), 0.45);
+        sac.cap.copy(sac.material.color).lerp(WHITE, 0.45);
         sac.material.opacity = st.opacity;
         sac.material.depthWrite = st.opacity > 0.95;
         // Cargo inside this cisterna (fewer in the forming one), with growing sugar sprigs.
@@ -214,7 +233,7 @@ const create: CloseupFactory = (ctx) => {
           const slot = cargoSlots[c];
           const present = st.p >= 0 || c < Math.round(fused * CARGO_PER_SAC);
           const size = present ? 0.5 * Math.min(1, st.opacity * 1.5) : 0;
-          const wobble = noise.noise(j * 7 + c, t * 0.3, 1) * 0.5 * amp;
+          const wobble = noise.noise((j - generation) * 7 + c, t * 0.3, 1) * 0.5 * amp;
           _p.set(st.x + cupOffset(slot.r * Math.cos(slot.phi)), slot.r * st.scale * Math.cos(slot.phi) + wobble, slot.r * st.scale * Math.sin(slot.phi));
           cargo.setMatrixAt(ci++, _m.compose(_p, _q.identity(), _s.setScalar(size)));
           // Sprig along the lumen (vertical), branching as it grows.
@@ -224,7 +243,7 @@ const create: CloseupFactory = (ctx) => {
             _a.copy(slot.tree[k]).applyQuaternion(_q);
             _a.x *= 0.35; // keep the sprig inside the thin lumen
             _a.add(_p).addScaledVector(_dir, 0.45);
-            sugars.setMatrixAt(si, _m.compose(_a, _q, _s.setScalar(on ? 0.2 : 0)));
+            sugars.setMatrixAt(si, _m.compose(_a, _q, _s.setScalar(on ? 0.2 * Math.min(1, st.opacity * 1.5) : 0)));
             sugars.setColorAt(si++, sugarColor);
           }
         }
@@ -246,8 +265,8 @@ const create: CloseupFactory = (ctx) => {
           if (s < COPII_TRAVEL + COPII_FUSE) {
             const arrive = Math.min(1, s / COPII_TRAVEL);
             const target = sacState(0, tau, fused);
-            _b.set(target.x + cupOffset((v.y * 0.75) / target.scale) - 1.8 - RADIUS.copii * (1 - sstep(COPII_TRAVEL, COPII_TRAVEL + COPII_FUSE, s)), v.y * 0.75, -3);
-            _a.set(-40, v.y + 6 * v.side, -4 + v.side * 2);
+            _b.set(target.x + cupOffset((v.y * 0.75) / target.scale) - 1.8 - RADIUS.copii * (1 - sstep(COPII_TRAVEL, COPII_TRAVEL + COPII_FUSE, s)), v.y * 0.75, 0);
+            _a.set(-40, v.y + 6 * v.side, 0);
             _p.copy(_a).lerp(_b, sstep(0, 1, arrive));
             _p.y += Math.sin(arrive * Math.PI) * 3 * v.side;
             radius = RADIUS.copii * (1 - sstep(COPII_TRAVEL, COPII_TRAVEL + COPII_FUSE, s));
@@ -287,44 +306,48 @@ const create: CloseupFactory = (ctx) => {
           if (s < BUD + LEAVE) {
             const budStart = (v.start + LOOP) % LOOP;
             const tauBud = Math.min(1, ((budStart + Math.min(s, BUD)) % LOOP) / LOOP);
-            rimPoint(5, tauBud, fused, v.side, _a);
+            transFacePoint(5, tauBud, fused, v.side, _a);
             const r = RADIUS[v.kind];
+            _dir.set(1, v.side * 0.3, 0).normalize();
             if (s < BUD) {
               const g = sstep(0, BUD, s);
               radius = r * (0.15 + 0.85 * g);
-              _p.copy(_a).add(_dir.set(0.8, v.side * 0.6, 0).normalize().multiplyScalar(radius * 0.9 * g + 0.6));
+              _p.copy(_a).addScaledVector(_dir, radius * 0.85 * g + 0.4);
             } else {
               const u = sstep(BUD, BUD + LEAVE, s);
               radius = r;
-              _p.copy(_a).add(_dir.set(0.8, v.side * 0.6, 0).normalize().multiplyScalar(r * 0.9 + 0.6));
-              _p.x += 28 * u;
-              _p.y += v.side * (v.side > 0 ? 12 : 16) * u;
-              _p.z += 4 * u;
+              _p.copy(_a).addScaledVector(_dir, r * 0.85 + 0.4);
+              _p.x += 22 * u;
+              _p.y += v.side * 18 * u;
               alpha = 1 - sstep(BUD + LEAVE - 1.2, BUD + LEAVE, s);
             }
             _p.x += noise.noise(i, t * 0.4, 0) * 0.3 * amp;
+            const labelled = s > 0.6 && s < BUD + LEAVE - 1.4;
             if (v.kind === 'secretory') {
-              shown.secretory = true;
-              marks.secretory.position.copy(_p);
+              shown.secretory ||= labelled;
+              if (labelled) marks.secretory.position.copy(_p);
             } else {
-              shown.clathrin = true;
-              marks.clathrin.position.copy(_p);
+              shown.clathrin ||= labelled;
+              if (labelled) marks.clathrin.position.copy(_p);
             }
           }
         }
         const r = radius * Math.min(1, alpha * 1.5);
         bodies.setMatrixAt(i, _m.compose(_p, _q.identity(), _s.setScalar(Math.max(0, r))));
+        for (let c = 0; c < CONTENT; c++) {
+          _a.copy(contentOffsets[c]).multiplyScalar(r).add(_p);
+          contents.setMatrixAt(i * CONTENT + c, _m.compose(_a, _q, _s.setScalar(r > 1.2 ? 0.5 : 0)));
+        }
         if (COAT[v.kind]) {
           for (let d = 0; d < dirs.length; d++) {
             _a.copy(dirs[d]).multiplyScalar(r + 0.35).add(_p);
             coats.setMatrixAt(coatIndex++, _m.compose(_a, _q.identity(), _s.setScalar(r > 0.05 ? 0.42 + r * 0.12 : 0)));
           }
         }
-        if (v.kind === 'copi') bodies.setColorAt(i, _color.set(BODY.copi).lerp(enzymeColor, 0.15));
       });
       bodies.instanceMatrix.needsUpdate = true;
-      if (bodies.instanceColor) bodies.instanceColor.needsUpdate = true;
       coats.instanceMatrix.needsUpdate = true;
+      contents.instanceMatrix.needsUpdate = true;
     },
     dispose() {
       disposeScene(scene);
