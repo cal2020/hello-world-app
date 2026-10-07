@@ -304,7 +304,7 @@
     "improvementsTitle": "Améliorations apportées",
     "improvements": "Par rapport à l’expérience qui l’a inspiré, cet atlas ajoute une recherche qui tient compte des synonymes, un réglage visible de la qualité du rendu et un paramètre explicite de réduction des animations.",
     "sourcesTitle": "Sources",
-    "sources": "Chaque donnée clé renvoie à sa source. La plupart des sources ont été contrôlées lors de la préparation de cette version, d’après les résultats de moteurs de recherche renvoyant aux pages de l’éditeur ou de bibliothèques ; les quelques sources qui n’ont pas pu l’être portent la mention « pas encore vérifiée », et les affirmations qui reposent sur elles, la mention « Vérification en attente ». Les valeurs chiffrées conservent le contexte de mesure indiqué dans la source.",
+    "sources": "Chaque donnée clé renvoie à sa source. Toutes les sources ont été contrôlées lors de la préparation de cette version, d’après les résultats de moteurs de recherche renvoyant aux pages de l’éditeur, de bibliothèques ou de bases de données. Les valeurs chiffrées conservent le contexte de mesure indiqué dans la source.",
     "translationTitle": "Traductions",
     "translation": "{status}",
     "creditsTitle": "Crédits",

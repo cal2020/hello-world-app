@@ -99,7 +99,12 @@ Node.js ≥ 22.12 is required (Vite 8 / Vitest 5 engines).
   bilayers with individual lipids, banded cut membranes, DNA/RNA helices,
   coiled coils, actin and microtubule lattices, tRNA and ribosome shapes, glowing
   ion particles and GPU-side thermal motion. Close-up animations are pure
-  functions of biological time, so freezing stops them exactly.
+  functions of biological time, so freezing stops them exactly. Each close-up
+  runs on its own clock, which starts at the view's `posterTime`: a moment
+  with its key parts labelled, chosen by probing which phase-limited labels
+  are visible over the loop (`__HCA_DEBUG__.closeupLabels` with `?perf=1`) and
+  checking the frames. With motion frozen (reduced motion) that moment is the
+  still image readers see; otherwise playback continues from it.
 * **Translations.** A language-neutral registry (`src/content/`) holds numbers,
   sources and structure metadata; locale files hold all prose. Six translations
   were produced with AI assistance and are checked automatically (keys,

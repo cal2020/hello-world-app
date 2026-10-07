@@ -234,7 +234,8 @@ skip links, landmarks, real headings, `aria-pressed`/`aria-current`/`aria-expand
 states and live regions for status messages. All 3D content has a text
 equivalent (reading panel, text atlas, static pages). Reduced motion turns camera
 travel into cuts, stops decorative motion and starts biological animation frozen;
-it follows the system setting unless changed. Automated axe scans (WCAG 2.1 A/AA)
+each close-up then shows a representative, labelled moment of its animation. It
+follows the system setting unless changed. Automated axe scans (WCAG 2.1 A/AA)
 of the overview, a structure view and the Help dialog report no violations.
 
 ## Performance
@@ -267,13 +268,13 @@ widths are in [docs/screenshots/](docs/screenshots/).
   inspected. Features follow the documented experience described in the
   project's specification; everything else is a design decision (recorded in
   [docs/IMPLEMENTATION_NOTES.md](docs/IMPLEMENTATION_NOTES.md)).
-- **Source verification is incomplete.** Scientific websites (NCBI, DOI,
-  publishers, BioNumbers) were also blocked, so sources were verified through
-  search-engine records; the search budget ran out with **27 of 100 sources**
-  still unchecked. Those sources are labelled “not yet verified” and the
-  statements that depend on them “Verification pending” in the interface and
-  text atlas. `npm run check:links` checks all links from a normal connection;
-  the list to confirm is in [docs/VERIFICATION.md](docs/VERIFICATION.md).
+- **Sources were verified through search records, not by opening the pages.**
+  Scientific websites (NCBI, DOI, publishers, BioNumbers) were also blocked, so
+  all 100 sources were checked against search-engine records of their abstracts,
+  publisher and repository pages and database entries; each source's note says
+  which record was used (two values were corrected as a result). Link
+  reachability was not tested: run `npm run check:links` from a normal
+  connection. Details in [docs/VERIFICATION.md](docs/VERIFICATION.md).
 - **Translations** are AI-assisted and not yet reviewed by native-speaking experts.
 - **Performance** has only been measured with software rendering (see above).
 - Close-up scenes are fixed at the quality level active when they open (changing

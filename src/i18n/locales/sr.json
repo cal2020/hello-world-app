@@ -304,7 +304,7 @@
     "improvementsTitle": "Poboljšanja u izvedbi",
     "improvements": "U poređenju sa aplikacijom koja ga je inspirisala, ovaj atlas dodaje pretragu sa sinonimima, vidljivu kontrolu kvaliteta prikaza i posebno podešavanje za smanjeno kretanje.",
     "sourcesTitle": "Izvori",
-    "sources": "Svaka ključna činjenica povezana je sa svojim izvorom. Većina izvora je, kada je pravljena ova verzija, proverena prema zapisima pretraživača o stranicama izdavača ili biblioteka; malobrojni koje nije bilo moguće proveriti označeni su sa „još nije proveren“, a tvrdnje koje se na njih oslanjaju označene su sa „Čeka proveru“. Uz brojeve je naveden kontekst merenja dat u izvoru.",
+    "sources": "Svaka ključna činjenica povezana je sa svojim izvorom. Svi izvori su, kada je pravljena ova verzija, provereni prema zapisima pretraživača o stranicama izdavača, biblioteka ili baza podataka. Uz brojeve je naveden kontekst merenja dat u izvoru.",
     "translationTitle": "Prevodi",
     "translation": "{status}",
     "creditsTitle": "Zasluge",

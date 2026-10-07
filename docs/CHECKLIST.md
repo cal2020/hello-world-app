@@ -36,7 +36,7 @@ Verification details and results: [VERIFICATION.md](VERIFICATION.md).
 | Scale bar from camera projection and scene unit; µm ↔ nm; enlargement shown | Done | `app/scale.ts` (unit tests), engine `updateScale`; close-ups show magnification vs. whole cell. |
 | Typical size / typical quantity in the cited cell type / objects drawn kept distinct, with context | Done | Reading panel “By the numbers”. |
 | Interphase chromatin; condensed chromosome as separate close-up with cell-cycle context; chromatids, centromere, telomeres; XX assumption | Done | Chromosome territories + inactive X in the cell; metaphase close-up text states mitosis context. |
-| Claims verified against publications | **Partial** | 73 of 100 sources verified via search records; 27 pending (labelled in the UI). See VERIFICATION.md §1. |
+| Claims verified against publications | Done | All 100 sources verified through search records (abstracts, publisher and repository pages, BioNumbers); two values corrected. Pages could not be opened directly from the environment. See VERIFICATION.md §1. |
 | Simplifications explained; time-scaling stated | Done | Per-structure simplifications; close-up notes “slowed about ×N”. |
 
 ## 4. Visual design and layout

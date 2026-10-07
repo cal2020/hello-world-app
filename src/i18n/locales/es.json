@@ -304,7 +304,7 @@
     "improvementsTitle": "Mejoras de esta implementación",
     "improvements": "En comparación con la experiencia que lo inspiró, este atlas añade una búsqueda con sinónimos, un control visible de la calidad de renderizado y un ajuste explícito de movimiento reducido.",
     "sourcesTitle": "Fuentes",
-    "sources": "Cada dato clave enlaza con su fuente. La mayoría de las fuentes se cotejaron con los registros que los buscadores tienen de las páginas de la editorial o de la biblioteca cuando se generó esta versión; las pocas que no pudieron comprobarse llevan la marca «aún no verificada», y las afirmaciones que se basan en ellas llevan la marca «Verificación pendiente». Las cifras conservan el contexto de medición que indica la fuente.",
+    "sources": "Cada dato clave enlaza con su fuente. Todas las fuentes se cotejaron con los registros que los buscadores tienen de las páginas de la editorial, de la biblioteca o de la base de datos cuando se generó esta versión. Las cifras conservan el contexto de medición que indica la fuente.",
     "translationTitle": "Traducciones",
     "translation": "{status}",
     "creditsTitle": "Créditos",

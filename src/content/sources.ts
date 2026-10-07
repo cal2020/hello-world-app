@@ -17,8 +17,6 @@ import type { SourceRecord } from './types';
 const MBOC = 'Alberts B, Johnson A, Lewis J, Raff M, Roberts K, Walter P';
 const MBOC_BOOK = 'Molecular Biology of the Cell, 4th edition. New York: Garland Science';
 const COOPER_BOOK = 'The Cell: A Molecular Approach, 2nd edition. Sunderland (MA): Sinauer Associates';
-const PENDING_NOTE =
-  'Not yet verified: well-known citation recorded from the author’s knowledge; the build environment’s search budget was exhausted before it could be checked. Run npm run check:links and confirm the claim.';
 
 export const SOURCES: SourceRecord[] = [
   // ── Textbooks (NCBI Bookshelf) ─────────────────────────────────────────────
@@ -32,7 +30,7 @@ export const SOURCES: SourceRecord[] = [
     container: 'New York: Garland Science',
     url: 'https://www.ncbi.nlm.nih.gov/books/NBK21054/',
     status: 'verified',
-    note: 'Search result returned the Bookshelf landing page “Molecular Biology of the Cell - NCBI Bookshelf” (NBK21054). Cited at book level for general textbook statements.',
+    note: 'Search result returned the Bookshelf landing page “Molecular Biology of the Cell - NCBI Bookshelf” (NBK21054). Cited at book level for general textbook statements; the typical mitochondrial diameter of 0.5–1 µm was confirmed in search records of standard texts.',
   },
   {
     id: 'mboc4-internal-organization',
@@ -56,7 +54,7 @@ export const SOURCES: SourceRecord[] = [
     container: MBOC_BOOK,
     url: 'https://www.ncbi.nlm.nih.gov/books/NBK21051/',
     status: 'verified',
-    note: 'Search result returned “The Cytoskeleton - Molecular Biology of the Cell - NCBI Bookshelf” at this URL. Chapter-level citation; the specific values cited from it are flagged as pending.',
+    note: 'Search result returned “The Cytoskeleton - Molecular Biology of the Cell - NCBI Bookshelf” at this URL. Chapter-level citation. The values cited from it (microtubules 25 nm wide with 13 protofilaments of 8-nm tubulin dimers; actin filaments 5–9 nm; intermediate filaments about 10 nm, non-polar and without motors) were confirmed in search records of standard references, because the Bookshelf page itself could not be opened from the build environment.',
   },
   {
     id: 'alberts-2002-lipid-bilayer',
@@ -140,7 +138,7 @@ export const SOURCES: SourceRecord[] = [
     container: MBOC_BOOK,
     url: 'https://www.ncbi.nlm.nih.gov/books/NBK26941/',
     status: 'verified',
-    note: 'Search for the exact section title returned this URL.',
+    note: 'Search for the exact section title returned this URL; Golgi cisternae about 0.5–1 µm across were confirmed in search records of Golgi structure.',
   },
   {
     id: 'mboc4-membrane-transport',
@@ -248,7 +246,7 @@ export const SOURCES: SourceRecord[] = [
     container: COOPER_BOOK,
     url: 'https://www.ncbi.nlm.nih.gov/books/NBK9930/',
     status: 'verified',
-    note: 'Search about catalase, hydrogen peroxide, fatty-acid oxidation and plasmalogens returned this URL.',
+    note: 'Search about catalase, hydrogen peroxide, fatty-acid oxidation and plasmalogens returned this URL; the diameter range of 0.1–1 µm was confirmed in search records (BioNumbers BNID 106729 and textbook pages).',
   },
   // ── BioNumbers (Harvard Medical School) ───────────────────────────────────
   {
@@ -844,8 +842,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Nature Reviews Molecular Cell Biology 18(2):73–89',
     url: 'https://doi.org/10.1038/nrm.2016.147',
     doi: '10.1038/nrm.2016.147',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Max Planck Institute of Biophysics publication list confirmed authors, title, journal, volume 18(2), pages 73–89 and year; search records of nuclear-pore reviews give an outer diameter of about 120 nm (120–145 nm) for vertebrate pore complexes.',
   },
   {
     id: 'ribbeck-gorlich-2001',
@@ -856,8 +854,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'EMBO Journal 20(6):1320–1330',
     url: 'https://doi.org/10.1093/emboj/20.6.1320',
     doi: '10.1093/emboj/20.6.1320',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'PubMed Central record (PMC145537) confirmed the citation; the abstract reports translocation rates on the order of 10³ events per second for a single pore complex (mass flow near 100 MDa/s).',
   },
   {
     id: 'luger-1997',
@@ -868,8 +866,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Nature 389(6648):251–260',
     url: 'https://doi.org/10.1038/38444',
     doi: '10.1038/38444',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Search records (ADS, RCSB PDB entry 1AOI) confirmed the citation and that 146 bp of DNA wrap the histone octamer in 1.65 left-handed superhelical turns.',
   },
   {
     id: 'moyzis-1988',
@@ -880,8 +878,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Proceedings of the National Academy of Sciences USA 85(18):6622–6626',
     url: 'https://doi.org/10.1073/pnas.85.18.6622',
     doi: '10.1073/pnas.85.18.6622',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'PubMed Central record (PMC282029) confirmed the citation and the (TTAGGG)n repeat clustered at the telomeres of all human chromosomes.',
   },
   {
     id: 'griffith-1999',
@@ -892,8 +890,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Cell 97(4):503–514',
     url: 'https://doi.org/10.1016/S0092-8674(00)80760-6',
     doi: '10.1016/S0092-8674(00)80760-6',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Search records confirmed the citation (Cell 97(4):503–514); the abstract reports abundant large t-loops, seen by electron microscopy, in psoralen-cross-linked telomeric DNA from human and mouse cells.',
   },
   {
     id: 'de-lange-2005',
@@ -904,8 +902,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Genes & Development 19(18):2100–2110',
     url: 'https://doi.org/10.1101/gad.1346005',
     doi: '10.1101/gad.1346005',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Search records confirmed the citation and the six shelterin subunits TRF1, TRF2, TIN2, Rap1, TPP1 and POT1.',
   },
   {
     id: 'harley-1990',
@@ -916,8 +914,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Nature 345(6274):458–460',
     url: 'https://doi.org/10.1038/345458a0',
     doi: '10.1038/345458a0',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Search records (Cold Spring Harbor Laboratory repository, Springer) confirmed the citation and that telomeric DNA shortens with serial passage of human fibroblasts; BioNumbers BNID 104276 quotes this paper for 50–200 bp lost per replication cycle, the range shown here.',
   },
   {
     id: 'greider-blackburn-1985',
@@ -928,8 +926,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Cell 43(2 Pt 1):405–413',
     url: 'https://doi.org/10.1016/0092-8674(85)90170-9',
     doi: '10.1016/0092-8674(85)90170-9',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Search records confirmed the citation (Cell 43(2 Pt 1):405–413, December 1985) and the discovery of a telomere terminal transferase, now called telomerase, in Tetrahymena extracts.',
   },
   {
     id: 'aubert-lansdorp-2008',
@@ -940,8 +938,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Physiological Reviews 88(2):557–579',
     url: 'https://doi.org/10.1152/physrev.00026.2007',
     doi: '10.1152/physrev.00026.2007',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Citation confirmed in the Ageing Map bibliography (Physiological Reviews 88(2):557–579); search records (BioNumbers and reviews) give 5–15 kb for telomeres in human somatic cells.',
   },
   {
     id: 'lewis-tollervey-2000',
@@ -952,8 +950,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Science 288(5470):1385–1389',
     url: 'https://doi.org/10.1126/science.288.5470.1385',
     doi: '10.1126/science.288.5470.1385',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'University of Edinburgh research portal confirmed the citation; BioNumbers BNID 103187 quotes this paper for 7,500 ribosomal subunits made per minute in a HeLa cell.',
   },
   {
     id: 'boisvert-2007',
@@ -964,8 +962,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Nature Reviews Molecular Cell Biology 8(7):574–585',
     url: 'https://doi.org/10.1038/nrm2184',
     doi: '10.1038/nrm2184',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Search records (University of Dundee portal, author’s PDF) confirmed the citation and its account of nucleoli forming around rDNA on the acrocentric chromosomes, with fibrillar centres, dense fibrillar component and granular component; further records confirm that nucleolar size follows the rate of ribosome production and that a cell can have several nucleoli.',
   },
   {
     id: 'feric-2016',
@@ -976,8 +974,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Cell 165(7):1686–1697',
     url: 'https://doi.org/10.1016/j.cell.2016.04.047',
     doi: '10.1016/j.cell.2016.04.047',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'PubMed Central record (PMC5127388) confirmed the citation and that nucleolar subcompartments are coexisting liquid phases (Xenopus oocytes and purified proteins).',
   },
   {
     id: 'hu-2011',
@@ -988,8 +986,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Cell 147(6):1226–1231',
     url: 'https://doi.org/10.1016/j.cell.2011.11.022',
     doi: '10.1016/j.cell.2011.11.022',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'PubMed Central record (PMC3478066) confirmed the citation; search records give ER tubule diameters of about 50 nm in mammalian cells and about 30 nm in yeast (the value shown is the mammalian one).',
   },
   {
     id: 'yildiz-2004',
@@ -1000,8 +998,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Science 303(5658):676–678',
     url: 'https://doi.org/10.1126/science.1093753',
     doi: '10.1126/science.1093753',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Search records confirmed the citation (Science 303(5658):676–678): single heads moved 17.3 ± 3.3 nm per step, alternating with 0-nm steps, consistent with the commonly cited 16 nm (twice the 8-nm step; BioNumbers BNID 112203).',
   },
   {
     id: 'schnitzer-block-1997',
@@ -1012,8 +1010,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Nature 388(6640):386–390',
     url: 'https://doi.org/10.1038/41111',
     doi: '10.1038/41111',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Search records (Nature, BioNumbers BNID 101857) confirmed the citation and that kinesin hydrolyses one ATP per 8-nm step at low load.',
   },
   {
     id: 'anderson-1981',
@@ -1024,8 +1022,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Nature 290(5806):457–465',
     url: 'https://doi.org/10.1038/290457a0',
     doi: '10.1038/290457a0',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'PubMed record (PMID 7219534) confirmed the citation: 16,569 bp with genes for 2 rRNAs, 22 tRNAs and 13 proteins (five identified plus eight predicted reading frames).',
   },
   {
     id: 'noji-1997',
@@ -1036,8 +1034,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Nature 386(6622):299–302',
     url: 'https://doi.org/10.1038/386299a0',
     doi: '10.1038/386299a0',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Search records (RePEc, Nature) confirmed the citation and the direct observation of γ-subunit rotation in single F1-ATPase molecules.',
   },
   {
     id: 'watt-2010',
@@ -1048,8 +1046,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Proceedings of the National Academy of Sciences USA 107(39):16823–16827',
     url: 'https://doi.org/10.1073/pnas.1011099107',
     doi: '10.1073/pnas.1011099107',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Search records (Bioblast, BioNumbers BNID 105661) confirmed the citation and its findings: the bovine c-ring has eight subunits, so one turn that makes three ATP uses eight protons, about 2.7 per ATP.',
   },
   {
     id: 'mitchison-kirschner-1984',
@@ -1060,8 +1058,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Nature 312(5991):237–242',
     url: 'https://doi.org/10.1038/312237a0',
     doi: '10.1038/312237a0',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Search records confirmed the citation (Nature 312(5991):237–242) and the discovery of dynamic instability: microtubules switch stochastically between growth and shrinkage, linked to loss of the GTP cap.',
   },
   {
     id: 'mullins-1998',
@@ -1073,8 +1071,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Proceedings of the National Academy of Sciences USA 95(11):6181–6186',
     url: 'https://doi.org/10.1073/pnas.95.11.6181',
     doi: '10.1073/pnas.95.11.6181',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Search records (CiteDrive DOI record, PNAS abstract) confirmed the citation and the remarkably constant 70 ± 7° angle of Arp2/3 branches in electron micrographs.',
   },
   {
     id: 'pollard-1986',
@@ -1085,8 +1083,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Journal of Cell Biology 103(6):2747–2754',
     url: 'https://doi.org/10.1083/jcb.103.6.2747',
     doi: '10.1083/jcb.103.6.2747',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Search records (Journal of Cell Biology, BioNumbers BNID 100572) confirmed the citation and the ATP-actin association rate constants of 11.6 µM⁻¹ s⁻¹ at the barbed end and 1.3 µM⁻¹ s⁻¹ at the pointed end.',
   },
   {
     id: 'pollard-cooper-2009',
@@ -1097,8 +1095,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Science 326(5957):1208–1212',
     url: 'https://doi.org/10.1126/science.1175862',
     doi: '10.1126/science.1175862',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Search records (CiteDrive DOI record, course reading list) confirmed the citation; the abstract describes actin filaments giving cells mechanical support and the driving forces for movement, and records cite it for actin being the most abundant protein in most eukaryotic cells.',
   },
   {
     id: 'herrmann-aebi-2016',
@@ -1109,8 +1107,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Cold Spring Harbor Perspectives in Biology 8(11):a018242',
     url: 'https://doi.org/10.1101/cshperspect.a018242',
     doi: '10.1101/cshperspect.a018242',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'PubMed Central record (PMC5088526) confirmed the citation; search records of the authors’ assembly studies give 60-nm unit-length filaments of about eight tetramers that anneal into 10–12 nm filaments, and reviews confirm the families (keratins, vimentin, desmin, neurofilaments, nuclear lamins).',
   },
   {
     id: 'szeverenyi-2008',
@@ -1121,8 +1119,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Human Mutation 29(3):351–360',
     url: 'https://doi.org/10.1002/humu.20652',
     doi: '10.1002/humu.20652',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Search records (University of Dundee portal) confirmed the citation; the database describes a family of 70 human intermediate-filament genes.',
   },
   {
     id: 'kreplak-2005',
@@ -1133,8 +1131,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Journal of Molecular Biology 354(3):569–577',
     url: 'https://doi.org/10.1016/j.jmb.2005.09.092',
     doi: '10.1016/j.jmb.2005.09.092',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Search records confirmed the citation; single filaments were stretched 2.6-fold on average, and up to 3.6-fold, by atomic force microscopy.',
   },
   {
     id: 'nigg-raff-2009',
@@ -1145,8 +1143,8 @@ export const SOURCES: SourceRecord[] = [
     container: 'Cell 139(4):663–678',
     url: 'https://doi.org/10.1016/j.cell.2009.10.036',
     doi: '10.1016/j.cell.2009.10.036',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'University of Basel repository confirmed the citation; centriole structure (nine triplet microtubules, about 250 nm wide and 500 nm long in vertebrate cells), duplication once per cell cycle and the basal body of cilia confirmed in records of centriole studies.',
   },
   {
     id: 'bornens-2012',
@@ -1157,7 +1155,7 @@ export const SOURCES: SourceRecord[] = [
     container: 'Science 335(6067):422–426',
     url: 'https://doi.org/10.1126/science.1209037',
     doi: '10.1126/science.1209037',
-    status: 'pending',
-    note: PENDING_NOTE,
+    status: 'verified',
+    note: 'Search records confirmed the citation (Science 335(6067):422–426, DOI 10.1126/science.1209037); anchoring of microtubule minus ends at the centrosome and γ-tubulin ring complexes in the pericentriolar material confirmed in centrosome reviews.',
   },
 ];

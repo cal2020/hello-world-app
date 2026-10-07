@@ -304,7 +304,7 @@
     "improvementsTitle": "Miglioramenti dell’implementazione",
     "improvements": "Rispetto all’esperienza che lo ha ispirato, questo atlante aggiunge la ricerca con sinonimi, un controllo visibile della qualità di rendering e un’impostazione esplicita per ridurre il movimento.",
     "sourcesTitle": "Fonti",
-    "sources": "Ogni dato chiave rimanda alla sua fonte. Quando è stata creata questa versione, la maggior parte delle fonti è stata controllata confrontandola con i risultati dei motori di ricerca relativi alle pagine dell’editore o della biblioteca; le poche che non è stato possibile controllare sono contrassegnate come «non ancora verificata», e le affermazioni che si basano su di esse sono contrassegnate come «Verifica in sospeso». I valori numerici mantengono il contesto di misura indicato nella fonte.",
+    "sources": "Ogni dato chiave rimanda alla sua fonte. Quando è stata creata questa versione, tutte le fonti sono state controllate confrontandole con i risultati dei motori di ricerca relativi alle pagine dell’editore, della biblioteca o della banca dati. I valori numerici mantengono il contesto di misura indicato nella fonte.",
     "translationTitle": "Traduzioni",
     "translation": "{status}",
     "creditsTitle": "Riconoscimenti",

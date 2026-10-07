@@ -32,7 +32,7 @@ export function SourceList({ t, filterable }: { t: Translator; filterable: boole
   return (
     <div>
       <p>
-        {joinSentences(t, t.plural('help.sourcesCount', SOURCES.length), t.t('help.sourcePendingNote'))}
+        {joinSentences(t, t.plural('help.sourcesCount', SOURCES.length), SOURCES.some((record) => record.status === 'pending') && t.t('help.sourcePendingNote'))}
       </p>
       {filterable && (
         <label>

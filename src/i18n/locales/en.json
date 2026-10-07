@@ -300,7 +300,7 @@
     "improvementsTitle": "Implementation improvements",
     "improvements": "Compared with the experience that inspired it, this atlas adds search with synonyms, a visible rendering-quality control and an explicit reduced-motion setting.",
     "sourcesTitle": "Sources",
-    "sources": "Every key fact links to its source. Most sources were checked against search-engine records of the publisher or library pages when this version was built; the few that could not be checked are marked “not yet verified”, and the statements that rely on them are marked “Verification pending”. Numbers keep the measurement context given in the source.",
+    "sources": "Every key fact links to its source. All sources were checked against search-engine records of the publisher, library or database pages when this version was built. Numbers keep the measurement context given in the source.",
     "translationTitle": "Translations",
     "translation": "{status}",
     "creditsTitle": "Credits",
