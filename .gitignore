@@ -2,15 +2,29 @@
 logs
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
+# Dependencies and build output
 node_modules
 dist
 dist-ssr
 *.local
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Local data (SQLite database of imported telemetry)
+backend/.data/
+
+# Test artifacts
+frontend/test-results/
+frontend/playwright-report/
+frontend/e2e/.tmp/
 
 # Editor directories and files
 .vscode/*
@@ -18,7 +32,4 @@ dist-ssr
 .idea
 .DS_Store
 *.suo
-*.ntvs*
-*.njsproj
-*.sln
 *.sw?

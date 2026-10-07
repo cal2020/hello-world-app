@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% if r.report.kind == "import" %}Cost report · {{ r.import.filename }}{% else %}Run comparison report{% endif %}</title>
+<style>
+  :root {
+    --bg: #fbfbfd; --surface: #ffffff; --text: #16181d; --muted: #5b6170; --border: #e3e5ea;
+    --accent: #5b4bff; --observed: #1f6feb; --candidate: #b45309; --good: #0f7b4a; --bad: #b42318;
+    --chip: #f2f3f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d0f14; --surface: #141821; --text: #e8eaf0; --muted: #9aa1b2; --border: #262b36;
+      --accent: #9d93ff; --observed: #6aa7ff; --candidate: #f0a54a; --good: #4cc38a; --bad: #ff7a6b; --chip: #1d2230; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { font-size: 28px; letter-spacing: -0.02em; margin: 4px 0 6px; }
+  h2 { font-size: 19px; margin: 40px 0 12px; letter-spacing: -0.01em; }
+  h3 { font-size: 16px; margin: 0; }
+  p { margin: 6px 0; }
+  .eyebrow { color: var(--accent); font-weight: 600; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+  .muted { color: var(--muted); }
+  .mono, code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin: 12px 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .stat .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+  .stat .value { font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; margin-top: 4px; }
+  .tag { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--chip); border: 1px solid var(--border); margin-right: 4px; }
+  .tag.observed { color: var(--observed); } .tag.candidate { color: var(--candidate); }
+  .tag.estimate { color: var(--candidate); border-style: dashed; } .tag.measured { color: var(--good); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+  td.num, th.num { text-align: right; }
+  .scroll { overflow-x: auto; }
+  .finding header { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; justify-content: space-between; }
+  .finding .section { margin-top: 12px; }
+  .finding .section > .label { font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+  .dismissed { opacity: .72; }
+  ul { margin: 6px 0; padding-left: 20px; }
+  mark { background: color-mix(in srgb, var(--candidate) 22%, transparent); color: inherit; border-radius: 3px; padding: 0 2px; }
+  .delta-down { color: var(--good); font-weight: 650; } .delta-up { color: var(--bad); font-weight: 650; }
+  footer { margin-top: 48px; color: var(--muted); font-size: 12.5px; }
+  @media print { body { background: #fff; } .card { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<main>
+{% macro evidence_block(f) %}
+  {% set e = f.evidence %}
+  {% if f.evidence_status != "derived" %}
+    <p class="muted">The evidence for this finding could not be re-derived from the analyzer at this revision, so only the analyzer's rationale is shown.</p>
+  {% elif e.kind == "usage_signature_match" %}
+    <p>{{ e.statement }}</p>
+    <div class="scroll"><table>
+      <tr><th>Signature field</th><th>Shared value</th></tr>
+      {% for s in e.signature %}<tr><td class="mono">{{ s.field }}</td><td class="mono">{{ "not reported" if s.value is none else s.value }}</td></tr>{% endfor %}
+    </table></div>
+    <p class="muted">Calls sharing this signature:
+    {% for m in e.members %}<span class="mono">{{ m.record_id }}</span> ({{ m.role }}{% if e.scope == "import" %}, run {{ m.run_id }}{% endif %}){% if not loop.last %}, {% endif %}{% endfor %}.</p>
+    <p class="muted">Not compared: {% for n in e.not_compared %}{{ n }} {% endfor %}</p>
+  {% elif e.kind == "metadata_keyword" %}
+    <p>Keyword fragment <code>{{ e.keyword }}</code> found in:</p>
+    <ul>
+    {% for m in e.matches %}
+      <li><span class="mono">{{ m.field }}</span> = “{% if m.start is defined and m.start is not none %}{{ m.value[:m.start] }}<mark>{{ m.value[m.start:m.end] }}</mark>{{ m.value[m.end:] }}{% else %}{{ m.value }}{% endif %}”</li>
+    {% else %}
+      <li>combined metadata text: <span class="mono">{{ e.combined_text }}</span></li>
+    {% endfor %}
+    </ul>
+    <p class="muted">{{ e.statement }}</p>
+  {% elif e.kind == "model_tier_and_size" %}
+    <p>Model <code>{{ e.model }}</code> matches the high-end pattern <code>{{ e.matched_pattern }}</code>. Counted tokens: {{ e.token_total }} of a {{ e.token_limit }} limit (input {{ e.counted.input_tokens if e.counted.input_tokens is not none else "not reported" }}, output {{ e.counted.output_tokens if e.counted.output_tokens is not none else "not reported" }}, reasoning {{ e.counted.reasoning_tokens if e.counted.reasoning_tokens is not none else "not reported" }}).</p>
+    <p class="muted">{{ e.statement }}</p>
+  {% elif e.kind == "call_count_in_run" %}
+    <p>{{ e.statement }}</p>
+    <p class="muted">Order used: {{ e.ordering }}.{% if e.ordering_note %} {{ e.ordering_note }}{% endif %}</p>
+    <div class="scroll"><table>
+      <tr><th class="num">#</th><th>Record</th><th class="num">Step</th><th>Event time</th><th>Flagged</th></tr>
+      {% for s in e.sequence %}<tr><td class="num">{{ s.position }}</td><td class="mono">{{ s.record_id }}</td><td class="num">{{ s.step if s.step is not none else "—" }}</td><td class="mono">{{ s.event_time }}</td><td>{{ "yes" if s.flagged else "kept" }}</td></tr>{% endfor %}
+    </table></div>
+  {% endif %}
+{% endmacro %}
+
+{% macro finding_card(f) %}
+  <article class="card finding{% if f.dismissed %} dismissed{% endif %}">
+    <header>
+      <h3>#{{ f.rank }} · {{ f.category_label }} — {{ f.title }}</h3>
+      <span><span class="tag candidate">Candidate</span><span class="tag">{{ f.confidence }} confidence</span>{% if f.dismissed %}<span class="tag">Dismissed</span>{% endif %}</span>
+    </header>
+    {% if f.dismissed %}<p><strong>Dismissed{% if f.dismissed_at %} {{ f.dismissed_at }}{% endif %}:</strong> {{ f.dismissal_note or "no note" }}</p>{% endif %}
+    <div class="section"><div class="label">Affected calls ({{ f.affected|length }}) · observed spend on them: {{ f.affected_spend|spend }}</div>
+      <div class="scroll"><table>
+        <tr><th>Record</th><th>Run</th><th class="num">Step</th><th>Resource</th><th class="num">Observed cost</th></tr>
+        {% for a in f.affected %}<tr><td class="mono">{{ a.record_id }}</td><td class="mono">{{ a.run_id }}</td><td class="num">{{ a.step if a.step is not none else "—" }}</td><td>{{ a.resource_name }}</td><td class="num">{{ a.cost|money }}</td></tr>{% endfor %}
+      </table></div>
+    </div>
+    <div class="section"><div class="label">Evidence</div>{{ evidence_block(f) }}</div>
+    <div class="section"><div class="label">Rule</div><p><strong>{{ f.rule.name }}.</strong> {{ f.rule.summary }} {{ f.rule.confidence }}</p><p class="muted">Source: <span class="mono">{{ f.rule.source }}</span> ({{ f.rule.analyzer }})</p></div>
+    <div class="section"><div class="label">Analyzer rationale</div><p>{{ f.rationale }}</p></div>
+    <div class="section"><div class="label">Limits</div><ul>{% for l in f.limitations %}<li>{{ l }}</li>{% endfor %}</ul></div>
+    <div class="section"><div class="label"><span class="tag estimate">Scenario estimate</span></div>
+      <p>{{ f.scenario.ratio_percent }}% of observed cost on these calls under KORA Doctor's assumption:
+      {% for m in f.scenario.estimate %}{{ m|money }}{% if not loop.last %} + {% endif %}{% else %}no reported cost{% endfor %}.
+      {% if f.overlaps %}Overlaps with {% for o in f.overlaps %}{{ o.category_label }} ({{ o.shared_calls }} shared){% if not loop.last %}, {% endif %}{% endfor %}; overlapping estimates are never added together.{% endif %}</p>
+    </div>
+  </article>
+{% endmacro %}
+
+{% macro comparison_block(c) %}
+  {% set res = c.result %}
+  <div class="card">
+    <p><strong>{{ res.baseline.display_name }}</strong> <span class="muted">(baseline)</span> → <strong>{{ res.candidate.display_name }}</strong> <span class="muted">(candidate)</span></p>
+    <p>Equivalence marked by the user: <strong>{{ c.equivalence|replace("_", " ") }}</strong>{% if c.note %} — “{{ c.note }}”{% endif %}</p>
+    <p>{% if res.kind == "measured_change" %}<span class="tag measured">Measured change</span>{% elif res.kind == "observed_difference" %}<span class="tag observed">Observed difference</span>{% else %}<span class="tag">Not comparable</span>{% endif %}</p>
+    {% for s in res.scopes %}
+      <p style="margin-top:12px"><strong>{{ s.label }}</strong> — {{ "comparable" if s.comparable else "not comparable" }}</p>
+      {% for reason in s.reasons %}<p class="muted">{{ reason }}</p>{% endfor %}
+      <div class="scroll"><table>
+        <tr><th>Currency</th><th class="num">Baseline</th><th class="num">Candidate</th><th class="num">Change</th><th class="num">%</th></tr>
+        {% for row in s.rows %}<tr><td>{{ row.currency }}</td><td class="num">{{ {"amount": row.baseline, "currency": row.currency}|money }}</td><td class="num">{{ {"amount": row.candidate, "currency": row.currency}|money }}</td>
+        <td class="num {% if row.delta and row.delta.startswith('-') %}delta-down{% elif row.delta and row.delta != '0' %}delta-up{% endif %}">{{ {"amount": row.delta, "currency": row.currency}|money if row.delta is not none else "—" }}</td>
+        <td class="num">{{ (row.percent ~ "%") if row.percent is not none else (row.percent_note or "—") }}</td></tr>{% endfor %}
+      </table></div>
+      {% for n in s.notes %}<p class="muted">{{ n }}</p>{% endfor %}
+    {% endfor %}
+    <p class="muted" style="margin-top:12px">{{ res.quality.note }}</p>
+    {% for n in res.notes %}<p class="muted">{{ n }}</p>{% endfor %}
+  </div>
+{% endmacro %}
+
+<div class="eyebrow">AI Cost Inspector · {{ "Analysis report" if r.report.kind == "import" else "Run comparison report" }}</div>
+{% if r.report.kind == "import" %}
+  <h1>{{ r.import.filename }}</h1>
+  <p class="muted">Generated {{ r.report.generated_at }} · {{ r.report.generator.name }} {{ r.report.generator.version }} · analyzer {{ r.report.analyzer.name }} {{ r.report.analyzer.version }} (<span class="mono">{{ r.report.analyzer.revision[:12] }}</span>) · AUDR {{ r.report.audr_spec_version }}</p>
+  {% if r.import.synthetic %}<p><span class="tag">Synthetic demo data</span> These records are fictional and documented; they say nothing about real spending.</p>{% endif %}
+{% else %}
+  <h1>{{ r.comparison.result.baseline.display_name }} → {{ r.comparison.result.candidate.display_name }}</h1>
+  <p class="muted">Generated {{ r.report.generated_at }} · {{ r.report.generator.name }} {{ r.report.generator.version }} · AUDR {{ r.report.audr_spec_version }}</p>
+{% endif %}
+
+<h2>How to read this report</h2>
+<div class="card"><ul>{% for line in r.how_to_read %}<li>{{ line }}</li>{% endfor %}</ul>
+<p class="muted" style="margin-top:8px">{% for key, text in r.glossary.items() %}<strong>{{ key|replace("_", " ")|capitalize }}:</strong> {{ text }} {% endfor %}</p></div>
+
+{% if r.report.kind == "import" %}
+  <h2>Observed spending <span class="tag observed">Observed</span></h2>
+  <div class="grid">
+    <div class="card stat"><div class="label">Reported cost</div><div class="value">{{ r.observed.spend|spend }}</div><p class="muted">{{ r.observed.spend.known_calls }} of {{ r.observed.spend.total_calls }} calls report a cost.</p></div>
+    <div class="card stat"><div class="label">Runs · calls</div><div class="value">{{ r.observed.runs }} · {{ r.observed.calls }}</div><p class="muted">{{ r.import.record_count }} records in the file, {{ r.import.accepted_count }} analyzed.</p></div>
+    <div class="card stat"><div class="label">Open candidates</div><div class="value">{{ r.candidates.open_findings }}</div><p class="muted">{{ r.candidates.scenario_estimate.open.flagged_calls }} flagged call(s); {{ r.candidates.dismissed_findings }} dismissed finding(s).</p></div>
+  </div>
+  <div class="card scroll"><table>
+    <tr><th>Resource</th><th>Provider</th><th class="num">Calls</th><th class="num">Observed cost</th></tr>
+    {% for m in r.observed.by_model %}<tr><td>{{ m.name }} <span class="muted">({{ m.resource_type }})</span></td><td>{{ m.provider }}</td><td class="num">{{ m.calls }}</td><td class="num">{{ m.spend|spend }}</td></tr>{% endfor %}
+  </table></div>
+
+  <h2>Optimization candidates <span class="tag candidate">Candidate</span></h2>
+  <div class="card">
+    <p><span class="tag estimate">Scenario estimate</span> If every open candidate were acted on, KORA Doctor's fixed assumptions put up to
+    {% for m in r.candidates.scenario_estimate.open.estimate %}<strong>{{ m|money }}</strong>{% if not loop.last %} + {% endif %}{% else %}<strong>nothing with a reported cost</strong>{% endfor %}
+    of the observed spend on {{ r.candidates.scenario_estimate.open.flagged_calls }} flagged call(s) in scope. This is not a measured or guaranteed saving.</p>
+    <p class="muted">{{ r.candidates.scenario_estimate.method }} Ratios: {% for k, v in r.candidates.scenario_estimate.ratios.items() %}{{ label_for(k) }} {{ v }}{% if not loop.last %}, {% endif %}{% endfor %}.</p>
+  </div>
+  {% for f in r.findings if not f.dismissed %}{{ finding_card(f) }}{% else %}<p class="muted">No open findings.</p>{% endfor %}
+  {% set dismissed = r.findings|selectattr("dismissed")|list %}
+  {% if dismissed %}<h2>Dismissed findings</h2>{% for f in dismissed %}{{ finding_card(f) }}{% endfor %}{% endif %}
+
+  {% if r.comparisons %}<h2>Saved comparisons</h2>{% for c in r.comparisons %}{{ comparison_block(c) }}{% endfor %}{% endif %}
+
+  <h2>Runs</h2>
+  <div class="card scroll"><table>
+    <tr><th>Run</th><th>run_id</th><th class="num">Calls</th><th class="num">Model / tool</th><th>Outcome</th><th class="num">Observed cost</th></tr>
+    {% for run in r.runs %}<tr><td>{{ run.display_name }}</td><td class="mono">{{ run.run_id }}</td><td class="num">{{ run.calls }}</td><td class="num">{{ run.model_calls }} / {{ run.tool_calls }}</td><td>{{ run.outcome or "—" }}</td><td class="num">{{ run.spend|spend }}</td></tr>{% endfor %}
+  </table></div>
+
+  <h2>Calls</h2>
+  <div class="card scroll"><table>
+    <tr><th class="num">Line</th><th>Record</th><th>Run</th><th class="num">Step</th><th>Resource</th><th class="num">In / out tokens</th><th class="num">Observed cost</th><th>Findings</th></tr>
+    {% for c in r.calls %}<tr><td class="num">{{ c.line }}</td><td class="mono">{{ c.record_id }}</td><td class="mono">{{ c.run_id }}</td><td class="num">{{ c.step if c.step is not none else "—" }}</td><td>{{ c.resource.name }}</td>
+    <td class="num">{% if c.usage_kind == "llm" %}{{ c.usage.input_tokens if c.usage.input_tokens is defined else "—" }} / {{ c.usage.output_tokens if c.usage.output_tokens is defined else "—" }}{% else %}—{% endif %}</td>
+    <td class="num">{{ c.cost|money }}</td><td>{% for f in c.findings %}{{ label_for(f.category) }}{% if f.dismissed %} (dismissed){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</td></tr>{% endfor %}
+  </table></div>
+
+  {% if r.import.notes %}<h2>Import notes</h2><div class="card"><ul>{% for n in r.import.notes %}<li><strong>{{ n.severity }}:</strong> {{ n.message }}{% if n.lines %} <span class="muted">(lines {{ n.lines|join(", ") }})</span>{% endif %}</li>{% endfor %}</ul></div>{% endif %}
+
+  <h2>Provenance</h2>
+  <div class="card"><table>
+    <tr><th>File</th><td>{{ r.import.filename }} ({{ r.import.format }}, {{ r.import.byte_size }} bytes)</td></tr>
+    <tr><th>SHA-256</th><td class="mono">{{ r.import.file_sha256 }}</td></tr>
+    <tr><th>Imported</th><td>{{ r.import.imported_at }} (analyzed {{ r.import.analyzed_at }})</td></tr>
+    <tr><th>Analyzer</th><td>{{ r.report.analyzer.name }} {{ r.report.analyzer.version }} · <span class="mono">{{ r.report.analyzer.source }}</span> @ <span class="mono">{{ r.report.analyzer.revision }}</span></td></tr>
+  </table>
+  <p class="muted">{{ r.analyzer_raw.note }}</p></div>
+{% else %}
+  <h2>Comparison</h2>
+  {{ comparison_block(r.comparison) }}
+  {% set res = r.comparison.result %}
+  <div class="card scroll"><table>
+    <tr><th>Usage</th><th class="num">Baseline</th><th class="num">Candidate</th><th class="num">Change</th></tr>
+    {% for key in ["calls", "model_calls", "tool_calls"] %}{% set d = res.usage[key] %}<tr><td>{{ key|replace("_", " ")|capitalize }}</td><td class="num">{{ d.baseline }}</td><td class="num">{{ d.candidate }}</td><td class="num">{{ d.delta }}</td></tr>{% endfor %}
+    {% for key, d in res.usage.tokens.items() %}<tr><td>{{ key|replace("_", " ")|capitalize }}</td><td class="num">{{ d.baseline if d.baseline is not none else "not reported" }} <span class="muted">({{ d.baseline_reported }})</span></td><td class="num">{{ d.candidate if d.candidate is not none else "not reported" }} <span class="muted">({{ d.candidate_reported }})</span></td><td class="num">{{ d.delta if d.delta is not none else "—" }}</td></tr>{% endfor %}
+  </table></div>
+  <div class="card scroll"><table>
+    <tr><th>Resource</th><th class="num">Baseline calls</th><th class="num">Baseline cost</th><th class="num">Candidate calls</th><th class="num">Candidate cost</th></tr>
+    {% for m in res.by_model %}<tr><td>{{ m.name }} <span class="muted">({{ m.provider }})</span></td><td class="num">{{ m.baseline.calls }}</td><td class="num">{{ m.baseline.spend|spend }}</td><td class="num">{{ m.candidate.calls }}</td><td class="num">{{ m.candidate.spend|spend }}</td></tr>{% endfor %}
+  </table></div>
+  {% for side in ["baseline", "candidate"] %}
+    <h2>{{ side|capitalize }} calls · {{ r.runs[side].display_name }}</h2>
+    <div class="card scroll"><table>
+      <tr><th class="num">Step</th><th>Record</th><th>Resource</th><th class="num">In / out tokens</th><th class="num">Observed cost</th></tr>
+      {% for c in r.calls[side] %}<tr><td class="num">{{ c.step if c.step is not none else "—" }}</td><td class="mono">{{ c.record_id }}</td><td>{{ c.resource.name }}</td>
+      <td class="num">{% if c.usage_kind == "llm" %}{{ c.usage.input_tokens if c.usage.input_tokens is defined else "—" }} / {{ c.usage.output_tokens if c.usage.output_tokens is defined else "—" }}{% else %}—{% endif %}</td><td class="num">{{ c.cost|money }}</td></tr>{% endfor %}
+    </table></div>
+  {% endfor %}
+{% endif %}
+
+<footer>{{ r.privacy }}</footer>
+</main>
+</body>
+</html>

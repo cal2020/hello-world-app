@@ -1,0 +1,235 @@
+{
+  "spec_version": "1.0.0",
+  "schema": "../spec/audr.schema.json",
+  "description": "Shared conformance fixtures. Every AUDR emitter and sink SHOULD reproduce these outcomes.",
+  "cases": [
+    {
+      "file": "valid/model-generation-minimal.json",
+      "expect": "valid",
+      "rule": "3.4",
+      "note": "Smallest conformant model record."
+    },
+    {
+      "file": "valid/model-generation-full.json",
+      "expect": "valid",
+      "rule": "3.12",
+      "note": "Every optional model counter and cost component populated."
+    },
+    {
+      "file": "valid/model-embedding.json",
+      "expect": "valid",
+      "rule": "3.13",
+      "note": "embedding is a model operation."
+    },
+    {
+      "file": "valid/model-reranking.json",
+      "expect": "valid",
+      "rule": "3.13",
+      "note": "reranking is a model operation."
+    },
+    {
+      "file": "valid/tool-execution.json",
+      "expect": "valid",
+      "rule": "3.13",
+      "note": "Tool execution carries usage.tool and cost.tool only."
+    },
+    {
+      "file": "valid/tool-retrieval.json",
+      "expect": "valid",
+      "rule": "3.13",
+      "note": "retrieval is a tool operation."
+    },
+    {
+      "file": "valid/correction.json",
+      "expect": "valid",
+      "rule": "3.5",
+      "note": "A correction fully restates an earlier record under a fresh record_id."
+    },
+    {
+      "file": "valid/correction-void.json",
+      "expect": "valid",
+      "rule": "3.5",
+      "note": "All-zero usage voids the corrected record."
+    },
+    {
+      "file": "valid/spawned-agent.json",
+      "expect": "valid",
+      "rule": "3.9",
+      "note": "A spawned agent reuses the parent run_id and links via parent_span_id."
+    },
+    {
+      "file": "valid/failed-run.json",
+      "expect": "valid",
+      "rule": "3.9",
+      "note": "Usage consumed before a failure is still reported."
+    },
+    {
+      "file": "valid/extension-counters.json",
+      "expect": "valid",
+      "rule": "3.11",
+      "note": "Provider counters use the x_<provider>_<name> extension pattern."
+    },
+    {
+      "file": "valid/non-production-no-account.json",
+      "expect": "valid",
+      "rule": "3.10",
+      "note": "account_id is only required for production traffic."
+    },
+    {
+      "file": "valid/multimodal-audio.json",
+      "expect": "valid",
+      "rule": "3.11",
+      "note": "Audio counters on a multimodal model call."
+    },
+    {
+      "file": "valid/labels.json",
+      "expect": "valid",
+      "rule": "3.10",
+      "note": "Free-form non-billable label dimensions."
+    },
+    {
+      "file": "valid/provider-hosted-tool.json",
+      "expect": "valid",
+      "rule": "3.8",
+      "note": "A provider-executed tool names the executing vendor."
+    },
+    {
+      "file": "invalid/missing-spec-version.json",
+      "expect": "invalid",
+      "rule": "3.4",
+      "note": "spec_version is required."
+    },
+    {
+      "file": "invalid/unsupported-major-version.json",
+      "expect": "invalid",
+      "rule": "3.5",
+      "note": "Schema pins the 1.0.x family."
+    },
+    {
+      "file": "invalid/record-id-too-short.json",
+      "expect": "invalid",
+      "rule": "3.5",
+      "note": "record_id has a minimum length of 8."
+    },
+    {
+      "file": "invalid/missing-run.json",
+      "expect": "invalid",
+      "rule": "3.9",
+      "note": "run is required."
+    },
+    {
+      "file": "invalid/unknown-top-level-field.json",
+      "expect": "invalid",
+      "rule": "3.1",
+      "note": "Root object is closed to unspecified properties."
+    },
+    {
+      "file": "invalid/allof-as-field.json",
+      "expect": "invalid",
+      "rule": "3.1",
+      "note": "Regression: allOf must be a schema keyword, never an accepted record field."
+    },
+    {
+      "file": "invalid/usage-both-blocks.json",
+      "expect": "invalid",
+      "rule": "3.13",
+      "note": "A record carries exactly one usage sub-block."
+    },
+    {
+      "file": "invalid/model-op-with-tool-type.json",
+      "expect": "invalid",
+      "rule": "3.13",
+      "note": "A model operation requires resource.type=model."
+    },
+    {
+      "file": "invalid/tool-op-with-usage-llm.json",
+      "expect": "invalid",
+      "rule": "3.13",
+      "note": "A tool operation requires usage.tool."
+    },
+    {
+      "file": "invalid/model-op-with-cost-tool.json",
+      "expect": "invalid",
+      "rule": "3.13",
+      "note": "cost.tool is absent on model operations."
+    },
+    {
+      "file": "invalid/tool-op-with-cost-llm.json",
+      "expect": "invalid",
+      "rule": "3.13",
+      "note": "cost.llm is absent on tool operations."
+    },
+    {
+      "file": "invalid/unknown-operation.json",
+      "expect": "invalid",
+      "rule": "3.8",
+      "note": "Regression: 'inference' is not a member of the resource.operation enum."
+    },
+    {
+      "file": "invalid/empty-usage-llm.json",
+      "expect": "invalid",
+      "rule": "3.11",
+      "note": "A present usage sub-block carries at least one counter."
+    },
+    {
+      "file": "invalid/negative-tokens.json",
+      "expect": "invalid",
+      "rule": "3.11",
+      "note": "Counters are non-negative."
+    },
+    {
+      "file": "invalid/uppercase-provider.json",
+      "expect": "invalid",
+      "rule": "3.8",
+      "note": "Provider slugs are lowercase."
+    },
+    {
+      "file": "invalid/bad-currency.json",
+      "expect": "invalid",
+      "rule": "3.12",
+      "note": "Currency is an uppercase ISO 4217 code."
+    },
+    {
+      "file": "invalid/cost-missing-currency.json",
+      "expect": "invalid",
+      "rule": "3.12",
+      "note": "cost requires both total_cost and currency."
+    },
+    {
+      "file": "invalid/bad-event-time.json",
+      "expect": "invalid",
+      "rule": "3.7",
+      "note": "event_time is RFC 3339."
+    },
+    {
+      "file": "invalid/error-reason-too-long.json",
+      "expect": "invalid",
+      "rule": "3.9",
+      "note": "error_reason is capped at 32 characters."
+    },
+    {
+      "file": "invalid/unknown-environment.json",
+      "expect": "invalid",
+      "rule": "3.10",
+      "note": "environment is a closed enum."
+    },
+    {
+      "file": "invalid/extension-bad-name.json",
+      "expect": "invalid",
+      "rule": "3.11",
+      "note": "Extension counters match ^x_[a-z0-9_]+$."
+    },
+    {
+      "file": "invalid/emitter-unknown-field.json",
+      "expect": "invalid",
+      "rule": "3.6",
+      "note": "Sub-objects are closed too."
+    },
+    {
+      "file": "invalid/too-many-labels.json",
+      "expect": "invalid",
+      "rule": "3.10",
+      "note": "labels is capped at 20 pairs."
+    }
+  ]
+}

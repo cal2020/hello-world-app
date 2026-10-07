@@ -1,0 +1,54 @@
+{
+  "spec_version": "1.0.0",
+  "record_id": "01K4N8D2J4P7Q9R3S6T8V1W5XY",
+  "emitter": {
+    "component": "router",
+    "name": "@audr/openrouter",
+    "version": "0.5.1"
+  },
+  "timing": {
+    "event_time": "2026-09-08T12:00:00.000Z",
+    "received_time": "2026-09-08T12:00:01.200Z",
+    "duration_ms": 842
+  },
+  "resource": {
+    "provider": "anthropic",
+    "type": "model",
+    "name": "claude-sonnet-4-20250514",
+    "operation": "generation",
+    "modality": "text"
+  },
+  "run": {
+    "run_id": "01K4N8B0M2C5F7H9J1L3N6P8QR",
+    "span_id": "model-call-1",
+    "run_type": "agent_run"
+  },
+  "attribution": {
+    "environment": "production",
+    "account_id": "account-42"
+  },
+  "usage": {
+    "llm": {
+      "input_tokens": 1200,
+      "output_tokens": 300,
+      "cache_read_tokens": 800,
+      "cache_write_tokens": 64,
+      "reasoning_tokens": 150,
+      "requests": 1
+    }
+  },
+  "cost": {
+    "total_cost": 0.0084,
+    "currency": "USD",
+    "original_cost": 0.01,
+    "discount_amount": 0.0016,
+    "discount_percent": 16,
+    "llm": {
+      "total_token_cost": 0.0084,
+      "input_token_cost": 0.0036,
+      "output_token_cost": 0.0048,
+      "cache_read_cost": 0.0001,
+      "reasoning_cost": 0.0002
+    }
+  }
+}
