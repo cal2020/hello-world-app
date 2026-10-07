@@ -511,9 +511,9 @@ export function cutShell(options: CutShellOptions): THREE.Group {
   const segments = options.segments ?? 64;
   const group = new THREE.Group();
   const outerGeometry = new THREE.SphereGeometry(options.radius, segments, Math.round(segments / 2), 0, Math.PI * 2, Math.PI / 2, Math.PI / 2);
-  outerGeometry.rotateX(-Math.PI / 2); // open side toward +z
+  outerGeometry.rotateX(Math.PI / 2); // bowl behind the origin, open side toward +z (the camera)
   const innerGeometry = new THREE.SphereGeometry(options.radius - options.thickness, segments, Math.round(segments / 2), 0, Math.PI * 2, Math.PI / 2, Math.PI / 2);
-  innerGeometry.rotateX(-Math.PI / 2);
+  innerGeometry.rotateX(Math.PI / 2);
   const outer = new THREE.Mesh(outerGeometry, membraneMaterial(options.color, { opacity: options.opacity ?? 1, side: THREE.FrontSide }));
   const inner = new THREE.Mesh(innerGeometry, membraneMaterial(new THREE.Color(options.color).multiplyScalar(0.8), { side: THREE.BackSide, rim: 0.2 }));
   const rim = new THREE.Mesh(bilayerRingGeometry(options.radius - options.thickness, options.radius, segments), bandMaterial());

@@ -537,8 +537,8 @@ export interface CutBowlOptions {
 
 /**
  * A spherical membrane cut in half: the back half (z ≤ 0), open toward +z,
- * with the cut edge as a banded bilayer ring at z = 0. (Same idea as the
- * kit's cutShell, whose hemisphere ends up on the +z side, i.e. facing away.)
+ * with the cut edge as a banded bilayer ring at z = 0. Like the kit's
+ * cutShell, plus band colours and opacity options used by these scenes.
  * Children: [outer surface, inner surface, cut ring].
  */
 export function cutBowl(options: CutBowlOptions): THREE.Group {
