@@ -483,11 +483,11 @@ export function buildNucleosomes(ctx: BuildContext): CloseupViewBuild {
   // ── Layout: the cores sit along a gentle zigzag; each core's orientation is
   // searched so the DNA leaving one core runs smoothly into the next one
   // through a gently curved linker of 20–50 bp.
-  const coreX = [-30, -15, 0, 15, 30];
-  /** Target contour length of each linker (nm) — about 41, 47, 35 and 44 bp; all must stay within 20–50 bp. */
-  const linkerTarget = [14, 16, 12, 15];
+  const coreX = [-32, -16, 0, 16, 32];
+  /** Target contour length of each linker (nm) — about 47, 48, 43 and 47 bp; all must stay within 20–50 bp. */
+  const linkerTarget = [16, 16.4, 14.6, 16];
   const LINKER_MIN = 7.5;
-  const LINKER_MAX = 16.8;
+  const LINKER_MAX = 16.9;
   const count = coreX.length;
   const desired = coreX.map((x, i) => new THREE.Vector3(x, (i % 2 ? -1 : 1) * 3.2, (i % 2 ? 1 : -1) * 3.5));
   const viewDir = new THREE.Vector3(0.18, 0.42, 1).normalize();
@@ -560,10 +560,10 @@ export function buildNucleosomes(ctx: BuildContext): CloseupViewBuild {
       const prevExit = exitPoint.clone().applyMatrix4(prev.matrix);
       const prevTan = exitTangent.clone().applyQuaternion(prev.quaternion);
       for (let k = 0; k < EXPAND; k++) {
-        perturb(prevTan, 0.9, chord);
+        perturb(prevTan, 1.15, chord);
         const length = linkerTarget[i - 1] * rng.range(0.85, 1.12);
         ePos.copy(prevExit).addScaledVector(chord, length * 0.93);
-        perturb(chord, 0.9, tE);
+        perturb(chord, 1.15, tE);
         candidate.setFromUnitVectors(entryTangent, tE);
         rollQ.setFromAxisAngle(tE, rng.range(0, TAU));
         candidate.premultiply(rollQ);
@@ -573,7 +573,7 @@ export function buildNucleosomes(ctx: BuildContext): CloseupViewBuild {
         let cost = 0.06 * centerC.distanceToSquared(desired[i]) + 0.15 * Math.abs(contour - linkerTarget[i - 1]);
         for (let j = 0; j < i; j++) {
           const dd = centerC.distanceTo(partial.poses[j].center);
-          if (dd < 14) cost += (14 - dd) * 6;
+          if (dd < 16.5) cost += (16.5 - dd) * 6;
         }
         for (let j = 0; j < i - 1; j++) {
           for (let u = 1; u < 4; u++) {
