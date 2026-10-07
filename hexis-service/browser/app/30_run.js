@@ -697,8 +697,7 @@
       set("rn-sum-status", run_chip(snap.run.status, out),
         crashed ? HXUI.chip("Worker crashed at " + S.crash.point, "crit", { icon: "alert", class: "rn-sum-flag", title: "Restart the worker to recover" }) : null,
         pending_cancel ? HXUI.chip("Cancel requested", "warn", { class: "rn-sum-flag", title: "The next step finishes the cancellation" }) : null);
-      set("rn-sum-state", code(snap.cp.state_id),
-        out ? h("span", { class: "rn-sum-note" }, " ", HXUI.chip(out.category, CATEGORY_TONE[out.category] || "neutral")) : null);
+      set("rn-sum-state", code(snap.cp.state_id), out && out.terminal !== snap.cp.state_id ? h("span", { class: "rn-sum-note" }, " → " + out.terminal) : null);
       const steps = (snap.ins.events || []).filter((e) => e.type === "TRANSITION" || e.type === "FALLBACK_ENTERED").length;
       set("rn-sum-steps", h("span", { class: "hx-num" }, String(steps)), h("span", { class: "rn-sum-note" }, " rev " + snap.cp.revision));
     }

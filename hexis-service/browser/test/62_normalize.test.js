@@ -8,6 +8,25 @@
     assert.deepEqual(N.NOISE_KINDS.slice(), ["noop", "heartbeat", "log", "orchestration"]);
   });
 
+  test("eligibility: a non-str verifier status is never positive, also a dict with integer-like keys (no KEY_ORDER_UNKNOWN)", () => {
+    const g = H().main();
+    const P = H().packages();
+    assert.ok(g.eligibility_status.length >= 10);
+    let unsupported = 0;
+    for (const c of g.eligibility_status) {
+      const [t] = HX.traces.from_jsonl(g.bases[c.base].jsonl);
+      t.records[c.record_index].output.status = JSON.parse(c.status_json);
+      for (const pk of Object.keys(c.python)) {
+        const want = c.python[pk];
+        const got = H().run(() => N.eligibility(t, P[pk]));
+        assert.ok(got.ok && want.ok, c.status_json + "@" + pk + " " + JSON.stringify(got));
+        assert.deepEqual(JSON.parse(JSON.stringify(got.ok)), want.ok, c.status_json + "@" + pk);
+        if (want.ok.some((v) => v.code === "UNSUPPORTED_SUCCESS_CLAIM")) unsupported++;
+      }
+    }
+    assert.ok(unsupported >= 14, String(unsupported));
+  });
+
   test("normalize: every vector - events, dropped records, eligibility and first_step against each package", () => {
     const P = H().packages();
     let n = 0, el = 0;

@@ -12673,6 +12673,35 @@
    "input_ascii": "{\"kind\": \"model\", \"state_id\": \"s\", \"prompt\": \"p\", \"inputs\": {}, \"output_schema\": {}, \"labels\": [\"x\\ud800\"]}",
    "model": "fakes.ModelRequest",
    "py": "ok"
+  },
+  {
+   "exc": "TypeError",
+   "input_ascii": "{\"id\": \"S\", \"action\": {\"kind\": \"judge\", \"prompt\": \"q\", \"reads\": [\"a\"], \"writes\": [\"b\"], \"labels\": true}, \"\\ud800\": 1}",
+   "model": "efsm.State",
+   "py": "exc"
+  },
+  {
+   "exc": "TypeError",
+   "input_ascii": "{\"skill_id\": \"s\", \"initial\": \"i\", \"\\udc00\": 1, \"states\": {\"A\": {\"id\": \"A\", \"action\": {\"kind\": \"judge\", \"prompt\": \"q\", \"reads\": [\"a\"], \"writes\": [\"b\"], \"labels\": true}}}}",
+   "model": "efsm.Machine",
+   "py": "exc"
+  },
+  {
+   "exc": "TypeError",
+   "input_ascii": "{\"id\": \"S\", \"action\": {\"kind\": \"judge\", \"prompt\": \"q\", \"reads\": [\"a\"], \"writes\": [\"b\"], \"labels\": 5}, \"x\": 1, \"\\ud800\": 1}",
+   "model": "efsm.State",
+   "py": "exc"
+  },
+  {
+   "errors": [
+    [
+     "string_unicode",
+     []
+    ]
+   ],
+   "input_ascii": "{\"id\": 5, \"action\": {\"kind\": \"end\"}, \"\\ud800\": 1}",
+   "model": "efsm.State",
+   "py": "error"
   }
  ]
 }

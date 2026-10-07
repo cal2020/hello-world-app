@@ -144,6 +144,11 @@
       const r = H.run(() => H.load(v));
       assert.equal(r.exc, "CanonicalError", v.name);
     }
+    /* refused at parse time, so the class differs where Python fails later on the same text:
+       Python AttributeError ('float' object has no attribute 'get') for a float hexis_service block */
+    assert.equal(H.run(() => T.from_jsonl('{"hexis_service": 1.0}')).exc, "CanonicalError");
+    /* ... and Python loads {"task_id": 5.99e307} (trace_id "5.99e+307"); JS refuses the integral literal */
+    assert.equal(H.run(() => T.from_jsonl('{"task_id": 5.99e307}')).exc, "CanonicalError");
   });
 
   test("traces: the seal is private (not serialized) and travels only through seal/from_jsonl/model_copy", () => {
@@ -203,5 +208,25 @@
     const [t2, errs] = T.from_jsonl(T.to_jsonl(t));
     assert.deepEqual(errs, []);
     assert.equal(T.to_jsonl(t2), T.to_jsonl(t));
+  });
+  test("from_jsonl: KEY_ORDER_UNKNOWN for str(task_id) only where Python builds the trace; earlier errors keep Python's class", () => {
+    const cases = H.main().from_jsonl_order;
+    assert.ok(cases.length >= 9);
+    let ko = 0;
+    for (const c of cases) {
+      const got = H.run(() => T.from_jsonl(c.text));
+      const label = JSON.stringify(c.text);
+      if (c.python.exc !== undefined) { H.same_exc(got, c.python, label); continue; }
+      if (/^\{'b': 1, '1': 2\}$/.test(c.python.ok.trace_id)) {
+        /* Python prints the dict in insertion order; JS cannot recover it (deviations/traces.md #7) */
+        assert.equal(got.exc, "KEY_ORDER_UNKNOWN", label + " " + JSON.stringify(got));
+        ko++;
+        continue;
+      }
+      assert.ok(got.ok, label + " " + JSON.stringify(got));
+      assert.equal(got.ok[0].trace_id, c.python.ok.trace_id, label);
+      assert.deepEqual(got.ok[1], c.python.ok.errors, label);
+    }
+    assert.equal(ko, 2);
   });
 })();

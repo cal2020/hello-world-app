@@ -211,6 +211,20 @@ def summarize_vectors() -> list:
                      steps=rng.randint(0, 40), model_calls=rng.randint(0, 5))
             rows.append(r)
         out.append({"rows": rows, "value": ints(EV.summarize(rows))})
+    # mixed int / float steps: CPython 3.12 sum() compensates float items only (int items join the running double
+    # uncompensated once a float has appeared)
+    base = {k: True for k in keys}
+    base.update(duplicate_writes=0, human_interactions=0, model_calls=0)
+    mixes = [[26, 0.1, 0.1, -3], [0.1, 0.2, 0.3, 4], [3, 0.1, 0.2, 0.3], [1, 1e-16, 1e-16, 1, 1e-16],
+             [0.1] * 7 + [5], [123456789012, 0.1, -123456789012, 0.2], [2.5, 1, 0.7, 2, 0.1]]
+    for _ in range(30):
+        mixes.append([rng.choice([rng.randint(-50, 50), round(rng.uniform(-50, 50), rng.randint(1, 6)), 0.1,
+                                  1111111111111111, 0.3]) for _ in range(rng.randint(2, 9))])
+    for steps in mixes:
+        steps = [x for x in steps if not (isinstance(x, float) and x.is_integer())] or [0.5]
+        rows = [dict(base, steps=x) for x in steps]
+        rows[0]["human_interactions"] = 0.1
+        out.append({"rows": rows, "value": ints(EV.summarize(rows))})
     return out
 
 

@@ -238,6 +238,12 @@
     /* the documented stricter classes */
     assert.equal(C.py_regex_check("\\N{DIGIT ONE}").kind, "error");
     assert.equal(C.py_regex_check("(?P<é>a)").kind, "error");
+    /* CPython 3.12 re.compile accepts lone surrogates in a str pattern (load_catalog refuses them before) */
+    for (const p of ["\ud800", "[\udc00-\udfff]", "a\udfffb*", "(?<=\ud800)x", "[\ud800-\udbff][\udc00-\udfff]"]) {
+      assert.equal(C.py_regex_check(p), null, JSON.stringify(p));
+    }
+    assert.equal(C.py_regex_check("[\udfff-\ud800]").kind, "error"); /* bad character range, as in Python */
+    assert.equal(C.py_regex_check("\ud800{2,1}").kind, "error");
     assert.equal(C.py_regex_check("(".repeat(C.PY_RE_MAX_NESTING) + ")".repeat(C.PY_RE_MAX_NESTING)), null);
     assert.equal(C.py_regex_check("(".repeat(C.PY_RE_MAX_NESTING + 1) + ")".repeat(C.PY_RE_MAX_NESTING + 1)).kind, "RecursionError");
     assert.equal(C.py_regex_check("((((".repeat(5000)).kind, "RecursionError", "deep nesting never overflows the JS stack");

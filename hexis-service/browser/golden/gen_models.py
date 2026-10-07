@@ -475,7 +475,16 @@ SURROGATE_INPUTS = [
     ("fakes.ModelRequest", {"kind": SUR, "state_id": "s", "prompt": "p", "inputs": {SUR: SUR}, "output_schema": {}}),
     ("fakes.ModelRequest", {"kind": "model", "state_id": "s", "prompt": "p", "inputs": {}, "output_schema": {},
                             "labels": [SUR]}),
+    # a TypeError escaping a nested before-validator wins over the lone-surrogate key (pydantic validates fields first)
+    ("efsm.State", {"id": "S", "action": {"kind": "judge", "prompt": "q", "reads": ["a"], "writes": ["b"], "labels": True},
+                    "\ud800": 1}),
+    ("efsm.Machine", {"skill_id": "s", "initial": "i", "\udc00": 1, "states": {"A": {"id": "A", "action": {
+        "kind": "judge", "prompt": "q", "reads": ["a"], "writes": ["b"], "labels": True}}}}),
+    ("efsm.State", {"id": "S", "action": {"kind": "judge", "prompt": "q", "reads": ["a"], "writes": ["b"], "labels": 5},
+                    "x": 1, "\ud800": 1}),
+    ("efsm.State", {"id": 5, "action": {"kind": "end"}, "\ud800": 1}),
 ]
+SURROGATE_MODELS["efsm.State"] = E.State
 surrogate_cases = []
 for name, data in SURROGATE_INPUTS:
     c = {"model": name, "input_ascii": json.dumps(data, ensure_ascii=True)}
@@ -485,6 +494,9 @@ for name, data in SURROGATE_INPUTS:
     except ValidationError as exc:
         c["py"] = "error"
         c["errors"] = sorted([[e["type"], list(e["loc"])] for e in exc.errors()], key=lambda x: (x[0], json.dumps(x[1])))
+    except TypeError as exc:  # escapes pydantic from a before-validator
+        c["py"] = "exc"
+        c["exc"] = type(exc).__name__
     surrogate_cases.append(c)
 
 # A value rejected only by a documented deviation still takes part in validating its container (the JS port's
@@ -597,6 +609,21 @@ def bool_error(v):
 coerce["bool_big"] = [[expr, bool_error(eval(expr))] for expr in  # noqa: S307 - fixed literals
                       ["2**63", "-(2**63)", "2**64", "-(2**64)", "2**53 + 2", "-(2**53) - 2", "2**62", "1e300", "-1e300",
                        "2.0**63", "2.5e18"]]
+# pydantic-core's str->int length limits around 4300 digits (int_parsing_size from jiter's raw parse vs
+# int_parsing after cleaning): [prefix, digit, count, suffix, Python result ("ok" or the error type)]
+int_size = []
+for pre in ["", "-", "+", " ", "\t", "0", "00", "-0", "+0", "0_", "1_", "-1_", "+-", "\u3000"]:
+    for dig in "91":
+        for n in range(4297, 4304):
+            for suf in ["", ".0", ".00", " ", "_1", "_", ".5", "e0", "x", "\n"]:
+                v = pre + dig * n + suf
+                try:
+                    TI.validate_python(v)
+                    r = "ok"
+                except ValidationError as exc:
+                    r = exc.errors()[0]["type"]
+                int_size.append([pre, dig, n, suf, r])
+coerce["int_size"] = int_size
 write("models_coerce", coerce)
 
 # =============================================================================================== #

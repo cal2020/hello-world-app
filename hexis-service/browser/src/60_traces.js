@@ -424,8 +424,20 @@
       return t;
     })();
     const ext_tid = py_get(ext, "trace_id", null);
+    /* str(task_id) of a dict whose key order JS cannot recover (KEY_ORDER_UNKNOWN, deviations/traces.md #7) is
+       raised only once Python would have built the trace: an error Python raises later in the constructor call (a
+       bad record, an invalid header field) surfaces first, with Python's class */
+    let tid_error = null, tid;
+    if (py_truthy(ext_tid)) tid = ext_tid;
+    else {
+      try { tid = py_str(py_get(head, "task_id", "trace")); } catch (e) {
+        if (!(e instanceof HX.HXError && e.code === "KEY_ORDER_UNKNOWN")) throw e;
+        tid_error = e;
+        tid = "";
+      }
+    }
     const fields = {
-      trace_id: py_truthy(ext_tid) ? ext_tid : py_str(py_get(head, "task_id", "trace")),
+      trace_id: tid,
       task,
       verdict: py_get(head, "verdict", "unknown"),
       error_step: py_get(head, "error_step", null),
@@ -439,6 +451,7 @@
       return validate_model("Record", r);
     });
     const t = validate_model("Trace", fields);
+    if (tid_error) throw tid_error;
     const seal = {};
     if (py_truthy(ext)) {
       for (const k of ["records_digest", "header_digest"]) if (hasOwn(ext, k) && typeof ext[k] === "string") seal[k] = ext[k];

@@ -208,16 +208,61 @@
     };
   };
 
-  /** Python ``sum()`` of numbers (bools count as ints); compensated like CPython when floats are involved. */
+  /** CPython 3.12 ``sum()`` of numbers (``builtin_sum_impl``), start 0. Integral JS numbers stand for Python ints
+   *  (bools count as ints) and other numbers for floats (deviations/demo.md: an integral Python float such as
+   *  ``2.0`` or ``1e16`` cannot be told apart). Ints add exactly until the first float; from then on floats use
+   *  Neumaier compensation while ints that fit a C long are added to the running double WITHOUT compensation, as
+   *  CPython does; an int beyond a C long leaves the fast path for plain ``+``. */
+  const LONG_MAX = 2n ** 63n - 1n, LONG_MIN = -(2n ** 63n);
   function py_sum(xs) {
     const nums = xs.map((x) => {
       if (typeof x === "boolean") return x ? 1 : 0;
       if (typeof x !== "number") throw pyerr("TypeError", "unsupported operand type(s) for +: 'int' and '" + tname(x) + "'");
       return x;
     });
-    if (nums.every((x) => Number.isInteger(x))) return nums.reduce((a, b) => a + b, 0);
-    return HX.metrics.py_fsum(nums);
+    const is_int = (x) => Number.isInteger(x);
+    let i = 0;
+    let acc = 0n; /* exact int phase */
+    while (i < nums.length && is_int(nums[i])) {
+      const b = BigInt(nums[i]);
+      if (acc + b > LONG_MAX || acc + b < LONG_MIN) break;
+      acc += b;
+      i++;
+    }
+    if (i === nums.length) return Number(acc);
+    /* generic Python ``+`` from here on: ``result`` is a BigInt (int) or a number (float) */
+    let result = acc;
+    const add = (r, x) => (typeof r === "bigint" && is_int(x) ? r + BigInt(x) : Number(r) + x);
+    result = add(result, nums[i++]);
+    while (typeof result === "number" && i <= nums.length) {
+      /* the float fast path */
+      let f = result, c = 0.0, left = false;
+      for (; i < nums.length; i++) {
+        const x = nums[i];
+        if (!is_int(x)) {
+          const t = f + x;
+          if (Math.abs(f) >= Math.abs(x)) c += (f - t) + x;
+          else c += (x - t) + f;
+          f = t;
+          continue;
+        }
+        const v = BigInt(x);
+        if (v <= LONG_MAX && v >= LONG_MIN) { f += x; continue; }
+        left = true;
+        break;
+      }
+      if (!left) {
+        if (c !== 0 && Number.isFinite(c)) f += c;
+        return f;
+      }
+      result = f; /* CPython drops the compensation when it leaves the fast path */
+      for (; i < nums.length; i++) result = add(result, nums[i]);
+      return typeof result === "bigint" ? Number(result) : result;
+    }
+    for (; i < nums.length; i++) result = add(result, nums[i]);
+    return typeof result === "bigint" ? Number(result) : result;
   }
+  ev._py_sum = py_sum;
 
   ev.summarize = function summarize(rows) {
     const n = rows.length;

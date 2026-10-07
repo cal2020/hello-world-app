@@ -124,12 +124,26 @@ registry_cases.append({"records": {}, "args": {"supplier_ref": "SUP-55555", "bus
                        "result": run(FK.SupplierRegistry({}).lookup, {"supplier_ref": "SUP-55555", "business_unit": "BU-NA"},
                                      {"tenant_id": "acme"})})
 # dict(records or DEFAULT_REGISTRY): Python truthiness and dict() errors ([tenant, ref] pairs travel as lists)
-for recs in [0, "", [], False, 5, "ab", True, [1], [[1, 2, 3]], [[["acme", "SUP-55555"], {"business_unit": "BU-NA"}]]]:
+for recs in [0, "", [], False, 5, "ab", True, [1], [[1, 2, 3]], [[["acme", "SUP-55555"], {"business_unit": "BU-NA"}]],
+             # any hashable key is accepted by dict(); keys other than (tenant, ref) tuples simply never match
+             {"foo": {"business_unit": "B"}}, [["k", "v"]], ["ab"], [{"x": 1, "y": 2}], [{"x": 1}], [[{"x": 1}, 1]],
+             [[[1, 2, 3], {"business_unit": "BU-NA"}]], [[None, {}]], [[5, {}]], [[["acme", "SUP-55555", "x"], {}]],
+             [[["a|b", "c"], None]]]:
     py_recs = [[tuple(p[0]), p[1]] if isinstance(p, list) and len(p) == 2 and isinstance(p[0], list) else p
                for p in recs] if isinstance(recs, list) else recs
     args = {"supplier_ref": "SUP-55555", "business_unit": "BU-NA"}
     registry_cases.append({"records": recs, "args": args, "ctx": {"tenant_id": "acme"},
                            "result": run(lambda: FK.SupplierRegistry(py_recs).lookup(args, {"tenant_id": "acme"}))})
+# a (tenant, ref) tuple whose tenant contains "|" matches that tenant id
+for recs, tenant, ref in [([[["a|b", "c"], {"business_unit": "BU-NA"}]], "a|b", "c"),
+                          ([[["a|b", "c"], {"business_unit": "BU-X"}]], "a|b", "c"),
+                          ([[["a|b", "c"], {"business_unit": "BU-NA"}]], "a", "b|c"),
+                          ([[["a", "b|c"], {"business_unit": "BU-NA"}]], "a", "b|c"),
+                          ([[["a", "b|c"], {"business_unit": "BU-NA"}]], "a|b", "c")]:
+    py_recs = [[tuple(p[0]), p[1]] for p in recs]
+    args = {"supplier_ref": ref, "business_unit": "BU-NA"}
+    registry_cases.append({"records": recs, "args": args, "ctx": {"tenant_id": tenant},
+                           "result": run(lambda: FK.SupplierRegistry(py_recs).lookup(args, {"tenant_id": tenant}))})
 
 # ---------------------------------------------------------------------------------------------- #
 VALID_EMAILS = ["ap@northwind.example", "billing@fabrikam.example", "a@b.co", "a.b+c@d-e.org", "x@y.z.com",
@@ -423,7 +437,14 @@ for inputs, state in [({"documents": {"a": 1}}, "EXTRACT_DRAFT"), ({"documents":
                        "REPAIR_DRAFT"),
                       ({"documents": [], "draft": {"a": 1}, "validation_issues": [{"field": ["x"]}]}, "REPAIR_DRAFT"),
                       ({"documents": [{"content": "Tax ID: T1", "document_id": "d"}], "draft": {"tax_id": "bad"},
-                        "validation_issues": [{"field": "tax_id"}, {"field": "contact_email"}, {"field": 5}]}, "REPAIR_DRAFT")]:
+                        "validation_issues": [{"field": "tax_id"}, {"field": "contact_email"}, {"field": 5}]}, "REPAIR_DRAFT"),
+                      # dict(draft) of a non-dict: str / list sequences and their errors
+                      *[({"documents": [], "draft": d, "validation_issues": vi}, "REPAIR_DRAFT")
+                        for d, vi in [("ab", []), ("", []), ("", [{"field": "contact_email"}]), ([], []),
+                                      ([["a", 1]], []), ([["a", 1], "xy"], []), ([{"k": 1, "v": 2}], []),
+                                      ([["contact_email", "a(at)b.co"]], [{"field": "contact_email"}]),
+                                      ([[[1], 2]], []), ([[{"a": 1}, 2]], []), (None, []), (5, []), (True, []),
+                                      ([["a", 1, 2]], []), (["abc"], []), ([5], []), ([None], [])]]]:
     req = {"kind": "model", "state_id": state, "prompt": "", "inputs": inputs, "output_schema": {}}
     malformed_model.append({"request_json": json.dumps(req, ensure_ascii=False),
                             "result": run(lambda r: m.generate(ModelRequest(**r)).model_dump(mode="json"), req)})

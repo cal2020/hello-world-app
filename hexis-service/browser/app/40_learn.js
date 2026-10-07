@@ -434,7 +434,9 @@
       () => { shortcut_now(true); },
       () => { if (!HXUI.engine_missing(EVAL_NEEDS).length) eval_now(true); },
     ];
+    const mine = S; /* a Reset lab or a new env mid-sequence starts a new sequence; this one stops */
     const next = () => {
+      if (S !== mine) return;
       const fn = steps.shift();
       if (!fn) { S.init = "done"; paint_all(); return; }
       try { fn(); } catch (e) {
@@ -745,6 +747,14 @@
         prop.negative_additions.length ? h("p", { class: "ln-note" }, "Goes to the negative corpus: ", prop.negative_additions.map((t) => tid(t))) : null));
       return h("div", { class: "ln-result" }, parts);
     }
+    if (prop.status === "NO_CHANGE") {
+      const rep = (prop.gates.new_trace_replay || {}).report || {};
+      parts.push(h("div", { class: "ln-block", id: "ln-nochange" }, h("p", { class: "ln-sub" }, "Replay against the parent"),
+        h("p", null, rep.status ? HXUI.chip(rep.status, rep.status === "PASS" ? "ok" : "crit", { mono: true }) : null, " ",
+          "The parent already walks this trace. No candidate was built, so no other gate ran."),
+        Array.isArray(rep.path) && rep.path.length ? h("div", { class: "ln-path" }, h("span", { class: "hx-label" }, "Parent path "), chain(rep.path)) : null));
+      return h("div", { class: "ln-result" }, parts);
+    }
     if (prop.gates && Object.keys(prop.gates).length) parts.push(gates_table(prop.gates, "ln-gates"));
     if (prop.status === "CANDIDATE") parts.push(diff_view(prop.diff), candidate_graph(prop.candidate, prop.diff.states_added || [], "ln-prop-graph", "Candidate machine, new states highlighted"));
     if (prop.status === "REJECTED") {
@@ -861,13 +871,14 @@
       try {
         S.admission = do_admit(r);
         HXUI.announce("Admission " + S.admission.result.status + ".");
+        if (S.admission.result.status === "ADMITTED") shortcut_now(true);
       } catch (e) { S.admission = { error: e }; }
       publish_archive(get_env());
     }, paint_all) });
     const race = HXUI.button("Race two updates", { id: "ln-race", icon: "arrow", on_click: () => act("race", () => {
       try {
         S.race = do_race();
-        if (S.race.rows) HXUI.announce("Race: " + S.race.rows.map((x) => x.res.status).join(" and ") + ".");
+        if (S.race.rows) { HXUI.announce("Race: " + S.race.rows.map((x) => x.res.status).join(" and ") + "."); shortcut_now(true); }
       } catch (e) { S.race = { error: e }; }
       publish_archive(get_env());
     }, paint_all) });
@@ -961,9 +972,9 @@
         caption: "Racing admissions", caption_hidden: true, class: "ln-race-table",
         columns: [
           { key: "label", label: "Proposal", render: (r) => r.label },
-          { key: "cand", label: "Candidate", render: (r) => HXUI.digest(r.prop.candidate.artifact_hash, { short: 15, label: "candidate hash" }) },
+          { key: "cand", label: "Candidate", fold: true, fold_label: "candidate", render: (r) => HXUI.digest(r.prop.candidate.artifact_hash, { short: 15, label: "candidate hash" }) },
           { key: "status", label: "Admission", nowrap: true, render: (r) => status_chip(r.res.status) },
-          { key: "why", label: "Detail", fold: true, render: (r) => r.res.status === "ADMITTED" ? "Active, archive v" + r.res.archive_version + "." : (r.res.reasons || []).join(" ") },
+          { key: "why", label: "Detail", fold: true, render: (r) => r.res.status === "ADMITTED" ? "Active, archive v" + r.res.archive_version + "." : h("span", { class: "ln-wrap" }, (r.res.reasons || []).join(" ")) },
         ],
         rows: x.rows, row_attrs: (r) => ({ dataset: { race: r.id, status: r.res.status } }),
       }),
@@ -997,6 +1008,7 @@
           h("div", { class: "ln-step" }, h("p", { class: "ln-sub" }, "2 · Active version"),
             h("div", { class: "ln-result-head" }, HXUI.chip(same ? "Unchanged" : "Changed", same ? "ok" : "crit", { icon: same ? "check" : "alert", class: "ln-sc-unchanged" }),
               HXUI.digest(x.after ? x.after[0] : "", { short: 19, label: "active version hash", id: "ln-sc-active" }),
+              HXUI.chip(x.parent_kind, x.parent_kind === "refined" ? "accent" : "neutral"),
               x.after ? h("span", { class: "ln-sum-note" }, "archive v" + x.after[1]) : null),
             h("p", { class: "ln-why" }, same ? "The store's active pointer reads the same before and after this check." : "The active pointer moved during this check."))),
         h("div", { class: "ln-sub-row" }, h("p", { class: "ln-sub" }, "3 · The shortcut candidate, run through every gate anyway"),
@@ -1028,6 +1040,7 @@
       { code: "user:bob" }, ". It does not touch this lab's archive."], h("div", { class: "hx-action-row" }, btn));
     p.paint = () => {
       const missing = HXUI.engine_missing(EVAL_NEEDS);
+      btn.hidden = !!missing.length;
       if (missing.length) {
         HXUI.set_disabled(btn, true, "The evaluation module is not in this build.");
         p.body.replaceChildren(HXUI.unavailable(missing, { compact: true }));
@@ -1110,6 +1123,9 @@
     if (S.store && env && env.store !== S.store) {
       sync_store();
       if (P.root.isConnected && !P.root.closest("[hidden]")) init_sequence();
+    } else if (S.init === "done" && S.shortcut && !S.shortcut.error && env) {
+      /* another section moved the active pointer (the Run workbench can admit the refined machine): recheck */
+      try { if (active(env).hash !== S.shortcut.parent_hash) shortcut_now(true); } catch (e) { /* no active version */ }
     }
     paint_all();
   });

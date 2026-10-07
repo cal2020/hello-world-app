@@ -157,6 +157,35 @@
       HX.canonical.CanonicalError);
   });
 
+  test("documented deviation #7: counterexamples at or above 2^53 are reported as digit strings (report stays digestible)", () => {
+    const d = plain(base());
+    const sid = Object.keys(d.machine.states).find((s) => d.machine.states[s].transitions.length >= 2);
+    d.machine.variables.push({ name: "x", type: "integer", init: 0, init_from: null });
+    d.contracts.variables.x = { owner: "engine", schema: { type: "integer" } };
+    const tr = d.machine.states[sid].transitions;
+    for (const [a, b, want] of [["x >= 1e16", "x == 1e16", "10000000000000000"], ["x > 1e16", "x > 2e16", "20000000000000004"]]) {
+      tr[0]["if"] = a; tr[1]["if"] = b;
+      /* Python: COUNTEREXAMPLE {'x': 10000000000000000} / {'x': 20000000000000001} (guards.md #6), GUARDS_OVERLAP */
+      const r = HX.validate.validate_package(HX.pkg.sealed(HX.pkg.normalize_package(plain(d))), HX.data.tool_catalog);
+      assert.equal(r.passed, false);
+      const f = r.findings.find((x) => x.code === "GUARDS_OVERLAP" && x.state === sid);
+      assert.ok(f, a + " / " + b);
+      assert.deepEqual(plain(f.detail), { counterexample: { x: want } });
+      const an = r.analyses.find((x) => x.state === sid);
+      assert.equal(an.status, "COUNTEREXAMPLE");
+      assert.deepEqual(plain(an.counterexample), { x: want });
+      const j = r.to_json(); /* would throw CanonicalError with the raw number */
+      assert.match(j.report_digest, /^sha256:[0-9a-f]{64}$/);
+    }
+    /* guards.md #6 consumers: the raw counterexample (equal to Python's value here) cannot be canonicalized */
+    const raw = HX.guards.analyze_disjoint(["x >= 1e16", "x == 1e16"], { x: "integer" });
+    assert.equal(raw.status, "COUNTEREXAMPLE");
+    assert.equal(raw.counterexample.x, 1e16);
+    assert.throws(() => HX.canonical.canonical_text({ counterexample: raw.counterexample }), HX.canonical.CanonicalError);
+    assert.deepEqual(plain(HX.validate._digestible_counterexample({ a: 2 ** 53 - 1, b: 1.5, c: "s", d: true, e: 2 ** 60 })),
+      { a: 2 ** 53 - 1, b: 1.5, c: "s", d: true, e: "1152921504606846976" });
+  });
+
   test("validate: conformance mutations (test_static_admission, test_review_admission_validator) match Python", () => {
     const g = golden("validate_conformance");
     for (const c of g.cases) check_case(c, g.variants, c.name);

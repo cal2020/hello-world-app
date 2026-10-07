@@ -196,6 +196,23 @@
   /* graph helpers                                                                                */
   /* ------------------------------------------------------------------------------------------ */
 
+  /** Deviation #7 (deviations/static.md): a disjointness counterexample may hold an integral number at or above 2^53
+   *  (the exact value Python found, e.g. ``1e16``, or a guards.md #6 representative). ``HX.canonical`` refuses such
+   *  numbers, so the report could not be digested; the value is reported as its decimal digits in a string instead.
+   *  The verdict (GUARDS_OVERLAP, an error) is unchanged. */
+  function digestible_counterexample(cex) {
+    if (cex === null || typeof cex !== "object") return cex;
+    const out = {};
+    for (const k of Object.keys(cex)) {
+      const v = cex[k];
+      const big = typeof v === "number" && Number.isInteger(v) && !Number.isSafeInteger(v);
+      Object.defineProperty(out, k, { value: big ? BigInt(v).toString() : v, enumerable: true, writable: true, configurable: true });
+    }
+    return out;
+  }
+  validate._digestible_counterexample = digestible_counterexample;
+  const clone_cex = (c) => (c === null || typeof c !== "object" ? c : digestible_counterexample(c));
+
   /** Template variables ``${name}`` in a JSON value, as a Set. */
   validate.template_vars = function template_vars(obj) {
     const out = new Set();
@@ -718,10 +735,11 @@
       }
       if (guarded.length >= 2 && !F.some((f) => f.state === sid && f.code === "GUARD_INVALID")) {
         const an = G.analyze_disjoint(guarded.map((x) => x[1]), types);
-        analyses.push({ state: sid, analysis: "disjointness", status: an.status, detail: an.detail, counterexample: an.counterexample });
+        const cex = digestible_counterexample(an.counterexample);
+        analyses.push({ state: sid, analysis: "disjointness", status: an.status, detail: an.detail, counterexample: cex });
         if (an.status === "COUNTEREXAMPLE") {
           err("GUARDS_OVERLAP", sid + ": guarded edges " + repr(an.edges.map((i) => guarded[i][0])) + " overlap",
-            { state: sid, detail: { counterexample: an.counterexample } });
+            { state: sid, detail: { counterexample: clone_cex(cex) } });
         } else if (an.status === "UNKNOWN") {
           err("GUARDS_DISJOINTNESS_UNKNOWN", sid + ": disjointness not proven (" + an.detail + ")", { state: sid });
         }

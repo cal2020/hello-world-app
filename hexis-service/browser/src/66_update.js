@@ -451,7 +451,7 @@
     let diagnostics = [first.to_json()];
     for (let attempt = 1; attempt <= update.MAX_ATTEMPTS; attempt++) {
       const ctx = { attempt, restrictive: attempt > 1, machine: clone(parent.machine), events: clone(events),
-        dropped: clone(dropped), divergence: first.divergence, diagnostics,
+        dropped, divergence: first.divergence, diagnostics, /* the same list in every attempt, like Python */
         clauses: clone(parent.source_manifest.clauses) };
       const ops = aligner.propose(ctx);
       const op_errs = update._validate_ops(parent, ops, events, catalog);

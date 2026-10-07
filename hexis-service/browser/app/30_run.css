@@ -254,5 +254,5 @@
 /* the outcome card lives in the narrow side column: each label sits above its value */
 .rn-outcome .rn-scope-row { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
 .rn-outcome .rn-scope-row + .rn-scope-row { padding-top: 0.2rem; }
-.rn-sum-flag { max-width: 100%; white-space: normal; padding-block: 0.15rem; }
-.rn-sum-flag .hx-chip-text { white-space: normal; overflow: visible; text-overflow: clip; }
+#rn-sum-status .hx-chip { max-width: 100%; white-space: normal; padding-block: 0.15rem; }
+#rn-sum-status .hx-chip-text { overflow: visible; text-overflow: clip; }

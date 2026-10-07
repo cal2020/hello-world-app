@@ -786,6 +786,36 @@ key_order.append(("normalize", "logical_action_id dict (event role)",
                   _reseal_header(MBL.replace(_rec_line, json.dumps(_r, ensure_ascii=False), 1))))
 key_order.append(("normalize", "unrecognized kind dict (dropped reason, UNRECOGNIZED_RECORD requirement)",
                   _reseal_header(_with_record(MBL, 0, {"step": 50, "action": {"kind": json.loads(UNS)}}))))
+# eligibility's str(status) never prints a dict into a value: a non-str status is never positive, even a dict with
+# integer-like keys (no KEY_ORDER_UNKNOWN)
+eligibility_status = []
+_happy = RUN_TRACES["happy"]
+_vtools = {ev.verifier_tool for tc in INITIAL.contracts.terminals.values() for ev in tc.evidence}
+_vi = max(i for i, r in enumerate(_happy.records) if r.action.get("name") in _vtools)
+for _st in [{"b": 1, "1": 2}, {"10": 1, "9": 2}, ["pass"], 1, None, True, "pass", "match", "PASS", {"pass": 1}, 2.5]:
+    _recs = [r.model_copy(deep=True) for r in _happy.records]
+    _recs[_vi].output["status"] = copy.deepcopy(_st)
+    _t = _happy.model_copy(update={"records": _recs})
+    eligibility_status.append({"status_json": json.dumps(_st), "base": "happy", "record_index": _vi,
+                               "python": {p: run(lambda: eligibility(_t, PKGS[p])) for p in ("initial", "refined")}})
+# from_jsonl with a dict task_id whose insertion order JS cannot recover: errors Python raises later in the same
+# constructor call (bad records, invalid header fields) come first; only a trace Python builds is KEY_ORDER_UNKNOWN
+from_jsonl_order = []
+_ok_rec = MBL.split("\n")[1]
+for _hd, _recs in [('{"task_id": {"10": 1, "9": 2}, "hexis_service": {}}', ['{"step": "0b1"}']),
+                   ('{"task_id": {"b": 1, "1": 2}}', ['{"step": 0, "action": 5}']),
+                   ('{"task_id": {"b": 1, "1": 2}}', ['[1]']),
+                   ('{"task_id": {"b": 1, "1": 2}, "verdict": 5}', [_ok_rec]),
+                   ('{"task_id": {"b": 1, "1": 2}, "hexis_service": {"source": []}}', []),
+                   ('{"task_id": {"b": 1, "1": 2}}', [_ok_rec]),
+                   ('{"task_id": {"b": 1, "1": 2}}', []),
+                   ('{"task_id": {"b": 1, "1": 2}, "hexis_service": {"trace_id": "T"}}', ['{"step": "0b1"}']),
+                   ('{"task_id": {"b": 1, "1": 2}, "hexis_service": {"trace_id": "T"}}', [])]:
+    _text = "\n".join([_hd] + _recs)
+    _r = run(lambda: Trace.from_jsonl(_text))
+    if "ok" in _r:
+        _r = {"ok": {"trace_id": _r["ok"][0].trace_id, "errors": _r["ok"][1]}}
+    from_jsonl_order.append({"text": _text, "python": _r})
 key_order_vectors = []
 for where, nm, text in key_order:
     pk = ["mini_branch"]
@@ -1066,7 +1096,7 @@ main = {
     "packages": {k: pkg_dump(p) for k, p in PKGS.items()},
     "package_hashes": {k: p.artifact_hash for k, p in PKGS.items()},
     "bases": {k: {"jsonl": t.to_jsonl(), "pkgs": BASE_PKGS[k]} for k, t in BASES.items()},
-    "on_step": on_step, "rogue": rogue_rep, "mode_errors": mode_errors, "key_order": key_order_vectors, "py_int": py_int_cases,
+    "on_step": on_step, "rogue": rogue_rep, "mode_errors": mode_errors, "key_order": key_order_vectors, "eligibility_status": eligibility_status, "from_jsonl_order": from_jsonl_order, "py_int": py_int_cases,
     "curated": curated,
 }
 write("traces", main)

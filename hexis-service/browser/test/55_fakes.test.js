@@ -147,7 +147,20 @@
     }
     const reg = new FK.SupplierRegistry([[["t", "R"], { business_unit: "B" }]]);
     assert.equal(reg.lookup({ supplier_ref: "R", business_unit: "B" }, { tenant_id: "t" }).status, "exists_compatible");
-    assert.throws(() => new FK.SupplierRegistry({ nobar: {} }), TypeError);
+    /* Python's dict() accepts any hashable key; one that is not a (tenant, ref) pair never matches */
+    assert.equal(new FK.SupplierRegistry({ nobar: { business_unit: "B" } }).lookup({ supplier_ref: "SUP-1", business_unit: "B" },
+      { tenant_id: "acme" }).status, "new");
+    assert.throws(() => new FK.SupplierRegistry([[{ x: 1 }, 1]]), (e) => e.code === "TypeError" && /unhashable/.test(e.message));
+  });
+
+  test("documented (models.md): integer-like free-form keys reorder validate_draft issues, which changes downstream digests", () => {
+    const out = FK.validate_draft({ draft: { legal_name: "A", source_links: { ghost: "D1", 12: "D1" } }, required_fields: [] }, {});
+    /* Python (insertion order ghost, 12): fields ['ghost', '12'],
+       digest sha256:54432b63c93e47c9390b526ebb25b8c8cd6fd19806f5b01a27becdba8f076ca2. JS iterates '12' first, which is
+       exactly Python's result for the input {'12': 'D1', 'ghost': 'D1'}. */
+    assert.deepEqual(out.issues.map((i) => i.field), ["12", "ghost"]);
+    assert.equal(HX.canonical.digest(out), "sha256:59dee1cd88f7e595043c14efb6af6ae1b715a53cbd319c94dade7a9727fc5e02");
+    assert.notEqual(HX.canonical.digest(out), "sha256:54432b63c93e47c9390b526ebb25b8c8cd6fd19806f5b01a27becdba8f076ca2");
   });
 
   test("validate_draft matches Python on 330+ drafts (emails, tax ids incl. trailing newlines, missing fields, sanctions, orphan links)", () => {
@@ -219,6 +232,10 @@
     }
     const m = new FK.FixtureExtractionModel();
     for (const c of G().model_malformed) same(`malformed ${c.request_json}`, () => m.generate(parse(c.request_json)), c.result);
+    /* documented (models.md): dict([[1, 2]]) has an int key, which a JS object cannot hold; Python returns {1: 2} */
+    assert.throws(() => FK._py_dict([[1, 2]]), (e) => e.code === "TypeError");
+    assert.deepEqual(FK._py_dict(""), {});
+    assert.throws(() => FK._py_dict("ab"), (e) => e.code === "ValueError" && /element #0 has length 1/.test(e.message));
   });
 
   test("FixtureExtractionModel arguments: Python truthiness, n > 0 comparison, keyword/positional forms", () => {

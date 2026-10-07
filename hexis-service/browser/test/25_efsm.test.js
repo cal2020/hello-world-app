@@ -118,7 +118,7 @@
     /* Python accepts lone surrogates in str, dict and Any fields and in dict keys; the port refuses them there
        (string_unicode / json_invalid), so it may report those errors in addition to pydantic's */
     const documented = (e) => e[0] === "string_unicode" || e[0] === "json_invalid";
-    let exact = 0, extra = 0, stricter = 0;
+    let exact = 0, extra = 0, stricter = 0, escaped = 0;
     for (const c of G.surrogates) {
       const input = JSON.parse(c.input_ascii); /* strict_loads would refuse the lone surrogates */
       let err;
@@ -126,7 +126,12 @@
       const label = `${c.model} ${c.input_ascii}`;
       assert.ok(err && Array.isArray(err.errors), `${label}: should reject`);
       const got = sortErrs(err.errors.map((e) => [e.type, e.loc]));
-      if (c.py === "error") {
+      if (c.py === "exc") {
+        /* a TypeError escaped a nested before-validator: pydantic validates fields before it reads the keys */
+        assert.equal(c.exc, "TypeError");
+        assert.ok(got.length && got.every((e) => e[0] === "python_type_error"), `${label}: ${JSON.stringify(got)}`);
+        escaped++;
+      } else if (c.py === "error") {
         const py = sortErrs(c.errors);
         for (const e of py) assert.ok(got.some((g) => errKey(g) === errKey(e)), `${label}: missing ${JSON.stringify(e)} in ${JSON.stringify(got)}`);
         const more = got.filter((g) => !py.some((e) => errKey(e) === errKey(g)));
@@ -138,7 +143,7 @@
         stricter++;
       }
     }
-    assert.ok(exact >= 30 && stricter >= 8, `${exact} ${extra} ${stricter}`);
+    assert.ok(exact >= 30 && stricter >= 8 && escaped >= 3, `${exact} ${extra} ${stricter} ${escaped}`);
     /* the verifier's three cases */
     const one = (fn) => { try { fn(); } catch (e) { return e.errors.map((x) => [x.type, x.loc]); } return null; };
     assert.deepEqual(one(() => E.Variable.model_validate({ name: "v", type: "x\ud800" })), [["string_unicode", ["type"]]]);
@@ -194,6 +199,42 @@
     assert.deepEqual(Object.keys(dev.float).sort(), ["nonfinite"]);
     assert.ok(Object.keys(dev.int).every((k) => k === "quirk" || k === "unsafe"));
     assert.ok(G.int.length + G.float.length + G.bool.length > 3000);
+  });
+
+  test("int strings around 4300 digits: pydantic-core's int_parsing_size vs int_parsing; big accepted values are int_unsafe", () => {
+    const G = golden("models_coerce").int_size;
+    const seen = {};
+    for (const [pre, dig, n, suf, want] of G) {
+      const v = pre + dig.repeat(n) + suf;
+      const r = E.pyd.validate_type({ k: "int" }, v);
+      const got = r.errors.length ? r.errors[0].type : "ok";
+      const label = JSON.stringify([pre, dig, n, suf]);
+      /* Python accepts these as (unsafe) big ints; the port rejects them as int_unsafe (models.md "Numbers") */
+      if (want === "ok") assert.equal(got, "int_unsafe", label);
+      else assert.equal(got, want, label + ": Python " + want);
+      seen[want] = (seen[want] || 0) + 1;
+    }
+    assert.ok(seen.int_parsing_size > 100 && seen.int_parsing > 100 && seen.ok > 100, JSON.stringify(seen));
+    /* the follow-up repros */
+    const t = (v) => E.pyd.validate_type({ k: "int" }, v).errors.map((e) => e.type);
+    assert.deepEqual(t("-" + "9".repeat(4300)), ["int_parsing_size"]);
+    assert.deepEqual(t(" " + "7".repeat(4301)), ["int_parsing"]);
+    assert.deepEqual(t("+" + "1".repeat(4301)), ["int_parsing"]);
+  });
+
+  test("25_efsm reads no other namespace at load time (only HX.HXError, README convention)", () => {
+    const get = typeof process === "object" && process.getBuiltinModule;
+    if (!get) return;
+    const fs = process.getBuiltinModule("node:fs"), vm = process.getBuiltinModule("node:vm");
+    const path = process.getBuiltinModule("node:path");
+    const src = fs.readFileSync(path.join(ROOT, "src", "25_efsm.js"), "utf8");
+    /* no module-level alias of another namespace (const util = HX.util) */
+    assert.equal(/^ {2}(?:const|let|var) \w+ = HX\.(?!efsm\b)\w+\s*;/m.test(src), false);
+    /* a context whose HX has nothing but the error base: any load-time HX.util / HX.canonical read would throw */
+    const ctx = vm.createContext({});
+    vm.runInContext("globalThis.HX = { HXError: class HXError extends Error {} };", ctx);
+    vm.runInContext(src, ctx);
+    assert.equal(vm.runInContext("typeof HX.efsm.load_machine", ctx), "function");
   });
 
   test("model-aware canonical text: integral float fields keep Python's float repr", () => {

@@ -1094,12 +1094,14 @@ def utc_errors():
     for t in (253402300800, 253402300799.9999996, 253402300800.5, -62135596800.5, -62135596801, 8.64e12 + 0.5,
               -1e13 + 0.5, 6.7e16 + 0.5, -6.7e16 + 0.5, 6.8e16 + 0.5, -6.8e16 + 0.5, 1e17 + 0.5, 9.2e18 + 0.5,
               9.3e18 + 0.5, -9.3e18 + 0.5, 1e300 + 0.5, 9223372036854774784.0, 2.0 ** 63, -(2.0 ** 63),
-              -9223372036854777856.0):
+              -9223372036854777856.0, float("nan"), float("inf"), float("-inf")):
         try:
             datetime.fromtimestamp(t, timezone.utc)
             raise AssertionError(t)
         except (ValueError, OSError, OverflowError) as exc:
-            out.append([repr(t), type(exc).__name__, str(exc)])  # repr: integral floats cannot be stored
+            # repr: integral floats cannot be stored; non-finite values as JS Number() spellings
+            label = {"nan": "NaN", "inf": "Infinity", "-inf": "-Infinity"}.get(repr(t), repr(t))
+            out.append([label, type(exc).__name__, str(exc)])
     return out
 
 

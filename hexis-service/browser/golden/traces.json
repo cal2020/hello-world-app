@@ -47880,6 +47880,330 @@
    }
   }
  ],
+ "eligibility_status": [
+  {
+   "base": "happy",
+   "python": {
+    "initial": {
+     "ok": [
+      {
+       "claim": "persisted_draft_matches_approved_payload",
+       "code": "UNSUPPORTED_SUCCESS_CLAIM",
+       "step": 10
+      }
+     ]
+    },
+    "refined": {
+     "ok": [
+      {
+       "claim": "persisted_draft_matches_approved_payload",
+       "code": "UNSUPPORTED_SUCCESS_CLAIM",
+       "step": 10
+      }
+     ]
+    }
+   },
+   "record_index": 9,
+   "status_json": "{\"b\": 1, \"1\": 2}"
+  },
+  {
+   "base": "happy",
+   "python": {
+    "initial": {
+     "ok": [
+      {
+       "claim": "persisted_draft_matches_approved_payload",
+       "code": "UNSUPPORTED_SUCCESS_CLAIM",
+       "step": 10
+      }
+     ]
+    },
+    "refined": {
+     "ok": [
+      {
+       "claim": "persisted_draft_matches_approved_payload",
+       "code": "UNSUPPORTED_SUCCESS_CLAIM",
+       "step": 10
+      }
+     ]
+    }
+   },
+   "record_index": 9,
+   "status_json": "{\"10\": 1, \"9\": 2}"
+  },
+  {
+   "base": "happy",
+   "python": {
+    "initial": {
+     "ok": [
+      {
+       "claim": "persisted_draft_matches_approved_payload",
+       "code": "UNSUPPORTED_SUCCESS_CLAIM",
+       "step": 10
+      }
+     ]
+    },
+    "refined": {
+     "ok": [
+      {
+       "claim": "persisted_draft_matches_approved_payload",
+       "code": "UNSUPPORTED_SUCCESS_CLAIM",
+       "step": 10
+      }
+     ]
+    }
+   },
+   "record_index": 9,
+   "status_json": "[\"pass\"]"
+  },
+  {
+   "base": "happy",
+   "python": {
+    "initial": {
+     "ok": [
+      {
+       "claim": "persisted_draft_matches_approved_payload",
+       "code": "UNSUPPORTED_SUCCESS_CLAIM",
+       "step": 10
+      }
+     ]
+    },
+    "refined": {
+     "ok": [
+      {
+       "claim": "persisted_draft_matches_approved_payload",
+       "code": "UNSUPPORTED_SUCCESS_CLAIM",
+       "step": 10
+      }
+     ]
+    }
+   },
+   "record_index": 9,
+   "status_json": "1"
+  },
+  {
+   "base": "happy",
+   "python": {
+    "initial": {
+     "ok": [
+      {
+       "claim": "persisted_draft_matches_approved_payload",
+       "code": "UNSUPPORTED_SUCCESS_CLAIM",
+       "step": 10
+      }
+     ]
+    },
+    "refined": {
+     "ok": [
+      {
+       "claim": "persisted_draft_matches_approved_payload",
+       "code": "UNSUPPORTED_SUCCESS_CLAIM",
+       "step": 10
+      }
+     ]
+    }
+   },
+   "record_index": 9,
+   "status_json": "null"
+  },
+  {
+   "base": "happy",
+   "python": {
+    "initial": {
+     "ok": [
+      {
+       "claim": "persisted_draft_matches_approved_payload",
+       "code": "UNSUPPORTED_SUCCESS_CLAIM",
+       "step": 10
+      }
+     ]
+    },
+    "refined": {
+     "ok": [
+      {
+       "claim": "persisted_draft_matches_approved_payload",
+       "code": "UNSUPPORTED_SUCCESS_CLAIM",
+       "step": 10
+      }
+     ]
+    }
+   },
+   "record_index": 9,
+   "status_json": "true"
+  },
+  {
+   "base": "happy",
+   "python": {
+    "initial": {
+     "ok": []
+    },
+    "refined": {
+     "ok": []
+    }
+   },
+   "record_index": 9,
+   "status_json": "\"pass\""
+  },
+  {
+   "base": "happy",
+   "python": {
+    "initial": {
+     "ok": []
+    },
+    "refined": {
+     "ok": []
+    }
+   },
+   "record_index": 9,
+   "status_json": "\"match\""
+  },
+  {
+   "base": "happy",
+   "python": {
+    "initial": {
+     "ok": [
+      {
+       "claim": "persisted_draft_matches_approved_payload",
+       "code": "UNSUPPORTED_SUCCESS_CLAIM",
+       "step": 10
+      }
+     ]
+    },
+    "refined": {
+     "ok": [
+      {
+       "claim": "persisted_draft_matches_approved_payload",
+       "code": "UNSUPPORTED_SUCCESS_CLAIM",
+       "step": 10
+      }
+     ]
+    }
+   },
+   "record_index": 9,
+   "status_json": "\"PASS\""
+  },
+  {
+   "base": "happy",
+   "python": {
+    "initial": {
+     "ok": [
+      {
+       "claim": "persisted_draft_matches_approved_payload",
+       "code": "UNSUPPORTED_SUCCESS_CLAIM",
+       "step": 10
+      }
+     ]
+    },
+    "refined": {
+     "ok": [
+      {
+       "claim": "persisted_draft_matches_approved_payload",
+       "code": "UNSUPPORTED_SUCCESS_CLAIM",
+       "step": 10
+      }
+     ]
+    }
+   },
+   "record_index": 9,
+   "status_json": "{\"pass\": 1}"
+  },
+  {
+   "base": "happy",
+   "python": {
+    "initial": {
+     "ok": [
+      {
+       "claim": "persisted_draft_matches_approved_payload",
+       "code": "UNSUPPORTED_SUCCESS_CLAIM",
+       "step": 10
+      }
+     ]
+    },
+    "refined": {
+     "ok": [
+      {
+       "claim": "persisted_draft_matches_approved_payload",
+       "code": "UNSUPPORTED_SUCCESS_CLAIM",
+       "step": 10
+      }
+     ]
+    }
+   },
+   "record_index": 9,
+   "status_json": "2.5"
+  }
+ ],
+ "from_jsonl_order": [
+  {
+   "python": {
+    "exc": "ValidationError"
+   },
+   "text": "{\"task_id\": {\"10\": 1, \"9\": 2}, \"hexis_service\": {}}\n{\"step\": \"0b1\"}"
+  },
+  {
+   "python": {
+    "exc": "ValidationError"
+   },
+   "text": "{\"task_id\": {\"b\": 1, \"1\": 2}}\n{\"step\": 0, \"action\": 5}"
+  },
+  {
+   "python": {
+    "exc": "TypeError"
+   },
+   "text": "{\"task_id\": {\"b\": 1, \"1\": 2}}\n[1]"
+  },
+  {
+   "python": {
+    "exc": "ValidationError"
+   },
+   "text": "{\"task_id\": {\"b\": 1, \"1\": 2}, \"verdict\": 5}\n{\"action\": {\"input\": {}, \"kind\": \"tool\", \"name\": \"tool.a\"}, \"clause\": \"\", \"meta\": {\"digest\": \"sha256:dc3d3875722ac61d92e922bb430cb03ef704c1a597491001aaab5334380ac7c4\"}, \"output\": {\"status\": \"ok\", \"val\": \"v\"}, \"state\": \"\", \"step\": 0, \"vars\": {}}"
+  },
+  {
+   "python": {
+    "exc": "ValidationError"
+   },
+   "text": "{\"task_id\": {\"b\": 1, \"1\": 2}, \"hexis_service\": {\"source\": []}}"
+  },
+  {
+   "python": {
+    "ok": {
+     "errors": [
+      "no integrity block (unsealed trace)"
+     ],
+     "trace_id": "{'b': 1, '1': 2}"
+    }
+   },
+   "text": "{\"task_id\": {\"b\": 1, \"1\": 2}}\n{\"action\": {\"input\": {}, \"kind\": \"tool\", \"name\": \"tool.a\"}, \"clause\": \"\", \"meta\": {\"digest\": \"sha256:dc3d3875722ac61d92e922bb430cb03ef704c1a597491001aaab5334380ac7c4\"}, \"output\": {\"status\": \"ok\", \"val\": \"v\"}, \"state\": \"\", \"step\": 0, \"vars\": {}}"
+  },
+  {
+   "python": {
+    "ok": {
+     "errors": [
+      "no integrity block (unsealed trace)"
+     ],
+     "trace_id": "{'b': 1, '1': 2}"
+    }
+   },
+   "text": "{\"task_id\": {\"b\": 1, \"1\": 2}}"
+  },
+  {
+   "python": {
+    "exc": "ValidationError"
+   },
+   "text": "{\"task_id\": {\"b\": 1, \"1\": 2}, \"hexis_service\": {\"trace_id\": \"T\"}}\n{\"step\": \"0b1\"}"
+  },
+  {
+   "python": {
+    "ok": {
+     "errors": [
+      "no integrity block (unsealed trace)"
+     ],
+     "trace_id": "T"
+    }
+   },
+   "text": "{\"task_id\": {\"b\": 1, \"1\": 2}, \"hexis_service\": {\"trace_id\": \"T\"}}"
+  }
+ ],
  "key_order": [
   {
    "name": "key order: task_id dict with an integer-like key, empty ext trace_id",

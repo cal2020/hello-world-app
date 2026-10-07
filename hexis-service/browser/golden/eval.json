@@ -11805,6 +11805,2787 @@
     "tasks": 3,
     "terminal_honesty": 0.6666666666666666
    }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 26,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -3,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 5.800000000000001,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 4,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.2,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 4,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 1.15,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 4,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.2,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 0.9,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 4,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1e-16,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1e-16,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1e-16,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 0.4,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 5,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 5,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 0.7125,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 8,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 123456789012,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -123456789012,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.2,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 0.07500152587890625,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 4,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 2.5,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.7,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 2,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 1.26,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 5,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 15,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 476190476190478.44,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 7,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 35,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 37,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 24.099999999999998,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 3,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -23,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -4.3206,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": -4.453433333333333,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 6,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -23,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 40.584,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -26,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": -1.352666666666666,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 6,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 0.2333333333333333,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 3,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -15.734,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 277777777777773.9,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 4,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 0.26,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 5,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 1111111111111111,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 2,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 6.669577,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -13.7,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1.16862,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 123456790123456.25,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 9,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -33,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 18.8046,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -44.74,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -32,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 123456790123447.06,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 9,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -40,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 740740740740734.1,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 6,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 49,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 24.65,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 2,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 740740740740740.8,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 3,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -34.928,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 12.810539,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 185185185185181.6,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 6,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 25,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 370370370370374.6,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 6,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1.674437,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -0.33038,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -7,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 123456790123456.23,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 9,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 21,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -5,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 29,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -35.4234,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 138888888888890.16,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 8,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 10,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 35.591472,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -4,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -30,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 13.504,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 277777777777780.94,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 8,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -43,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -41,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 19.99,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 27.4,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -16,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 246913580246907.75,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 9,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -7,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 370370370370368.06,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 3,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 29.11,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -3.78478,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -3.104359,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 222222222222226.7,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 5,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -32,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -41,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": -12,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 6,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -41.93152,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -10,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": -25.96576,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 2,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 12.5659,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 42.8,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 14,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 8,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -31,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 138888888888894.72,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 8,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 21.00015,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 37.92908,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 277777777777792.5,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 4,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 740740740740740.8,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 3,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 41,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -36,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 493827160493827.75,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 9,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 8.4296,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 1111111111111111,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 740740740740743.5,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 3,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -8.458,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 13,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 35,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -11,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 41,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": 9.991714285714286,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 7,
+    "terminal_honesty": 1
+   }
+  },
+  {
+   "rows": [
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0.1,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -39,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.3,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": 0.1,
+     "terminal_honest": true
+    },
+    {
+     "business_success": true,
+     "duplicate_writes": 0,
+     "entered_fallback": true,
+     "fallback_outcome": true,
+     "human_interactions": 0,
+     "model_calls": 0,
+     "procedural_conformance": true,
+     "steps": -2,
+     "terminal_honest": true
+    }
+   ],
+   "value": {
+    "business_success": 1,
+    "duplicate_writes": 0,
+    "failure_fallback_rate": 1,
+    "fallback_rate": 1,
+    "human_interactions": 0.1,
+    "mean_steps": -10.15,
+    "model_calls": 0,
+    "procedural_conformance": 1,
+    "tasks": 4,
+    "terminal_honesty": 1
+   }
   }
  ]
 }

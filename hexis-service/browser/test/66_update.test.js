@@ -106,6 +106,33 @@
     assert.deepEqual(Object.keys(prop.candidate.machine.states), Object.keys(loads(F.g.refined_json).machine.states));
   });
 
+  test("aligner context: dropped is shared across attempts like Python", () => {
+    const F = U.fixtures();
+    const lens = [];
+    const aligner = { propose(ctx) { lens.push(ctx.dropped.length); ctx.dropped.push({ x: 1 }); return [{ op: "bogus" }]; } };
+    const p = HX.update.propose_update(F.initial, F.traces.missing, [], [], F.catalog, aligner, F.skill_text);
+    /* Python (the same aligner): lengths [1, 2], status REJECTED */
+    assert.deepEqual(lens, [1, 2]);
+    assert.equal(p.status, "REJECTED");
+  });
+
+  test("documented deviation #6: integer-like names are refused (state ids, variables, clause ids)", () => {
+    const F = U.fixtures();
+    const code = (fn) => { try { fn(); } catch (e) { return U.exc_class(e) === "ValidationError" ? "ValidationError" : e.code || e.name; } return null; };
+    const add_var = { op: "add_variable", rationale: "r", variable: { name: "7", type: "string", init: true, init_from: null },
+      contract: { owner: "tool", schema: { type: "integer" } } };
+    const set_cov = { op: "set_coverage", rationale: "r", clause: "7",
+      coverage: { classification: "executable_control", justification: "j" } };
+    /* Python: both build a sealed candidate */
+    for (const op of [add_var, set_cov]) {
+      assert.throws(() => HX.update.apply_ops(F.initial, [op], ["tid"]), (e) => e instanceof HX.HXError && /integer-like|Integer-like/.test(e.message), op.op);
+    }
+    const cand = JSON.parse(JSON.stringify(F.initial));
+    cand.contracts.clause_coverage = Object.assign({ 0: { classification: "executable_control", justification: "j" } },
+      cand.contracts.clause_coverage);
+    assert.ok(code(() => HX.update.policy_widening(F.initial, cand)) !== null, "policy_widening refuses");
+  });
+
   test("update: MAX_ATTEMPTS, UpdateProposal shape", () => {
     const F = U.fixtures();
     assert.equal(HX.update.MAX_ATTEMPTS, F.g.max_attempts);

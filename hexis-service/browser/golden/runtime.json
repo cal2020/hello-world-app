@@ -6219,6 +6219,65 @@
    "{\"type\": [\"object\", \"null\"], \"not\": {\"required\": [\"bad\"]}, \"oneOf\": [{\"required\": [\"p\"]}, {\"type\": \"object\", \"required\": [\"q\"]}], \"properties\": {\"p\": {\"type\": \"boolean\"}, \"q\": {\"uniqueItems\": true}}}",
    "{\"p\": true}",
    []
+  ],
+  [
+   "{\"properties\": {\"a\": {\"properties\": {\"b\": {\"type\": \"string\"}}}}, \"additionalProperties\": {\"type\": \"string\"}}",
+   "{\"a\": {\"b\": 1}, \"a\\u0000\": 1}",
+   [
+    "a/b: 1 is not of type 'string'",
+    "a\u0000: 1 is not of type 'string'"
+   ]
+  ],
+  [
+   "{\"properties\": {\"a\": {\"properties\": {\"b\": {\"type\": \"string\"}}}}, \"additionalProperties\": {\"type\": \"string\"}}",
+   "{\"a\\u0000\": 1, \"a\": {\"b\": 1}, \"a\\u0000b\": 2, \"\\u0000\": 3}",
+   [
+    "\u0000: 3 is not of type 'string'",
+    "a/b: 1 is not of type 'string'",
+    "a\u0000: 1 is not of type 'string'",
+    "a\u0000b: 2 is not of type 'string'"
+   ]
+  ],
+  [
+   "{\"maxItems\": 0}",
+   "[\"10\"]",
+   [
+    "<root>: ['10'] is expected to be empty"
+   ]
+  ],
+  [
+   "{\"maxItems\": 0}",
+   "[]",
+   []
+  ],
+  [
+   "{\"maxLength\": 0}",
+   "\"a\"",
+   [
+    "<root>: 'a' is expected to be empty"
+   ]
+  ],
+  [
+   "{\"maxLength\": 0}",
+   "\"\"",
+   []
+  ],
+  [
+   "{\"properties\": {\"l\": {\"maxItems\": 0, \"minItems\": 1}, \"s\": {\"maxLength\": 0}, \"t\": {\"maxLength\": 1}, \"u\": {\"maxItems\": 1}}}",
+   "{\"l\": [1], \"s\": \"xy\", \"t\": \"xy\", \"u\": [1, 2]}",
+   [
+    "l: [1] is expected to be empty",
+    "s: 'xy' is expected to be empty",
+    "t: 'xy' is too long",
+    "u: [1, 2] is too long"
+   ]
+  ],
+  [
+   "{\"properties\": {\"l\": {\"maxItems\": 0, \"minItems\": 1}, \"s\": {\"maxLength\": 0}, \"t\": {\"maxLength\": 1}, \"u\": {\"maxItems\": 1}}}",
+   "{\"l\": []}",
+   [
+    "l: [] should be non-empty"
+   ]
   ]
  ],
  "unsealed_hash": "",
@@ -6374,6 +6433,21 @@
   ],
   [
    "-9.223372036854778e+18",
+   "OverflowError",
+   "timestamp out of range for platform time_t"
+  ],
+  [
+   "NaN",
+   "ValueError",
+   "Invalid value NaN (not a number)"
+  ],
+  [
+   "Infinity",
+   "OverflowError",
+   "timestamp out of range for platform time_t"
+  ],
+  [
+   "-Infinity",
    "OverflowError",
    "timestamp out of range for platform time_t"
   ]

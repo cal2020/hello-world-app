@@ -243,8 +243,10 @@
       if (typeof term !== "string" || !verified.has(term)) continue;
       for (const ev of terms[term].evidence) {
         const last = trace.records.filter((x) => x.step < r.step && get(x.action, "name", null) === ev.verifier_tool);
-        if (!last.length ||
-            HX.evidence.POSITIVE_RESULTS.indexOf(T._py_str(get(last[last.length - 1].output, "status", null))) < 0) {
+        /* ``str(status) not in POSITIVE_RESULTS``: only a str can stringify to "pass"/"match" (the str() of a number,
+           bool, None, list or dict never does), so no repr is needed (a dict with integer-like keys stays printable) */
+        const status = last.length ? get(last[last.length - 1].output, "status", null) : null;
+        if (!last.length || typeof status !== "string" || HX.evidence.POSITIVE_RESULTS.indexOf(status) < 0) {
           violations.push({ code: "UNSUPPORTED_SUCCESS_CLAIM", step: r.step, claim: ev.claim });
         }
       }

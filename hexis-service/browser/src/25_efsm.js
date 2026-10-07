@@ -25,7 +25,6 @@
 (function (HX) {
   "use strict";
   const efsm = (HX.efsm = HX.efsm || {});
-  const util = HX.util;
   const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 
   efsm.FALLBACK = "FALLBACK";
@@ -61,7 +60,7 @@
   pyd.PyValueError = PyValueError;
   pyd.PyTypeError = PyTypeError;
 
-  function is_dict(v) { return util.is_plain_object(v); }
+  function is_dict(v) { return HX.util.is_plain_object(v); }
   pyd.is_dict = is_dict;
 
   /** Python truthiness of a JSON-like value. */
@@ -157,15 +156,22 @@
 
   /** pydantic lax str->int. Returns a safe integer, or an error type string. Accepts the grammar
    *  ``[+-]?digits(_digits)*(.0+)?`` after Rust-style trimming (pydantic also accepts some odd forms such
-   *  as "0-1"; those are rejected here, see deviations/models.md). More than 4300 significant digits is
-   *  ``int_parsing_size`` as in pydantic-core. */
+   *  as "0-1"; those are rejected here, see deviations/models.md). The length limits are pydantic-core's
+   *  ``str_as_int``: jiter first parses the RAW string as a JSON integer and reports ``int_parsing_size`` when
+   *  its integer run (``-?[1-9][0-9]*``, sign included) is longer than 4300 bytes; otherwise the cleaned string
+   *  (trimmed, ``+`` and leading zeros dropped, ``.0+`` and underscores removed, sign kept) is parsed again,
+   *  and a cleaned string longer than 4300 bytes is a plain ``int_parsing``. */
   function str_to_int(v) {
+    const raw = /^-?[1-9][0-9]*/.exec(v);
+    if (raw !== null && raw[0].length > 4300) return "int_parsing_size";
     const s = v.replace(RUST_TRIM, "");
     if (!INT_STR.test(s)) return "int_parsing";
     let t = s.replace(/_/g, "");
     const dot = t.indexOf(".");
     if (dot >= 0) t = t.slice(0, dot);
-    if (t.replace(/^[+-]?0*/, "").length > 4300) return "int_parsing_size";
+    const neg = t[0] === "-";
+    const digits = t.replace(/^[+-]/, "").replace(/^0+(?=[0-9])/, "");
+    if (digits.length + (neg ? 1 : 0) > 4300) return "int_parsing";
     const n = Number(t);
     if (!Number.isSafeInteger(n)) return "int_unsafe";
     return n === 0 ? 0 : n;
@@ -227,7 +233,7 @@
   }
 
   function lit_msg(values) {
-    const q = values.map((x) => util.py_repr(x));
+    const q = values.map((x) => HX.util.py_repr(x));
     return "Input should be " + (q.length > 1 ? q.slice(0, -1).join(", ") + " or " + q[q.length - 1] : q[0]);
   }
 
@@ -258,7 +264,7 @@
     switch (d.k) {
       case "str":
         if (typeof v === "string") {
-          if (util.has_lone_surrogate(v)) return soft(errs, "string_unicode", loc, v);
+          if (HX.util.has_lone_surrogate(v)) return soft(errs, "string_unicode", loc, v);
           return v;
         }
         push(errs, "string_type", loc);
@@ -273,7 +279,7 @@
           else return v === 0 ? 0 : v;
         } else if (typeof v === "string") {
           /* pydantic-core reads the str as UTF-8 first: a lone surrogate is string_unicode */
-          r = util.has_lone_surrogate(v) ? "string_unicode" : str_to_int(v);
+          r = HX.util.has_lone_surrogate(v) ? "string_unicode" : str_to_int(v);
           if (typeof r === "number") return r;
           if (r === "int_unsafe") return soft(errs, r, loc, v);
         } else r = "int_type";
@@ -287,7 +293,7 @@
           if (Number.isFinite(v)) return v === 0 ? 0 : v;
           return soft(errs, "finite_number", loc, v);
         } else if (typeof v === "string") {
-          r = util.has_lone_surrogate(v) ? "string_unicode" : str_to_float(v);
+          r = HX.util.has_lone_surrogate(v) ? "string_unicode" : str_to_float(v);
           if (typeof r === "number") return r;
           if (r === "finite_number") return soft(errs, r, loc, v);
         } else r = "float_type";
@@ -303,7 +309,7 @@
           /* pydantic-core reads the number as an int64: outside that range it is not even a candidate */
           r = Number.isInteger(v) && v >= -9223372036854775808 && v < 9223372036854775808 ? "bool_parsing" : "bool_type";
         } else if (typeof v === "string") {
-          r = util.has_lone_surrogate(v) ? "string_unicode" : str_to_bool(v);
+          r = HX.util.has_lone_surrogate(v) ? "string_unicode" : str_to_bool(v);
           if (typeof r === "boolean") return r;
         } else r = "bool_type";
         push(errs, r, loc);
@@ -340,7 +346,7 @@
         let bad = false, softened = false;
         for (const k of Object.keys(v)) {
           /* Python accepts both keys (soft); the value is still validated */
-          if (util.has_lone_surrogate(k)) { push(errs, "string_unicode", loc.concat([k])); softened = true; }
+          if (HX.util.has_lone_surrogate(k)) { push(errs, "string_unicode", loc.concat([k])); softened = true; }
           else if (d.ordered && is_index_key(k)) { push(errs, "dict_key_integer_like", loc.concat([k])); softened = true; }
           const x = v_type(d.of, v[k], loc.concat([k]), errs);
           if (x === FAIL) bad = true;
@@ -350,7 +356,7 @@
         return bad ? FAIL : softened ? new Soft(out) : out;
       }
       case "lit":
-        if (typeof v === "string" && util.has_lone_surrogate(v)) { push(errs, "string_unicode", loc); return FAIL; }
+        if (typeof v === "string" && HX.util.has_lone_surrogate(v)) { push(errs, "string_unicode", loc); return FAIL; }
         if (d.values.indexOf(v) >= 0) return v;
         push(errs, "literal_error", loc, lit_msg(d.values));
         return FAIL;
@@ -362,15 +368,15 @@
       case "union": {
         if (!is_dict(v)) { push(errs, "model_attributes_type", loc); return FAIL; }
         if (!hasOwn(v, d.disc)) {
-          push(errs, "union_tag_not_found", loc, "Unable to extract tag using discriminator " + util.py_repr(d.disc));
+          push(errs, "union_tag_not_found", loc, "Unable to extract tag using discriminator " + HX.util.py_repr(d.disc));
           return FAIL;
         }
         const tag = v[d.disc];
         const tags = Object.keys(d.members);
         if (typeof tag !== "string" || tags.indexOf(tag) < 0) {
-          const shown = typeof tag === "string" ? tag : util.py_repr(tag);
-          push(errs, "union_tag_invalid", loc, "Input tag " + util.py_repr(shown) + " found using " + util.py_repr(d.disc) +
-            " does not match any of the expected tags: " + tags.map((x) => util.py_repr(x)).join(", "));
+          const shown = typeof tag === "string" ? tag : HX.util.py_repr(tag);
+          push(errs, "union_tag_invalid", loc, "Input tag " + HX.util.py_repr(shown) + " found using " + HX.util.py_repr(d.disc) +
+            " does not match any of the expected tags: " + tags.map((x) => HX.util.py_repr(x)).join(", "));
           return FAIL;
         }
         return v_model(resolve(d.members[tag]), v, loc.concat([tag]), errs);
@@ -406,11 +412,13 @@
         throw e;
       }
     }
-    /* pydantic-core reads every input key as UTF-8 before validating fields: one key with a lone
-       surrogate fails the whole model with a single string_unicode error at the model's loc */
-    for (const k of Object.keys(v)) {
-      if (util.has_lone_surrogate(k)) { push(errs, "string_unicode", loc); return FAIL; }
-    }
+    /* One input key with a lone surrogate fails the whole model with a single string_unicode error at the model's
+       loc. pydantic-core validates the fields first, though (it meets the key only when it reads the input keys),
+       so a TypeError escaping a nested before-validator still escapes: the fields are validated into a scratch list
+       and only its python_type_error entries survive. */
+    const bad_key = Object.keys(v).some((k) => HX.util.has_lone_surrogate(k));
+    const outer_errs = errs;
+    if (bad_key) errs = [];
     const used = new Set();
     const vals = new Array(spec.fields.length);
     let hard = false, softened = false;
@@ -440,6 +448,12 @@
         push(errs, "extra_forbidden", loc.concat([k]));
         hard = true;
       }
+    }
+    if (bad_key) {
+      const escaped = errs.filter((e) => e.type === "python_type_error");
+      if (escaped.length) outer_errs.push(...escaped);
+      else push(outer_errs, "string_unicode", loc);
+      return FAIL;
     }
     if (hard) return FAIL;
     const out = {};
@@ -503,7 +517,7 @@
       out.push("]");
       return;
     }
-    const keys = util.sorted_keys(v);
+    const keys = HX.util.sorted_keys(v);
     out.push("{");
     for (let i = 0; i < keys.length; i++) {
       if (i) out.push(",");
@@ -551,7 +565,7 @@
   }
 
   function obj(v, type_of, out) {
-    const keys = util.sorted_keys(v);
+    const keys = HX.util.sorted_keys(v);
     out.push("{");
     for (let i = 0; i < keys.length; i++) {
       if (i) out.push(",");
@@ -748,7 +762,7 @@
     /* _checks (mode="after") */
     after(a) {
       if (a.labels.indexOf(a.abstain) < 0) {
-        throw new PyValueError("judge abstain label " + util.py_repr(a.abstain) + " must be in labels");
+        throw new PyValueError("judge abstain label " + HX.util.py_repr(a.abstain) + " must be in labels");
       }
       if (!a.reads.length || !a.writes.length) throw new PyValueError("a judge action needs non-empty reads and writes");
       if (a.writes.length !== 1) throw new PyValueError("a judge action writes exactly one label variable");
@@ -842,7 +856,7 @@
   efsm.load_machine = function (data) {
     if (!is_dict(data) || !hasOwn(data, "format") || data.format !== "efsm-v1") {
       const fmt = is_dict(data) && hasOwn(data, "format") ? data.format : null;
-      const msg = "not an efsm-v1 machine (format=" + util.py_repr(fmt) + ")";
+      const msg = "not an efsm-v1 machine (format=" + HX.util.py_repr(fmt) + ")";
       throw new EfsmError(msg, [{ type: "value_error", loc: ["format"], msg }], "Machine");
     }
     return pyd.model_validate(MODELS.Machine, data, EfsmError);

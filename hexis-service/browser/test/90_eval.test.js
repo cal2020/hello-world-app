@@ -96,10 +96,14 @@
     assert.ok(errors > 0 && hits > 5);
   });
 
-  test("eval: summarize equals Python's (61 row sets, including the empty one)", () => {
+  test("eval: summarize equals Python's (98 row sets incl. the empty one and mixed int/float steps)", () => {
     const vs = G().summarize;
-    assert.equal(vs.length, 61);
-    for (const v of vs) assert.deepEqual(HX.eval.summarize(v.rows), v.value);
+    assert.equal(vs.length, 98);
+    for (const v of vs) assert.deepEqual(HX.eval.summarize(v.rows), v.value, JSON.stringify(v.rows.map((r) => r.steps)));
+    /* the follow-up repro: Python sum([26, 0.1, 0.1, -3]) = 23.200000000000003 (int items are not compensated) */
+    assert.equal(HX.eval._py_sum([26, 0.1, 0.1, -3]), 23.200000000000003);
+    assert.equal(HX.eval._py_sum([0.1, 0.1, 0.1]), 0.30000000000000004);
+    assert.equal(HX.eval._py_sum([1, 2, true]), 4);
     assert.deepEqual(HX.eval.summarize([]), { tasks: 0 });
   });
 

@@ -157,9 +157,11 @@
 
   /** Python ``datetime.fromtimestamp(now, timezone.utc).isoformat()`` (microseconds rounded half-even). */
   function utc_isoformat(now) {
-    if (typeof now !== "number" || !Number.isFinite(now)) {
+    if (typeof now !== "number") {
       throw pyerr("TypeError", "'" + HX.kernel._py_type_name(now) + "' object cannot be interpreted as a timestamp");
     }
+    if (Number.isNaN(now)) throw pyerr("ValueError", "Invalid value NaN (not a number)");
+    if (!Number.isFinite(now)) throw pyerr("OverflowError", "timestamp out of range for platform time_t");
     let intpart = Math.trunc(now);
     let frac = (now - intpart) * 1e6;
     const fl = Math.floor(frac), diff = frac - fl;

@@ -19,6 +19,7 @@ make the port more permissive.
 |---|---|---|---|
 | `int` fields accept integers of any size | integers outside ±(2^53−1), given as numbers or numeric strings, are rejected (`int_unsafe`) | larger values cannot be represented exactly | `25_efsm` "documented deviations", coercion golden ("unsafe") |
 | `float` fields accept `inf`, `nan`, `"inf"`, `"NaN"`, `"Infinity"` and overflowing strings such as `"1e400"` | rejected (`finite_number`) | non-finite numbers cannot be canonicalized; Python would fail later when hashing | same tests ("nonfinite") |
+| numeric strings of 4300+ characters: pydantic-core's `str_as_int` first parses the **raw** string as a JSON integer (jiter) and reports `int_parsing_size` when its integer run `-?[1-9][0-9]*` (sign included) is longer than 4300 bytes; otherwise it parses the cleaned string (trimmed, `+` and leading zeros dropped, `.0+` and `_` removed, sign kept) and reports a plain `int_parsing` when that is longer than 4300 | **matched**: the same two-step rule, so the error *type* equals pydantic's (`"-" + "9"*4300` → `int_parsing_size`, `" " + "7"*4301` and `"+" + "1"*4301` → `int_parsing`). A long string Python accepts is `int_unsafe` (row above) | — | `25_efsm` "int strings around 4300 digits …" (2,000+ Python results in `models_coerce.json` `int_size`: prefixes, leading zeros, underscores, `.0`, padding, 4297–4303 digits) |
 | pydantic-core also accepts some irregular integer strings: `"0-1"` → -1, `"0__5"` → 5, `"00-1"`, `"+0-1"` | only the grammar `[+-]?d(_?d)*(\.0+)?` is accepted, after the Unicode-whitespace trim that pydantic applies; everything else is `int_parsing` | the irregular forms come from a pydantic-core leading-zero quirk | coercion golden ("quirk": 3,246 inputs; JS never accepts what Python rejects, and accepted values are equal) |
 | integral values of `float` fields (`JudgeAction.error_rate` default `0.0`, thresholds, `budgets.max_spend_usd`, `ModelResponse.cost_usd`) are floats and dump as `0.0` (`1e16` as `1e+16`) | the normalized dump holds the JS number `0` (`10000000000000000`) | `1.0 === 1` in JS | `26_pkg` "float-typed fields", "float fields beyond 2^53" |
 
@@ -52,7 +53,7 @@ refuses such integers in the first place. Test: `25_efsm` coercions (golden `boo
 | Python | JS port | Why | Test |
 |---|---|---|---|
 | any string key is accepted in `Machine.states`, `ToolAction.binds`, the top-level keys of `ToolAction.input`, `Contracts.{variables, field_scoped_writes, terminals, interactions, clause_coverage, explained_unreachable}`, `SourceManifest.resources`, `SkillSource.resources` and `ToolCatalog.tools` | integer-like keys (`"0"` … `"4294967294"`) are rejected (`dict_key_integer_like`) | JS objects iterate such keys first. That would change validator finding order, BFS order and normalization order, all of which follow Python's insertion order | `25_efsm` / `26_pkg` "documented deviations" |
-| free-form JSON (`dict`/`Any` fields, tool arguments, drafts, documents) keeps insertion order | integer-like keys come first | the same JS object rule; it cannot be fixed with plain objects | not order-tested (no hash impact). It only affects the order of `validate_draft` orphan-link issues for integer-like field names and the key order inside `raw_text` |
+| free-form JSON (`dict`/`Any` fields, tool arguments, drafts, documents) keeps insertion order | integer-like keys come first | the same JS object rule; it cannot be fixed with plain objects | `55_fakes` "documented (models.md): integer-like free-form keys reorder validate_draft issues …". It affects the order of `validate_draft` orphan-link issues for integer-like field names (`source_links: {"ghost": …, "12": …}` gives issues `12, ghost`, Python `ghost, 12`) and the key order inside `raw_text`. **This changes digests**: the `validate_draft` output digest, the record digests of `export_run_trace` (each record carries the tool output) and checkpoint digests (`validation_issues` is a variable). Within the port everything is self-consistent; it is not comparable with Python for such inputs |
 | `Machine.var_types()` iterates in variable order | `HX.efsm.var_types()` iterates integer-like variable names (`"0"`, `"17"`) first | the same JS object rule | the Python code only looks names up in it (`types[k]`, an evaluation env); iterate `machine.variables` where order matters |
 
 Representation note (not a behavior change): the typed maps above, and `HX.efsm.var_types()`, are
@@ -65,7 +66,11 @@ Representation note (not a behavior change): the typed maps above, and `HX.efsm.
 * Lone surrogates, where pydantic rejects them, give pydantic's errors exactly: a string with a lone surrogate in an
   `int`, `float`, `bool` or `Literal` field is `string_unicode` at that field, and one input **key** with a lone
   surrogate fails the whole model with a single `string_unicode` at the model's `loc` (after a `before` validator, no
-  other error for that model). Test: `25_efsm` "lone surrogates" (golden `models_efsm.json` `surrogates`).
+  other error for that model). pydantic validates the model's fields **before** it meets that key, so a `TypeError`
+  escaping a nested before-validator (a `JudgeAction` with `labels: true` inside a `State` or `Machine` with such a
+  key) still escapes; the port reports it the same way as without the key (only `python_type_error`, no
+  `string_unicode`). Test: `25_efsm` "lone surrogates" (golden `models_efsm.json` `surrogates`, including the `exc`
+  cases).
 * Where Python **accepts** lone surrogates, the port rejects them (stricter): in `str` fields and `dict[str, X]` keys
   (`string_unicode`) and inside `dict`/`Any` values (`json_invalid`). Python cannot hash such models (its JSON dump
   raises `UnicodeEncodeError`). When the input has other errors too, the port reports these errors in addition to
@@ -85,9 +90,11 @@ Representation note (not a behavior change): the typed maps above, and `HX.efsm.
   reports the deviation's error (`json_invalid`, `string_unicode`, `dict_key_integer_like`, `int_unsafe`,
   `finite_number`) **in addition to** every pydantic error: such a value still takes part in validating its container,
   so the map value is still validated and the model validators pydantic runs still run (e.g. `Variable` with a
-  non-JSON `init` and an `init_from` reports `json_invalid` and pydantic's `value_error`). The error list is a superset
-  of pydantic's. One exception: pydantic's irregular integer strings (`"0-1"`, see Numbers) are a plain `int_parsing`,
-  so a model validator of the same model does not run. Test: `25_efsm` "values rejected only by a documented
+  non-JSON `init` and an `init_from` reports `json_invalid` and pydantic's `value_error`). The error list is then a
+  superset of pydantic's. Exceptions: pydantic's irregular integer strings (`"0-1"`, see Numbers) are a plain
+  `int_parsing`, so a model validator of the same model does not run; and a numeric string of 4300+ characters that
+  pydantic accepts is `int_unsafe` (a soft error) where it rejects it with `int_parsing_size` / `int_parsing`, the
+  same type as pydantic's. Test: `25_efsm` "values rejected only by a documented
   deviation" (golden `soft`).
 * Error **order**: the same entries, but when an input dict has integer-like keys (`"7"`), JS objects iterate them
   first, so their errors come first (e.g. `ExecutionPolicy.budgets {"1e3": 1, "7": 2}`: Python lists
@@ -135,6 +142,10 @@ Representation note (not a behavior change): the typed maps above, and `HX.efsm.
   * regexes Python accepts that JS cannot compile with the `u` flag, such as `(?P<n>x)`, `\Z`, `(?i)`, `\_`, `{,2}`,
     possessive `a*+` or `[[:digit:]]`.
 
+  Lone surrogates are **not** among the stricter classes: `py_regex_check("\ud800")` and `"[\udc00-\udfff]"` are
+  `null`, as CPython's `re.compile` accepts them (`check_schemas` never sees them: `load_catalog` refuses lone
+  surrogates first). Test: `26_pkg` "Python re acceptance".
+
   Tests: `26_pkg` "Python re acceptance" (12,157 patterns: `kind` equals CPython's for every pattern outside the
   stricter classes), "check_schemas is never more lenient" (every pattern as `pattern` and as a `patternProperties`
   key), "random Draft 2020-12 schemas" (2,400 schemas with Python's verdicts) and the catalog cases including
@@ -154,12 +165,20 @@ Representation note (not a behavior change): the typed maps above, and `HX.efsm.
 
 * `DEFAULT_REGISTRY` tuple keys `(tenant, ref)` become `"tenant|ref"` strings, split at the first `|`.
   `SupplierRegistry.records` is a `Map` keyed that way. The constructor also accepts `[[tenant, ref], record]`
-  entries. A tenant id that contains `|` never matches a record.
+  entries (a JS array stands for a Python tuple). Like Python's `dict()`, it accepts **any hashable key**: a pair
+  whose tenant contains `|` is kept under an internal key and matches exactly that tenant (`[["a|b", "c"], rec]`
+  matches tenant `"a|b"`, ref `"c"`, as in Python), and a key that is not a `(tenant, ref)` pair (an object key or
+  string without `|`, a number, `null`, a tuple of another length, the characters of a 2-character string element)
+  is stored but never matches, as Python's `(tenant, ref)` lookup never hits it. A dict key is `TypeError` "unhashable
+  type: 'dict'". The only convention that differs from Python is the object form: a plain-object key `"t|r"` stands
+  for the tuple `("t", "r")` (Python's dict would hold the string). Test: `55_fakes` "SupplierRegistry.lookup …"
+  (golden `registry`).
 * `SupplierRegistry.lookup` returns a **copy** of the stored record, where Python returns the stored dict itself.
   The result is the same, and the copy keeps registry state from aliasing into run variables.
 * `SupplierRegistry(records)` is `dict(records or DEFAULT_REGISTRY)` with Python truthiness (`0`, `""`, `[]`, `false`
   select the defaults) and Python's `dict()` errors for other values (`TypeError` "'int' object is not iterable",
-  `ValueError` "dictionary update sequence element #0 has length 1; 2 is required", ...).
+  `ValueError` "dictionary update sequence element #0 has length 1; 2 is required", ...); a dict element of the
+  sequence contributes its keys, like Python.
 * `FixtureExtractionModel({gullible, invalid_outputs, unavailable})` is the keyword call (an unknown key raises
   `TypeError` like Python) and a non-object argument is the positional `gullible`. The values are kept as given and
   used like Python's attributes: `gullible`/`unavailable` by truthiness, `invalid_outputs > 0` by Python comparison
@@ -190,8 +209,13 @@ Representation note (not a behavior change): the typed maps above, and `HX.efsm.
   `IndexError`, `ProgrammingError`, `OverflowError`, `UnicodeEncodeError`) are `HX.HXError` with that class name as
   `code`. The messages match Python's for `KeyError`, `AttributeError`, `IndexError`, `ProgrammingError`,
   `OverflowError` and the `DocumentStore`/binding `TypeError`s; other messages are approximate.
-* `FixtureExtractionModel` REPAIR_DRAFT with a non-dict `draft`: Python's `dict(x)` also accepts a list of pairs.
-  JS raises `TypeError`. Only schema-validated dict drafts reach it in the flow.
+* `FixtureExtractionModel` REPAIR_DRAFT with a non-dict `draft` follows Python's `dict(x)`: `""` and `[]` give `{}`
+  (`raw_text` `{"draft": {}}`), a list of pairs (or of 2-character strings / 2-key dicts) builds the dict, a
+  non-empty string raises `ValueError` "dictionary update sequence element #0 has length 1; 2 is required", a pair of
+  the wrong length `ValueError`, a list key `TypeError` "unhashable type: 'list'", and `null`/numbers `TypeError`
+  "'int' object is not iterable". **Deviation:** a pair with a non-str key (`[[1, 2]]`) raises `TypeError` in JS,
+  where Python returns `{1: 2}` (an int key a JS object cannot hold). Only schema-validated dict drafts reach it in the
+  flow. Test: `55_fakes` (golden `model_malformed`).
 * `FixtureExtractionModel.generate(request)` validates `request` as a `ModelRequest`, which is what constructing the
   Python request does, and logs the normalized request in `requests`.
 * `DocumentStore` follows Python on malformed collections: `docs` that is not a dict raises `AttributeError` (`.get`,

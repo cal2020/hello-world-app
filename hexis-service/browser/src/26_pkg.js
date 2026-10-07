@@ -950,7 +950,6 @@
    *  Python exception (``error`` = re.error); the message follows Python's wording. */
   catalog.py_regex_check = function (pattern) {
     if (typeof pattern !== "string") return { kind: "TypeError", message: "first argument must be string or compiled pattern" };
-    if (HX.util.has_lone_surrogate(pattern)) return { kind: "error", message: "lone surrogate in pattern (JS port)" };
     try {
       const src = new ReTokenizer(pattern);
       const state = new ReState();

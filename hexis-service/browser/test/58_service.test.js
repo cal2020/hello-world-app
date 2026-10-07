@@ -30,6 +30,14 @@
     }
   });
 
+  test("documented deviation #1: repr of integer-like keys in messages (JS key order); verdict unchanged", () => {
+    const errs = HX.broker._validate_against({ enum: ["approved", "rejected"] }, [{ z: 0, 7: 1 }]);
+    /* Python: "<root>: [{'z': 0, '7': 1}] is not one of ['approved', 'rejected']" */
+    assert.deepEqual(errs, ["<root>: [{'7': 1, 'z': 0}] is not one of ['approved', 'rejected']"]);
+    assert.deepEqual(HX.broker._validate_against({ maxItems: 0 }, ["10"]), ["<root>: ['10'] is expected to be empty"]);
+    assert.deepEqual(HX.broker._validate_against({ maxLength: 0 }, "a"), ["<root>: 'a' is expected to be empty"]);
+  });
+
   test("service: approval scope digest hashes expires_at as a Python float", () => {
     const scope = { b: "x", expires_at: 1790086400, a: [1, 2.5] };
     assert.equal(HX.service._scope_digest(scope),

@@ -57,7 +57,7 @@ matches Python exactly.
 | 3 | `repr()` of an operation dict (at any depth) with two or more keys of which one is integer-like (`{"op": "match", …, "7": 1}`) in an operation error message (`match references unknown state/event: {o}`, `… references unknown state: {o}`, `unknown operation {kind!r}`) | prints the keys in insertion order | `HX.HXError` `KEY_ORDER_UNKNOWN` from `_validate_ops` (and so from `propose_update`) | a JS object enumerates integer-like keys first and cannot give back the insertion order (same rule as deviations/traces.md #7). Messages that do not print such a dict are unaffected | "documented deviations" (#3) |
 | 4 | Exceptions inside `apply_ops` in `propose_update` | `except Exception` turns any exception into an `op_errors` entry | only Python-class exceptions (`HX.HXError`, which includes the model errors) become op errors. A native JS error (`RangeError`, `TypeError` from a bug) propagates | such an error is an engine failure, not a property of the candidate. Raising is fail-closed: no proposal, no candidate | "documented deviations" (#4) |
 | 5 | Integral float operands (`"position": 1.0`, `"index": 1.0`, `"event_index": 1.0`) | `TypeError` (a float is not an index) | cannot be represented: JSON operations must be parsed with `HX.canonical.strict_loads`, which refuses `1.0`. A JS aligner that returns the number `1` means the int | the general number deviation (DEVIATIONS.md) | non-integral floats (`0.5`) are covered by the apply vectors |
-| 6 | Integer-like string state ids (`"5"`) added by `add_state` | accepted by `Machine` | refused by `HX.efsm` (`dict_key_integer_like`), so `apply_ops` raises `ValidationError` | inherited from deviations/models.md (JS key order) | — |
+| 6 | Integer-like string names (`"5"`, `"7"`, `"0"`): state ids added by `add_state`, variable names added by `add_variable` (the `Contracts.variables` key), clause ids of `set_coverage`, and `contracts.clause_coverage` keys of a candidate given to `policy_widening` | accepted by `Machine` / `Contracts`: `apply_ops` builds a sealed candidate (e.g. `add_variable` `"7"` gives `sha256:22fd90ad…`), `policy_widening` returns findings | refused by `HX.efsm` / `HX.pkg` (`dict_key_integer_like`): `apply_ops` and `policy_widening` raise (`ValidationError` for a state id, `PackageError` for a contracts key), and `propose_update` turns that into an attempt with `op_errors` "candidate construction failed: …", so `REJECTED` | inherited from deviations/models.md row "any string key is accepted in `Machine.states`, … `Contracts.{variables, …, clause_coverage, …}`" (JS key order) | `66_update` "documented deviation #6: integer-like names are refused" |
 
 ## Not deviations (verified equal, listed because JS makes them easy to get wrong)
 
@@ -97,8 +97,10 @@ matches Python exactly.
 * `UpdateProposal(status, parent_hash, trace_id, {candidate, diff, gates, attempts, diagnostics, negative_additions,
   requires_review})` is a class with `to_json()` (and `toJSON()`). Like Python, `to_json()` returns the proposal's
   own objects, not copies.
-* The aligner context holds fresh copies of the machine dump, the events, the dropped records and the clauses.
-  `divergence` and `diagnostics` are shared, as in Python.
+* The aligner context holds fresh copies of the machine dump, the events and the clauses in every attempt (Python
+  dumps them anew per attempt). `dropped` (the very list `normalize` returned), `divergence` and `diagnostics` are
+  shared objects, as in Python, so an aligner that mutates `ctx.dropped` in one attempt sees the change in the next
+  (`66_update` "aligner context: dropped is shared across attempts like Python").
 * `HX.update._validate_ops`, `_hkey` (Python hashing key), `_item` (Python `x[k]`), `_is_validation_error` and
   `_COVERAGE_RANK` are exported for tests and the UI.
 * `HX.reference.ReferenceExecutor.ctx` is a plain object (Python's `ToolContext` is a dict subclass), and

@@ -369,29 +369,45 @@
 
   /** Python ``dict(records)`` for the registry: a dict (``"tenant|ref"`` keys), a Map, or a list of
    *  ``[[tenant, ref], record]`` pairs; anything else fails like Python's ``dict()``. */
+  /* Registry keys. Python keys the dict by ``(tenant, ref)`` tuples; the port's public ``records`` Map uses
+     ``"tenant|ref"`` strings (split at the first "|"). Keys Python accepts but that the "|" form cannot express get
+     internal encodings that keep Python's lookup result: a tuple whose tenant contains "|" ("\u0000" + JSON), and
+     any other hashable key (a string without "|", a number, null, a tuple of another length), which Python's
+     ``(tenant, ref)`` lookup can never hit ("\u0001" + JSON). Dicts are unhashable (TypeError, like Python). */
+  function tuple_key(tenant, ref) {
+    return tenant.indexOf("|") < 0 ? tenant + "|" + ref : "\u0000" + JSON.stringify([tenant, ref]);
+  }
+  function check_hashable(key) {
+    if (is_dict(key)) throw pyerr("TypeError", "unhashable type: 'dict'");
+    if (Array.isArray(key)) key.forEach(check_hashable); /* JS arrays stand for tuples */
+  }
   function registry_entries(records) {
     const out = new Map();
     const add = (key, rec) => {
-      let k = key;
-      if (Array.isArray(key)) {
-        if (key.length !== 2 || typeof key[0] !== "string" || typeof key[1] !== "string" || key[0].indexOf("|") >= 0) {
-          throw new TypeError("registry keys must be [tenant, supplier_ref] strings (tenant without '|')");
-        }
-        k = key[0] + "|" + key[1];
+      check_hashable(key);
+      let k;
+      if (Array.isArray(key) && key.length === 2 && typeof key[0] === "string" && typeof key[1] === "string") {
+        k = tuple_key(key[0], key[1]);
+      } else if (typeof key === "string" && key.indexOf("|") >= 0) {
+        k = key;
+      } else {
+        k = "\u0001" + JSON.stringify(typeof key === "string" ? ["str", key] : [typeof key, key]);
       }
-      if (typeof k !== "string" || k.indexOf("|") < 0) throw new TypeError("registry keys must be 'tenant|supplier_ref'");
       out.set(k, rec);
     };
     if (records instanceof Map) {
       for (const [k, v] of records) add(k, v);
     } else if (Array.isArray(records)) {
       records.forEach((pair, i) => {
-        if (!Array.isArray(pair) && typeof pair !== "string") {
+        if (!Array.isArray(pair) && typeof pair !== "string" && !is_dict(pair)) {
           throw pyerr("TypeError", "cannot convert dictionary update sequence element #" + i + " to a sequence");
         }
-        const n = Array.isArray(pair) ? pair.length : Array.from(pair).length;
-        if (n !== 2) throw pyerr("ValueError", "dictionary update sequence element #" + i + " has length " + n + "; 2 is required");
-        add(Array.isArray(pair) ? pair[0] : Array.from(pair)[0], Array.isArray(pair) ? pair[1] : Array.from(pair)[1]);
+        /* a str element iterates its characters, a dict element its keys (Python's dict() of a sequence) */
+        const xs = Array.isArray(pair) ? pair : typeof pair === "string" ? Array.from(pair) : Object.keys(pair);
+        if (xs.length !== 2) {
+          throw pyerr("ValueError", "dictionary update sequence element #" + i + " has length " + xs.length + "; 2 is required");
+        }
+        add(xs[0], xs[1]);
       });
     } else if (is_dict(records)) {
       for (const k of Object.keys(records)) add(k, records[k]);
@@ -403,6 +419,39 @@
     }
     return out;
   }
+
+  /** Python ``dict(x)`` of a JSON value into a fresh object: a dict is copied; a str or list is a sequence of
+   *  2-item elements (a str element iterates its characters, a dict element its keys), so ``""`` and ``[]`` give
+   *  ``{}``. Errors are Python's (TypeError / ValueError, same messages). A non-str key (``[[1, 2]]``) raises
+   *  TypeError: a JS object cannot hold Python's int key (deviations/models.md). */
+  function py_dict(src) {
+    const out = {};
+    if (is_dict(src)) {
+      for (const k of Object.keys(src)) set_own(out, k, src[k]);
+      return out;
+    }
+    if (typeof src !== "string" && !Array.isArray(src)) {
+      throw pyerr("TypeError", "'" + type_name(src) + "' object is not iterable");
+    }
+    const elems = typeof src === "string" ? Array.from(src) : src;
+    elems.forEach((el, i) => {
+      if (!Array.isArray(el) && typeof el !== "string" && !is_dict(el)) {
+        throw pyerr("TypeError", "cannot convert dictionary update sequence element #" + i + " to a sequence");
+      }
+      const xs = Array.isArray(el) ? el : typeof el === "string" ? Array.from(el) : Object.keys(el);
+      if (xs.length !== 2) {
+        throw pyerr("ValueError", "dictionary update sequence element #" + i + " has length " + xs.length + "; 2 is required");
+      }
+      const k = xs[0];
+      if (Array.isArray(k) || is_dict(k)) throw pyerr("TypeError", "unhashable type: '" + type_name(k) + "'");
+      if (typeof k !== "string") {
+        throw pyerr("TypeError", "dict() key " + py_str(k) + " is not a str (the JavaScript port keeps str keys only)");
+      }
+      set_own(out, k, xs[1]);
+    });
+    return out;
+  }
+  fakes._py_dict = py_dict;
 
   class SupplierRegistry {
     /** ``SupplierRegistry(records=None)``: ``dict(records or DEFAULT_REGISTRY)`` with Python truthiness.
@@ -418,8 +467,8 @@
       const ref = item(args, "supplier_ref");
       for (const x of [tenant, ref]) if (unhashable(x)) throw pyerr("TypeError", "unhashable type: '" + type_name(x) + "'");
       let rec = null;
-      if (typeof tenant === "string" && typeof ref === "string" && tenant.indexOf("|") < 0) {
-        const k = tenant + "|" + ref;
+      if (typeof tenant === "string" && typeof ref === "string") {
+        const k = tuple_key(tenant, ref);
         rec = this.records.has(k) ? this.records.get(k) : null;
       }
       if (rec === null || rec === undefined) return { status: "new", existing: {} };
@@ -730,10 +779,7 @@
           out.tenant_id = "globex";
         }
       } else if (req.state_id === "REPAIR_DRAFT") {
-        const src = item(inputs, "draft");
-        if (!is_dict(src)) throw pyerr("TypeError", "cannot convert '" + type_name(src) + "' object to a dict");
-        const draft = {};
-        for (const k of Object.keys(src)) set_own(draft, k, src[k]);
+        const draft = py_dict(item(inputs, "draft"));
         let issues = py_get(inputs, "validation_issues");
         if (!py_truthy(issues)) issues = [];
         for (const issue of py_iter(issues)) {

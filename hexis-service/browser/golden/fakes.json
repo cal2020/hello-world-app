@@ -15193,6 +15193,190 @@
      "raw_text": "{\"draft\": {\"tax_id\": \"T1\"}}"
     }
    }
+  },
+  {
+   "request_json": "{\"kind\": \"model\", \"state_id\": \"REPAIR_DRAFT\", \"prompt\": \"\", \"inputs\": {\"documents\": [], \"draft\": \"ab\", \"validation_issues\": []}, \"output_schema\": {}}",
+   "result": {
+    "exc": "ValueError",
+    "message": "dictionary update sequence element #0 has length 1; 2 is required"
+   }
+  },
+  {
+   "request_json": "{\"kind\": \"model\", \"state_id\": \"REPAIR_DRAFT\", \"prompt\": \"\", \"inputs\": {\"documents\": [], \"draft\": \"\", \"validation_issues\": []}, \"output_schema\": {}}",
+   "result": {
+    "ok": {
+     "cost_usd": null,
+     "input_tokens": 13,
+     "model_id": "fixture:procurement-extractor/1",
+     "output": {
+      "draft": {}
+     },
+     "output_tokens": 3,
+     "raw_text": "{\"draft\": {}}"
+    }
+   }
+  },
+  {
+   "request_json": "{\"kind\": \"model\", \"state_id\": \"REPAIR_DRAFT\", \"prompt\": \"\", \"inputs\": {\"documents\": [], \"draft\": \"\", \"validation_issues\": [{\"field\": \"contact_email\"}]}, \"output_schema\": {}}",
+   "result": {
+    "ok": {
+     "cost_usd": null,
+     "input_tokens": 20,
+     "model_id": "fixture:procurement-extractor/1",
+     "output": {
+      "draft": {}
+     },
+     "output_tokens": 3,
+     "raw_text": "{\"draft\": {}}"
+    }
+   }
+  },
+  {
+   "request_json": "{\"kind\": \"model\", \"state_id\": \"REPAIR_DRAFT\", \"prompt\": \"\", \"inputs\": {\"documents\": [], \"draft\": [], \"validation_issues\": []}, \"output_schema\": {}}",
+   "result": {
+    "ok": {
+     "cost_usd": null,
+     "input_tokens": 13,
+     "model_id": "fixture:procurement-extractor/1",
+     "output": {
+      "draft": {}
+     },
+     "output_tokens": 3,
+     "raw_text": "{\"draft\": {}}"
+    }
+   }
+  },
+  {
+   "request_json": "{\"kind\": \"model\", \"state_id\": \"REPAIR_DRAFT\", \"prompt\": \"\", \"inputs\": {\"documents\": [], \"draft\": [[\"a\", 1]], \"validation_issues\": []}, \"output_schema\": {}}",
+   "result": {
+    "ok": {
+     "cost_usd": null,
+     "input_tokens": 15,
+     "model_id": "fixture:procurement-extractor/1",
+     "output": {
+      "draft": {
+       "a": 1
+      }
+     },
+     "output_tokens": 4,
+     "raw_text": "{\"draft\": {\"a\": 1}}"
+    }
+   }
+  },
+  {
+   "request_json": "{\"kind\": \"model\", \"state_id\": \"REPAIR_DRAFT\", \"prompt\": \"\", \"inputs\": {\"documents\": [], \"draft\": [[\"a\", 1], \"xy\"], \"validation_issues\": []}, \"output_schema\": {}}",
+   "result": {
+    "ok": {
+     "cost_usd": null,
+     "input_tokens": 17,
+     "model_id": "fixture:procurement-extractor/1",
+     "output": {
+      "draft": {
+       "a": 1,
+       "x": "y"
+      }
+     },
+     "output_tokens": 7,
+     "raw_text": "{\"draft\": {\"a\": 1, \"x\": \"y\"}}"
+    }
+   }
+  },
+  {
+   "request_json": "{\"kind\": \"model\", \"state_id\": \"REPAIR_DRAFT\", \"prompt\": \"\", \"inputs\": {\"documents\": [], \"draft\": [{\"k\": 1, \"v\": 2}], \"validation_issues\": []}, \"output_schema\": {}}",
+   "result": {
+    "ok": {
+     "cost_usd": null,
+     "input_tokens": 17,
+     "model_id": "fixture:procurement-extractor/1",
+     "output": {
+      "draft": {
+       "k": "v"
+      }
+     },
+     "output_tokens": 5,
+     "raw_text": "{\"draft\": {\"k\": \"v\"}}"
+    }
+   }
+  },
+  {
+   "request_json": "{\"kind\": \"model\", \"state_id\": \"REPAIR_DRAFT\", \"prompt\": \"\", \"inputs\": {\"documents\": [], \"draft\": [[\"contact_email\", \"a(at)b.co\"]], \"validation_issues\": [{\"field\": \"contact_email\"}]}, \"output_schema\": {}}",
+   "result": {
+    "ok": {
+     "cost_usd": null,
+     "input_tokens": 27,
+     "model_id": "fixture:procurement-extractor/1",
+     "output": {
+      "draft": {
+       "contact_email": "a@b.co"
+      }
+     },
+     "output_tokens": 9,
+     "raw_text": "{\"draft\": {\"contact_email\": \"a@b.co\"}}"
+    }
+   }
+  },
+  {
+   "request_json": "{\"kind\": \"model\", \"state_id\": \"REPAIR_DRAFT\", \"prompt\": \"\", \"inputs\": {\"documents\": [], \"draft\": [[[1], 2]], \"validation_issues\": []}, \"output_schema\": {}}",
+   "result": {
+    "exc": "TypeError",
+    "message": "unhashable type: 'list'"
+   }
+  },
+  {
+   "request_json": "{\"kind\": \"model\", \"state_id\": \"REPAIR_DRAFT\", \"prompt\": \"\", \"inputs\": {\"documents\": [], \"draft\": [[{\"a\": 1}, 2]], \"validation_issues\": []}, \"output_schema\": {}}",
+   "result": {
+    "exc": "TypeError",
+    "message": "unhashable type: 'dict'"
+   }
+  },
+  {
+   "request_json": "{\"kind\": \"model\", \"state_id\": \"REPAIR_DRAFT\", \"prompt\": \"\", \"inputs\": {\"documents\": [], \"draft\": null, \"validation_issues\": []}, \"output_schema\": {}}",
+   "result": {
+    "exc": "TypeError",
+    "message": "'NoneType' object is not iterable"
+   }
+  },
+  {
+   "request_json": "{\"kind\": \"model\", \"state_id\": \"REPAIR_DRAFT\", \"prompt\": \"\", \"inputs\": {\"documents\": [], \"draft\": 5, \"validation_issues\": []}, \"output_schema\": {}}",
+   "result": {
+    "exc": "TypeError",
+    "message": "'int' object is not iterable"
+   }
+  },
+  {
+   "request_json": "{\"kind\": \"model\", \"state_id\": \"REPAIR_DRAFT\", \"prompt\": \"\", \"inputs\": {\"documents\": [], \"draft\": true, \"validation_issues\": []}, \"output_schema\": {}}",
+   "result": {
+    "exc": "TypeError",
+    "message": "'bool' object is not iterable"
+   }
+  },
+  {
+   "request_json": "{\"kind\": \"model\", \"state_id\": \"REPAIR_DRAFT\", \"prompt\": \"\", \"inputs\": {\"documents\": [], \"draft\": [[\"a\", 1, 2]], \"validation_issues\": []}, \"output_schema\": {}}",
+   "result": {
+    "exc": "ValueError",
+    "message": "dictionary update sequence element #0 has length 3; 2 is required"
+   }
+  },
+  {
+   "request_json": "{\"kind\": \"model\", \"state_id\": \"REPAIR_DRAFT\", \"prompt\": \"\", \"inputs\": {\"documents\": [], \"draft\": [\"abc\"], \"validation_issues\": []}, \"output_schema\": {}}",
+   "result": {
+    "exc": "ValueError",
+    "message": "dictionary update sequence element #0 has length 3; 2 is required"
+   }
+  },
+  {
+   "request_json": "{\"kind\": \"model\", \"state_id\": \"REPAIR_DRAFT\", \"prompt\": \"\", \"inputs\": {\"documents\": [], \"draft\": [5], \"validation_issues\": []}, \"output_schema\": {}}",
+   "result": {
+    "exc": "TypeError",
+    "message": "cannot convert dictionary update sequence element #0 to a sequence"
+   }
+  },
+  {
+   "request_json": "{\"kind\": \"model\", \"state_id\": \"REPAIR_DRAFT\", \"prompt\": \"\", \"inputs\": {\"documents\": [], \"draft\": [null], \"validation_issues\": []}, \"output_schema\": {}}",
+   "result": {
+    "exc": "TypeError",
+    "message": "cannot convert dictionary update sequence element #0 to a sequence"
+   }
   }
  ],
  "model_request": [
@@ -16225,6 +16409,379 @@
       "business_unit": "BU-NA"
      },
      "status": "exists_compatible"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": {
+    "foo": {
+     "business_unit": "B"
+    }
+   },
+   "result": {
+    "ok": {
+     "existing": {},
+     "status": "new"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": [
+    [
+     "k",
+     "v"
+    ]
+   ],
+   "result": {
+    "ok": {
+     "existing": {},
+     "status": "new"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": [
+    "ab"
+   ],
+   "result": {
+    "ok": {
+     "existing": {},
+     "status": "new"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": [
+    {
+     "x": 1,
+     "y": 2
+    }
+   ],
+   "result": {
+    "ok": {
+     "existing": {},
+     "status": "new"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": [
+    {
+     "x": 1
+    }
+   ],
+   "result": {
+    "exc": "ValueError",
+    "message": "dictionary update sequence element #0 has length 1; 2 is required"
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": [
+    [
+     {
+      "x": 1
+     },
+     1
+    ]
+   ],
+   "result": {
+    "exc": "TypeError",
+    "message": "unhashable type: 'dict'"
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": [
+    [
+     [
+      1,
+      2,
+      3
+     ],
+     {
+      "business_unit": "BU-NA"
+     }
+    ]
+   ],
+   "result": {
+    "ok": {
+     "existing": {},
+     "status": "new"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": [
+    [
+     null,
+     {}
+    ]
+   ],
+   "result": {
+    "ok": {
+     "existing": {},
+     "status": "new"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": [
+    [
+     5,
+     {}
+    ]
+   ],
+   "result": {
+    "ok": {
+     "existing": {},
+     "status": "new"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": [
+    [
+     [
+      "acme",
+      "SUP-55555",
+      "x"
+     ],
+     {}
+    ]
+   ],
+   "result": {
+    "ok": {
+     "existing": {},
+     "status": "new"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "SUP-55555"
+   },
+   "ctx": {
+    "tenant_id": "acme"
+   },
+   "records": [
+    [
+     [
+      "a|b",
+      "c"
+     ],
+     null
+    ]
+   ],
+   "result": {
+    "ok": {
+     "existing": {},
+     "status": "new"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "c"
+   },
+   "ctx": {
+    "tenant_id": "a|b"
+   },
+   "records": [
+    [
+     [
+      "a|b",
+      "c"
+     ],
+     {
+      "business_unit": "BU-NA"
+     }
+    ]
+   ],
+   "result": {
+    "ok": {
+     "existing": {
+      "business_unit": "BU-NA"
+     },
+     "status": "exists_compatible"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "c"
+   },
+   "ctx": {
+    "tenant_id": "a|b"
+   },
+   "records": [
+    [
+     [
+      "a|b",
+      "c"
+     ],
+     {
+      "business_unit": "BU-X"
+     }
+    ]
+   ],
+   "result": {
+    "ok": {
+     "existing": {
+      "business_unit": "BU-X"
+     },
+     "status": "conflict"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "b|c"
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "records": [
+    [
+     [
+      "a|b",
+      "c"
+     ],
+     {
+      "business_unit": "BU-NA"
+     }
+    ]
+   ],
+   "result": {
+    "ok": {
+     "existing": {},
+     "status": "new"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "b|c"
+   },
+   "ctx": {
+    "tenant_id": "a"
+   },
+   "records": [
+    [
+     [
+      "a",
+      "b|c"
+     ],
+     {
+      "business_unit": "BU-NA"
+     }
+    ]
+   ],
+   "result": {
+    "ok": {
+     "existing": {
+      "business_unit": "BU-NA"
+     },
+     "status": "exists_compatible"
+    }
+   }
+  },
+  {
+   "args": {
+    "business_unit": "BU-NA",
+    "supplier_ref": "c"
+   },
+   "ctx": {
+    "tenant_id": "a|b"
+   },
+   "records": [
+    [
+     [
+      "a",
+      "b|c"
+     ],
+     {
+      "business_unit": "BU-NA"
+     }
+    ]
+   ],
+   "result": {
+    "ok": {
+     "existing": {},
+     "status": "new"
     }
    }
   }
