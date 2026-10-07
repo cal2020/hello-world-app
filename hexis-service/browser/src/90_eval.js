@@ -91,17 +91,25 @@
     if (typeof v !== "number") throw pyerr("TypeError", "unsupported format string passed to " + tname(v) + ".__format__");
     if (Number.isNaN(v)) return "nan";
     if (!Number.isFinite(v)) return v > 0 ? "inf" : "-inf";
-    const a = Math.abs(v);
-    let s;
-    if (a < 1e15 && Number.isInteger(a * 8) && !Number.isInteger(a * 4)) {
-      const lo = Math.floor(a * 100); /* exact: a*100 = (2i+1)*12.5 */
-      const n = lo % 2 === 0 ? lo : lo + 1;
-      s = Math.floor(n / 100) + "." + String(n % 100).padStart(2, "0");
-    } else if (a >= 1e21) {
-      s = BigInt(a).toString() + ".00";
-    } else {
-      s = a.toFixed(2);
+    /* Python's format(v, ".2f"): the exact binary value rounded half-even to 2 decimals. The double is split
+       exactly into mantissa * 2^exp and scaled by 100 in BigInt arithmetic (toFixed rounds ties away from zero, and
+       a * 100 is inexact above ~9e13). */
+    const dv = new DataView(new ArrayBuffer(8));
+    dv.setFloat64(0, Math.abs(v));
+    const bits = dv.getBigUint64(0);
+    const bexp = Number((bits >> 52n) & 0x7ffn);
+    const frac = bits & ((1n << 52n) - 1n);
+    const mant = bexp === 0 ? frac : frac | (1n << 52n);
+    const exp = (bexp === 0 ? 1 : bexp) - 1075;
+    let q;
+    if (exp >= 0) q = (mant << BigInt(exp)) * 100n;
+    else {
+      const num = mant * 100n, den = 1n << BigInt(-exp);
+      q = num / den;
+      const r2 = (num % den) * 2n;
+      if (r2 > den || (r2 === den && q % 2n === 1n)) q += 1n;
     }
+    const s = (q / 100n).toString() + "." + (q % 100n).toString().padStart(2, "0");
     return (v < 0 || Object.is(v, -0)) ? "-" + s : s;
   }
   ev.fmt2 = fmt2;
