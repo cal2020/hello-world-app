@@ -1134,7 +1134,10 @@
     // drawing. While a state is focused or pointed at it becomes sticky: on a short window the reading stays at the
     // bottom of the screen, and a focused state is scrolled clear of it.
     const canvas = el("div", { class: "hxg-canvas" }, alt);
-    const caption = mode === "normal" ? null : el("p", { class: "hxg-caption", "aria-hidden": "true", hidden: true });
+    // On a phone the sticky reading bar holds two lines and scrolls for the rest: tabindex -1 keeps that scroller out
+    // of the Tab order (it is aria-hidden; the focused state's name carries the same text), and a press on it does
+    // not take focus from the state being read.
+    const caption = mode === "normal" ? null : el("p", { class: "hxg-caption", "aria-hidden": "true", tabindex: "-1", hidden: true });
     const frame = el("div", { class: "hxg-frame" }, canvas, caption);
     const root = el("figure", { class: "hxg" + (on_select ? " is-selectable" : ""), "data-hxg": uid }, head, frame);
     if (title) root.setAttribute("aria-labelledby", uid + "-title");
@@ -1330,6 +1333,7 @@
     /* ---------------------------------------------------------------- interaction */
     const listeners = [];
     const listen = (target, type, fn) => { target.addEventListener(type, fn); listeners.push([target, type, fn]); };
+    if (caption) listen(caption, "mousedown", (ev) => ev.preventDefault());
     const node_of = (t) => (t && t.closest && D && D.svg.contains(t) ? t.closest(".hxg-node") : null);
     const edge_of = (t) => (t && t.closest && D && D.svg.contains(t) ? t.closest(".hxg-edge") : null);
     function set_roving(g) {
