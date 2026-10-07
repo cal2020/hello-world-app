@@ -5,7 +5,10 @@ icons or texts**. Every piece of geometry is generated procedurally by the code
 in `src/engine/`; the cell illustration (`src/ui/CellIllustration.tsx`), the
 favicon and the interface icons (`src/ui/icons.tsx`) are original SVG drawn
 for this project; all explanations were written for this project. The
-screenshots in `docs/screenshots/` are renders of this application.
+screenshots in `docs/screenshots/` and the structure illustrations in
+`public/illustrations/` (used by the text atlas and the prerendered pages) are
+renders of this application's own scenes (`npm run screenshots`,
+`npm run illustrations`).
 
 Scientific facts are cited, not copied: each source record in
 `src/content/sources.ts` gives the title, authors or organisation, year and a
