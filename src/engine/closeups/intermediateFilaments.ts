@@ -44,7 +44,9 @@ const X_FILAMENT = 38; // left end of the mature filament once the new ULF has d
 const FILAMENT_UNITS = 4;
 const X_DOCK = X_FILAMENT + UNIT / 2; // where the newly arriving ULF joins
 const FILAMENT_LENGTH = UNIT * FILAMENT_UNITS;
-const PULL_FOCUS = X_FILAMENT + FILAMENT_LENGTH - 60; // the pulled end region, at rest
+const PULL_FOCUS = X_FILAMENT + FILAMENT_LENGTH - 50; // the pulled end region, at rest
+/** While pulled, the view follows the end at this fraction of its speed, so the end still visibly moves outward. */
+const PULL_FOLLOW = 0.85;
 
 /**
  * Where the view is centred (assembly-line x) over the loop: it holds on each
@@ -322,6 +324,8 @@ const create: CloseupFactory = (ctx) => {
   const ringFrame = (k: number, target: THREE.Quaternion) => target.setFromAxisAngle(X, ulfAngle(k) - Math.PI / 2);
 
   let pulling = false;
+  /** True during the quick return sweep from the pulled end back to the dimer (stage labels stay hidden). */
+  let sweeping = false;
   let focus = PULL_FOCUS;
   let stretch = 1;
   let s1 = 1;
@@ -420,36 +424,33 @@ const create: CloseupFactory = (ctx) => {
 
     // Follow the lesson: slide the assembly line so the active stage (or, while pulling,
     // the pulled end, which still visibly moves outward) sits in the middle of the view.
-    focus = focusAt(t) + 0.8 * FILAMENT_LENGTH * (stretch - 1);
+    focus = focusAt(t) + PULL_FOLLOW * FILAMENT_LENGTH * (stretch - 1);
+    sweeping = t < 1.7;
     root.position.x = -focus;
     updateAnchors(end);
   };
 
-  const DEBUG = new URLSearchParams(window.location.search);
-  const DEBUG_R = Number(DEBUG.get('cur') ?? 'NaN');
-  const DEBUG_C = (DEBUG.get('cuc') ?? '').split(',').map(Number);
   update(0, false);
 
   return {
     scene,
     views: [
       {
-        target: DEBUG_C.length === 3 ? new THREE.Vector3(DEBUG_C[0], DEBUG_C[1], DEBUG_C[2]) : new THREE.Vector3(0, 0, 0),
-        radius: Number.isFinite(DEBUG_R) ? DEBUG_R : 105,
+        target: new THREE.Vector3(0, 0, 0),
+        radius: 90,
         direction: new THREE.Vector3(0, 0.3, 1).normalize(),
         labels: [
           { textKey: 'closeupCaptions.pull', anchor: () => pullAnchor, visible: () => pulling },
-          { part: 'dimer', anchor: () => dimerAnchor, visible: () => s1 > 0.5 && Math.abs(X_DIMER - focus) < IN_VIEW },
-          { part: 'tetramer', anchor: () => tetramerAnchor, visible: () => Math.abs(X_TETRAMER - focus) < IN_VIEW },
-          { part: 'ulf', anchor: () => ulfAnchor, visible: () => ulfInView },
-          { part: 'filament', anchor: () => filamentAnchor, visible: () => focus > X_FILAMENT - 20 },
+          { part: 'dimer', anchor: () => dimerAnchor, visible: () => !sweeping && s1 > 0.5 && Math.abs(X_DIMER - focus) < IN_VIEW },
+          { part: 'tetramer', anchor: () => tetramerAnchor, visible: () => !sweeping && Math.abs(X_TETRAMER - focus) < IN_VIEW },
+          { part: 'ulf', anchor: () => ulfAnchor, visible: () => !sweeping && ulfInView },
+          { part: 'filament', anchor: () => filamentAnchor, visible: () => !sweeping && focus > X_FILAMENT - 20 },
         ],
       },
     ],
     setView() {},
     update(_dt, time, calm) {
-      const dbg = window as unknown as { __cut?: number };
-      update(dbg.__cut ?? time, calm);
+      update(time, calm);
     },
     dispose() {
       together.dispose();
