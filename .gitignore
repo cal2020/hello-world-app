@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Switchyard local state
+.tools
+.switchyard
+.demo
+test-results

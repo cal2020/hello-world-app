@@ -1,0 +1,146 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Surfaces and ink are tokens so both themes share every component. */
+:root {
+  --surface: #f6f6f9;
+  --panel: #ffffff;
+  --panel-2: #f1f1f5;
+  --panel-3: #e8e8ef;
+  --line: rgb(17 18 39 / 0.09);
+  --line-strong: rgb(17 18 39 / 0.16);
+  --ink: #0d0e16;
+  --dim: #5b5f72;
+  --faint: #8a8ea0;
+  --brand: #5b5bf6;
+  --brand-2: #0ea5e9;
+  --glow: rgb(91 91 246 / 0.16);
+  color-scheme: light;
+}
+
+.dark {
+  --surface: #07080d;
+  --panel: #0d0f16;
+  --panel-2: #13161f;
+  --panel-3: #1b1f2b;
+  --line: rgb(255 255 255 / 0.07);
+  --line-strong: rgb(255 255 255 / 0.13);
+  --ink: #eceef6;
+  --dim: #9297ab;
+  --faint: #626779;
+  --brand: #8b8cff;
+  --brand-2: #38bdf8;
+  --glow: rgb(139 140 255 / 0.18);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-surface: var(--surface);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-panel-3: var(--panel-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-dim: var(--dim);
+  --color-faint: var(--faint);
+  --color-brand: var(--brand);
+  --color-brand-2: var(--brand-2);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-surface text-ink font-sans antialiased;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--glow);
+  }
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  code,
+  kbd,
+  pre {
+    @apply font-mono;
+  }
+}
+
+/* Backdrop: a quiet aurora behind the workspace. */
+.backdrop-aurora {
+  background:
+    radial-gradient(60rem 30rem at 12% -10%, rgb(91 91 246 / 0.12), transparent 60%),
+    radial-gradient(50rem 26rem at 95% -5%, rgb(14 165 233 / 0.1), transparent 60%),
+    var(--surface);
+}
+.dark .backdrop-aurora {
+  background:
+    radial-gradient(60rem 30rem at 12% -10%, rgb(99 102 241 / 0.16), transparent 60%),
+    radial-gradient(50rem 26rem at 95% -5%, rgb(14 165 233 / 0.1), transparent 60%),
+    var(--surface);
+}
+
+.glass {
+  background: color-mix(in oklab, var(--panel) 82%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+
+.brand-text {
+  background: linear-gradient(100deg, var(--brand), var(--brand-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+.progress-indeterminate {
+  animation: indeterminate 1.3s ease-in-out infinite;
+}
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 var(--glow);
+  }
+  70% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+.pulse-ring {
+  animation: pulse-ring 2.4s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
