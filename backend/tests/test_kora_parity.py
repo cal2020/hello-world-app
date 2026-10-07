@@ -9,7 +9,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from conftest import AUDR_FIXTURES, DEMO_DIR, KORA_SAMPLES, upload_file
+from conftest import AUDR_FIXTURES, DEMO_DIR, KORA_SAMPLES, full_findings, upload_file
 
 from cost_inspector.analysis import kora
 from cost_inspector.ingest.issues import IssueList
@@ -44,7 +44,7 @@ def money_map(spend_list: list[dict]) -> dict[str, Decimal]:
 def test_findings_match_cli(client, path: Path) -> None:
     expected = cli_json(path)
     detail = upload_file(client, path)
-    stored = sorted(detail["findings"], key=lambda f: f["ordinal"])
+    stored = sorted(full_findings(client, detail), key=lambda f: f["ordinal"])
 
     assert [
         (
@@ -84,7 +84,7 @@ def test_findings_match_cli(client, path: Path) -> None:
 @pytest.mark.parametrize("path", PARITY_FILES, ids=[p.name for p in PARITY_FILES])
 def test_every_finding_has_derived_evidence_and_documented_ratio(client, path: Path) -> None:
     detail = upload_file(client, path)
-    for finding in detail["findings"]:
+    for finding in full_findings(client, detail):
         assert finding["evidence_status"] == "derived", finding["title"]
         assert finding["evidence"]["proof"] is False
         assert Decimal(finding["scenario"]["ratio"]) == kora.SCENARIO_RATIOS[finding["category"]]

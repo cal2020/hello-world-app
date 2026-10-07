@@ -162,7 +162,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return response
 
     # Added last so it runs first: reject unexpected Host headers (DNS rebinding).
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=[*settings.allowed_hosts, "testserver"])
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts)
 
     @app.exception_handler(ApiError)
     async def _api_error(_request: Request, exc: ApiError) -> Response:
@@ -282,16 +282,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise ApiError(404, "not_found", "That run does not exist.")
         return ok(result)
 
+    @app.get("/api/findings/{finding_id}")
+    def get_finding(finding_id: str) -> Response:
+        detail = views.finding_detail(store, finding_id)
+        if detail is None:
+            raise ApiError(
+                404, "not_found", "That finding does not exist (it may have been re-analyzed)."
+            )
+        return ok(detail)
+
     @app.patch("/api/findings/{finding_id}")
     def patch_finding(finding_id: str, body: DismissBody) -> Response:
         if not store.set_dismissal(finding_id, body.dismissed, clean_note(body.note)):
             raise ApiError(404, "not_found", "That finding does not exist.")
-        finding = store.get_finding(finding_id)
-        assert finding is not None
-        calls = {c.id: c for c in store.load_calls(finding.import_id)}
-        findings = store.load_findings(finding.import_id)
-        ranks = views.rank_findings(findings)
-        return ok(views.finding_json(finding, calls, findings, ranks))
+        detail = views.finding_detail(store, finding_id)
+        assert detail is not None
+        return ok(detail)
 
     def _run_summary(run_pk: str, role: str) -> dict[str, Any]:
         run = store.get_run(run_pk)

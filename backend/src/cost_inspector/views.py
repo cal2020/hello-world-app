@@ -113,15 +113,29 @@ def call_json(call: CallRecord, findings: Sequence[FindingRow] = ()) -> dict[str
     }
 
 
-def _rank_key(finding: FindingRow) -> tuple[int, int, int, int]:
+def _rank_key(
+    confidence: str, call_count: int, category: str, ordinal: int
+) -> tuple[int, int, int, int]:
     # KORA Doctor's text report ranks by confidence, then by call count.
-    confidence = {"medium": 0, "low": 1}.get(finding.confidence, 9)
-    category = CATEGORY_ORDER.index(finding.category) if finding.category in CATEGORY_ORDER else 99
-    return (confidence, -len(finding.call_ids), category, finding.ordinal)
+    return (
+        {"medium": 0, "low": 1}.get(confidence, 9),
+        -call_count,
+        CATEGORY_ORDER.index(category) if category in CATEGORY_ORDER else 99,
+        ordinal,
+    )
 
 
 def rank_findings(findings: Sequence[FindingRow]) -> dict[str, int]:
-    return {f.id: index + 1 for index, f in enumerate(sorted(findings, key=_rank_key))}
+    """1-based rank of each finding among the given ones."""
+    return rank_inputs(
+        [(f.id, f.confidence, f.category, f.ordinal, len(f.call_ids)) for f in findings]
+    )
+
+
+def rank_inputs(rows: Sequence[tuple[str, str, str, int, int]]) -> dict[str, int]:
+    """Rank (id, confidence, category, ordinal, call count) rows, e.g. from the store."""
+    ordered = sorted(rows, key=lambda r: _rank_key(r[1], r[4], r[2], r[3]))
+    return {row[0]: index + 1 for index, row in enumerate(ordered)}
 
 
 def _enrich_evidence(evidence: dict[str, Any], import_id: str) -> dict[str, Any]:
@@ -135,49 +149,105 @@ def _enrich_evidence(evidence: dict[str, Any], import_id: str) -> dict[str, Any]
     return dict(out)
 
 
-def finding_json(
-    finding: FindingRow,
-    calls_by_id: dict[str, CallRecord],
-    all_findings: Sequence[FindingRow],
-    ranks: dict[str, int],
-) -> dict[str, Any]:
-    affected_calls = [calls_by_id[cid] for cid in finding.call_ids if cid in calls_by_id]
-    estimate: dict[str, Decimal] = {}
-    for call in affected_calls:
-        if call.cost_total is not None and call.cost_currency is not None:
-            estimate[call.cost_currency] = estimate.get(call.cost_currency, Decimal(0)) + scale(
-                call.cost_total, finding.saving_ratio
-            )
-    mine = set(finding.call_ids)
-    overlaps = []
-    for other in all_findings:
-        if other.id == finding.id:
-            continue
-        shared = mine.intersection(other.call_ids)
-        if shared:
-            overlaps.append(
-                {
-                    "finding_id": other.id,
-                    "category": other.category,
-                    "category_label": catalog.label_for(other.category),
-                    "shared_calls": len(shared),
-                    "dismissed": other.dismissed,
-                }
-            )
-    spend = summarize_spend(affected_calls)
-    run_pks = sorted({c.run_pk for c in affected_calls})
+class FindingContext:
+    """Per-request lookups so building many findings stays linear in their size."""
+
+    def __init__(
+        self,
+        findings: Sequence[FindingRow],
+        calls_by_id: dict[str, CallRecord],
+        ranks: dict[str, int] | None = None,
+    ) -> None:
+        self.calls_by_id = calls_by_id
+        self.by_id = {f.id: f for f in findings}
+        self.ranks = rank_findings(findings) if ranks is None else ranks
+        self.by_call: dict[str, list[FindingRow]] = defaultdict(list)
+        for finding in findings:
+            for cid in finding.call_ids:
+                self.by_call[cid].append(finding)
+
+    def shared_calls(self, finding: FindingRow) -> dict[str, int]:
+        """Other finding ID → number of this finding's calls it also flags."""
+        shared: dict[str, int] = defaultdict(int)
+        for cid in finding.call_ids:
+            for other in self.by_call.get(cid, ()):
+                if other.id != finding.id:
+                    shared[other.id] += 1
+        return shared
+
+
+def _affected(finding: FindingRow, ctx: FindingContext) -> list[CallRecord]:
+    return [ctx.calls_by_id[cid] for cid in finding.call_ids if cid in ctx.calls_by_id]
+
+
+def finding_summary_json(finding: FindingRow, ctx: FindingContext) -> dict[str, Any]:
+    """Light form for lists and timeline emphasis; details come from finding_json."""
+    affected = _affected(finding, ctx)
+    shared = ctx.shared_calls(finding)
+    reference = finding.evidence.get("reference_record_id")
     return {
         "id": finding.id,
         "import_id": finding.import_id,
         "ordinal": finding.ordinal,
-        "rank": ranks.get(finding.id),
+        "rank": ctx.ranks.get(finding.id),
         "category": finding.category,
         "category_label": catalog.label_for(finding.category),
         "title": finding.title,
-        "rationale": finding.reason,
         "confidence": finding.confidence,
-        "evidence": _enrich_evidence(finding.evidence, finding.import_id),
         "evidence_status": finding.evidence_status,
+        "call_ids": list(finding.call_ids),
+        "reference_call_id": ids.call_id(finding.import_id, reference) if reference else None,
+        "run_pks": sorted({c.run_pk for c in affected}),
+        "affected_count": len(finding.call_ids),
+        "affected_spend": summarize_spend(affected).to_json(),
+        "overlap_count": sum(1 for fid in shared if not ctx.by_id[fid].dismissed),
+        "dismissed": finding.dismissed,
+        "dismissal_note": finding.dismissal_note,
+        "dismissed_at": finding.dismissed_at,
+    }
+
+
+def finding_json(finding: FindingRow, ctx: FindingContext) -> dict[str, Any]:
+    """Full form: evidence, rule, limitations, affected calls, scenario and overlaps."""
+    affected = _affected(finding, ctx)
+    estimate: dict[str, Decimal] = {}
+    for call in affected:
+        if call.cost_total is not None and call.cost_currency is not None:
+            estimate[call.cost_currency] = estimate.get(call.cost_currency, Decimal(0)) + scale(
+                call.cost_total, finding.saving_ratio
+            )
+    # One pass over this finding's calls: which other findings also flag them, by category.
+    other_ids: dict[str, set[str]] = defaultdict(set)
+    shared_calls: dict[str, set[str]] = defaultdict(set)
+    for cid in finding.call_ids:
+        for other in ctx.by_call.get(cid, ()):
+            if other.id != finding.id:
+                other_ids[other.category].add(other.id)
+                shared_calls[other.category].add(cid)
+    overlaps = []
+    for category in sorted(
+        other_ids, key=lambda c: CATEGORY_ORDER.index(c) if c in CATEGORY_ORDER else 99
+    ):
+        # Open findings first, so the inspector links to one that still needs a decision.
+        others = sorted(
+            other_ids[category], key=lambda oid: (ctx.by_id[oid].dismissed, ctx.ranks.get(oid, 0))
+        )
+        overlaps.append(
+            {
+                "category": category,
+                "category_label": catalog.label_for(category),
+                "findings": len(others),
+                "open_findings": sum(1 for oid in others if not ctx.by_id[oid].dismissed),
+                "shared_calls": len(shared_calls[category]),
+                "finding_ids": others[:10],
+            }
+        )
+    summary = finding_summary_json(finding, ctx)
+    spend = summarize_spend(affected)
+    return {
+        **summary,
+        "rationale": finding.reason,
+        "evidence": _enrich_evidence(finding.evidence, finding.import_id),
         "rule": catalog.rule_for(finding.category),
         "limitations": catalog.limitations_for(finding.category),
         "affected": [
@@ -191,11 +261,9 @@ def finding_json(
                 "event_time": c.event_time,
                 "cost": cost_json(c),
             }
-            for c in affected_calls
+            for c in affected
         ],
         "run_ids": finding.run_ids,
-        "run_pks": run_pks,
-        "affected_spend": spend.to_json(),
         "scenario": {
             "ratio": decimal_str(finding.saving_ratio),
             "ratio_percent": decimal_str(finding.saving_ratio * 100),
@@ -203,10 +271,19 @@ def finding_json(
             "unknown_cost_calls": spend.unknown_calls,
         },
         "overlaps": overlaps,
-        "dismissed": finding.dismissed,
-        "dismissal_note": finding.dismissal_note,
-        "dismissed_at": finding.dismissed_at,
     }
+
+
+def finding_detail(store: Store, finding_id: str) -> dict[str, Any] | None:
+    """One finding with full evidence. Loads only its calls and the findings sharing them;
+    its rank is import-wide, matching the import overview and the exported report."""
+    nearby = store.load_findings_near_finding(finding_id)
+    finding = next((f for f in nearby if f.id == finding_id), None)
+    if finding is None:
+        return None
+    calls = {c.id: c for c in store.load_finding_calls(finding_id)}
+    ranks = rank_inputs(store.finding_rank_inputs(finding.import_id))
+    return finding_json(finding, FindingContext(nearby, calls, ranks))
 
 
 def scenario_json(
@@ -313,13 +390,11 @@ def list_imports(store: Store) -> list[dict[str, Any]]:
     runs_by_import: dict[str, list[RunRow]] = defaultdict(list)
     for run in store.list_runs():
         runs_by_import[run.import_id].append(run)
-    out = []
-    for imp in store.list_imports():
-        findings = store.load_findings(imp.id)
-        out.append(
-            import_summary_json(imp, runs_by_import[imp.id], counts, _import_counts(findings))
-        )
-    return out
+    per_import = store.import_finding_counts()
+    return [
+        import_summary_json(imp, runs_by_import[imp.id], counts, per_import.get(imp.id, {}))
+        for imp in store.list_imports()
+    ]
 
 
 def import_notes(imp: ImportRow) -> list[dict[str, Any]]:
@@ -329,26 +404,40 @@ def import_notes(imp: ImportRow) -> list[dict[str, Any]]:
     return notes
 
 
+class ImportData:
+    """Everything stored for one import, loaded once and shared by the views built on it."""
+
+    def __init__(self, store: Store, imp: ImportRow) -> None:
+        self.imp = imp
+        self.runs = store.list_runs(imp.id)
+        self.calls = store.load_calls(imp.id)
+        self.findings = store.load_findings(imp.id)
+        self.ctx = FindingContext(self.findings, {c.id: c for c in self.calls})
+
+    def overview(self, store: Store) -> dict[str, Any]:
+        """Import summary, notes, scenario and per-model spend; no finding list."""
+        summary = import_summary_json(
+            self.imp, self.runs, store.finding_counts(), _import_counts(self.findings)
+        )
+        return {
+            **summary,
+            "notes": import_notes(self.imp),
+            "category_counts": self.imp.analysis.get("category_counts", {}),
+            "scenario": scenario_json(self.findings, self.ctx.calls_by_id),
+            "by_model": by_model(self.calls),
+        }
+
+
 def import_detail(store: Store, import_id: str) -> dict[str, Any] | None:
     imp = store.get_import(import_id)
     if imp is None:
         return None
-    runs = store.list_runs(import_id)
-    calls = store.load_calls(import_id)
-    findings = store.load_findings(import_id)
-    calls_by_id = {c.id: c for c in calls}
-    ranks = rank_findings(findings)
-    summary = import_summary_json(imp, runs, store.finding_counts(), _import_counts(findings))
+    data = ImportData(store, imp)
     return {
-        **summary,
-        "notes": import_notes(imp),
-        "category_counts": imp.analysis.get("category_counts", {}),
+        **data.overview(store),
         "findings": sorted(
-            (finding_json(f, calls_by_id, findings, ranks) for f in findings),
-            key=lambda f: f["rank"],
+            (finding_summary_json(f, data.ctx) for f in data.findings), key=lambda f: f["rank"]
         ),
-        "scenario": scenario_json(findings, calls_by_id),
-        "by_model": by_model(calls),
     }
 
 
@@ -358,28 +447,32 @@ def run_detail(store: Store, run_pk: str) -> dict[str, Any] | None:
         return None
     imp = store.get_import(run.import_id)
     assert imp is not None
-    all_calls = store.load_calls(run.import_id)
-    findings = store.load_findings(run.import_id)
-    calls_by_id = {c.id: c for c in all_calls}
-    run_calls = [c for c in all_calls if c.run_pk == run_pk]
+    # Only this run's calls, plus calls elsewhere that share a finding with them.
+    run_calls = store.load_calls(run.import_id, run_pk)
+    calls_by_id = {c.id: c for c in run_calls}
+    calls_by_id.update((c.id, c) for c in store.load_calls_flagged_with_run(run_pk))
     run_call_ids = {c.id for c in run_calls}
-    touching = [f for f in findings if run_call_ids.intersection(f.call_ids)]
-    ranks = rank_findings(touching)
-    by_call = _finding_index(findings)
+    nearby = store.load_findings_near_run(run_pk)
+    touching = [f for f in nearby if run_call_ids.intersection(f.call_ids)]
+    # Ranks are relative to the run's own findings, the order its list shows.
+    ctx = FindingContext(nearby, calls_by_id, rank_findings(touching))
+    by_call = _finding_index(touching)
     counts = store.finding_counts()
     summary = run_summary_json(run, imp, counts)
     starts = [c.start_ms if c.start_ms is not None else c.event_ms for c in run_calls]
     return {
         "run": summary,
         "import": import_summary_json(
-            imp, store.list_runs(run.import_id), counts, _import_counts(findings)
+            imp,
+            store.list_runs(run.import_id),
+            counts,
+            store.import_finding_counts().get(imp.id, {}),
         ),
         "calls": [call_json(c, by_call.get(c.id, ())) for c in run_calls],
         "findings": sorted(
-            (finding_json(f, calls_by_id, touching, ranks) for f in touching),
-            key=lambda f: f["rank"],
+            (finding_summary_json(f, ctx) for f in touching), key=lambda f: f["rank"]
         ),
-        "scenario": scenario_json(findings, calls_by_id, run_pk=run_pk),
+        "scenario": scenario_json(touching, calls_by_id, run_pk=run_pk),
         "by_model": by_model(run_calls),
         "timeline": {
             "start_ms": min(starts),

@@ -6,7 +6,7 @@ import json
 
 from conftest import FIXTURES, KORA_SAMPLES, jsonl, record, upload, upload_file, with_cost
 
-from cost_inspector import ids
+from cost_inspector import ids, views
 
 
 def test_full_workflow_survives_reload(make_client, settings) -> None:
@@ -101,9 +101,12 @@ def test_json_report_is_self_explanatory(client) -> None:
     assert len(report["calls"]) == 11
     finding = next(f for f in report["findings"] if f["id"] == target["id"])
     assert finding["dismissed"] and finding["dismissal_note"] == "Known loop"
+    calls = {c["id"]: c for c in report["calls"]}
     for f in report["findings"]:
-        assert f["rule"]["summary"] and f["limitations"] and f["evidence"]["kind"]
-        assert f["affected"] and all(a["record_id"] for a in f["affected"])
+        rule = report["rules"][f["category"]]
+        assert rule["rule"]["summary"] and rule["limitations"] and f["evidence"]["kind"]
+        assert f["rationale"] and f["call_ids"]
+        assert all(calls[cid]["record_id"] for cid in f["call_ids"])
 
 
 def test_html_report_is_standalone_and_escaped(client) -> None:
@@ -131,7 +134,7 @@ def test_delete_run_reanalyzes_and_keeps_surviving_dismissals(client) -> None:
     keep = next(
         f
         for f in detail["findings"]
-        if f["category"] == "duplicate_repeated" and len(f["affected"]) == 2
+        if f["category"] == "duplicate_repeated" and f["affected_count"] == 2
     )
     client.patch(f"/api/findings/{keep['id']}", json={"dismissed": True, "note": "ok"})
     assert any(f["category"] == "cache_reuse" for f in detail["findings"])
@@ -290,3 +293,91 @@ def test_demo_matches_documented_totals(client) -> None:
     assert [
         by_key[k]["open_findings"] for k in ("support-before", "support-after", "partial-telemetry")
     ] == [13, 1, 4]
+
+
+def test_lists_carry_light_summaries_and_details_load_on_demand(client) -> None:
+    detail = upload_file(client, KORA_SAMPLES / "inefficient_agent.jsonl")
+    summary = detail["findings"][0]
+    assert {"id", "category", "title", "confidence", "call_ids", "affected_count"} <= set(summary)
+    assert not {"evidence", "rule", "limitations", "rationale"} & set(summary)
+    full = client.get(f"/api/findings/{summary['id']}").json()
+    assert full["id"] == summary["id"]
+    assert full["evidence"]["kind"] and full["rule"]["summary"] and full["limitations"]
+    assert [a["call_id"] for a in full["affected"]] == summary["call_ids"]
+    for group in full["overlaps"]:
+        assert group["findings"] >= 1 and group["shared_calls"] >= 1
+    assert client.get("/api/findings/fnd_missing").status_code == 404
+
+
+def test_overlaps_are_grouped_by_category_and_link_to_open_findings_first(client) -> None:
+    detail = upload_file(client, KORA_SAMPLES / "inefficient_agent.jsonl")
+    summaries = {s["id"]: s for s in detail["findings"]}
+    target = next(s for s in summaries.values() if s["category"] == "orchestration_overhead")
+    mine = set(target["call_ids"])
+    others = [
+        s for s in summaries.values() if s["id"] != target["id"] and mine & set(s["call_ids"])
+    ]
+    assert target["overlap_count"] == len(others)
+
+    expected: dict[str, set[str]] = {}
+    for other in others:
+        expected.setdefault(other["category"], set()).update(mine & set(other["call_ids"]))
+    full = client.get(f"/api/findings/{target['id']}").json()
+    assert {g["category"]: g["shared_calls"] for g in full["overlaps"]} == {
+        category: len(calls) for category, calls in expected.items()
+    }
+    group = next(g for g in full["overlaps"] if g["findings"] > 1)
+    first = group["finding_ids"][0]
+    client.patch(f"/api/findings/{first}", json={"dismissed": True})
+    again = client.get(f"/api/findings/{target['id']}").json()
+    regrouped = next(g for g in again["overlaps"] if g["category"] == group["category"])
+    assert regrouped["open_findings"] == group["open_findings"] - 1
+    assert regrouped["finding_ids"][0] != first
+    assert regrouped["finding_ids"][-1] == first
+    assert again["overlap_count"] == target["overlap_count"] - 1
+
+
+def test_targeted_views_match_a_full_import_computation(client, store) -> None:
+    """Run and finding views load only nearby rows; they must agree with a computation
+    over the whole import, including findings that span two runs."""
+    detail = upload_file(client, KORA_SAMPLES / "inefficient_agent.jsonl")
+    assert any(len(f["run_pks"]) > 1 for f in detail["findings"])
+    client.patch(f"/api/findings/{detail['findings'][1]['id']}", json={"dismissed": True})
+
+    def plain(value: object) -> object:
+        return json.loads(json.dumps(value))
+
+    findings = store.load_findings(detail["id"])
+    calls = {c.id: c for c in store.load_calls(detail["id"])}
+    whole = views.FindingContext(findings, calls)
+    for finding in findings:
+        response = client.get(f"/api/findings/{finding.id}").json()
+        assert response == plain(views.finding_json(finding, whole))
+
+    for run in detail["runs"]:
+        view = client.get(f"/api/runs/{run['id']}").json()
+        in_run = {cid for cid, call in calls.items() if call.run_pk == run["id"]}
+        touching = [f for f in findings if in_run & set(f.call_ids)]
+        ctx = views.FindingContext(findings, calls, views.rank_findings(touching))
+        expected = sorted(
+            (views.finding_summary_json(f, ctx) for f in touching), key=lambda f: f["rank"]
+        )
+        assert view["findings"] == plain(expected)
+        assert view["scenario"] == plain(views.scenario_json(findings, calls, run_pk=run["id"]))
+        assert view["import"]["open_findings"] == len(findings) - 1
+
+
+def test_report_lists_rules_once_and_html_caps_long_tables(client) -> None:
+    # 30 calls with one usage signature: one repeated-call finding with 30 members.
+    records = [with_cost(record(i), "0.001") for i in range(1, 31)]
+    detail = upload(client, jsonl(records)).json()
+    report = client.get(f"/api/imports/{detail['id']}/report?format=json").json()
+    assert set(report["rules"]) >= {f["category"] for f in report["findings"]}
+    biggest = max(report["findings"], key=lambda f: f["affected_count"])
+    assert biggest["affected_count"] == len(biggest["call_ids"]) > 25
+    assert not {"rule", "limitations", "affected"} & set(biggest)
+
+    html = client.get(f"/api/imports/{detail['id']}/report?format=html").text
+    assert html.count('id="rule-') == len(report["rules"])
+    assert f'href="#rule-{biggest["category"]}"' in html
+    assert f"… and {biggest['affected_count'] - 25} more; the JSON report lists every call." in html

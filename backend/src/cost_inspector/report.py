@@ -1,9 +1,11 @@
 """Portable analysis reports: versioned JSON and a self-contained HTML rendering.
 
 A report carries enough data to understand the result without the app: the
-glossary of labels, import provenance, observed spend, every finding with its
-rule, evidence, rationale, limitations and dismissal note, the runs and the
-normalized calls they reference, and any saved comparisons.
+glossary of labels, import provenance, observed spend, the rules with their
+limits, every finding with its evidence, rationale and dismissal note, the runs
+and the normalized calls the findings reference, and any saved comparisons.
+Rules and calls are listed once and referenced by category and call_id, so a
+large import does not repeat them per finding.
 """
 
 from __future__ import annotations
@@ -16,14 +18,17 @@ from typing import Any
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from . import __version__, views
-from .analysis import catalog
+from .analysis import catalog, kora
 from .compare import compare_runs
+from .ingest.normalize import decimal_str
 from .ingest.validate import AUDR_SPEC_VERSION
 from .store import ComparisonRow, Store
 
 REPORT_FORMAT = "ai-cost-inspector/report"
 REPORT_VERSION = 1
 TEMPLATES = Path(__file__).parent / "templates"
+#: Rows per finding table in the HTML rendering; the JSON report lists everything.
+HTML_ROWS_PER_FINDING = 25
 
 PRIVACY = (
     "This report contains normalized AUDR telemetry only. AUDR records carry no prompt or "
@@ -37,6 +42,8 @@ HOW_TO_READ = [
     "counted once at its highest ratio.",
     "A measured change requires two runs with complete, comparable costs that the user marked "
     "as equivalent work. Output quality is never measured.",
+    "Each finding names its calls by call_id (their details are under calls) and its rule and "
+    "limits by category (under rules).",
 ]
 
 
@@ -49,6 +56,25 @@ def _header(kind: str) -> dict[str, Any]:
         "generator": {"name": "AI Cost Inspector", "version": __version__},
         "audr_spec_version": AUDR_SPEC_VERSION,
     }
+
+
+def rules_json() -> dict[str, Any]:
+    """Every rule the analyzer applies, with its limits and scenario ratio, keyed by category."""
+    return {
+        category: {
+            "label": catalog.label_for(category),
+            "rule": catalog.rule_for(category),
+            "limitations": catalog.limitations_for(category),
+            "scenario_ratio": decimal_str(kora.SCENARIO_RATIOS[category]),
+            "scenario_percent": decimal_str(kora.SCENARIO_RATIOS[category] * 100),
+        }
+        for category in catalog.CATEGORY_INFO
+    }
+
+
+def _report_finding(finding: dict[str, Any]) -> dict[str, Any]:
+    # Rule and limits live under `rules`, call details under `calls`.
+    return {k: v for k, v in finding.items() if k not in ("rule", "limitations", "affected")}
 
 
 def comparison_result(store: Store, row: ComparisonRow) -> dict[str, Any] | None:
@@ -83,15 +109,17 @@ def comparison_json(store: Store, row: ComparisonRow) -> dict[str, Any] | None:
 
 
 def import_report(store: Store, import_id: str) -> dict[str, Any] | None:
-    detail = views.import_detail(store, import_id)
-    if detail is None:
+    imp = store.get_import(import_id)
+    if imp is None:
         return None
-    findings = store.load_findings(import_id)
-    by_call: dict[str, list[Any]] = {}
-    for finding in findings:
-        for cid in finding.call_ids:
-            by_call.setdefault(cid, []).append(finding)
-    calls = [views.call_json(c, by_call.get(c.id, ())) for c in store.load_calls(import_id)]
+    data = views.ImportData(store, imp)
+    detail = data.overview(store)
+    ctx = data.ctx
+    calls = [views.call_json(c, ctx.by_call.get(c.id, ())) for c in data.calls]
+    report_findings = sorted(
+        (_report_finding(views.finding_json(f, ctx)) for f in data.findings),
+        key=lambda f: f["rank"],
+    )
     run_pks = {run["id"] for run in detail["runs"]}
     comparisons = []
     for row in store.list_comparisons():
@@ -99,8 +127,6 @@ def import_report(store: Store, import_id: str) -> dict[str, Any] | None:
             item = comparison_json(store, row)
             if item is not None:
                 comparisons.append(item)
-    imp = store.get_import(import_id)
-    assert imp is not None
     return {
         "report": {**_header("import"), "analyzer": detail["analyzer"]},
         "how_to_read": HOW_TO_READ,
@@ -136,7 +162,8 @@ def import_report(store: Store, import_id: str) -> dict[str, Any] | None:
             "scenario_estimate": detail["scenario"],
         },
         "runs": detail["runs"],
-        "findings": detail["findings"],
+        "rules": rules_json(),
+        "findings": report_findings,
         "calls": calls,
         "comparisons": comparisons,
         "analyzer_raw": {
@@ -220,4 +247,10 @@ def _env() -> Environment:
 
 
 def render_html(report: dict[str, Any]) -> str:
-    return _env().get_template("report.html.j2").render(r=report)
+    calls = report.get("calls")
+    calls_by_id = {c["id"]: c for c in calls} if isinstance(calls, list) else {}
+    return (
+        _env()
+        .get_template("report.html.j2")
+        .render(r=report, calls_by_id=calls_by_id, row_limit=HTML_ROWS_PER_FINDING)
+    )

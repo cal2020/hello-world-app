@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from conftest import AUDR_FIXTURES, DEMO_DIR, KORA_SAMPLES, upload_file
+from conftest import AUDR_FIXTURES, DEMO_DIR, KORA_SAMPLES, full_findings, upload_file
 
 from cost_inspector.analysis import catalog
 
@@ -43,7 +43,7 @@ def strings(value: Any) -> list[str]:
 @pytest.mark.parametrize("path", FILES, ids=[p.name for p in FILES])
 def test_no_finding_text_claims_identical_prompts(client, path: Path) -> None:
     detail = upload_file(client, path)
-    for finding in detail["findings"]:
+    for finding in full_findings(client, detail):
         for text in strings(finding):
             assert not AFFIRMATIVE_PROMPT_CLAIM.search(text), text
         if finding["category"] in ("duplicate_repeated", "cache_reuse"):

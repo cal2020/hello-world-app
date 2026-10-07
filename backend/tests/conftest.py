@@ -109,7 +109,10 @@ def jsonl(records: list[dict[str, Any]]) -> bytes:
 
 @pytest.fixture
 def settings(tmp_path: Path) -> Settings:
-    return Settings(db_path=tmp_path / "test.sqlite3", static_dir=None)
+    # "testserver" is the Host header Starlette's TestClient sends.
+    return Settings(
+        db_path=tmp_path / "test.sqlite3", static_dir=None, extra_allowed_hosts=("testserver",)
+    )
 
 
 @pytest.fixture
@@ -143,3 +146,13 @@ def upload_file(client: TestClient, path: Path) -> dict[str, Any]:
     assert response.status_code == 201, response.text
     body: dict[str, Any] = response.json()
     return body
+
+
+def full_findings(client: TestClient, detail: dict[str, Any]) -> list[dict[str, Any]]:
+    """Lists carry finding summaries; fetch each finding's full evidence and limits."""
+    out = []
+    for summary in detail["findings"]:
+        response = client.get(f"/api/findings/{summary['id']}")
+        assert response.status_code == 200, response.text
+        out.append(response.json())
+    return out

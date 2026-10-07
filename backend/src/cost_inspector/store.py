@@ -11,11 +11,12 @@ import json
 import sqlite3
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
+from functools import cached_property
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, cast
 
 from . import ids
 from .analysis.kora import AnalysisResult
@@ -23,6 +24,26 @@ from .ingest.issues import Issue
 from .ingest.normalize import CallRecord, decimal_str
 
 SCHEMA_VERSION = 1
+
+# Fixed subqueries for targeted loads. Only these constants are ever spliced into SQL;
+# every value is bound as parameter ?1.
+_TOUCHING_RUN = (  # findings flagging at least one call in run ?1
+    "SELECT fc.finding_id FROM finding_calls fc JOIN calls c ON c.id = fc.call_id "
+    "WHERE c.run_pk = ?1"
+)
+_FINDING_SCOPES = {
+    "import": "SELECT id FROM findings WHERE import_id = ?1",
+    # Findings touching run ?1, plus findings that share a call with them.
+    "near_run": (
+        "SELECT finding_id FROM finding_calls WHERE call_id IN ("  # noqa: S608 (constants only)
+        f"SELECT call_id FROM finding_calls WHERE finding_id IN ({_TOUCHING_RUN}))"
+    ),
+    # Finding ?1 plus every finding that flags at least one of its calls.
+    "near_finding": (
+        "SELECT ?1 UNION SELECT finding_id FROM finding_calls WHERE call_id IN ("
+        "SELECT call_id FROM finding_calls WHERE finding_id = ?1)"
+    ),
+}
 
 _SCHEMA_V1 = """
 CREATE TABLE imports (
@@ -172,8 +193,11 @@ def dumps(value: Any) -> str:
     return json.dumps(value, default=_default, ensure_ascii=False, separators=(",", ":"))
 
 
+_DECODER = json.JSONDecoder(object_hook=_hook)
+
+
 def loads(text: str) -> Any:
-    return json.loads(text, object_hook=_hook)
+    return _DECODER.decode(text)
 
 
 @dataclass(frozen=True)
@@ -228,14 +252,27 @@ class FindingRow:
     reason: str
     confidence: str
     saving_ratio: Decimal
-    record_ids: list[str]
-    run_ids: list[str]
     call_ids: list[str]
-    evidence: dict[str, Any]
     evidence_status: str
     dismissed: bool
     dismissal_note: str | None
     dismissed_at: str | None
+    # Stored JSON, decoded on first use: list views read only a little of it.
+    record_ids_json: str = field(repr=False)
+    run_ids_json: str = field(repr=False)
+    evidence_json: str = field(repr=False)
+
+    @cached_property
+    def record_ids(self) -> list[str]:
+        return cast(list[str], loads(self.record_ids_json))
+
+    @cached_property
+    def run_ids(self) -> list[str]:
+        return cast(list[str], loads(self.run_ids_json))
+
+    @cached_property
+    def evidence(self) -> dict[str, Any]:
+        return cast(dict[str, Any], loads(self.evidence_json))
 
 
 @dataclass(frozen=True)
@@ -412,14 +449,14 @@ def _row_to_finding(row: sqlite3.Row, call_ids: list[str]) -> FindingRow:
         reason=row["reason"],
         confidence=row["confidence"],
         saving_ratio=Decimal(row["saving_ratio"]),
-        record_ids=loads(row["record_ids_json"]),
-        run_ids=loads(row["run_ids_json"]),
         call_ids=call_ids,
-        evidence=loads(row["evidence_json"]),
         evidence_status=row["evidence_status"],
         dismissed=bool(row["dismissed"]),
         dismissal_note=row["dismissal_note"],
         dismissed_at=row["dismissed_at"],
+        record_ids_json=row["record_ids_json"],
+        run_ids_json=row["run_ids_json"],
+        evidence_json=row["evidence_json"],
     )
 
 
@@ -703,23 +740,69 @@ class Store:
                 ).fetchall()
         return [_row_to_call(r) for r in rows]
 
-    # --------------------------------------------------------------- findings
-
-    def load_findings(self, import_id: str) -> list[FindingRow]:
+    def load_finding_calls(self, finding_id: str) -> list[CallRecord]:
+        """The calls one finding flags, in the analyzer's order."""
         with self.connect() as conn:
             rows = conn.execute(
-                "SELECT * FROM findings WHERE import_id = ? ORDER BY ordinal", (import_id,)
+                "SELECT c.* FROM calls c JOIN finding_calls fc ON fc.call_id = c.id "
+                "WHERE fc.finding_id = ? ORDER BY fc.position",
+                (finding_id,),
+            ).fetchall()
+        return [_row_to_call(r) for r in rows]
+
+    def load_calls_flagged_with_run(self, run_pk: str) -> list[CallRecord]:
+        """Calls in other runs that share a finding with this run's calls."""
+        with self.connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM calls WHERE run_pk != ?1 AND id IN ("  # noqa: S608 (constant)
+                f"SELECT call_id FROM finding_calls WHERE finding_id IN ({_TOUCHING_RUN})"
+                ") ORDER BY ordinal",
+                (run_pk,),
+            ).fetchall()
+        return [_row_to_call(r) for r in rows]
+
+    # --------------------------------------------------------------- findings
+
+    def _load_findings(
+        self, scope: Literal["import", "near_run", "near_finding"], key: str
+    ) -> list[FindingRow]:
+        id_query = _FINDING_SCOPES[scope]
+        with self.connect() as conn:
+            rows = conn.execute(
+                f"SELECT * FROM findings WHERE id IN ({id_query}) ORDER BY ordinal",  # noqa: S608
+                (key,),
             ).fetchall()
             links = conn.execute(
-                "SELECT fc.finding_id, fc.call_id FROM finding_calls fc "
-                "JOIN findings f ON f.id = fc.finding_id WHERE f.import_id = ? "
-                "ORDER BY fc.finding_id, fc.position",
-                (import_id,),
+                "SELECT finding_id, call_id FROM finding_calls "  # noqa: S608 (fixed scope)
+                f"WHERE finding_id IN ({id_query}) ORDER BY finding_id, position",
+                (key,),
             ).fetchall()
         by_finding: dict[str, list[str]] = {}
         for link in links:
             by_finding.setdefault(link["finding_id"], []).append(link["call_id"])
         return [_row_to_finding(r, by_finding.get(r["id"], [])) for r in rows]
+
+    def load_findings(self, import_id: str) -> list[FindingRow]:
+        return self._load_findings("import", import_id)
+
+    def load_findings_near_run(self, run_pk: str) -> list[FindingRow]:
+        """Findings flagging any call in the run, plus findings that share a call with them."""
+        return self._load_findings("near_run", run_pk)
+
+    def load_findings_near_finding(self, finding_id: str) -> list[FindingRow]:
+        """The finding plus every finding that flags at least one of its calls."""
+        return self._load_findings("near_finding", finding_id)
+
+    def finding_rank_inputs(self, import_id: str) -> list[tuple[str, str, str, int, int]]:
+        """(id, confidence, category, ordinal, call count) for every finding in an import."""
+        with self.connect() as conn:
+            rows = conn.execute(
+                "SELECT f.id, f.confidence, f.category, f.ordinal, COUNT(fc.call_id) AS calls "
+                "FROM findings f LEFT JOIN finding_calls fc ON fc.finding_id = f.id "
+                "WHERE f.import_id = ? GROUP BY f.id",
+                (import_id,),
+            ).fetchall()
+        return [(r["id"], r["confidence"], r["category"], r["ordinal"], r["calls"]) for r in rows]
 
     def get_finding(self, finding_id: str) -> FindingRow | None:
         with self.connect() as conn:
@@ -731,6 +814,15 @@ class Store:
                 (finding_id,),
             ).fetchall()
         return _row_to_finding(row, [link["call_id"] for link in links])
+
+    def import_finding_counts(self) -> dict[str, dict[str, int]]:
+        """Per import: open and dismissed findings (one aggregate query)."""
+        with self.connect() as conn:
+            rows = conn.execute(
+                "SELECT import_id, SUM(dismissed = 0) AS open, SUM(dismissed = 1) AS dismissed "
+                "FROM findings GROUP BY import_id"
+            ).fetchall()
+        return {r["import_id"]: {"open": r["open"], "dismissed": r["dismissed"]} for r in rows}
 
     def set_dismissal(self, finding_id: str, dismissed: bool, note: str | None) -> bool:
         with self.connect() as conn, conn:

@@ -183,28 +183,61 @@ def _signature_evidence(finding: Any, group: list[dict[str, Any]], scope: str) -
     }
 
 
-def _derive_duplicate(
-    finding: Any, by_id: dict[str, dict[str, Any]], model_records: list[dict[str, Any]]
-) -> dict[str, Any] | None:
+def _orchestration_key(record: dict[str, Any]) -> tuple[bool, int, str]:
+    # Same ordering as the lambda in kora_doctor.analyzer.analyze(), including
+    # its treatment of step 0 (``step or 10**9`` places it after other steps).
+    step = record.get("run", {}).get("step")
+    return (step is None, step or 10**9, str(record.get("timing", {}).get("event_time", "")))
+
+
+@dataclass
+class _Index:
+    """Lookups built once per analysis, so deriving evidence stays linear in size."""
+
+    by_id: dict[str, dict[str, Any]]
+    signature: dict[str, tuple[Any, ...]] = field(default_factory=dict)
+    by_run_signature: dict[tuple[str, tuple[Any, ...]], list[dict[str, Any]]] = field(
+        default_factory=dict
+    )
+    by_signature: dict[tuple[Any, ...], list[dict[str, Any]]] = field(default_factory=dict)
+    by_run: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+    _ordered: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+
+    @classmethod
+    def build(cls, records: list[dict[str, Any]]) -> _Index:
+        index = cls(by_id={_rid(r): r for r in records})
+        for record in records:
+            if not kd._is_model(record):
+                continue
+            sig = kd._usage_signature(record)
+            index.signature[_rid(record)] = sig
+            index.by_run_signature.setdefault((_run_id(record), sig), []).append(record)
+            index.by_signature.setdefault(sig, []).append(record)
+            index.by_run.setdefault(_run_id(record), []).append(record)
+        return index
+
+    def ordered(self, run_id: str) -> list[dict[str, Any]]:
+        """Model calls of a run in the analyzer's orchestration order (stable sort)."""
+        if run_id not in self._ordered:
+            self._ordered[run_id] = sorted(self.by_run.get(run_id, []), key=_orchestration_key)
+        return self._ordered[run_id]
+
+
+def _derive_duplicate(finding: Any, index: _Index) -> dict[str, Any] | None:
     if not _SIGNATURE_OK or len(finding.run_ids) != 1 or not finding.record_ids:
         return None
-    run_id = finding.run_ids[0]
-    signature = kd._usage_signature(by_id[finding.record_ids[0]])
-    group = [
-        r for r in model_records if _run_id(r) == run_id and kd._usage_signature(r) == signature
-    ]
+    signature = index.signature.get(finding.record_ids[0])
+    group = index.by_run_signature.get((finding.run_ids[0], signature), []) if signature else []
     if len(group) < 2 or [_rid(r) for r in group[1:]] != list(finding.record_ids):
         return None
     return _signature_evidence(finding, group, scope="run")
 
 
-def _derive_cache(
-    finding: Any, by_id: dict[str, dict[str, Any]], model_records: list[dict[str, Any]]
-) -> dict[str, Any] | None:
+def _derive_cache(finding: Any, index: _Index) -> dict[str, Any] | None:
     if not _SIGNATURE_OK or not finding.record_ids:
         return None
-    signature = kd._usage_signature(by_id[finding.record_ids[0]])
-    group = [r for r in model_records if kd._usage_signature(r) == signature]
+    signature = index.signature.get(finding.record_ids[0])
+    group = index.by_signature.get(signature, []) if signature else []
     runs = sorted({_run_id(r) for r in group})
     if (
         len(group) < 2
@@ -225,12 +258,10 @@ def _deterministic_sources(record: dict[str, Any]) -> list[tuple[str, str]]:
     return [(name, str(value)) for name, value in sources if value]
 
 
-def _derive_deterministic(
-    finding: Any, by_id: dict[str, dict[str, Any]], _model_records: list[dict[str, Any]]
-) -> dict[str, Any] | None:
+def _derive_deterministic(finding: Any, index: _Index) -> dict[str, Any] | None:
     if len(finding.record_ids) != 1:
         return None
-    record = by_id[finding.record_ids[0]]
+    record = index.by_id[finding.record_ids[0]]
     text = kd._context_text(record)
     hit = next((kw for kw in kd.DETERMINISTIC_KEYWORDS if kw in text), None)
     if hit is None or f"'{hit}'" not in finding.reason:
@@ -238,13 +269,13 @@ def _derive_deterministic(
     matches = []
     for name, value in _deterministic_sources(record):
         lowered = value.lower()
-        index = lowered.find(hit)
-        if index < 0:
+        pos = lowered.find(hit)
+        if pos < 0:
             continue
         match: dict[str, Any] = {"field": name, "value": value}
         if len(lowered) == len(value):  # offsets are only safe when lowering keeps length
-            match["start"] = index
-            match["end"] = index + len(hit)
+            match["start"] = pos
+            match["end"] = pos + len(hit)
         matches.append(match)
     return {
         "kind": "metadata_keyword",
@@ -263,12 +294,10 @@ def _derive_deterministic(
     }
 
 
-def _derive_smaller(
-    finding: Any, by_id: dict[str, dict[str, Any]], _model_records: list[dict[str, Any]]
-) -> dict[str, Any] | None:
+def _derive_smaller(finding: Any, index: _Index) -> dict[str, Any] | None:
     if len(finding.record_ids) != 1:
         return None
-    record = by_id[finding.record_ids[0]]
+    record = index.by_id[finding.record_ids[0]]
     model = str(record.get("resource", {}).get("name", ""))
     lowered = model.lower()
     llm = record.get("usage", {}).get("llm", {})
@@ -305,20 +334,11 @@ def _derive_smaller(
     }
 
 
-def _orchestration_key(record: dict[str, Any]) -> tuple[bool, int, str]:
-    # Same ordering as the lambda in kora_doctor.analyzer.analyze(), including
-    # its treatment of step 0 (``step or 10**9`` places it after other steps).
-    step = record.get("run", {}).get("step")
-    return (step is None, step or 10**9, str(record.get("timing", {}).get("event_time", "")))
-
-
-def _derive_orchestration(
-    finding: Any, _by_id: dict[str, dict[str, Any]], model_records: list[dict[str, Any]]
-) -> dict[str, Any] | None:
+def _derive_orchestration(finding: Any, index: _Index) -> dict[str, Any] | None:
     if len(finding.run_ids) != 1:
         return None
     run_id = finding.run_ids[0]
-    ordered = sorted((r for r in model_records if _run_id(r) == run_id), key=_orchestration_key)
+    ordered = index.ordered(run_id)
     expected_confidence = "medium" if len(ordered) >= ORCHESTRATION_MEDIUM_AT else "low"
     if (
         len(ordered) < ORCHESTRATION_MIN_CALLS
@@ -358,10 +378,7 @@ def _derive_orchestration(
     }
 
 
-_DERIVERS: dict[
-    str,
-    Callable[[Any, dict[str, dict[str, Any]], list[dict[str, Any]]], dict[str, Any] | None],
-] = {
+_DERIVERS: dict[str, Callable[[Any, _Index], dict[str, Any] | None]] = {
     DUPLICATE: _derive_duplicate,
     CACHE: _derive_cache,
     DETERMINISTIC: _derive_deterministic,
@@ -375,14 +392,13 @@ def run_analysis(calls: list[CallRecord]) -> AnalysisResult:
     ordered_calls = sorted(calls, key=lambda c: c.ordinal)
     records = [to_kora_record(call) for call in ordered_calls]
     report = kd.analyze(records)
-    by_id = {_rid(r): r for r in records}
-    model_records = [r for r in records if kd._is_model(r)]
+    index = _Index.build(records)
 
     findings: list[AnalyzedFinding] = []
     for ordinal, finding in enumerate(report.findings):
         derive = _DERIVERS.get(finding.category)
         try:
-            evidence = derive(finding, by_id, model_records) if derive else None
+            evidence = derive(finding, index) if derive else None
         except (KeyError, TypeError, ValueError):
             evidence = None
         findings.append(
