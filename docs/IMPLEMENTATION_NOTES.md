@@ -104,8 +104,8 @@ Node.js ≥ 22.12 is required (Vite 8 / Vitest 5 engines).
   functions of biological time, so freezing stops them exactly. Each close-up
   runs on its own clock, which starts at the view's `posterTime`: a moment
   with its key parts labelled, chosen by probing which phase-limited labels
-  are visible over the loop (`__HCA_DEBUG__.closeupLabels` with `?perf=1`) and
-  checking the frames. With motion frozen (reduced motion) that moment is the
+  are visible over the loop (`npm run probe:labels`, which uses the
+  `?perf=1` debug hook `__HCA_DEBUG__.closeupLabels`) and checking the frames. With motion frozen (reduced motion) that moment is the
   still image readers see; otherwise playback continues from it.
 * **Translations.** A language-neutral registry (`src/content/`) holds numbers,
   sources and structure metadata; locale files hold all prose. Six translations

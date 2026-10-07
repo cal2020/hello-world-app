@@ -132,6 +132,9 @@ restore the selection, view and language without reloading.
 | `npm run check:links` | Checks every source URL and DOI (needs normal internet access). |
 | `npm run screenshots` | Regenerates `docs/screenshots/` from a running preview. |
 | `npm run perf` | Measures start-up and frame times from a running preview (`-- --gpu` to use the GPU). |
+| `npm run check:closeups` | Opens all 21 close-up views twice in a running preview and reports load time, draw calls, triangles, labels, console errors and whether GPU resources are released. |
+| `npm run probe:labels` | Shows when each close-up label is in phase over its loop and suggests a poster moment (how each view's `posterTime` was chosen). |
+| `npm run illustrations` | Renders the text-atlas illustrations into `public/illustrations/` from a running preview. |
 | `npm run i18n -- check fr` | Translation helper: list sections, show English text, merge a translated section, check a locale. |
 
 Playwright uses the Chromium build that matches `@playwright/test` 1.56.1. On a

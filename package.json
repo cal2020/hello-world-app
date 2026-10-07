@@ -23,7 +23,8 @@
     "perf": "tsx scripts/measure-performance.ts",
     "i18n": "tsx scripts/i18n.ts",
     "illustrations": "tsx scripts/illustrations.ts",
-    "check:closeups": "tsx scripts/check-closeups.ts"
+    "check:closeups": "tsx scripts/check-closeups.ts",
+    "probe:labels": "tsx scripts/closeup-labels.ts"
   },
   "dependencies": {
     "@fontsource/alegreya": "5.3.0",
