@@ -21,9 +21,23 @@
   const HXUI = globalThis.HXUI;
   if (typeof HXUI.register_section !== "function") return; /* the UI core is missing: boot reports it */
   const h = (...a) => HXUI.h(...a);
-  const code = (t) => h("code", { class: "hx-inline" }, t);
+  /* short identifiers (state ids, tools, principals, codes) never break inside; long text uses wrap_id() */
+  const code = (t) => h("code", { class: "hx-inline rn-nw" }, t);
+  /** a long identifier as plain mono text that may wrap after "_", "-", "/", ":" or "." (never mid-word) */
+  function wrap_id(t, cls) {
+    const parts = String(t === null || t === undefined ? "" : t).split(/(?<=[_\-/:.])/);
+    const kids = [];
+    parts.forEach((p, i) => { if (i) kids.push(h("wbr")); kids.push(p); });
+    return h("span", { class: ["hx-mono rn-wrapid", cls] }, kids);
+  }
+  /** "A → B" as one unit that never breaks */
+  const move = (a, b) => h("span", { class: "rn-nw rn-move" }, code(a), h("span", { class: "rn-arrow", "aria-hidden": "true" }, " → "),
+    h("span", { class: "hx-visually-hidden" }, " to "), code(b));
 
-  const NEEDS = ["env", "service", "kernel", "broker", "store", "policy", "approvals", "fakes", "compile", "registry", "canonical", "catalog", "metrics"];
+  /* every namespace the run path reaches: compile_procurement, registry.admit and admit_initial also call jsonschema,
+     guards, efsm, pkg, clauses, validate, diff and fixture */
+  const NEEDS = ["env", "service", "kernel", "broker", "store", "policy", "approvals", "fakes", "compile", "registry", "canonical", "catalog", "metrics",
+    "jsonschema", "guards", "efsm", "pkg", "clauses", "validate", "diff", "fixture"];
   const LAB_EPOCH = 1790000000.25;
   const TERMINAL = ["COMPLETED", "FAILED", "CANCELLED"];
   const APPROVERS = ["user:bob", "user:alice", "user:carol", "user:mallory", "user:dana"];
@@ -171,6 +185,9 @@
   let P = null; /* the mounted parts */
 
   /* ---------------------------------------------------------------- formatting */
+  function reduced_motion() {
+    try { return globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return true; }
+  }
   const F = () => HXUI.run_format;
   function iso(t) {
     try { return new Date(Number(t) * 1000).toISOString().replace("T", " ").replace(/\.\d+Z$/, " UTC"); } catch (e) { return String(t); }
@@ -183,12 +200,32 @@
   function status_chip(status, opts) {
     return HXUI.chip(STATUS_TEXT[status] || status, STATUS_TONE[status] || "neutral", Object.assign({ title: status }, opts || {}));
   }
+  /** A run's status as the reader should take it: a COMPLETED run carries its outcome category's tone and name
+      ("Completed · fallback"), so a review or unverified ending never reads as a success. */
+  function run_tone(status, outcome) {
+    if (status === "COMPLETED" && outcome) return CATEGORY_TONE[outcome.category] || "neutral";
+    return STATUS_TONE[status] || "neutral";
+  }
+  function run_chip(status, outcome, opts) {
+    const text = status === "COMPLETED" && outcome ? "Completed · " + outcome.category : STATUS_TEXT[status] || status;
+    const tone = run_tone(status, outcome);
+    const icon = status === "COMPLETED" ? (tone === "ok" ? "check" : "alert") : status === "FAILED" ? "stop" : undefined;
+    return HXUI.chip(text, tone, Object.assign({ title: status + (outcome ? " · " + outcome.terminal : ""), icon }, opts || {}));
+  }
+  /** the RUN_STOPPED event that ended a FAILED run, if any */
+  function stop_event(events) {
+    const ev = (events || []).filter((e) => e.type === "RUN_STOPPED");
+    return ev.length ? ev[ev.length - 1] : null;
+  }
+  /** the run's last TRANSITION event (the edge that reached where it is now) */
+  function last_transition(events) {
+    const ev = (events || []).filter((e) => e.type === "TRANSITION");
+    return ev.length ? ev[ev.length - 1] : null;
+  }
 
   /* ---------------------------------------------------------------- results and errors */
   const HINTS = {
-    NOT_AUTHORIZED: "Approvals need the procurement_approver role and someone other than the initiator: pick user:bob.",
     SCOPE_MISMATCH: "The approval named a different scope digest. Clear \"Tamper with the scope digest\" and approve again.",
-    NOT_FOUND: "Runs are scoped to the caller's tenant. user:mallory belongs to globex, so this acme run does not exist for them.",
     RESPONSE_INVALID: "The answer does not match the interaction's response schema.",
     ALREADY_ANSWERED: "This interaction already has an answer; a second one is never applied.",
     INTERACTION_EXPIRED: "The approval expired. Step the run to record the expiry; it then ends unverified.",
@@ -203,32 +240,83 @@
     CANONICAL: "Fix the JSON text; the strict parser rejects it.",
   };
 
-  function error_notice(err) {
+  function principal_doc(env, pid) {
+    const doc = env ? env.policy.doc : HX.data.policy;
+    return (doc.principals || {})[pid] || null;
+  }
+
+  /** Principals who may approve this interaction: the required role, the run's tenant, not the initiator. */
+  function eligible_approvers(env, run, ix) {
+    if (!env || !run) return [];
+    const role = ix && ix.scope ? ix.scope.required_role : null;
+    const doc = env.policy.doc.principals || {};
+    return Object.keys(doc).filter((p) => p !== run.principal && doc[p].tenant_id === run.tenant_id &&
+      (!role || (doc[p].roles || []).indexOf(role) >= 0));
+  }
+
+  /** The fix for an error, built from the call's context: which area acted, as whom, on which run. */
+  function hint_for(c, ctx) {
+    const x = ctx || {};
+    const env = env_now();
+    const run = x.run || null;
+    const who = x.who || null;
+    if (c === "NOT_FOUND" && run && who) {
+      const d = principal_doc(env, who);
+      if (d && d.tenant_id !== run.tenant_id) {
+        return who + " belongs to " + d.tenant_id + ", so this " + run.tenant_id + " run does not exist for them. Answer as someone in " + run.tenant_id + ".";
+      }
+      return "The run or interaction is not visible to " + who + ". Pick the run again from Runs in this lab.";
+    }
+    if (c === "NOT_AUTHORIZED") {
+      if (x.kind === "input" && run) {
+        return "Only the requester (" + run.principal + ") or an approver may answer input requests" + (who ? "; " + who + " is neither" : "") + ". Answer as " + run.principal + ".";
+      }
+      if (x.kind === "approval" && run) {
+        const ok = eligible_approvers(env, run, x.ix);
+        const role = x.ix && x.ix.scope ? x.ix.scope.required_role : "the approver role";
+        const why = who === run.principal ? who + " started this run and cannot approve it (separation of duties)."
+          : who + " lacks the " + role + " role in " + run.tenant_id + ".";
+        return why + (ok.length ? " Approve as " + ok.join(" or ") + "." : " Nobody in " + run.tenant_id + " holds " + role + " now; Reset lab restores the policy.");
+      }
+      return "This identity lacks the capability for the call. Pick another principal.";
+    }
+    if (c === "TASK_INPUT_INVALID" && x.custom) return "Fix the task JSON above, or press Reset to example.";
+    return HINTS[c] || "";
+  }
+
+  function error_notice(err, ctx) {
     const is_hx = globalThis.HX && err instanceof HX.HXError;
     const c = is_hx ? err.code : "Error";
     const msg = String((err && err.message) || err);
-    const hint = HINTS[c] || (is_hx ? "" : "This is not an engine error; reload the page if it repeats.");
+    const hint = is_hx ? hint_for(c, ctx) : (ctx && ctx.plain ? "" : "This is not an engine error; reload the page if it repeats.");
     return { tone: "crit", code: c, title: c, body: [h("p", { class: "rn-err-msg" }, msg), hint ? h("p", { class: "rn-err-fix" }, hint) : null] };
   }
 
   function set_result(area, res) { S.results[area] = res; }
 
-  /** call(area, fn): run one engine call; HXError -> inline code + message; SimulatedCrash -> crash state. */
-  function call(area, fn) {
+  /** A UI precondition that is not met (no run, no draft): shown like an error, without the "reload" hint. */
+  class Precondition extends Error {}
+
+  /** call(area, fn, ctx): run one engine call; HXError -> inline code + message (with a fix built from ctx);
+      SimulatedCrash -> crash state. */
+  function call(area, fn, ctx) {
     /* an answer's result stays only until the next action elsewhere: it describes a step that is now history */
     if (area !== "human") S.results.human = null;
     try {
       const out = fn();
       if (out) set_result(area, out);
+      /* a human answer moved the run on: the previous drive result describes a state that is gone */
+      if (area === "human") S.results.drive = null;
     } catch (err) {
       if (HX.broker && typeof HX.broker.is_crash === "function" && HX.broker.is_crash(err)) {
-        S.crash = { point: err.point || String(err.message || ""), run_id: HXUI.lab.selected_run };
+        S.crash = { point: err.point || String(err.message || ""), run_id: HXUI.lab.selected_run, env: HXUI.lab.env };
         set_result(area, { tone: "crit", code: "SIMULATED_CRASH", title: "Worker crashed at " + S.crash.point,
           body: [h("p", null, "The armed fault point fired, as a process death would. Nothing after it ran: the store keeps exactly what was committed before the crash."),
             h("p", null, "Restart the worker to recover from the stored state.")], crash: true });
         HXUI.announce("Worker crashed at " + S.crash.point + ".");
       } else {
-        set_result(area, error_notice(err));
+        const c = Object.assign({ plain: err instanceof Precondition }, typeof ctx === "function" ? ctx() : ctx || {});
+        set_result(area, error_notice(err, c));
         HXUI.announce("Error " + (err && err.code ? err.code : "") + ": " + String((err && err.message) || err));
       }
     }
@@ -244,7 +332,7 @@
     box.dataset.code = r.code || "OK";
     box.dataset.tone = r.tone;
     const body = [].concat(r.body || []);
-    if (r.crash) body.push(h("div", { class: "hx-actions" }, HXUI.button("Restart worker", { id: "rn-crash-restart", variant: "primary", size: "sm", icon: "reset", on_click: do_restart })));
+    if (r.crash) body.push(h("div", { class: "hx-actions" }, HXUI.button("Restart worker to recover", { id: "rn-crash-restart", variant: "primary", size: "sm", icon: "reset", on_click: do_restart })));
     box.replaceChildren(HXUI.notice(r.tone, r.code && r.tone === "crit" && !r.crash ? [h("span", { class: "rn-code" }, r.code), " ", r.title === r.code ? "" : r.title] : r.title, body.length ? body : null));
   }
 
@@ -254,33 +342,58 @@
     const run = env ? find_run(env, HXUI.lab.selected_run) : null;
     return run ? { env, run, principal: env.principal(run.principal) } : null;
   }
+  function need_run() {
+    const sel = selected();
+    if (!sel) throw new Precondition("Start a run first.");
+    return sel;
+  }
 
   function step_text(res, before) {
     const cp = res.checkpoint || {};
-    const moved = before && cp.state_id && before !== cp.state_id ? [code(before), " → ", code(cp.state_id)] : [" at ", code(cp.state_id || "?")];
-    return [h("span", { class: "rn-res-status" }, status_chip(res.status)), " ", moved, res.detail && res.detail !== cp.state_id && res.detail !== res.status ? [" · ", h("span", { class: "rn-res-detail" }, res.detail)] : null];
+    const moved = before && cp.state_id && before !== cp.state_id ? move(before, cp.state_id) : [" at ", code(cp.state_id || "?")];
+    return [h("span", { class: "rn-res-status" }, run_chip(res.status, cp.outcome)), " ", moved,
+      res.detail && res.detail !== cp.state_id && res.detail !== res.status ? [" · ", h("span", { class: "rn-res-detail" }, res.detail)] : null];
+  }
+
+  /** The tone and title of a step result: a terminal takes its outcome's meaning, not just "finished". */
+  function step_result(fn_name, res, before, sel) {
+    const cp = res.checkpoint || {};
+    const out = cp.outcome || null;
+    let tone = res.status === "FAILED" ? "crit" : res.status === "COMPLETED" ? run_tone("COMPLETED", out) : res.status === "CANCELLED" ? "neutral" : "neutral";
+    let title = [code(fn_name), " returned ", res.status === "COMPLETED" && out ? "COMPLETED · " + out.category + " (" + out.terminal + ")" : res.status];
+    const body = [h("p", { class: "rn-res-line" }, step_text(res, before))];
+    if (res.status === "FAILED") {
+      let ev = null;
+      try { ev = stop_event(sel.env.service.inspect_run(sel.run.run_id, sel.principal).events); } catch (e) { ev = null; }
+      if (ev && ev.code === "TERMINAL_ADMISSION_DENIED") {
+        title = [code(fn_name), " returned FAILED · verified outcome refused"];
+        body.push(h("p", null, "The run reached ", code(cp.state_id), " but the terminal was refused: its evidence was invalidated after it was issued. See the outcome card."));
+      } else if (ev) body.push(h("p", null, "Stopped with ", code(ev.code), ev.message ? ": " + ev.message : "", "."));
+    }
+    return { tone, code: res.status, title, body };
   }
 
   function do_step(until) {
     call("drive", () => {
-      const sel = selected();
-      if (!sel) throw new Error("Start a run first.");
+      const sel = need_run();
       const before = sel.env.store.latest_checkpoint(sel.run.tenant_id, sel.run.run_id).state_id;
       const res = until ? sel.env.service.run_until_blocked(sel.run.run_id, sel.principal)
         : sel.env.service.advance_run(sel.run.run_id, sel.principal);
-      return { tone: res.status === "FAILED" ? "crit" : TERMINAL.indexOf(res.status) >= 0 ? "ok" : "neutral", code: res.status,
-        title: [code(until ? "run_until_blocked" : "advance_run"), " returned ", res.status],
-        body: [h("p", { class: "rn-res-line" }, step_text(res, before))] };
-    });
+      return step_result(until ? "run_until_blocked" : "advance_run", res, before, sel);
+    }, () => ({ run: (selected() || {}).run }));
+  }
+
+  function armed_list(env) {
+    return env ? Array.from(env.faults.armed || []) : [];
   }
 
   function do_restart() {
     call("drive", () => {
       const env = env_now();
-      if (!env) throw new Error("Nothing to restart yet: start a run first.");
-      const armed = Array.from(env.faults.armed || []);
-      HXUI.lab.env = env.restart();
+      if (!env) throw new Precondition("Nothing to restart yet: start a run first.");
+      const armed = armed_list(env);
       const was = S.crash;
+      HXUI.lab.env = env.restart();
       S.crash = null;
       HXUI.lab_changed("env");
       return { tone: "ok", code: "RESTARTED", title: "Worker restarted",
@@ -292,39 +405,81 @@
 
   function do_cancel() {
     call("drive", () => {
-      const sel = selected();
-      if (!sel) throw new Error("Start a run first.");
+      const sel = need_run();
       const cr = sel.env.service.cancel_run(sel.run.run_id, null, sel.principal);
       const disclosed = (cr.disclosed_effects || []).map((e) => e.tool + " " + (e.external_ref || "?") + " (" + e.certainty + ")");
       return { tone: cr.status === "CANCELLED" ? "ok" : "warn", code: cr.status, title: [code("cancel_run"), " returned ", cr.status],
         body: [h("p", null, disclosed.length ? "Completed external effects disclosed: " + disclosed.join(", ") + "." : "No completed external effects to disclose."),
           (cr.unresolved || []).length ? h("p", null, "Unresolved: " + cr.unresolved.join("; ") + ".") : null,
           cr.status === "CANCEL_REQUESTED" ? h("p", null, "The cancellation is recorded and blocks any further dispatch. The worker that holds the run's lease finishes it on its next step: press Step.") : null] };
-    });
+    }, () => ({ run: (selected() || {}).run }));
+  }
+
+  /** approval expiry and lease length, read from the engine (the selected run's package, the service) */
+  function timing_facts(env, snap) {
+    let expiry = null;
+    try {
+      const pkg = snap && snap.pkg ? snap.pkg : chosen_package(env);
+      expiry = pkg && pkg.execution_policy ? pkg.execution_policy.approval_expiry_s : null;
+    } catch (e) { expiry = null; }
+    const lease = env && env.service ? env.service.lease_ttl : null;
+    return { expiry, lease };
   }
 
   function do_clock(seconds, label) {
     call("drive", () => {
       const env = HXUI.lab_env();
       env.clock.advance(seconds);
-      return { tone: "neutral", code: "CLOCK", title: "Clock advanced " + label,
-        body: [h("p", null, "Logical time is now ", h("span", { class: "hx-mono" }, iso(env.clock())), ". Approvals expire 24 h after they open; a worker's lease lasts 300 s.")] };
+      const f = timing_facts(env, P.last_snap);
+      const fmt = F().secs;
+      const ix = P.last_snap && P.last_snap.ix;
+      const facts = [];
+      if (f.expiry !== null && f.expiry !== undefined) facts.push("Approvals expire " + fmt(f.expiry) + " after they open");
+      if (f.lease !== null && f.lease !== undefined) facts.push("a worker's lease lasts " + fmt(f.lease));
+      const past = ix && ix.expires_at !== null && ix.expires_at !== undefined && env.clock() > ix.expires_at;
+      return { tone: past ? "warn" : "neutral", code: "CLOCK", title: "Clock advanced " + label,
+        body: [h("p", null, "Logical time is now ", h("span", { class: "hx-mono rn-nw" }, iso(env.clock())), ". ", facts.length ? facts.join("; ") + "." : ""),
+          past ? h("p", null, "The open approval has expired. Press Step: the run records the expiry and ends unverified.") : null] };
     });
   }
 
+  /** "char 25" in a parser message -> "line 2, column 4" of the text */
+  function where_in(text, msg) {
+    const m = /char(?:acter)?\s+(\d+)|position\s+(\d+)|offset\s+(\d+)/i.exec(msg);
+    if (!m) return null;
+    const at = Number(m[1] || m[2] || m[3]);
+    const before = text.slice(0, at);
+    const line = before.split("\n").length;
+    const col = at - before.lastIndexOf("\n");
+    return { line, col };
+  }
+
+  function example_task_text() { return JSON.stringify(HXUI.run_scenario("custom").task(), null, 2); }
+
   function custom_task(pkg) {
-    const text = S.custom_text === null ? JSON.stringify(HXUI.run_scenario("custom").task(), null, 2) : S.custom_text;
+    const text = S.custom_text === null ? example_task_text() : S.custom_text;
     let v;
     try { v = HX.canonical.strict_loads(text); } catch (err) {
-      return { error: "Not valid task JSON: " + String(err.message || err) + "." };
+      const msg = String(err.message || err).replace(/\.$/, "");
+      const at = where_in(text, msg);
+      return { error: "Not valid JSON" + (at ? " at line " + at.line + ", column " + at.col : "") + ": " + msg + ". Fix it there, or press Reset to example." };
     }
-    if (v === null || typeof v !== "object" || Array.isArray(v)) return { error: "The task must be a JSON object, such as {\"supplier_ref\": \"SUP-10042\", ...}." };
+    if (v === null || typeof v !== "object" || Array.isArray(v)) return { error: "The task must be a JSON object, such as {\"supplier_ref\": \"SUP-10042\", ...}. Press Reset to example to start over." };
     const schema = pkg && pkg.contracts ? pkg.contracts.task_input_schema : null;
     if (schema) {
-      const check = HX.broker && HX.broker._validate_against ? HX.broker._validate_against : HX.catalog.validate_against;
       let errs = [];
-      try { errs = check(schema, v) || []; } catch (err) { errs = [String(err.message || err)]; }
-      if (errs.length) return { error: "The task does not match the package's task schema: " + errs.slice(0, 3).join("; ") + "." };
+      try { errs = HX.catalog.validate_against(schema, v) || []; } catch (err) { errs = [String(err.message || err)]; }
+      if (errs.length) {
+        const missing = [], other = [];
+        for (const e of errs) {
+          const m = /'([^']+)' is a required property/.exec(e);
+          if (m) missing.push(m[1]); else other.push(String(e).replace(/^<root>:\s*/, "task: "));
+        }
+        const parts = [];
+        if (missing.length) parts.push("Missing fields: " + missing.join(", ") + ".");
+        if (other.length) parts.push((other.length > 3 ? other.slice(0, 3).join("; ") + "; and " + (other.length - 3) + " more" : other.join("; ")) + ".");
+        return { error: parts.join(" ") + " Add or fix them, or press Reset to example." };
+      }
     }
     return { task: v };
   }
@@ -335,11 +490,12 @@
   }
 
   function do_start() {
+    let started = false;
     call("start", () => {
       const sc = HXUI.run_scenario(S.scenario) || HXUI.run_scenario("clean");
       const env0 = HXUI.lab_env();
       const pkg = chosen_package(env0);
-      if (!pkg) throw new HX.HXError("ARTIFACT_NOT_ADMITTED", "The refined machine is not admitted in this lab. Admit it in Learn from traces first.");
+      if (!pkg) throw new HX.HXError("ARTIFACT_NOT_ADMITTED", "The refined machine is not admitted in this lab. Press Admit refined machine above first.");
       let task;
       if (sc.custom) {
         const r = custom_task(pkg);
@@ -352,12 +508,14 @@
       const has = !!(env.model && env.model.gullible);
       let note = null;
       if (want !== has) {
+        const armed = armed_list(env);
         const model = want ? new HX.fakes.FixtureExtractionModel({ gullible: true }) : new HX.fakes.FixtureExtractionModel();
         env = env.restart(model);
         HXUI.lab.env = env;
         S.crash = null;
-        note = want ? "The worker was restarted with the gullible fixture model (env.restart(model)); it obeys instructions it finds in documents."
-          : "The worker was restarted with the standard fixture model (env.restart(model)).";
+        note = (want ? "The worker was restarted with the gullible fixture model (env.restart(model)); it obeys instructions it finds in documents."
+          : "The worker was restarted with the standard fixture model (env.restart(model)).") +
+          (armed.length ? " Armed crash points belonged to the old process and are gone: " + armed.join(", ") + "." : "");
       }
       const p = env.principal(S.initiator);
       const handle = env.service.start_run(pkg.artifact_hash, task, p);
@@ -366,25 +524,60 @@
       HXUI.lab.selected_run = handle.run_id;
       S.results.drive = null; S.results.human = null; S.results.erp = null;
       HXUI.lab_changed("runs");
+      started = true;
       return { tone: "ok", code: "STARTED", title: ["Started ", code(handle.run_id)],
         body: [h("p", null, sc.title + " as ", code(p.id), " on the " + (pkg.artifact_hash === initial_hash() ? "initial" : "refined") + " machine. ",
-          "Step through it, or run it until it blocks."), note ? h("p", null, note) : null] };
+          "Step through it in the workbench below, or run it until it blocks."), note ? h("p", null, note) : null] };
+    }, () => ({ custom: !!(HXUI.run_scenario(S.scenario) || {}).custom }));
+    if (started && P && P.drive) {
+      /* hand the reader to the next action */
+      const step = P.drive.step;
+      try { step.focus({ preventScroll: true }); } catch (e) { step.focus(); }
+      try { step.scrollIntoView({ block: "nearest", behavior: reduced_motion() ? "auto" : "smooth" }); } catch (e) { /* old engines */ }
+    }
+  }
+
+  /** Admit the refined machine from the reference missing-documents trace (propose_update, then registry.admit), so
+      the Missing documents scenario works without Learn from traces. */
+  function do_admit_refined() {
+    call("start", () => {
+      const env = HXUI.lab_env();
+      const pkg = HXUI.lab.packages.initial;
+      const R = HX.reference;
+      const skill_text = HX.env.skill_source().text;
+      const trace = R.missing_docs_trace();
+      const prop = HX.update.propose_update(pkg, trace, [], [], env.catalog, new R.FixtureAligner(), skill_text);
+      if (!prop || !prop.candidate) throw new HX.HXError("UPDATE_REJECTED", "propose_update returned no candidate (" + (prop ? prop.status : "no result") + ").");
+      const adm = HX.registry.admit(env.store, prop.candidate, env.catalog, { expected_parent_hash: pkg.artifact_hash,
+        approver: env.principal("user:dana"), environment: "sandbox", deployment_policy: HX.fixture.deployment_policy(),
+        protected: [trace], negative: [], now: env.clock(), skill_text });
+      if (!adm || adm.status !== "ADMITTED") throw new HX.HXError("ADMISSION_FAILED", "The refined machine was not admitted (" + (adm ? adm.status + ": " + (adm.reasons || []).join("; ") : "no result") + ").");
+      HXUI.lab.packages.refined = prop.candidate;
+      HXUI.lab_changed("packages");
+      return { tone: "ok", code: "ADMITTED", title: ["Refined machine ", code(F().short(prop.candidate.artifact_hash, 19)), " admitted"],
+        body: [h("p", null, "Proposed from the reference missing-documents trace (", code("HX.update.propose_update"), ") and admitted by ", code("user:dana"),
+          " with every gate passing. Missing documents is now available.")] };
     });
   }
 
+  function current_ix(sel) {
+    return sel.env.store.interaction_for_revision(sel.run.tenant_id, sel.run.run_id, sel.env.store.latest_checkpoint(sel.run.tenant_id, sel.run.run_id).revision);
+  }
+
   function do_answer_approval(decision) {
+    let ctx = {};
     call("human", () => {
-      const sel = selected();
-      if (!sel) throw new Error("Start a run first.");
-      const ix = sel.env.store.interaction_for_revision(sel.run.tenant_id, sel.run.run_id, sel.env.store.latest_checkpoint(sel.run.tenant_id, sel.run.run_id).revision);
-      if (!ix) throw new Error("This run has no open approval.");
+      const sel = need_run();
+      const ix = current_ix(sel);
+      if (!ix) throw new Precondition("This run has no open approval.");
       const who = P.approver.value;
+      ctx = { kind: "approval", run: sel.run, who, ix };
       const tamper = P.tamper.checked;
       const digest = tamper ? tampered(ix.scope_digest) : ix.scope_digest;
       const res = sel.env.service.resume_interaction(sel.run.run_id, ix.interaction_id, { approval_decision: decision, scope_digest: digest }, sel.env.principal(who));
       return { tone: "ok", code: decision.toUpperCase(), title: [decision === "approved" ? "Approved by " : "Rejected by ", code(who)],
         body: [h("p", { class: "rn-res-line" }, "The run continued one step: ", step_text(res, ix.state_id))] };
-    });
+    }, () => ctx);
   }
 
   function tampered(d) {
@@ -396,17 +589,19 @@
 
   function do_answer_input(ev) {
     if (ev) ev.preventDefault();
+    if (P.input_send && HXUI.is_disabled(P.input_send)) return;
+    let ctx = {};
     call("human", () => {
-      const sel = selected();
-      if (!sel) throw new Error("Start a run first.");
-      const ix = sel.env.store.interaction_for_revision(sel.run.tenant_id, sel.run.run_id, sel.env.store.latest_checkpoint(sel.run.tenant_id, sel.run.run_id).revision);
-      if (!ix) throw new Error("This run has no open input request.");
+      const sel = need_run();
+      const ix = current_ix(sel);
+      if (!ix) throw new Precondition("This run has no open input request.");
       const ids = String(P.docs_input.value || "").split(/[\s,]+/).filter(Boolean);
       const who = P.input_who.value;
+      ctx = { kind: "input", run: sel.run, who, ix };
       const res = sel.env.service.resume_interaction(sel.run.run_id, ix.interaction_id, { document_ids: ids }, sel.env.principal(who));
       return { tone: "ok", code: "ANSWERED", title: ["Answered by ", code(who)],
-        body: [h("p", { class: "rn-res-line" }, "Sent document_ids ", code(JSON.stringify(ids)), ". The run continued one step: ", step_text(res, ix.state_id))] };
-    });
+        body: [h("p", { class: "rn-res-line" }, "Sent document_ids ", wrap_id(JSON.stringify(ids)), ". The run continued one step: ", step_text(res, ix.state_id))] };
+    }, () => ctx);
   }
 
   function do_arm() {
@@ -424,32 +619,34 @@
       const env = HXUI.lab_env();
       const who = P.trouble.pol_principal.value;
       const cap = P.trouble.pol_cap.value;
-      if (!cap) throw new Error(who + " has no capabilities left to revoke.");
+      if (!cap) throw new Precondition(who + " has no capabilities left to revoke.");
       const before = env.policy.version;
       env.policy.revoke_capability(who, cap);
       return { tone: "warn", code: "REVOKED", title: ["Revoked ", code(cap), " from ", code(who)],
-        body: [h("p", null, "Policy version ", code(before), " is now ", code(env.policy.version), ". The broker re-checks capabilities and the approval's policy version before every dispatch.")] };
+        body: [h("p", null, "Policy version ", code(before), " is now ", code(env.policy.version), ". The broker re-checks capabilities and the approval's policy version before every dispatch."),
+          h("p", null, "This stays in effect for every run in the lab until Reset lab.")] };
     });
   }
 
   function do_erp(kind) {
     call("erp", () => {
-      const sel = selected();
-      if (!sel) throw new Error("Start a run first.");
+      const sel = need_run();
       const cp = sel.env.store.latest_checkpoint(sel.run.tenant_id, sel.run.run_id);
       const id = cp.variables && cp.variables.erp_draft_id;
-      if (!id) throw new Error("The run has no ERP draft yet.");
+      if (!id) throw new Precondition("The run has no ERP draft yet.");
       if (kind === "modify") {
         const changes = { legal_name: "Changed Later GmbH" };
         sel.env.erp.modify_out_of_band(sel.run.tenant_id, id, changes);
         return { tone: "warn", code: "MODIFIED", title: ["Draft ", code(id), " changed out of band"],
-          body: [h("p", null, "Set legal_name to \"Changed Later GmbH\" and bumped the ERP version, as test A25 does. The verified terminal re-reads the draft before it admits success.")] };
+          body: [h("p", null, "Set legal_name to \"Changed Later GmbH\" and bumped the ERP version (", code("modify_out_of_band"), "). ",
+            cp.state_id === "END_VERIFIED_DRAFT" ? "Step now: the terminal re-checks its evidence and refuses the verified outcome (test A25)."
+              : "Step now: the read-back sees the change, so the run ends unverified (the A28 outcome). To see A25, modify at END_VERIFIED_DRAFT instead.")] };
       }
       const changes = { tax_id: "DE000000000" };
       sel.env.erp.tamper_payload(sel.run.tenant_id, id, changes);
       return { tone: "warn", code: "TAMPERED", title: ["Draft ", code(id), " payload tampered"],
-        body: [h("p", null, "Set tax_id to \"DE000000000\" without a version bump, as test A28 does: the connector persisted something other than the approved payload.")] };
-    });
+        body: [h("p", null, "Set tax_id to \"DE000000000\" without a version bump, as test A28 does: the connector persisted something other than the approved payload. Step now: the read-back catches it.")] };
+    }, () => ({ run: (selected() || {}).run }));
   }
 
   function select_run(run_id) {
@@ -469,9 +666,16 @@
       summary_item("Run", "rn-sum-run", null),
       summary_item("Status", "rn-sum-status", null),
       summary_item("State", "rn-sum-state", null),
-      summary_item("Steps", "rn-sum-steps", null),
+      summary_item("Transitions", "rn-sum-steps", null),
       summary_item("ERP drafts", "rn-sum-erp", null),
       summary_item("Logical clock", "rn-sum-clock", null));
+  }
+
+  /** the tenant whose ERP drafts the summary counts: the selected run's, else the chosen initiator's */
+  function summary_tenant(snap) {
+    if (snap.run) return snap.run.tenant_id;
+    const d = principal_doc(snap.env, S.initiator);
+    return d ? d.tenant_id : null;
   }
 
   function paint_summary(snap) {
@@ -486,38 +690,46 @@
       set("rn-sum-steps", h("span", { class: "hx-num" }, "0"));
     } else {
       const meta = meta_of(snap.run.run_id);
-      set("rn-sum-run", h("span", { class: "hx-mono", title: snap.run.run_id }, snap.run.run_id), meta ? h("span", { class: "rn-sum-note" }, meta.title) : null);
-      set("rn-sum-status", status_chip(snap.run.status, { icon: snap.run.status === "COMPLETED" ? "check" : snap.run.status === "FAILED" ? "stop" : undefined }));
       const out = snap.cp.outcome;
+      set("rn-sum-run", h("span", { class: "hx-mono", title: snap.run.run_id }, snap.run.run_id), meta ? h("span", { class: "rn-sum-note" }, meta.title) : null);
+      const crashed = S.crash && S.crash.run_id === snap.run.run_id;
+      const pending_cancel = snap.run.cancel_requested && TERMINAL.indexOf(snap.run.status) < 0;
+      set("rn-sum-status", run_chip(snap.run.status, out),
+        crashed ? HXUI.chip("Worker crashed at " + S.crash.point, "crit", { icon: "alert", class: "rn-sum-flag", title: "Restart the worker to recover" }) : null,
+        pending_cancel ? HXUI.chip("Cancel requested", "warn", { class: "rn-sum-flag", title: "The next step finishes the cancellation" }) : null);
       set("rn-sum-state", code(snap.cp.state_id),
         out ? h("span", { class: "rn-sum-note" }, " ", HXUI.chip(out.category, CATEGORY_TONE[out.category] || "neutral")) : null);
       const steps = (snap.ins.events || []).filter((e) => e.type === "TRANSITION" || e.type === "FALLBACK_ENTERED").length;
       set("rn-sum-steps", h("span", { class: "hx-num" }, String(steps)), h("span", { class: "rn-sum-note" }, " rev " + snap.cp.revision));
     }
     let drafts = 0;
-    if (env) { try { drafts = env.erp.count(snap.run ? snap.run.tenant_id : "acme"); } catch (e) { drafts = 0; } }
-    set("rn-sum-erp", h("span", { class: "hx-num", dataset: { count: drafts } }, String(drafts)));
+    const tenant = summary_tenant(snap);
+    if (env && tenant) { try { drafts = env.erp.count(tenant); } catch (e) { drafts = 0; } }
+    set("rn-sum-erp", h("span", { class: "hx-num", dataset: { count: drafts } }, String(drafts)), tenant ? h("span", { class: "rn-sum-note" }, " " + tenant) : null);
     set("rn-sum-clock", h("span", { class: "hx-mono rn-clock" }, iso(env ? env.clock() : LAB_EPOCH)));
   }
 
   /* ---- start panel */
   function scenario_card(sc) {
     const id = "rn-sc-" + sc.id;
-    const input = h("input", { type: "radio", name: "rn-scenario", id, value: sc.id, class: "rn-sc-input", checked: S.scenario === sc.id });
+    const input = h("input", { type: "radio", name: "rn-scenario", id, value: sc.id, class: "rn-sc-input", checked: S.scenario === sc.id,
+      "aria-labelledby": id + "-title", "aria-describedby": id + "-sum" });
     input.addEventListener("change", () => {
       if (!input.checked) return;
       S.scenario = sc.id;
       S.machine = sc.machine === "refined" ? "refined" : "initial";
       refresh();
     });
-    const reason = h("p", { class: "rn-sc-reason", id: id + "-reason", hidden: true });
+    const reason = h("span", { class: "rn-sc-reason", id: id + "-reason", hidden: true });
+    const tag = h("span", { class: "rn-sc-tags" }, HXUI.chip(sc.refs, sc.machine === "refined" ? "accent" : "neutral"),
+      sc.model && sc.model.gullible ? HXUI.chip("Gullible model", "info") : null);
     const card = h("label", { class: "rn-sc", for: id, dataset: { scenario: sc.id } },
       input,
-      h("span", { class: "rn-sc-head" }, h("span", { class: "rn-sc-title" }, sc.title), HXUI.chip(sc.refs, sc.machine === "refined" ? "accent" : "neutral")),
-      h("span", { class: "rn-sc-body" }, HXUI.rich(sc.summary)),
-      sc.model && sc.model.gullible ? h("span", { class: "rn-sc-model" }, HXUI.chip("Gullible model", "info")) : null,
+      h("span", { class: "rn-sc-title", id: id + "-title" }, sc.title),
+      tag,
+      h("span", { class: "rn-sc-body", id: id + "-sum" }, HXUI.rich(sc.summary)),
       reason);
-    return { sc, input, card, reason };
+    return { sc, input, card, reason, tag };
   }
 
   function build_start() {
@@ -525,13 +737,24 @@
     const list = h("div", { class: "rn-sc-grid", role: "radiogroup", "aria-labelledby": "rn-start-title" }, cards.map((c) => c.card));
     const expect = h("p", { class: "rn-expect", id: "rn-expect" });
 
+    /* the refined machine, admitted here when Learn from traces has not done it yet */
+    const admit = HXUI.button("Admit refined machine", { id: "rn-admit-refined", size: "sm", icon: "check", on_click: do_admit_refined });
+    const admit_wrap = h("div", { class: "rn-admit", id: "rn-admit", hidden: true },
+      h("p", { class: "rn-admit-text", id: "rn-admit-text" }), h("div", { class: "hx-actions" }, admit));
+
     /* custom task editor */
     const ta = h("textarea", { id: "rn-custom", class: "hx-textarea rn-custom", rows: 9, spellcheck: "false", autocomplete: "off" });
-    ta.value = S.custom_text === null ? JSON.stringify(HXUI.run_scenario("custom").task(), null, 2) : S.custom_text;
+    ta.value = S.custom_text === null ? example_task_text() : S.custom_text;
     let t = 0;
     ta.addEventListener("input", () => { S.custom_text = ta.value; clearTimeout(t); t = setTimeout(refresh, 200); });
     const custom = HXUI.field("Task JSON", ta, { id: "rn-custom", hint: "Parsed with HX.canonical.strict_loads, then checked against the package's task_input_schema." });
-    const custom_wrap = h("div", { class: "rn-custom-wrap", hidden: true }, custom);
+    const reset = HXUI.button("Reset to example", { id: "rn-custom-reset", size: "sm", variant: "ghost", icon: "reset", on_click: () => {
+      S.custom_text = null;
+      ta.value = example_task_text();
+      refresh();
+      try { ta.focus(); } catch (e) { /* gone */ }
+    } });
+    const custom_wrap = h("div", { class: "rn-custom-wrap", hidden: true }, custom, h("div", { class: "hx-actions" }, reset));
 
     /* machine toggle */
     const m_init = h("input", { type: "radio", name: "rn-machine", id: "rn-machine-initial", value: "initial", checked: S.machine === "initial" });
@@ -546,14 +769,14 @@
       ref_reason);
 
     const principals = Object.keys(HX.data.policy.principals);
-    const who = HXUI.select("rn-initiator", principals.map((p) => ({ value: p, label: p + " · " + HX.data.policy.principals[p].roles.join(", ") })),
+    const who = HXUI.select("rn-initiator", principals.map((p) => ({ value: p, label: principal_label(null, p, null) })),
       { value: S.initiator, on_change: (v) => { S.initiator = v; refresh(); } });
     const who_field = HXUI.field("Initiator", who, { hint: "The run's principal. The broker checks this identity's capabilities." });
     const start = HXUI.button("Start run", { id: "rn-start", variant: "primary", icon: "play", on_click: do_start });
     const result = h("div", { class: "rn-result", id: "rn-start-result", hidden: true });
 
     const form = h("form", { class: "rn-start", id: "rn-start-form", "aria-labelledby": "rn-start-title" },
-      list, custom_wrap,
+      list, admit_wrap, custom_wrap,
       h("div", { class: "rn-start-row" }, machine, who_field, h("div", { class: "rn-start-go" }, start)),
       expect, result);
     form.addEventListener("submit", (e) => { e.preventDefault(); do_start(); });
@@ -563,13 +786,24 @@
       h("p", { class: "hx-panel-lead" }, "Each scenario is a task from the Python tests. The run starts in the lab's environment, which admitted the compiled machine as ",
         code("user:dana"), "."),
       form);
-    return { panel, cards, custom_wrap, custom, ta, m_init, m_ref, ref_reason, who, start, result, expect };
+    return { panel, cards, list, custom_wrap, custom, ta, m_init, m_ref, ref_reason, who, start, result, expect, admit, admit_wrap };
   }
+
+  /** "user:mallory · globex · procurement_approver": the tenant first when it differs from the run's */
+  function principal_label(env, p, tenant) {
+    const d = principal_doc(env, p) || {};
+    const roles = (d.roles || []).join(", ");
+    return p + (d.tenant_id && tenant && d.tenant_id !== tenant ? " · " + d.tenant_id : "") + (roles ? " · " + roles : "");
+  }
+
+  const can_admit_here = () => !!(globalThis.HX && HX.update && HX.reference && HX.registry && HX.fixture && HX.env);
 
   function paint_start(snap) {
     const env = snap.env;
     const refined = env ? refined_package(env) : null;
-    const no_ref = "Needs the refined machine, which is not admitted in this lab yet. Admit it in Learn from traces first.";
+    const here = can_admit_here();
+    const no_ref = "Needs the refined machine, which is not admitted in this lab yet. " +
+      (here ? "Press Admit refined machine below, or admit it in Learn from traces." : "Admit it in Learn from traces first.");
     for (const c of P.start.cards) {
       const off = c.sc.machine === "refined" && !refined;
       c.input.disabled = off;
@@ -577,16 +811,28 @@
       c.card.classList.toggle("is-selected", S.scenario === c.sc.id);
       c.reason.hidden = !off;
       c.reason.textContent = off ? no_ref : "";
-      if (off) c.input.setAttribute("aria-describedby", c.reason.id); else c.input.removeAttribute("aria-describedby");
+      c.input.setAttribute("aria-describedby", c.input.id + "-sum" + (off ? " " + c.reason.id : ""));
       c.input.checked = S.scenario === c.sc.id;
+      /* a disabled card's tag reads as inactive */
+      const first = c.tag.firstChild;
+      if (first) { first.classList.toggle("hx-tone-accent", !off && c.sc.machine === "refined"); first.classList.toggle("hx-tone-neutral", off || c.sc.machine !== "refined"); }
     }
     if (S.scenario === "missing-docs" && !refined) { S.scenario = "clean"; S.machine = "initial"; return paint_start(snap); }
     if (S.machine === "refined" && !refined) S.machine = "initial";
+    /* once a run exists the cards shrink to their titles on narrow screens (the selected one keeps its text) */
+    P.start.list.classList.toggle("is-compact", (HXUI.lab.runs || []).length > 0);
     P.start.m_ref.disabled = !refined;
+    if (refined) P.start.m_ref.removeAttribute("aria-describedby"); else P.start.m_ref.setAttribute("aria-describedby", "rn-machine-reason");
     P.start.m_init.checked = S.machine === "initial";
     P.start.m_ref.checked = S.machine === "refined";
     P.start.ref_reason.replaceChildren(...(refined ? ["Refined ", h("span", { class: "hx-mono", title: refined.artifact_hash }, F().short(refined.artifact_hash, 19)), " is admitted."]
       : ["Refined is available once it is admitted. ", h("a", { class: "hx-link", href: "#learn", id: "rn-open-learn" }, "Open Learn from traces")]));
+    /* admit here */
+    P.start.admit_wrap.hidden = !!refined || !here;
+    if (!refined && here) {
+      document.getElementById("rn-admit-text").replaceChildren("The Missing documents scenario runs on the refined machine. Admit it here: ",
+        code("propose_update"), " with the reference missing-documents trace, then ", code("registry.admit"), " as ", code("user:dana"), ".");
+    }
     const sc = HXUI.run_scenario(S.scenario);
     P.start.custom_wrap.hidden = !sc.custom;
     let reason = "";
@@ -597,6 +843,7 @@
       P.start.custom.hx.set_error(r.error || "");
       P.start.custom.hx.set_hint(r.error ? "" : "Valid task with " + Object.keys(r.task).length + " fields, checked against the task schema.");
       if (r.error) reason = "Fix the task JSON first: " + r.error;
+      HXUI.set_disabled(document.getElementById("rn-custom-reset"), S.custom_text === null, "The editor already shows the example task.");
     }
     HXUI.set_disabled(P.start.start, !!reason, reason);
     P.start.expect.replaceChildren(h("span", { class: "hx-label" }, "Expected"), " ", sc.expect);
@@ -614,9 +861,12 @@
   }
 
   function paint_runs(snap) {
-    const runs = all_runs(snap.env).slice().reverse();
-    const counts = {};
-    for (const r of runs) counts[r.status] = (counts[r.status] || 0) + 1;
+    const env = snap.env;
+    const runs = all_runs(env).slice().reverse().map((r) => {
+      let out = null;
+      try { const cp = env.store.latest_checkpoint(r.tenant_id, r.run_id); out = cp ? cp.outcome : null; } catch (e) { out = null; }
+      return Object.assign({}, r, { outcome: out });
+    });
     document.getElementById("rn-runs-meta").replaceChildren(HXUI.chip(runs.length + (runs.length === 1 ? " run" : " runs"), "neutral"));
     const sel = HXUI.lab.selected_run;
     const table = HXUI.table({
@@ -626,13 +876,15 @@
           type: "button", class: "rn-run-btn", id: "rn-run-" + r.run_id, "aria-current": r.run_id === sel ? "true" : null,
           "aria-label": "Inspect " + r.run_id + (r.run_id === sel ? " (shown)" : ""), on: { click: () => select_run(r.run_id) },
         }, h("span", { class: "hx-mono" }, r.run_id)) },
-        { key: "scenario", label: "Scenario", render: (r) => { const m = meta_of(r.run_id); return m ? m.title : h("span", { class: "hx-faint" }, "started elsewhere"); } },
-        { key: "status", label: "Status", render: (r) => status_chip(r.status) },
+        { key: "status", label: "Status", nowrap: true, render: (r) => run_chip(r.status, r.outcome) },
+        { key: "outcome", label: "Outcome", nowrap: true, fold: true, fold_label: "outcome",
+          render: (r) => r.outcome ? code(r.outcome.terminal) : h("span", { class: "hx-faint" }, "none yet") },
+        { key: "scenario", label: "Scenario", fold: true, render: (r) => { const m = meta_of(r.run_id); return m ? m.title : h("span", { class: "hx-faint" }, "started elsewhere"); } },
         { key: "principal", label: "Initiator", mono: true, nowrap: true, fold: true, fold_label: "by" },
         { key: "machine", label: "Machine", fold: true, render: (r) => r.artifact_hash === initial_hash() ? "initial" : h("span", { class: "hx-mono", title: r.artifact_hash }, F().short(r.artifact_hash, 15)) },
       ],
       rows: runs, empty: "No runs yet. Pick a scenario and start one.",
-      row_attrs: (r) => ({ class: r.run_id === sel ? "is-selected" : null, dataset: { run: r.run_id, status: r.status } }),
+      row_attrs: (r) => ({ class: r.run_id === sel ? "is-selected" : null, dataset: { run: r.run_id, status: r.status, terminal: r.outcome ? r.outcome.terminal : "" } }),
     });
     P.runs.body.replaceChildren(table);
   }
@@ -667,6 +919,7 @@
   function build_drive() {
     const b = (label, id, fn, o) => HXUI.button(label, Object.assign({ id, size: "sm", on_click: fn }, o || {}));
     const step = b("Step", "rn-step", () => do_step(false), { variant: "primary", icon: "arrow" });
+    const wait = h("p", { class: "rn-drive-wait", id: "rn-drive-wait", hidden: true });
     const until = b("Run until blocked", "rn-until", () => do_step(true), { icon: "play" });
     const restart = b("Restart worker", "rn-restart", do_restart, { icon: "reset" });
     const cancel = b("Cancel run", "rn-cancel", do_cancel, { variant: "secondary" });
@@ -676,11 +929,18 @@
     const panel = h("section", { class: "rn-drive", "aria-labelledby": "rn-drive-title" },
       h("h4", { class: "hx-label", id: "rn-drive-title" }, "Drive the run"),
       h("div", { class: "rn-drive-row" }, step, until),
+      wait,
       h("div", { class: "rn-drive-row" }, restart, cancel),
       h("div", { class: "rn-drive-row rn-clock-row" }, h("span", { class: "rn-clock-label", id: "rn-clock-label" }, "Advance clock"), h1, h25),
       result);
     for (const c of [h1, h25]) c.setAttribute("aria-describedby", "rn-clock-label");
-    return { panel, step, until, restart, cancel, h1, h25, result };
+    return { panel, step, until, restart, cancel, h1, h25, result, wait };
+  }
+
+  /** whether the open approval's expiry has passed on the logical clock */
+  function ix_expired(snap) {
+    const ix = snap.ix;
+    return !!(ix && ix.expires_at !== null && ix.expires_at !== undefined && snap.env && snap.env.clock() > ix.expires_at);
   }
 
   function paint_drive(snap) {
@@ -688,14 +948,27 @@
     const crashed = S.crash ? "The worker crashed at " + S.crash.point + ". Restart the worker first." : "";
     const none = "Start a run first.";
     const done = run && TERMINAL.indexOf(run.status) >= 0 ? "The run has finished (" + run.status + ")." : "";
-    const r1 = !run ? none : crashed || done;
+    const cancel_pending = run && run.cancel_requested && !done ? "Cancellation already requested: press Step to finish it." : "";
+    let waiting = "";
+    if (cancel_pending) waiting = "";
+    else if (run && run.status === "WAITING_FOR_APPROVAL" && !ix_expired(snap)) {
+      waiting = "Waiting for approval: answer it below, or advance the clock past its expiry and then Step to record the expiry.";
+    } else if (run && run.status === "WAITING_FOR_INPUT") {
+      waiting = "Waiting for input: send the documents below. Stepping cannot move the run until someone answers.";
+    }
+    const r1 = !run ? none : crashed || done || waiting;
     HXUI.set_disabled(P.drive.step, !!r1, r1);
     HXUI.set_disabled(P.drive.until, !!r1, r1);
-    HXUI.set_disabled(P.drive.cancel, !!r1, r1);
+    /* the one action that can move the run is the primary one: Step, unless a human answer or a restart is due */
+    const step_primary = !r1;
+    P.drive.step.classList.toggle("hx-btn--primary", step_primary);
+    P.drive.step.classList.toggle("hx-btn--secondary", !step_primary);
+    const rc = !run ? none : crashed || done || cancel_pending;
+    HXUI.set_disabled(P.drive.cancel, !!rc, rc);
     const r2 = snap.env ? "" : "Nothing to restart yet: start a run first.";
     HXUI.set_disabled(P.drive.restart, !!r2, r2);
-    P.drive.restart.classList.toggle("hx-btn--primary", !!S.crash);
-    P.drive.restart.classList.toggle("hx-btn--secondary", !S.crash);
+    P.drive.wait.hidden = !waiting || !!crashed;
+    P.drive.wait.textContent = waiting;
     result_view("drive");
   }
 
@@ -707,55 +980,74 @@
       row("Tool", [code(scope.tool), " ", h("span", { class: "hx-faint" }, "v" + scope.tool_version)]),
       row("Args digest", HXUI.digest(scope.args_digest, { short: 19, label: "args digest", id: "rn-scope-args" })),
       row("Business ref", HXUI.digest(scope.target && scope.target.business_reference, { short: 19, label: "business reference" })),
-      row("Evidence", ev.length ? h("ul", { class: "rn-scope-ev" }, ev.map((e) => h("li", null, code(e.claim), " ", HXUI.digest(e.receipt_id, { short: 14, copy: false }))))
+      row("Evidence", ev.length ? h("ul", { class: "rn-scope-ev" }, ev.map((e) => h("li", null, wrap_id(e.claim, "rn-claim"), " ", HXUI.digest(e.receipt_id, { short: 14, copy: false }))))
         : h("span", { class: "hx-faint" }, "none")),
       row("Policy", code(scope.policy_version)),
       row("Role", code(scope.required_role)),
-      row("Expires", h("span", { class: "hx-mono" }, iso(scope.expires_at))),
+      row("Expires", h("span", { class: "hx-mono rn-nw", id: "rn-scope-expires" }, iso(scope.expires_at))),
       row("Scope digest", HXUI.digest(ix.scope_digest, { short: 19, label: "scope digest", id: "rn-scope-digest" })));
   }
 
   function build_approval(snap) {
     const ix = snap.ix;
-    const approver = HXUI.select("rn-approver", APPROVERS.map((p) => {
-      const d = snap.env.policy.doc.principals[p] || {};
-      return { value: p, label: p + " · " + (d.roles || []).join(", ") + (d.tenant_id && d.tenant_id !== snap.run.tenant_id ? " · " + d.tenant_id : "") };
-    }), { value: "user:bob" });
+    const ok = eligible_approvers(snap.env, snap.run, ix);
+    const approver = HXUI.select("rn-approver", APPROVERS.map((p) => ({ value: p, label: principal_label(snap.env, p, snap.run.tenant_id) })),
+      { value: ok.indexOf("user:bob") >= 0 || !ok.length ? "user:bob" : ok[0] });
     const tamper = h("input", { type: "checkbox", id: "rn-tamper" });
     const approve = HXUI.button("Approve", { id: "rn-approve", variant: "primary", size: "sm", icon: "check", on_click: () => do_answer_approval("approved") });
     const reject = HXUI.button("Reject", { id: "rn-reject", size: "sm", on_click: () => do_answer_approval("rejected") });
+    const chip = h("span", { class: "rn-ix-chip", id: "rn-approval-state" });
     P.approver = approver;
     P.tamper = tamper;
+    P.human_buttons = [approve, reject];
+    P.ix_chip = chip;
     return h("section", { class: "hx-card rn-human", id: "rn-approval", "aria-labelledby": "rn-approval-title", dataset: { interaction: ix.interaction_id } },
       h("div", { class: "rn-human-head" },
-        h("h4", { class: "rn-human-title", id: "rn-approval-title" }, "Approval requested"),
-        HXUI.chip("Open", "warn")),
+        h("h4", { class: "rn-human-title", id: "rn-approval-title" }, "Approval requested"), chip),
       h("p", { class: "rn-human-lead" }, "The approver signs off this exact write. Any change to the tool, arguments, evidence or policy afterwards invalidates the approval."),
       scope_rows(ix.scope || {}, ix),
-      HXUI.field("Approve as", approver, { hint: "Separation of duties: the initiator cannot approve their own run." }),
+      HXUI.field("Approve as", approver, { hint: "Separation of duties: the initiator cannot approve their own run." + (ok.length ? " Eligible here: " + ok.join(", ") + "." : "") }),
       h("label", { class: "rn-check", for: "rn-tamper" }, tamper, "Tamper with the scope digest (negative demo)"),
       h("div", { class: "hx-actions" }, approve, reject),
       P.results.human);
+  }
+
+  /** documents on file for the task's supplier that the task did not list (fixture document store) */
+  function documents_on_file(env, run, cp) {
+    try {
+      const docs = env.docs && env.docs.docs ? env.docs.docs[run.tenant_id] || {} : {};
+      const task = cp.variables || {};
+      const listed = Array.isArray(task.document_ids) ? task.document_ids : [];
+      const num = String(task.supplier_ref || "").replace(/^\D+/, "");
+      return Object.keys(docs).filter((d) => listed.indexOf(d) < 0 && num && d.endsWith("-" + num));
+    } catch (e) { return []; }
   }
 
   function build_input(snap) {
     const ix = snap.ix;
     const ctx = (ix.scope && ix.scope.context) || {};
     const missing = Array.isArray(ctx.missing_document_ids) ? ctx.missing_document_ids : [];
+    const on_file = documents_on_file(snap.env, snap.run, snap.cp);
     const docs = h("input", { type: "text", id: "rn-docs", class: "hx-input hx-mono", autocomplete: "off", spellcheck: "false",
-      value: missing.indexOf("DOC-LATE-MISSING") >= 0 ? "DOC-LATE-40002" : "" });
+      value: on_file.join(", ") });
     const principals = Object.keys(snap.env.policy.doc.principals);
-    const who = HXUI.select("rn-input-who", principals.map((p) => ({ value: p, label: p })), { value: snap.run.principal });
+    const who = HXUI.select("rn-input-who", principals.map((p) => ({ value: p, label: principal_label(snap.env, p, snap.run.tenant_id) })), { value: snap.run.principal });
     P.docs_input = docs;
     P.input_who = who;
     const send = HXUI.button("Send documents", { id: "rn-input-send", variant: "primary", size: "sm", type: "submit" });
+    P.input_send = send;
+    P.human_buttons = [send];
+    const chip = h("span", { class: "rn-ix-chip", id: "rn-input-state" });
+    P.ix_chip = chip;
     const form = h("form", { class: "rn-input-form", id: "rn-input-form" },
-      HXUI.field("document_ids", docs, { hint: "Comma-separated document ids. The available late document is DOC-LATE-40002." }),
-      HXUI.field("Answer as", who, { hint: "The requester or an approver may answer an input request." }),
+      HXUI.field("document_ids", docs, { hint: "Comma-separated document ids. " + (on_file.length
+        ? "The fixture document store has " + on_file.join(", ") + " on file for " + (snap.cp.variables || {}).supplier_ref + " (prefilled)."
+        : "The fixture document store has no other document on file for this supplier.") }),
+      HXUI.field("Answer as", who, { hint: "The requester (" + snap.run.principal + ") or an approver may answer an input request." }),
       h("div", { class: "hx-actions" }, send));
     form.addEventListener("submit", do_answer_input);
     return h("section", { class: "hx-card rn-human", id: "rn-input", "aria-labelledby": "rn-input-title", dataset: { interaction: ix.interaction_id } },
-      h("div", { class: "rn-human-head" }, h("h4", { class: "rn-human-title", id: "rn-input-title" }, "Input requested"), HXUI.chip("Open", "warn")),
+      h("div", { class: "rn-human-head" }, h("h4", { class: "rn-human-title", id: "rn-input-title" }, "Input requested"), chip),
       h("p", { class: "rn-human-lead" }, "The machine asks the requester once for the missing documents: ",
         missing.length ? missing.map((m, i) => [i ? ", " : "", code(m)]) : "none listed", "."),
       form, P.results.human);
@@ -766,8 +1058,14 @@
     const key = ix && ix.status === "OPEN" ? snap.run.run_id + "|" + ix.interaction_id : null;
     if (key !== S.human_key) {
       S.human_key = key;
-      if (!key) P.human.replaceChildren();
+      if (!key) { P.human.replaceChildren(); P.human_buttons = []; P.ix_chip = null; }
       else P.human.replaceChildren(ix.type === "approval" ? build_approval(snap) : build_input(snap));
+    }
+    if (key) {
+      const expired = ix_expired(snap);
+      if (P.ix_chip) P.ix_chip.replaceChildren(expired ? HXUI.chip("Expired", "warn", { icon: "alert", title: "The logical clock passed " + iso(ix.expires_at) }) : HXUI.chip("Open", "accent"));
+      const why = S.crash ? "The worker crashed at " + S.crash.point + ". Restart the worker first." : "";
+      for (const b of P.human_buttons || []) HXUI.set_disabled(b, !!why, why);
     }
     if (!key && S.results.human) {
       /* the answer moved the run on: keep its result visible under the controls */
@@ -786,23 +1084,46 @@
     const cp = snap.cp;
     const out = cp.outcome;
     const a = cp.assurance || {};
+    const events = snap.ins.events || [];
     const list = (arr) => arr && arr.length ? h("ul", { class: "rn-out-list" }, arr.map((x) => h("li", null, typeof x === "string" ? x : F().compact_json(x, 200)))) : h("span", { class: "hx-faint" }, "none");
     const row = (k, v, id) => h("div", { class: "rn-scope-row", dataset: { key: id } }, h("dt", null, k), h("dd", null, v));
     const diag = (a.diagnostics || []).map((d) => [code(d.code || "?"), " ", d.message || F().compact_json(d, 160)]);
     const tone = out ? CATEGORY_TONE[out.category] || "neutral" : STATUS_TONE[run.status] || "neutral";
+    const stop = run.status === "FAILED" ? stop_event(events) : null;
+    const refused = !!(stop && stop.code === "TERMINAL_ADMISSION_DENIED") ||
+      ((a.diagnostics || []).length && a.diagnostics[a.diagnostics.length - 1].code === "TERMINAL_ADMISSION_DENIED");
+    const title = out ? "Outcome" : refused ? "Verified outcome refused" : run.status === "RECONCILING" ? "Reconciling" : "Stopped without an outcome";
+    let lead = null;
+    if (refused) {
+      lead = h("p", { class: "rn-out-lead" }, "The verified terminal ", code(cp.state_id), " was refused because its evidence was invalidated: the ERP draft changed after the read-back verified it. The run failed instead of claiming a verified outcome.");
+    } else if (stop) {
+      lead = h("p", { class: "rn-out-lead" }, "Stopped at ", code(stop.state || cp.state_id), " with ", code(stop.code), stop.message ? ": " + stop.message : "", ".");
+    }
+    /* why the run ended where it did: the guard of the last transition, or the fallback reason */
+    const last = last_transition(events);
+    let why = null;
+    if (a.entered_fallback) why = [HXUI.chip("fallback", "crit"), " ", a.fallback_reason || "the step failed and the machine's fallback took over"];
+    else if (out && out.category !== "verified" && last && last.to === out.terminal) {
+      why = [move(last.from, last.to), " because ", last.edge && last.edge.if ? code(last.edge.if) : "no other edge applied (default edge)"];
+    }
     box.dataset.status = run.status;
     box.dataset.terminal = out ? out.terminal : "";
     box.dataset.category = out ? out.category : "";
+    box.dataset.refused = refused ? "1" : "";
     box.className = "hx-card rn-outcome hx-tone-" + tone;
+    const fallback_text = a.entered_fallback ? h("span", null, HXUI.chip("entered", "crit"), " ", a.fallback_reason || "")
+      : out && out.category === "fallback" ? "not entered (" + out.terminal + " was reached by a guarded edge)" : "not entered";
     box.replaceChildren(
       h("div", { class: "rn-human-head" },
-        h("h4", { class: "rn-human-title", id: "rn-outcome-title" }, out ? "Outcome" : run.status === "RECONCILING" ? "Reconciling" : "Stopped without an outcome"),
+        h("h4", { class: "rn-human-title", id: "rn-outcome-title" }, title),
         out ? HXUI.chip(out.category, tone, { icon: out.category === "verified" ? "check" : "alert" }) : status_chip(run.status)),
       h("p", { class: "rn-out-terminal" }, out ? code(out.terminal) : [code(cp.state_id), " · ", run.status]),
+      lead,
       h("dl", { class: "rn-scope" },
+        why ? row("Why", why, "why") : null,
         row("Verification scope", a.verification_scope || h("span", { class: "hx-faint" }, out && out.category === "verified" ? "" : "no verified claim"), "scope"),
-        out && out.evidence_receipts && out.evidence_receipts.length ? row("Evidence", out.evidence_receipts.map((r) => code(r)), "evidence") : null,
-        row("Fallback", a.entered_fallback ? h("span", null, HXUI.chip("entered", "crit"), " ", a.fallback_reason || "") : "not entered", "fallback"),
+        out && out.evidence_receipts && out.evidence_receipts.length ? row("Evidence", h("span", { class: "rn-ev-ids" }, out.evidence_receipts.map((r) => code(r))), "evidence") : null,
+        row("Fallback path", fallback_text, "fallback"),
         row("Missing evidence", list(a.missing_evidence), "missing"),
         row("Policy violations", list(a.policy_violations), "violations"),
         row("Unresolved effects", list(a.unresolved_effects), "unresolved"),
@@ -841,7 +1162,7 @@
       h("div", { class: "rn-trouble" },
         group("rn-g-faults", "Faults", "Crash the worker at a dispatch boundary, or make the fake ERP misbehave on its next call.",
           HXUI.field("Fault", fault), fault_help, h("div", { class: "hx-actions" }, arm), armed, res("faults")),
-        group("rn-g-policy", "Policy", "Revoke a capability. Every revocation creates a new policy version.",
+        group("rn-g-policy", "Policy", "Revoke a capability. Every revocation creates a new policy version and stays in effect for every run in the lab until Reset lab.",
           HXUI.field("Principal", pol_principal), HXUI.field("Capability", pol_cap), h("div", { class: "hx-actions" }, revoke), pol_version, res("policy")),
         group("rn-g-erp", "ERP draft", "Change the persisted draft behind the engine's back, after it was written.",
           h("div", { class: "rn-erp-actions" }, modify, tamper), erp_note, res("erp"))));
@@ -876,13 +1197,27 @@
     T.pol_cap.disabled = !caps.length;
     const no_caps = caps.length ? "" : T.pol_principal.value + " has no capabilities left to revoke.";
     HXUI.set_disabled(T.revoke, !!no_caps, no_caps);
-    T.pol_version.replaceChildren("Policy version ", code(env ? env.policy.version : doc.policy_version));
+    /* what this lab revoked so far, against the policy the lab started with */
+    const revoked = [];
+    const base = HX.data.policy.principals || {};
+    for (const p of Object.keys(base)) {
+      const now = (doc.principals[p] || {}).capabilities || [];
+      for (const c of base[p].capabilities || []) if (now.indexOf(c) < 0) revoked.push([p, c]);
+    }
+    T.pol_version.replaceChildren("Policy version ", code(env ? env.policy.version : doc.policy_version), ". ",
+      revoked.length ? ["Revoked in this lab: ", revoked.map(([p, c], i) => [i ? ", " : "", code(c), " from ", code(p)]), ". Reset lab restores the policy."]
+        : "Nothing revoked.");
+    T.pol_version.dataset.revoked = String(revoked.length);
     /* ERP */
     const draft = snap.run && snap.cp && snap.cp.variables ? snap.cp.variables.erp_draft_id : null;
-    const r = !snap.run ? "Start a run first." : !draft ? "The run has no ERP draft yet. It writes one at PERSIST_DRAFT, after approval." : "";
+    const terminal = snap.run && TERMINAL.indexOf(snap.run.status) >= 0;
+    const r = !snap.run ? "Start a run first." : terminal ? "The run has finished (" + snap.run.status + "); a change now has no visible effect. Start another run."
+      : !draft ? "The run has no ERP draft yet. It writes one at PERSIST_DRAFT, after approval." : "";
     HXUI.set_disabled(T.modify, !!r, r);
     HXUI.set_disabled(T.tamper, !!r, r);
-    T.erp_note.replaceChildren(draft ? ["Acts on draft ", code(draft), " of ", code(snap.run.run_id), "."] : r);
+    T.erp_note.replaceChildren(r ? r : ["Acts on draft ", code(draft), " of ", code(snap.run.run_id), " at ", code(snap.cp.state_id), ". ",
+      snap.cp.state_id === "END_VERIFIED_DRAFT" ? "Modify now, then Step, to see A25: terminal admission denied."
+        : "Tamper, then Step, for A28 (ends unverified). For A25, Step to END_VERIFIED_DRAFT first, then Modify."]);
     for (const a of ["faults", "policy", "erp"]) result_view(a);
   }
 
@@ -918,7 +1253,7 @@
       insp.el);
     const root = h("div", { class: "rn", id: "rn" },
       build_summary(),
-      h("div", { class: "rn-body hx-ruled" }, start.panel, runs.panel, work, P.trouble.panel, inspector));
+      h("div", { class: "rn-body hx-ruled" }, start.panel, work, inspector, P.trouble.panel, runs.panel));
     el.replaceChildren(root);
     P.root = root;
     refresh();
@@ -929,6 +1264,7 @@
     if (!P || !P.root || !P.root.isConnected || painting) return;
     painting = true;
     const had_focus = document.activeElement && P.root.contains(document.activeElement) ? document.activeElement : null;
+    const had_id = had_focus ? had_focus.id : "";
     try {
       let snap;
       try { snap = snapshot(); } catch (err) {
@@ -957,7 +1293,10 @@
       }
       /* a control that went away with the step (an answered approval, a crash notice) hands focus to the next action */
       if (had_focus && !had_focus.isConnected) {
-        const next = [P.drive.until, P.drive.step, P.start.start].find((b) => b && !HXUI.is_disabled(b)) || P.drive.restart;
+        /* the same control rebuilt (a runs-list button, a tab control) keeps focus; otherwise the next action gets it */
+        const same = had_id ? document.getElementById(had_id) : null;
+        const next = same && P.root.contains(same) ? same
+          : [P.drive.until, P.drive.step, P.start.start].find((b) => b && !HXUI.is_disabled(b)) || P.drive.restart;
         try { next.focus({ preventScroll: true }); } catch (e) { next.focus(); }
       }
     } finally {
@@ -965,7 +1304,11 @@
     }
   }
 
-  HXUI.bus.on("lab:changed", () => refresh());
+  HXUI.bus.on("lab:changed", () => {
+    /* a crash belongs to one worker: another env (a tour mirroring its own) has no crashed worker */
+    if (S.crash && S.crash.env && HXUI.lab.env !== S.crash.env) S.crash = null;
+    refresh();
+  });
   HXUI.bus.on("lab:reset", () => {
     if (S.view) { try { S.view.destroy(); } catch (e) { /* gone */ } }
     S = fresh_state();
