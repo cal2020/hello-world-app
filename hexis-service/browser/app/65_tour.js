@@ -493,18 +493,19 @@
       try {
         r = tour.demo.next();
         mirror(tour.demo, r.id);
-        tour.status = tour.demo.done ? "done" : "ready";
+        /* what this step left in the shared env; the next step starts only if nothing changed it */
+        tour.fp = fingerprint(tour.demo);
       } catch (err) {
         tour.status = "error";
         tour.error = error_of(err);
       }
       if (r) {
+        /* still "running" while the section opens, so its own events are not taken for a change */
         show_place(r.id);
         if (r.id === "6a" || r.id === "6b") publish_learn(tour.demo, r);
+        tour.status = tour.demo.done ? "done" : "ready";
       }
       paint();
-      /* what this step left in the shared env; the next step starts only if nothing changed it */
-      tour.fp = r ? fingerprint(tour.demo) : tour.fp;
       mark_overview();
       if (r && tour.status !== "error") {
         HXUI.announce("Guided demo, step " + r.id + ": " + r.title + (tour.status === "done" ? ". The demo is finished." : "."));
@@ -545,6 +546,7 @@
     if (old) old.remove();
     insert_panel(panel);
     if (HXUI.current && HXUI.current() !== "overview" && HXUI.has_section("overview")) HXUI.go("overview", { focus: false });
+    try { panel.scrollIntoView({ block: "start", behavior: reduced_motion() ? "auto" : "smooth" }); } catch (e) { panel.scrollIntoView(); }
     focus_id("tour-title");
     HXUI.announce("The guided demo needs engine modules that are not in this build: " + missing.join(", ") + ".");
   }
@@ -599,6 +601,14 @@
   HXUI.bus.on("lab:reset", () => end(false));
   /* another section changed the shared env: stop before narrating something that did not happen */
   HXUI.bus.on("lab:changed", () => { if (T && T.status === "ready") check_in_sync(); });
+  /* the Run workbench answers approvals and steps runs without a lab event: after any action outside the guide,
+     look again (cheap: a few store reads), so the guide shows the change before the viewer presses Next */
+  function after_action(e) {
+    if (!T || T.status !== "ready" || !T.parts || (e && e.target && T.parts.panel.contains(e.target))) return;
+    for (const ms of [30, 400]) setTimeout(() => { if (T && T.status === "ready") check_in_sync(); }, ms);
+  }
+  document.addEventListener("click", after_action, true);
+  document.addEventListener("keyup", (e) => { if (e.key === "Enter" || e.key === " ") after_action(e); }, true);
   HXUI.bus.on("section:shown", (p) => {
     if (!T) return;
     if (T.status === "ready") check_in_sync();

@@ -12,6 +12,7 @@
   scroll-margin-top: 5rem;
 }
 .tour[data-status="error"] { border-left-color: var(--crit); }
+.tour[data-status="changed"], .tour[data-status="unavailable"] { border-left-color: var(--warn); }
 .tour-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2) var(--sp-4); }
 .tour-label {
   display: flex;
@@ -27,8 +28,10 @@
 .tour-counter::before { content: "·"; margin-right: 0.45rem; color: var(--ink-3); }
 .tour-progress { display: flex; flex-wrap: wrap; gap: 0.25rem; padding: 0; list-style: none; }
 .tour-dot {
-  display: inline-grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
   min-width: 1.75rem;
   height: 1.5rem;
   padding: 0 0.3rem;
@@ -38,8 +41,19 @@
   font: 500 var(--fs-1) / 1 var(--font-mono);
   color: var(--ink-3);
 }
+.tour-dot-icon { width: 0.7rem; height: 0.7rem; flex: none; stroke-width: 2; }
+/* state is carried by form as well as color: done has a check, failed a cross, current is filled and underlined */
 .tour-dot[data-state="done"] { border-color: color-mix(in srgb, var(--ok) 45%, transparent); background: var(--ok-tint); color: var(--ok); }
-.tour-dot[data-state="current"] { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+.tour-dot[data-state="current"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 2px;
+}
+.tour-dot[data-state="failed"] { border-color: var(--crit); background: var(--crit-tint); color: var(--crit); font-weight: 700; }
 .tour-title { font: 600 var(--fs-5) / 1.3 var(--font-display); color: var(--ink); text-wrap: balance; }
 .tour-title:focus-visible { outline-offset: 4px; }
 .tour-body { display: grid; gap: var(--sp-3); min-width: 0; }
@@ -76,11 +90,30 @@
 .tour-summary-title { font: 600 var(--fs-4) / 1.3 var(--font-sans); color: var(--ink); }
 .tour-summary-title:focus-visible { outline-offset: 3px; }
 .tour-sum-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: var(--sp-3) var(--sp-4); }
-.tour-sum-row { display: grid; gap: 0.25rem; min-width: 0; }
+.tour-sum-row { display: grid; grid-template-rows: auto auto; align-content: start; gap: 0.25rem; min-width: 0; }
 .tour-sum-row dt { font: 500 var(--fs-1) / 1.3 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
-.tour-sum-row dd { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0; min-width: 0; }
+/* value on line one, note on line two, in every cell, so chips share a baseline across a row */
+.tour-sum-row dd { display: grid; grid-template-rows: auto auto; align-content: start; justify-items: start; gap: 0.3rem; margin: 0; min-width: 0; }
+.tour-sum-value { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; min-width: 0; }
 .tour-sum-note { font-size: var(--fs-2); color: var(--ink-2); overflow-wrap: anywhere; }
 .tour-sum-foot { font-size: var(--fs-2); color: var(--ink-2); text-wrap: pretty; }
+
+.tour-changes { display: grid; gap: 0.3rem; margin: 0 0 var(--sp-2); padding-left: 1.1rem; }
+.tour-changes li { overflow-wrap: anywhere; }
+.tour-last { min-width: 0; padding-top: var(--sp-3); border-top: 1px solid var(--rule); }
+.tour-last > summary { cursor: pointer; font-weight: 600; color: var(--ink-2); width: fit-content; max-width: 100%; }
+.tour-last > summary:hover { color: var(--ink); }
+.tour-last > .tour-body { margin-top: var(--sp-3); }
+.tour .hx-unavailable { min-width: 0; }
+
+/* finished, on a section other than Learn: one line with Show summary and End demo */
+.tour[data-collapsed="true"] { gap: var(--sp-2); padding-block: var(--sp-3); }
+.tour[data-collapsed="true"] .tour-progress { display: none; }
+.tour[data-collapsed="true"] .tour-title { font-size: var(--fs-4); }
+
+/* the tour's marks on the Overview's step list (a visible word, not only the number's color) */
+.tour-ov-mark { display: inline-flex; vertical-align: middle; margin-left: 0.35rem; }
+.tour-ov-mark .hx-chip { font-size: var(--fs-1); }
 
 @media (max-width: 899.98px) {
   .tour { margin-bottom: var(--sp-5); padding: var(--sp-4); }

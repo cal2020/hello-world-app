@@ -5,10 +5,14 @@ export default async function (t) {
   const { page, assert } = t;
   await t.open();
   await page.evaluate(() => HXUI.go("selftest"));
-  /* streaming: the run is in progress and the page still answers between checks */
-  await page.waitForFunction(() => ["running", "done"].includes(document.getElementById("st-root")?.dataset.runState));
-  const mid = await page.evaluate(() => ({ state: document.getElementById("st-root").dataset.runState, disabled: document.getElementById("st-run").getAttribute("aria-disabled") }));
-  if (mid.state === "running") assert.equal(mid.disabled, "true", "Run all checks is disabled while a run is in progress");
+  /* streaming: while the run is in progress some rows have passed and others still wait, and the page answers */
+  await page.waitForFunction(() => {
+    const root = document.getElementById("st-root");
+    if (!root || root.dataset.runState !== "running") return false;
+    const st = [...document.querySelectorAll("tr[data-check]")].map((tr) => tr.dataset.status);
+    return st.some((x) => x === "pass" || x === "skip") && st.some((x) => x === "pending");
+  }, null, { timeout: 60000, polling: 5 });
+  assert.equal(await page.evaluate(() => document.getElementById("st-run").getAttribute("aria-disabled")), "true", "Run all checks is disabled while a run is in progress");
   await page.waitForFunction(() => document.getElementById("st-root").dataset.runState === "done", null, { timeout: 120000 });
   const r = await page.evaluate(() => {
     const root = document.getElementById("st-root");
@@ -16,7 +20,13 @@ export default async function (t) {
     const res = HXUI.selftest.results();
     const missing = HXUI.engine_missing(["demo", "env", "service", "kernel", "update", "replay", "traces", "reference", "compile", "guards", "canonical"]);
     return { pass: +root.dataset.pass, fail: +root.dataset.fail, skip: +root.dataset.skip, total: +root.dataset.total, rows, res, missing,
-      embed: !!HXUI.checks.embed(), ids: HXUI.checks.list().map((c) => c.id) };
+      embed: !!HXUI.checks.embed(), ids: HXUI.checks.list().map((c) => c.id),
+      embed_listed: /"selftest"/.test((document.getElementById("hx-embed") || { textContent: "" }).textContent.slice(0, 4000)),
+      modules: [...document.querySelectorAll(".st-modules tr[data-module]")].map((tr) => ({ prefix: tr.dataset.module, status: tr.dataset.status })),
+      inventory: HXUI.engine_inventory().map((m) => ({ prefix: m.prefix, present: m.ns.every((n) => globalThis.HX && HX[n] !== undefined && HX[n] !== null) })),
+      p1: (document.querySelector('tr[data-check="p-initial"] .hx-digest') || { dataset: {} }).dataset.full || null,
+      p1_want: HX.data && HX.data.python_build ? HX.data.python_build.initial_artifact_hash : null,
+      groups: [...document.querySelectorAll("details.st-group")].map((g) => ({ open: g.open, problems: g.querySelectorAll('tr[data-status="fail"], tr[data-status="skip"]').length })) };
   });
   const failures = r.res.filter((x) => x.status === "fail").map((x) => x.id + " " + x.name + ": " + x.message);
   assert.deepEqual(failures, [], "no check fails");
@@ -28,6 +38,17 @@ export default async function (t) {
     const id = "A" + String(n).padStart(2, "0");
     assert.ok(r.ids.includes(id), "an acceptance check for " + id);
   }
+  if (r.embed_listed) assert.ok(r.embed, "the golden sample in #hx-embed parses");
+  /* the engine inventory lists every module, loaded where its namespaces are present */
+  assert.ok(r.modules.length >= 20, "the engine inventory lists the modules");
+  for (const m of r.inventory) {
+    const row = r.modules.find((x) => x.prefix === m.prefix);
+    assert.ok(row, "inventory row for module " + m.prefix);
+    if (m.present) assert.equal(row.status, "loaded", "module " + m.prefix + " is loaded");
+  }
+  if (r.p1_want && r.res.find((x) => x.key === "p-initial").status === "pass") assert.equal(r.p1, r.p1_want, "P1 shows the full digest");
+  /* groups at rest: closed when every check passed, open when one failed or was skipped */
+  for (const g of r.groups) assert.equal(g.open, g.problems > 0, "a group is open exactly when it has problems");
   if (!r.missing.length && r.embed) {
     assert.equal(r.skip, 0, "nothing is skipped with the full engine and the golden sample");
     assert.equal(r.pass, r.total);
@@ -40,6 +61,9 @@ export default async function (t) {
   await page.check("#st-problems-only");
   const shown = await page.evaluate(() => document.querySelectorAll("tr[data-check]").length);
   assert.equal(shown, r.fail + r.skip, "only problems are listed");
+  const note = await page.evaluate(() => { const n = document.getElementById("st-filter-note"); return n.hidden ? "" : n.innerText; });
+  if (r.fail + r.skip === 0) assert.ok(/No failed or skipped checks/.test(note), "one notice when nothing failed: " + note);
+  else assert.equal(note, "", "no all-clear notice while there are problems");
   await page.uncheck("#st-problems-only");
   assert.equal(await page.evaluate(() => document.querySelectorAll("tr[data-check]").length), r.total);
 
