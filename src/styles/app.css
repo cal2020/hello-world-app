@@ -2067,9 +2067,9 @@ kbd {
   :root:not([data-motion='allow']) *,
   :root:not([data-motion='allow']) *::before,
   :root:not([data-motion='allow']) *::after {
-    animation-duration: 1ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 1ms !important;
+    /* No transitions at all: state changes apply in the same frame. */
+    animation: none !important;
+    transition: none !important;
     scroll-behavior: auto !important;
   }
 }
@@ -2077,10 +2077,15 @@ kbd {
 :root[data-motion='reduce'] *,
 :root[data-motion='reduce'] *::before,
 :root[data-motion='reduce'] *::after {
-  animation-duration: 1ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 1ms !important;
+  animation: none !important;
+  transition: none !important;
   scroll-behavior: auto !important;
+}
+
+/* Phone with the reading sheet fully open: the floating controls would cover the top bar. */
+.app[data-layout='compact'][data-sheet='full'] .hud-bottom,
+.app[data-layout='compact'][data-sheet='full'] .location-inset {
+  visibility: hidden;
 }
 
 /* Prerendered page (no JavaScript, or before the app mounts). */

@@ -146,6 +146,7 @@ export function App() {
       className="app"
       data-layout={layout}
       data-list-open={listOpen}
+      data-sheet={layout === 'compact' ? sheet : undefined}
       data-text-atlas={textAtlas}
       data-phase={phase}
       data-closeup={closeupStatus}
