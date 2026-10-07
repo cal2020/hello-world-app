@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { GROUPS, STRUCTURES, citedSources, source } from '../content/registry';
 import { SOURCES } from '../content/sources';
-import { citationLine, structureName } from '../content/text';
+import { citationLine, joinSentences, structureName } from '../content/text';
 import { normalize } from '../content/search';
 import type { Translator } from '../i18n/translator';
 import type { SourceRecord } from '../content/types';
@@ -32,7 +32,7 @@ export function SourceList({ t, filterable }: { t: Translator; filterable: boole
   return (
     <div>
       <p>
-        {t.plural('help.sourcesCount', SOURCES.length)}. {t.t('help.sourcePendingNote')}
+        {joinSentences(t, t.plural('help.sourcesCount', SOURCES.length), t.t('help.sourcePendingNote'))}
       </p>
       {filterable && (
         <label>

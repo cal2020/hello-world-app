@@ -12,6 +12,8 @@ export interface CutUniforms {
   /** Cosine of the cap's half-angle; values above 1 disable the cut. */
   uCutCos: { value: number };
   uRimColor: { value: THREE.Color };
+  /** Brightness of the glowing cut edge (lowered while another structure is in focus). */
+  uRimStrength: { value: number };
 }
 
 export function createCut(center: THREE.Vector3, rimColor: THREE.ColorRepresentation): CutUniforms {
@@ -20,6 +22,7 @@ export function createCut(center: THREE.Vector3, rimColor: THREE.ColorRepresenta
     uCutDir: { value: new THREE.Vector3(0, 0, 1) },
     uCutCos: { value: 1.01 },
     uRimColor: { value: new THREE.Color(rimColor) },
+    uRimStrength: { value: 1.6 },
   };
 }
 
@@ -46,6 +49,7 @@ uniform vec3 uCutCenter;
 uniform vec3 uCutDir;
 uniform float uCutCos;
 uniform vec3 uRimColor;
+uniform float uRimStrength;
 `;
 
 /** Patch a built-in material (standard/physical/basic) with the cutaway. */
@@ -69,8 +73,8 @@ export function applyCutaway(material: THREE.Material, cut: CutUniforms, rimWidt
       .replace(
         '#include <dithering_fragment>',
         /* glsl */ `#include <dithering_fragment>
-  gl_FragColor.rgb += uRimColor * cutRim * 1.6;
-  gl_FragColor.a = max(gl_FragColor.a, cutRim * 0.95);`,
+  gl_FragColor.rgb += uRimColor * cutRim * uRimStrength;
+  gl_FragColor.a = max(gl_FragColor.a, cutRim * 0.95 * min(1.0, uRimStrength));`,
       );
   };
   const previousKey = material.customProgramCacheKey?.bind(material);
@@ -177,4 +181,40 @@ export function pointsFocus(material: THREE.PointsMaterial | THREE.ShaderMateria
       material.visible = value > 0.003;
     },
   };
+}
+
+/**
+ * Foreground clearing: while a structure is in focus, anything closer to the
+ * camera than `nearFade.value` dissolves (dithered, so no sorting problems),
+ * so other organelles never loom between the camera and the subject.
+ */
+export const nearFade = { value: 0 };
+
+export function applyNearFade(material: THREE.Material): void {
+  if ((material as THREE.Material & { userData: { nearFade?: boolean } }).userData.nearFade) return;
+  if (
+    !(material instanceof THREE.MeshStandardMaterial) &&
+    !(material instanceof THREE.MeshLambertMaterial) &&
+    !(material instanceof THREE.MeshPhongMaterial)
+  ) {
+    return;
+  }
+  material.userData.nearFade = true;
+  const previous = material.onBeforeCompile;
+  material.onBeforeCompile = (shader, renderer) => {
+    previous?.call(material, shader, renderer);
+    shader.uniforms.uNearFade = nearFade;
+    shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uNearFade;').replace(
+      'void main() {',
+      /* glsl */ `void main() {
+  if (uNearFade > 0.0) {
+    float nearFadeDist = length(vViewPosition);
+    float nearFadeKeep = smoothstep(uNearFade * 0.55, uNearFade, nearFadeDist);
+    float nearFadeHash = fract(sin(dot(floor(gl_FragCoord.xy), vec2(12.9898, 78.233))) * 43758.5453);
+    if (nearFadeHash > nearFadeKeep) discard;
+  }`,
+    );
+  };
+  const previousKey = material.customProgramCacheKey?.bind(material);
+  material.customProgramCacheKey = () => `${previousKey ? previousKey() : ''}|nearfade`;
 }

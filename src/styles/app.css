@@ -487,6 +487,29 @@ textarea {
   background: var(--chip-hover);
 }
 
+/* Narrower wide screens: keep every control, drop secondary text first. */
+@media (max-width: 1559px) {
+  .app[data-layout='wide'] .topbar-group .btn-label-wide {
+    display: none;
+  }
+}
+
+@media (max-width: 1439px) {
+  .app[data-layout='wide'] .brand-sub {
+    display: none;
+  }
+
+  .app[data-layout='wide'] .labeled-select .select-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
 /* ── Structure navigation ────────────────────────────────────────────────── */
 
 .nav-panel {

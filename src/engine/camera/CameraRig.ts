@@ -17,6 +17,8 @@ CameraControls.install({
 });
 
 export interface FramingRequest {
+  /** Use the direction as given (no nudge toward the current view). */
+  exact?: boolean;
   target: THREE.Vector3;
   radius: number;
   direction?: THREE.Vector3;
@@ -167,7 +169,9 @@ export class CameraRig {
     const current = this.pose();
     const fromCurrent = current.position.clone().sub(current.target).normalize();
     let dir: THREE.Vector3;
-    if (request.direction) {
+    if (request.direction && request.exact) {
+      dir = request.direction.clone().normalize();
+    } else if (request.direction) {
       // Mostly the preferred direction, nudged toward the current view to limit swinging.
       dir = request.direction.clone().normalize().multiplyScalar(0.8).addScaledVector(fromCurrent, 0.2).normalize();
     } else {

@@ -59,3 +59,11 @@ export function citationLine(source: {
   const container = source.container ? ` ${source.container}.` : '';
   return `${who}${year}. ${source.title}.${container}`.trim();
 }
+
+/**
+ * Join sentences that are already punctuated. Chinese text runs sentences
+ * together without spaces; the other supported languages use one space.
+ */
+export function joinSentences(t: Translator, ...parts: Array<string | null | undefined | false>): string {
+  return parts.filter((part): part is string => !!part).join(t.lang === 'zh' ? '' : ' ');
+}

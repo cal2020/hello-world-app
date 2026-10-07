@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { citedSources, source, structure } from '../content/registry';
-import { citationLine, claimView, structureField, structureName, structureVars } from '../content/text';
+import { citationLine, claimView, joinSentences, structureField, structureName, structureVars } from '../content/text';
 import type { Claim, StructureId } from '../content/types';
 import type { InspectView } from '../app/routing';
 import type { Translator } from '../i18n/translator';
@@ -126,8 +126,8 @@ export function StructureArticle(props: StructureArticleProps) {
       <div className="article-eyebrow" style={{ color: s.color }}>
         <span className="dot" style={{ background: s.color }} aria-hidden="true" />
         <span style={{ color: 'var(--text-3)' }}>
-          <span className="visually-hidden">{t.t('panel.groupLabel')}: </span>
-          {t.t(`groups.${s.group}`)}
+          <span className="visually-hidden">{t.t('panel.groupHidden', { group: t.t(`groups.${s.group}`) })}</span>
+          <span aria-hidden="true">{t.t(`groups.${s.group}`)}</span>
         </span>
       </div>
       <Heading className="article-title" id={`${prefix}title-${id}`}>
@@ -211,7 +211,7 @@ export function StructureArticle(props: StructureArticleProps) {
           {s.closeup.views.map((v) => (
             <div key={v.id}>
               <h4>
-                {t.t('panel.closeup')}: {t.t(`${base}.views.${v.id}.title`)}
+                {t.t('panel.closeupTitle', { title: t.t(`${base}.views.${v.id}.title`) })}
               </h4>
               <p>{t.t(`${base}.views.${v.id}.seeing`, vars)}</p>
             </div>
@@ -256,8 +256,12 @@ export function StructureArticle(props: StructureArticleProps) {
               {drawnText}
             </span>
             <span className="context">
-              {t.t('panel.renderedSize', { dimension: t.t(`dimensions.${model.dimension}`), size: renderedSize })}.{' '}
-              {scaleText} {structureField(t, id, 'sampling')}
+              {joinSentences(
+                t,
+                t.t('panel.renderedSize', { dimension: t.t(`dimensions.${model.dimension}`), size: renderedSize }),
+                scaleText,
+                structureField(t, id, 'sampling'),
+              )}
             </span>
           </dd>
         </div>

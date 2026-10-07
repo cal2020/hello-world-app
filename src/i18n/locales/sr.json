@@ -35,18 +35,10 @@
     "structures": "Strukture",
     "showList": "Prikaži spisak struktura",
     "hideList": "Sakrij spisak struktura",
-    "previous": "Prethodna struktura",
-    "next": "Sledeća struktura",
     "previousNamed": "Prethodna: {name}",
     "nextNamed": "Sledeća: {name}",
     "wrapNote": "Kretanje napred i nazad je kružno: posle poslednje strukture dolazi prva.",
-    "breadcrumb": "Lokacija",
-    "selected": "izabrano",
-    "groupCount": {
-      "one": "{count} struktura",
-      "few": "{count} strukture",
-      "other": "{count} struktura"
-    }
+    "breadcrumb": "Lokacija"
   },
   "search": {
     "label": "Pretraži strukture",
@@ -59,13 +51,14 @@
     },
     "matched": "odgovara pojmu „{term}“",
     "empty": "Nijedna struktura ne odgovara upitu „{query}“.",
-    "emptyHint": "Pokušajte sa nazivom kao što je „jedro“, „mitohondrija“ ili „ER“, ili pregledajte grupe ispod.",
+    "emptyHint": "Pokušajte sa nazivom kao što je „jedro“, „mitohondrija“ ili „ER“, ili izaberite neki od predloga ispod.",
     "suggestions": "Predlozi"
   },
   "panel": {
     "region": "Objašnjenje",
     "inTheCell": "U ćeliji",
     "closeup": "Izbliza",
+    "closeupTitle": "Izbliza: {title}",
     "viewSwitch": "Izaberi prikaz",
     "subviews": "Prikazi izbliza",
     "whatYouSee": "Šta vidite",
@@ -84,7 +77,7 @@
     "enlarged": "Prikaz je oko {factor} puta veći od stvarne veličine, da bi ostao vidljiv.",
     "trueScale": "Prikaz je približno u stvarnoj razmeri.",
     "symbolic": "Prikazano simboličnim oznakama, ne u razmeri.",
-    "renderedSize": "Veličina u modelu ({dimension}): {size}",
+    "renderedSize": "Veličina u modelu ({dimension}): {size}.",
     "facts": "Ključne činjenice",
     "interesting": "Da li ste znali?",
     "parts": "Delovi",
@@ -92,8 +85,6 @@
     "simplifications": "Pojednostavljenja u modelu",
     "sources": "Izvori",
     "sourceRef": "Izvor {n}",
-    "sourcesLabel": "Izvori:",
-    "openCloseup": "Otvori prikaz izbliza",
     "backToCell": "Nazad na prikaz ćelije",
     "closeupLoading": "Učitavanje prikaza izbliza…",
     "closeupError": "Prikaz izbliza nije mogao da se učita.",
@@ -104,12 +95,10 @@
     "frozen": "Biološka animacija je zamrznuta.",
     "expand": "Proširi objašnjenje",
     "collapse": "Skupi objašnjenje",
-    "dragHandle": "Promeni veličinu objašnjenja",
-    "groupLabel": "Grupa",
+    "groupHidden": "Grupa: {group}",
     "pending": "Čeka proveru",
     "pendingHint": "Izvor za ovu tvrdnju nije bilo moguće proveriti kada je pravljena ova verzija.",
     "sourcePending": "još nije proveren",
-    "noValue": "Ne može se izraziti jednim brojem; pogledajte napomenu.",
     "drawnFixed": {
       "one": "{count} nacrtan objekat na svakom nivou kvaliteta",
       "few": "{count} nacrtana objekta na svakom nivou kvaliteta",
@@ -136,11 +125,8 @@
     "labelsHint": "Prikaži ili sakrij oznake",
     "bio": "Biološka animacija",
     "freeze": "Zamrzni",
-    "play": "Pokreni",
     "freezeHint": "Zamrzni biološku animaciju (kamera, čitanje i biranje struktura i dalje rade)",
     "playHint": "Pokreni biološku animaciju",
-    "bioPlaying": "Pokrenuta",
-    "bioFrozen": "Zamrznuta",
     "quality": "Kvalitet",
     "qualityAuto": "Automatski",
     "qualityAutoCurrent": "Automatski ({level})",
@@ -165,14 +151,11 @@
     "textAtlas": "Tekstualni atlas",
     "view3d": "3D prikaz",
     "close": "Zatvori",
-    "on": "Uključeno",
-    "off": "Isključeno",
     "freezeLabel": "Zamrzni biološku animaciju",
     "zoomGroup": "Zumiranje"
   },
   "tour": {
     "title": "Vođeni obilazak",
-    "start": "Započni obilazak",
     "pause": "Pauziraj obilazak",
     "resume": "Nastavi obilazak",
     "next": "Sledeća stanica",
@@ -206,6 +189,7 @@
     "wholeCell": "Prikaz cele ćelije",
     "closeup": "Izbliza · ×{factor} u odnosu na prikaz cele ćelije",
     "focusNote": "Mereno u tački fokusa.",
+    "aria": "{bar}. {context}. {focus}",
     "enlargedNote": "{name}: prikaz uvećan ×{factor} u odnosu na razmeru"
   },
   "closeupCaptions": {
@@ -290,11 +274,10 @@
     "sourcesTitle": "Svi izvori",
     "sourcesFilter": "Filtriraj izvore",
     "sourcesEmpty": "Nijedan izvor ne odgovara upitu „{query}“.",
-    "sourcesGeneral": "Model ćelije i opšti izvori",
     "sourcesCount": {
-      "one": "{count} izvor",
-      "few": "{count} izvora",
-      "other": "{count} izvora"
+      "one": "{count} izvor.",
+      "few": "{count} izvora.",
+      "other": "{count} izvora."
     },
     "aboutLink": "O modelu, zaslugama i licencama",
     "sourcePendingNote": "Izvori označeni sa „još nije proveren“ su poznate publikacije koje nije bilo moguće automatski proveriti kada je pravljena ova verzija."
@@ -319,7 +302,7 @@
       "Prikazi izbliza su zasebne scene u drugačijoj razmeri; oni se ne nalaze doslovno unutar scene cele ćelije."
     ],
     "improvementsTitle": "Poboljšanja u izvedbi",
-    "improvements": "U poređenju sa referentnom aplikacijom opisanom u projektnom zadatku, ova izvedba dodaje pretragu sa sinonimima, vidljivu kontrolu kvaliteta prikaza i posebno podešavanje za smanjeno kretanje.",
+    "improvements": "U poređenju sa aplikacijom koja ga je inspirisala, ovaj atlas dodaje pretragu sa sinonimima, vidljivu kontrolu kvaliteta prikaza i posebno podešavanje za smanjeno kretanje.",
     "sourcesTitle": "Izvori",
     "sources": "Svaka ključna činjenica povezana je sa svojim izvorom. Većina izvora je, kada je pravljena ova verzija, proverena prema zapisima pretraživača o stranicama izdavača ili biblioteka; malobrojni koje nije bilo moguće proveriti označeni su sa „još nije proveren“, a tvrdnje koje se na njih oslanjaju označene su sa „Čeka proveru“. Uz brojeve je naveden kontekst merenja dat u izvoru.",
     "translationTitle": "Prevodi",
@@ -355,7 +338,6 @@
     "contents": "Sadržaj",
     "backToTop": "Nazad na vrh",
     "noJs": "Za interaktivni 3D prikaz potreban je JavaScript. Sva objašnjenja nalaze se ispod.",
-    "openIn3d": "Otvori u 3D prikazu",
     "illustration": "Ilustracija prikaza izbliza iz 3D modela: {name}"
   },
   "dimensions": {
@@ -502,7 +484,10 @@
     "makes": "Stvara:",
     "protects": "Štiti:",
     "anchors": "Učvršćuje:",
-    "worksWith": "Sarađuje sa:"
+    "worksWith": "Sarađuje sa:",
+    "formsOn": "Nastaje na:",
+    "encloses": "Okružuje:",
+    "studdedWith": "Na površini nosi:"
   },
   "structures": {
     "plasma-membrane": {
@@ -632,7 +617,8 @@
       "simplifications": [
         "Voda, joni i mali molekuli su izostavljeni.",
         "Tačkice u prikazu cele ćelije samo nagoveštavaju zbijenost.",
-        "Kretanje molekula je izuzetno usporeno."
+        "Kretanje molekula je izuzetno usporeno.",
+        "U prikazu izbliza nacrtano je manje proteina nego što ih ima pravi citosol, kako bi se videla unutrašnjost kocke."
       ],
       "sizeContext": "Udeo zapremine ćelije jetre (hepatocita) koji zauzima citosol, tečni deo citoplazme. Odnosi se razlikuju među tipovima ćelija.",
       "quantityContext": "Količina proteina po litru ćelije: radna vrednost pretpostavljena u procenama BioNumbers za ćeliju jetre i ćeliju timusa, a ne direktno merenje citosola.",

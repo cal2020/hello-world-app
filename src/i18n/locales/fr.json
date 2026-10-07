@@ -35,18 +35,10 @@
     "structures": "Structures cellulaires",
     "showList": "Afficher la liste des structures",
     "hideList": "Masquer la liste des structures",
-    "previous": "Structure précédente",
-    "next": "Structure suivante",
     "previousNamed": "Précédente : {name}",
     "nextNamed": "Suivante : {name}",
     "wrapNote": "La navigation fonctionne en boucle : après la dernière structure, on revient à la première.",
-    "breadcrumb": "Emplacement",
-    "selected": "sélectionnée",
-    "groupCount": {
-      "one": "{count} structure",
-      "many": "{count} de structures",
-      "other": "{count} structures"
-    }
+    "breadcrumb": "Emplacement"
   },
   "search": {
     "label": "Rechercher une structure",
@@ -59,13 +51,14 @@
     },
     "matched": "correspond à « {term} »",
     "empty": "Aucune structure ne correspond à « {query} ».",
-    "emptyHint": "Essayez un nom comme « noyau », « mitochondrie » ou « RE », ou parcourez les groupes ci-dessous.",
+    "emptyHint": "Essayez un nom comme « noyau », « mitochondrie » ou « RE », ou choisissez une des suggestions ci-dessous.",
     "suggestions": "Quelques suggestions"
   },
   "panel": {
     "region": "Explication",
     "inTheCell": "Dans la cellule",
     "closeup": "Gros plan",
+    "closeupTitle": "Gros plan : {title}",
     "viewSwitch": "Choisir une vue",
     "subviews": "Vues en gros plan",
     "whatYouSee": "Ce que vous voyez",
@@ -84,7 +77,7 @@
     "enlarged": "Dessin agrandi environ ×{factor} par rapport à l’échelle réelle, pour rester visible.",
     "trueScale": "Dessin à peu près à l’échelle réelle.",
     "symbolic": "Représentation par des repères symboliques, sans respect de l’échelle.",
-    "renderedSize": "Taille dessinée ({dimension}) : {size}",
+    "renderedSize": "Taille dessinée ({dimension}) : {size}.",
     "facts": "Données clés",
     "interesting": "Le saviez-vous ?",
     "parts": "Composants",
@@ -92,8 +85,6 @@
     "simplifications": "Simplifications du modèle",
     "sources": "Sources",
     "sourceRef": "Source n° {n}",
-    "sourcesLabel": "Sources :",
-    "openCloseup": "Ouvrir le gros plan",
     "backToCell": "Revenir à la vue de la cellule",
     "closeupLoading": "Chargement du gros plan…",
     "closeupError": "Impossible de charger le gros plan.",
@@ -104,12 +95,10 @@
     "frozen": "L’animation biologique est figée.",
     "expand": "Déplier l’explication",
     "collapse": "Replier l’explication",
-    "dragHandle": "Redimensionner l’explication",
-    "groupLabel": "Groupe",
+    "groupHidden": "Groupe : {group}",
     "pending": "Vérification en attente",
     "pendingHint": "La source de cette affirmation n’a pas pu être vérifiée lors de la préparation de cette version.",
     "sourcePending": "pas encore vérifiée",
-    "noValue": "Pas de valeur unique ; voir la note.",
     "drawnFixed": {
       "one": "{count} exemplaire dessiné à tous les niveaux de qualité",
       "many": "{count} d’exemplaires dessinés à tous les niveaux de qualité",
@@ -136,11 +125,8 @@
     "labelsHint": "Afficher ou masquer les étiquettes",
     "bio": "Animation biologique",
     "freeze": "Figer",
-    "play": "Animer",
     "freezeHint": "Figer l’animation biologique (la caméra, la lecture et la sélection restent actives)",
     "playHint": "Lancer l’animation biologique",
-    "bioPlaying": "En cours",
-    "bioFrozen": "Figée",
     "quality": "Qualité",
     "qualityAuto": "Auto",
     "qualityAutoCurrent": "Auto ({level})",
@@ -165,14 +151,11 @@
     "textAtlas": "Version texte",
     "view3d": "Vue 3D",
     "close": "Fermer",
-    "on": "Activé",
-    "off": "Désactivé",
     "freezeLabel": "Figer l’animation biologique",
     "zoomGroup": "Zoom"
   },
   "tour": {
     "title": "Visite guidée",
-    "start": "Commencer la visite",
     "pause": "Mettre la visite en pause",
     "resume": "Reprendre la visite",
     "next": "Étape suivante",
@@ -206,6 +189,7 @@
     "wholeCell": "Vue de la cellule entière",
     "closeup": "Gros plan · ×{factor} par rapport à la cellule entière",
     "focusNote": "Mesurée au point visé.",
+    "aria": "{bar}. {context}. {focus}",
     "enlargedNote": "{name} : agrandissement ×{factor} par rapport à l’échelle"
   },
   "closeupCaptions": {
@@ -290,11 +274,10 @@
     "sourcesTitle": "Toutes les sources",
     "sourcesFilter": "Filtrer les sources",
     "sourcesEmpty": "Aucune source ne correspond à « {query} ».",
-    "sourcesGeneral": "Modèle cellulaire et généralités",
     "sourcesCount": {
-      "one": "{count} source",
-      "many": "{count} de sources",
-      "other": "{count} sources"
+      "one": "{count} source.",
+      "many": "{count} de sources.",
+      "other": "{count} sources."
     },
     "aboutLink": "À propos du modèle, crédits et licences",
     "sourcePendingNote": "Les sources portant la mention « pas encore vérifiée » sont des publications bien connues qui n’ont pas pu être vérifiées automatiquement lors de la préparation de cette version."
@@ -319,7 +302,7 @@
       "Les gros plans sont des scènes distinctes, à une autre échelle ; ils ne se trouvent pas littéralement à l’intérieur de la scène de la cellule entière."
     ],
     "improvementsTitle": "Améliorations apportées",
-    "improvements": "Par rapport à l’expérience de référence décrite dans le cahier des charges du projet, cette réalisation ajoute une recherche qui tient compte des synonymes, un réglage visible de la qualité du rendu et un paramètre explicite de réduction des animations.",
+    "improvements": "Par rapport à l’expérience qui l’a inspiré, cet atlas ajoute une recherche qui tient compte des synonymes, un réglage visible de la qualité du rendu et un paramètre explicite de réduction des animations.",
     "sourcesTitle": "Sources",
     "sources": "Chaque donnée clé renvoie à sa source. La plupart des sources ont été contrôlées lors de la préparation de cette version, d’après les résultats de moteurs de recherche renvoyant aux pages de l’éditeur ou de bibliothèques ; les quelques sources qui n’ont pas pu l’être portent la mention « pas encore vérifiée », et les affirmations qui reposent sur elles, la mention « Vérification en attente ». Les valeurs chiffrées conservent le contexte de mesure indiqué dans la source.",
     "translationTitle": "Traductions",
@@ -355,7 +338,6 @@
     "contents": "Sommaire",
     "backToTop": "Retour en haut",
     "noJs": "La vue 3D interactive nécessite JavaScript. Toutes les explications figurent ci-dessous.",
-    "openIn3d": "Ouvrir dans la vue 3D",
     "illustration": "Illustration du gros plan « {name} » issue du modèle 3D"
   },
   "dimensions": {
@@ -502,7 +484,10 @@
     "makes": "Fabrique",
     "protects": "Protège",
     "anchors": "Ancre",
-    "worksWith": "Coopère avec"
+    "worksWith": "Coopère avec",
+    "formsOn": "Se forme sur",
+    "encloses": "Entoure",
+    "studdedWith": "Parsemé de"
   },
   "structures": {
     "plasma-membrane": {
@@ -630,7 +615,8 @@
       "simplifications": [
         "L’eau, les ions et les petites molécules sont omis.",
         "Dans la vue de la cellule entière, les points ne font que suggérer l’encombrement.",
-        "Le mouvement des molécules est énormément ralenti."
+        "Le mouvement des molécules est énormément ralenti.",
+        "Le gros plan montre moins de protéines qu’un vrai cytosol n’en contient, pour qu’on puisse voir l’intérieur du cube."
       ],
       "sizeContext": "Part du volume d’une cellule du foie (hépatocyte) occupée par le cytosol, la partie liquide du cytoplasme. Les proportions varient selon les types cellulaires.",
       "quantityContext": "Protéines par litre de cellule : valeur de travail retenue dans des estimations de BioNumbers pour une cellule du foie et une cellule du thymus, et non mesure directe du cytosol.",

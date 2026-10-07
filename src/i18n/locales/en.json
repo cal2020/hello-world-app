@@ -35,17 +35,10 @@
     "structures": "Structures",
     "showList": "Show structure list",
     "hideList": "Hide structure list",
-    "previous": "Previous structure",
-    "next": "Next structure",
     "previousNamed": "Previous: {name}",
     "nextNamed": "Next: {name}",
     "wrapNote": "Previous and next wrap around: after the last structure comes the first.",
-    "breadcrumb": "Location",
-    "selected": "selected",
-    "groupCount": {
-      "one": "{count} structure",
-      "other": "{count} structures"
-    }
+    "breadcrumb": "Location"
   },
   "search": {
     "label": "Search structures",
@@ -57,13 +50,14 @@
     },
     "matched": "matches “{term}”",
     "empty": "No structure matches “{query}”.",
-    "emptyHint": "Try a name such as “nucleus”, “mitochondrion” or “ER”, or browse the groups below.",
+    "emptyHint": "Try a name such as “nucleus”, “mitochondrion” or “ER”, or pick one of the suggestions below.",
     "suggestions": "Suggestions"
   },
   "panel": {
     "region": "Explanation",
     "inTheCell": "In the cell",
     "closeup": "Close-up",
+    "closeupTitle": "Close-up: {title}",
     "viewSwitch": "Choose a view",
     "subviews": "Close-up views",
     "whatYouSee": "What you are seeing",
@@ -81,7 +75,7 @@
     "enlarged": "Drawn about ×{factor} larger than true scale so it stays visible.",
     "trueScale": "Drawn at about true scale.",
     "symbolic": "Drawn as symbolic markers, not to scale.",
-    "renderedSize": "Drawn {dimension}: {size}",
+    "renderedSize": "Drawn {dimension}: {size}.",
     "facts": "Key facts",
     "interesting": "Did you know?",
     "parts": "Parts",
@@ -89,8 +83,6 @@
     "simplifications": "Model simplifications",
     "sources": "Sources",
     "sourceRef": "Source {n}",
-    "sourcesLabel": "Sources:",
-    "openCloseup": "Open the close-up",
     "backToCell": "Back to the cell view",
     "closeupLoading": "Loading the close-up…",
     "closeupError": "The close-up could not be loaded.",
@@ -101,12 +93,10 @@
     "frozen": "Biological animation is frozen.",
     "expand": "Expand explanation",
     "collapse": "Collapse explanation",
-    "dragHandle": "Resize explanation",
-    "groupLabel": "Group",
+    "groupHidden": "Group: {group}",
     "pending": "Verification pending",
     "pendingHint": "The source for this statement could not be checked when this version was built.",
     "sourcePending": "not yet verified",
-    "noValue": "Not a single number; see the note.",
     "drawnFixed": {
       "one": "{count} drawn at every quality level",
       "other": "{count} drawn at every quality level"
@@ -132,11 +122,8 @@
     "labelsHint": "Show or hide labels",
     "bio": "Biological animation",
     "freeze": "Freeze",
-    "play": "Play",
     "freezeHint": "Freeze biological animation (the camera, reading and selection keep working)",
     "playHint": "Play biological animation",
-    "bioPlaying": "Playing",
-    "bioFrozen": "Frozen",
     "quality": "Quality",
     "qualityAuto": "Auto",
     "qualityAutoCurrent": "Auto ({level})",
@@ -161,14 +148,11 @@
     "textAtlas": "Text atlas",
     "view3d": "3D view",
     "close": "Close",
-    "on": "On",
-    "off": "Off",
     "freezeLabel": "Freeze biological animation",
     "zoomGroup": "Zoom"
   },
   "tour": {
     "title": "Guided tour",
-    "start": "Start tour",
     "pause": "Pause tour",
     "resume": "Resume tour",
     "next": "Next stop",
@@ -202,6 +186,7 @@
     "wholeCell": "Whole-cell view",
     "closeup": "Close-up · ×{factor} vs. whole-cell view",
     "focusNote": "Measured at the focus point.",
+    "aria": "{bar}. {context}. {focus}",
     "enlargedNote": "{name} drawn ×{factor} larger than scale"
   },
   "closeupCaptions": {
@@ -286,10 +271,9 @@
     "sourcesTitle": "All sources",
     "sourcesFilter": "Filter sources",
     "sourcesEmpty": "No source matches “{query}”.",
-    "sourcesGeneral": "Cell model and general",
     "sourcesCount": {
-      "one": "{count} source",
-      "other": "{count} sources"
+      "one": "{count} source.",
+      "other": "{count} sources."
     },
     "aboutLink": "About the model, credits and licences",
     "sourcePendingNote": "Sources marked “not yet verified” are well-known publications that could not be checked automatically when this version was built."
@@ -314,7 +298,7 @@
       "Close-ups are separate scenes at a different scale; they are not literally inside the whole-cell scene."
     ],
     "improvementsTitle": "Implementation improvements",
-    "improvements": "Compared with the reference experience described in the project brief, this implementation adds search with synonyms, a visible rendering-quality control and an explicit reduced-motion setting.",
+    "improvements": "Compared with the experience that inspired it, this atlas adds search with synonyms, a visible rendering-quality control and an explicit reduced-motion setting.",
     "sourcesTitle": "Sources",
     "sources": "Every key fact links to its source. Most sources were checked against search-engine records of the publisher or library pages when this version was built; the few that could not be checked are marked “not yet verified”, and the statements that rely on them are marked “Verification pending”. Numbers keep the measurement context given in the source.",
     "translationTitle": "Translations",
@@ -350,7 +334,6 @@
     "contents": "Contents",
     "backToTop": "Back to top",
     "noJs": "The interactive 3D view needs JavaScript. All explanations are below.",
-    "openIn3d": "Open in the 3D view",
     "illustration": "Illustration of the {name} close-up from the 3D model"
   },
   "dimensions": {
@@ -437,7 +420,10 @@
     "makes": "Makes",
     "protects": "Protects",
     "anchors": "Anchors",
-    "worksWith": "Works with"
+    "worksWith": "Works with",
+    "formsOn": "Forms on",
+    "encloses": "Encloses",
+    "studdedWith": "Studded with"
   },
   "structures": {
     "plasma-membrane": {
@@ -563,7 +549,8 @@
       "simplifications": [
         "Water, ions and small molecules are omitted.",
         "The specks in the whole-cell view only hint at the crowding.",
-        "Molecular motion is slowed enormously."
+        "Molecular motion is slowed enormously.",
+        "The close-up shows fewer proteins than a real cytosol holds, so that you can see into the cube."
       ],
       "sizeContext": "Share of a liver cell’s (hepatocyte’s) volume taken up by the cytosol, the fluid part of the cytoplasm. Proportions differ between cell types.",
       "quantityContext": "Protein per litre of cell: a working value assumed in BioNumbers estimates for a liver cell and a thymus cell, not a direct measurement of the cytosol.",

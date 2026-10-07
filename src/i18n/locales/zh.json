@@ -35,16 +35,10 @@
     "structures": "结构",
     "showList": "显示结构列表",
     "hideList": "隐藏结构列表",
-    "previous": "上一个结构",
-    "next": "下一个结构",
     "previousNamed": "上一个：{name}",
     "nextNamed": "下一个：{name}",
     "wrapNote": "“上一个”和“下一个”循环切换：最后一个结构之后是第一个。",
-    "breadcrumb": "当前位置",
-    "selected": "已选中",
-    "groupCount": {
-      "other": "{count} 种结构"
-    }
+    "breadcrumb": "当前位置"
   },
   "search": {
     "label": "搜索结构",
@@ -55,13 +49,14 @@
     },
     "matched": "匹配“{term}”",
     "empty": "没有与“{query}”匹配的结构。",
-    "emptyHint": "试试“细胞核”“线粒体”或“内质网”等名称，或浏览下方的分组。",
+    "emptyHint": "试试“细胞核”“线粒体”或“内质网”等名称，或选择下方的建议。",
     "suggestions": "建议"
   },
   "panel": {
     "region": "讲解",
     "inTheCell": "细胞中",
     "closeup": "特写",
+    "closeupTitle": "特写：{title}",
     "viewSwitch": "选择视图",
     "subviews": "特写视图",
     "whatYouSee": "你看到的是什么",
@@ -78,7 +73,7 @@
     "enlarged": "按真实比例放大约 {factor} 倍绘制，以便看清。",
     "trueScale": "大致按真实比例绘制。",
     "symbolic": "以示意性标记绘制，未按比例。",
-    "renderedSize": "绘制的{dimension}：{size}",
+    "renderedSize": "绘制的{dimension}：{size}。",
     "facts": "关键事实",
     "interesting": "你知道吗？",
     "parts": "组成部分",
@@ -86,8 +81,6 @@
     "simplifications": "模型简化",
     "sources": "资料来源",
     "sourceRef": "资料来源 {n}",
-    "sourcesLabel": "资料来源：",
-    "openCloseup": "打开特写",
     "backToCell": "返回细胞视图",
     "closeupLoading": "正在加载特写……",
     "closeupError": "特写未能加载。",
@@ -98,12 +91,10 @@
     "frozen": "生物动画已冻结。",
     "expand": "展开讲解",
     "collapse": "收起讲解",
-    "dragHandle": "调整讲解面板大小",
-    "groupLabel": "分组",
+    "groupHidden": "分组：{group}",
     "pending": "待核实",
     "pendingHint": "构建此版本时，未能核对这一说法的资料来源。",
     "sourcePending": "尚未核实",
-    "noValue": "无法用单一数字表示；请见说明。",
     "drawnFixed": {
       "other": "在所有画质级别下均绘制 {count} 个"
     },
@@ -128,11 +119,8 @@
     "labelsHint": "显示或隐藏标签",
     "bio": "生物动画",
     "freeze": "冻结",
-    "play": "播放",
     "freezeHint": "冻结生物动画（镜头、阅读和选择仍可正常使用）",
     "playHint": "播放生物动画",
-    "bioPlaying": "播放中",
-    "bioFrozen": "已冻结",
     "quality": "画质",
     "qualityAuto": "自动",
     "qualityAutoCurrent": "自动（{level}）",
@@ -157,14 +145,11 @@
     "textAtlas": "文字版图谱",
     "view3d": "3D 视图",
     "close": "关闭",
-    "on": "开",
-    "off": "关",
     "freezeLabel": "冻结生物动画",
     "zoomGroup": "缩放"
   },
   "tour": {
     "title": "导览",
-    "start": "开始导览",
     "pause": "暂停导览",
     "resume": "继续导览",
     "next": "下一站",
@@ -198,6 +183,7 @@
     "wholeCell": "全细胞视图",
     "closeup": "特写 · 放大至全细胞视图的 {factor} 倍",
     "focusNote": "在焦点处测量。",
+    "aria": "{bar}。{context}。{focus}",
     "enlargedNote": "{name}比实际比例放大 {factor} 倍绘制"
   },
   "closeupCaptions": {
@@ -282,9 +268,8 @@
     "sourcesTitle": "全部资料来源",
     "sourcesFilter": "筛选资料来源",
     "sourcesEmpty": "没有与“{query}”匹配的资料来源。",
-    "sourcesGeneral": "细胞模型与综合资料",
     "sourcesCount": {
-      "other": "{count} 条资料来源"
+      "other": "{count} 条资料来源。"
     },
     "aboutLink": "关于模型、致谢与许可",
     "sourcePendingNote": "标为“尚未核实”的资料来源均为知名出版物，只是在构建此版本时未能自动核对。"
@@ -309,7 +294,7 @@
       "特写是比例不同的独立场景；它们并非真的位于全细胞场景之中。"
     ],
     "improvementsTitle": "实现上的改进",
-    "improvements": "与项目简介中描述的参考体验相比，本实现增加了支持同义词的搜索、明确可见的渲染画质控件，以及专门的“减弱动态效果”设置。",
+    "improvements": "与启发本项目的原作相比，本图谱增加了支持同义词的搜索、明确可见的渲染画质控件，以及专门的“减弱动态效果”设置。",
     "sourcesTitle": "资料来源",
     "sources": "每条关键事实都链接到其资料来源。构建此版本时，大多数来源已与搜索引擎中出版方或图书馆页面的记录进行了核对；少数未能核对的来源标为“尚未核实”，依赖这些来源的说法则标为“待核实”。所有数字都保留了来源中给出的测量背景。",
     "translationTitle": "翻译",
@@ -345,7 +330,6 @@
     "contents": "目录",
     "backToTop": "返回顶部",
     "noJs": "交互式 3D 视图需要 JavaScript。所有讲解见下文。",
-    "openIn3d": "在 3D 视图中打开",
     "illustration": "取自 3D 模型的{name}特写示意图"
   },
   "dimensions": {
@@ -432,7 +416,10 @@
     "makes": "产生",
     "protects": "保护",
     "anchors": "锚定",
-    "worksWith": "协同工作"
+    "worksWith": "协同工作",
+    "formsOn": "形成于",
+    "encloses": "包围",
+    "studdedWith": "表面附着"
   },
   "structures": {
     "plasma-membrane": {
@@ -562,7 +549,8 @@
       "simplifications": [
         "省略了水、离子和小分子。",
         "全细胞视图中的小点只是暗示拥挤程度。",
-        "分子运动被大大放慢。"
+        "分子运动被大大放慢。",
+        "特写中画出的蛋白质比真实细胞质基质中的少，以便看清立方体内部。"
       ],
       "sizeContext": "细胞质基质（细胞质的液体部分）在肝细胞体积中所占的比例。不同类型细胞的比例各不相同。",
       "quantityContext": "每升细胞中的蛋白质含量：这是 BioNumbers 在估算肝细胞和胸腺细胞时采用的工作值，并非对细胞质基质的直接测量。",

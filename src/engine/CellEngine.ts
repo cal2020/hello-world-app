@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { joinSentences } from '../content/text';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
@@ -13,7 +14,7 @@ import { debugParams } from '../app/debug';
 import { structure as structureRecord } from '../content/registry';
 import { STRUCTURE_IDS, type StructureId } from '../content/types';
 import { CameraRig, type Pose } from './camera/CameraRig';
-import { createCut, insideCut } from './core/materials';
+import { createCut, insideCut, applyNearFade, nearFade } from './core/materials';
 import { insideEllipsoid, rayEllipsoid } from './core/geometry';
 import { CellLayout } from './cell/layout';
 import type { BuildContext, StructureInstance } from './cell/types';
@@ -250,6 +251,11 @@ export class CellEngine implements EngineController {
     }
     progress('materials');
     await nextFrame();
+    this.scene.traverse((object) => {
+      const material = (object as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+      if (Array.isArray(material)) material.forEach(applyNearFade);
+      else if (material && (object as THREE.Mesh).isMesh) applyNearFade(material);
+    });
     this.applyQuality(this.initialQuality(), true);
     this.applyFocusImmediately();
     try {
@@ -428,6 +434,10 @@ export class CellEngine implements EngineController {
     this.updateEmphasisTargets();
     this.cutTargets.membrane = membraneCutCos(id);
     this.cutTargets.nucleus = nucleusCutCos(id);
+    // A bright cut edge frames the overview; around a focused interior structure it would distract.
+    this.cuts.membrane.uRimStrength.value = id === null || id === 'plasma-membrane' ? 1.6 : 0.35;
+    const nuclear = id === null || id === 'nucleus' || id === 'chromosomes' || id === 'telomeres' || id === 'nucleolus';
+    this.cuts.nucleus.uRimStrength.value = nuclear ? 1.6 : 0.35;
     this.labelMode = '';
     if (id) this.frameStructure(id, true);
     else {
@@ -441,10 +451,83 @@ export class CellEngine implements EngineController {
     const instance = this.structures.get(id);
     if (!instance) return;
     const framing = instance.framing();
-    const pose = this.rig.poseFor({ target: framing.target, radius: framing.radius, direction: framing.direction });
+    const current = this.rig.pose();
+    const preferred = framing.direction ?? current.position.clone().sub(current.target).normalize();
+    const direction = this.clearDirection(id, framing.target, framing.radius, preferred);
+    const exact = direction !== preferred;
+    const pose = this.rig.poseFor({ target: framing.target, radius: framing.radius, direction, exact });
     const fit = this.rig.fitDistance(framing.radius);
     this.rig.setDistanceLimits(Math.min(this.rig.controls.minDistance, framing.radius * 0.3), Math.max(this.rig.controls.maxDistance, fit * 4));
     this.startTransition(pose, notify ? id : null, () => this.rig.setDistanceLimits(framing.radius * 0.3, Math.max(fit * 4, 16)));
+  }
+
+  /**
+   * The structure's preferred viewing direction, unless other copies of it
+   * (or strongly visible context) would sit between the camera and the
+   * subject: then the nearest unobstructed direction within ~50°.
+   */
+  private clearDirection(id: StructureId, target: THREE.Vector3, radius: number, preferred: THREE.Vector3): THREE.Vector3 {
+    const base = preferred.clone().normalize();
+    if (!this.lineOfSightBlocked(id, target, radius, base)) return preferred;
+    const distance = this.rig.fitDistance(radius);
+    const blockers = this.occluders(id);
+    const helper = Math.abs(base.y) < 0.95 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+    const a = new THREE.Vector3().crossVectors(base, helper).normalize();
+    const b = new THREE.Vector3().crossVectors(base, a).normalize();
+    const candidates = [base];
+    for (const tilt of [0.3, 0.55, 0.85]) {
+      for (let k = 0; k < 10; k++) {
+        const phi = (k / 10) * Math.PI * 2;
+        candidates.push(
+          base
+            .clone()
+            .multiplyScalar(Math.cos(tilt))
+            .addScaledVector(a, Math.sin(tilt) * Math.cos(phi))
+            .addScaledVector(b, Math.sin(tilt) * Math.sin(phi))
+            .normalize(),
+        );
+      }
+    }
+    let best = base;
+    let bestScore = -Infinity;
+    for (const dir of candidates) {
+      const score = dir.dot(base) - this.blockage(blockers, id, target, distance, radius, dir) * 4;
+      if (score > bestScore + 1e-6) {
+        bestScore = score;
+        best = dir;
+      }
+    }
+    return best;
+  }
+
+  private occluders(id: StructureId): [StructureId, StructureInstance][] {
+    const context = CONTEXT[id] ?? {};
+    return [...this.structures].filter(
+      ([sid]) => sid === id || ((context[sid] ?? 0) >= 0.5 && sid !== 'plasma-membrane' && sid !== 'cytoplasm' && sid !== 'nucleus'),
+    );
+  }
+
+  /** How much opaque material lies between a camera placed along `dir` and the subject. */
+  private blockage(
+    blockers: [StructureId, StructureInstance][],
+    id: StructureId,
+    target: THREE.Vector3,
+    distance: number,
+    radius: number,
+    dir: THREE.Vector3,
+  ): number {
+    const ray = new THREE.Ray(target.clone().addScaledVector(dir, distance), dir.clone().negate());
+    const clearUntil = distance - radius * 0.6;
+    let blocked = 0;
+    for (const [sid, instance] of blockers) {
+      const t = instance.raycast(ray);
+      if (t !== null && t < clearUntil) blocked += sid === id ? 1 : 0.6;
+    }
+    return blocked;
+  }
+
+  private lineOfSightBlocked(id: StructureId, target: THREE.Vector3, radius: number, dir: THREE.Vector3): boolean {
+    return this.blockage(this.occluders(id), id, target, this.rig.fitDistance(radius), radius, dir) > 0;
   }
 
   private startTransition(pose: Pose, arrivedId: StructureId | null, after?: () => void): void {
@@ -648,7 +731,7 @@ export class CellEngine implements EngineController {
       const st = this.focus.get(sid)!;
       if (st.opacity < PICK_THRESHOLD) continue;
       const t = instance.raycast(ray);
-      if (t === null) continue;
+      if (t === null || t < nearFade.value) continue; // dissolved foreground cannot be clicked
       if (sid === this.selected) focusedHit = t;
       if (!best || t < best.t) best = { id: sid, t };
     }
@@ -782,11 +865,13 @@ export class CellEngine implements EngineController {
     }
 
     this.rig.update(dt);
+    // Clear the foreground while a structure is in focus (not in the overview or close-ups).
+    nearFade.value = this.selected && !this.closeup && this.phase === 'exploring' ? this.rig.distance() * 0.45 : 0;
     this.updateClipPlanes();
     if (this.phase === 'exploring') this.updateCuts(dt, reduce);
     this.updateFocus(dt, reduce);
 
-    const uctx = { camera: this.camera, selected: this.selected, calm: reduce };
+    const uctx = { camera: this.camera, selected: this.selected, calm: reduce, uiDt: dt, instant: reduce };
     if (!this.closeup) {
       for (const instance of this.structures.values()) instance.update(bioDt, this.time.value, uctx);
     } else {
@@ -978,7 +1063,10 @@ export class CellEngine implements EngineController {
     el.scaleLength.textContent = text;
     if (el.scaleContext) el.scaleContext.textContent = context;
     if (el.scaleNote) el.scaleNote.textContent = note;
-    el.scaleRoot?.setAttribute('aria-label', `${t.t('scale.bar', { length: text })}. ${context}. ${t.t('scale.focusNote')}${note ? ` ${note}` : ''}`);
+    el.scaleRoot?.setAttribute(
+      'aria-label',
+      joinSentences(t, t.t('scale.aria', { bar: t.t('scale.bar', { length: text }), context, focus: t.t('scale.focusNote') }), note),
+    );
     el.scaleRoot?.setAttribute('data-length-nm', String(reading.lengthNm));
   }
 

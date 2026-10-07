@@ -35,18 +35,10 @@
     "structures": "Strutture",
     "showList": "Mostra l’elenco delle strutture",
     "hideList": "Nascondi l’elenco delle strutture",
-    "previous": "Struttura precedente",
-    "next": "Struttura successiva",
     "previousNamed": "Precedente: {name}",
     "nextNamed": "Successiva: {name}",
     "wrapNote": "Lo scorrimento è circolare: dopo l’ultima struttura si ritorna alla prima.",
-    "breadcrumb": "Posizione",
-    "selected": "selezionata",
-    "groupCount": {
-      "one": "{count} struttura",
-      "many": "{count} di strutture",
-      "other": "{count} strutture"
-    }
+    "breadcrumb": "Posizione"
   },
   "search": {
     "label": "Cerca strutture",
@@ -59,13 +51,14 @@
     },
     "matched": "corrisponde a «{term}»",
     "empty": "Nessuna struttura corrisponde a «{query}».",
-    "emptyHint": "Prova con un nome come «nucleo», «mitocondrio» o «RE», oppure sfoglia i gruppi qui sotto.",
+    "emptyHint": "Prova con un nome come «nucleo», «mitocondrio» o «RE», oppure scegli uno dei suggerimenti qui sotto.",
     "suggestions": "Suggerimenti"
   },
   "panel": {
     "region": "Spiegazione",
     "inTheCell": "Nella cellula",
     "closeup": "Primo piano",
+    "closeupTitle": "Primo piano: {title}",
     "viewSwitch": "Scegli una vista",
     "subviews": "Viste in primo piano",
     "whatYouSee": "Che cosa stai vedendo",
@@ -84,7 +77,7 @@
     "enlarged": "Disegno ingrandito circa ×{factor} rispetto alla scala reale, perché resti visibile.",
     "trueScale": "Disegno all’incirca in scala reale.",
     "symbolic": "Disegno con indicatori simbolici, non in scala.",
-    "renderedSize": "Nel modello: {dimension} di {size}",
+    "renderedSize": "Nel modello: {dimension} di {size}.",
     "facts": "Dati chiave",
     "interesting": "Lo sapevi?",
     "parts": "Componenti",
@@ -92,8 +85,6 @@
     "simplifications": "Semplificazioni del modello",
     "sources": "Fonti",
     "sourceRef": "Fonte {n}",
-    "sourcesLabel": "Fonti:",
-    "openCloseup": "Apri il primo piano",
     "backToCell": "Torna alla vista della cellula",
     "closeupLoading": "Caricamento del primo piano…",
     "closeupError": "Impossibile caricare il primo piano.",
@@ -104,12 +95,10 @@
     "frozen": "L’animazione biologica è bloccata.",
     "expand": "Espandi la spiegazione",
     "collapse": "Comprimi la spiegazione",
-    "dragHandle": "Ridimensiona la spiegazione",
-    "groupLabel": "Gruppo",
+    "groupHidden": "Gruppo: {group}",
     "pending": "Verifica in sospeso",
     "pendingHint": "Non è stato possibile controllare la fonte di questa affermazione quando è stata creata questa versione.",
     "sourcePending": "non ancora verificata",
-    "noValue": "Non esiste un valore unico; vedi la nota.",
     "drawnFixed": {
       "one": "{count} disegnato a ogni livello di qualità",
       "many": "{count} disegnati a ogni livello di qualità",
@@ -136,11 +125,8 @@
     "labelsHint": "Mostra o nascondi le etichette",
     "bio": "Animazione biologica",
     "freeze": "Blocca",
-    "play": "Riproduci",
     "freezeHint": "Blocca l’animazione biologica (telecamera, lettura e selezione continuano a funzionare)",
     "playHint": "Riproduci l’animazione biologica",
-    "bioPlaying": "In riproduzione",
-    "bioFrozen": "Bloccata",
     "quality": "Qualità",
     "qualityAuto": "Automatica",
     "qualityAutoCurrent": "Automatica ({level})",
@@ -165,14 +151,11 @@
     "textAtlas": "Atlante testuale",
     "view3d": "Vista 3D",
     "close": "Chiudi",
-    "on": "Attivo",
-    "off": "Disattivo",
     "freezeLabel": "Blocca l’animazione biologica",
     "zoomGroup": "Zoom"
   },
   "tour": {
     "title": "Visita guidata",
-    "start": "Inizia la visita",
     "pause": "Metti in pausa la visita",
     "resume": "Riprendi la visita",
     "next": "Tappa successiva",
@@ -206,6 +189,7 @@
     "wholeCell": "Vista della cellula intera",
     "closeup": "Primo piano · ×{factor} rispetto alla vista della cellula intera",
     "focusNote": "Misura riferita al punto messo a fuoco.",
+    "aria": "{bar}. {context}. {focus}",
     "enlargedNote": "{name}: disegno ingrandito ×{factor} rispetto alla scala"
   },
   "closeupCaptions": {
@@ -290,11 +274,10 @@
     "sourcesTitle": "Tutte le fonti",
     "sourcesFilter": "Filtra le fonti",
     "sourcesEmpty": "Nessuna fonte corrisponde a «{query}».",
-    "sourcesGeneral": "Modello cellulare e fonti generali",
     "sourcesCount": {
-      "one": "{count} fonte",
-      "many": "{count} di fonti",
-      "other": "{count} fonti"
+      "one": "{count} fonte.",
+      "many": "{count} di fonti.",
+      "other": "{count} fonti."
     },
     "aboutLink": "Informazioni sul modello, riconoscimenti e licenze",
     "sourcePendingNote": "Le fonti contrassegnate come «non ancora verificata» sono pubblicazioni ben note che non è stato possibile controllare automaticamente quando è stata creata questa versione."
@@ -319,7 +302,7 @@
       "I primi piani sono scene separate, a una scala diversa; non si trovano letteralmente all’interno della scena della cellula intera."
     ],
     "improvementsTitle": "Miglioramenti dell’implementazione",
-    "improvements": "Rispetto all’esperienza di riferimento descritta nelle specifiche del progetto, questa implementazione aggiunge la ricerca con sinonimi, un controllo visibile della qualità di rendering e un’impostazione esplicita per ridurre il movimento.",
+    "improvements": "Rispetto all’esperienza che lo ha ispirato, questo atlante aggiunge la ricerca con sinonimi, un controllo visibile della qualità di rendering e un’impostazione esplicita per ridurre il movimento.",
     "sourcesTitle": "Fonti",
     "sources": "Ogni dato chiave rimanda alla sua fonte. Quando è stata creata questa versione, la maggior parte delle fonti è stata controllata confrontandola con i risultati dei motori di ricerca relativi alle pagine dell’editore o della biblioteca; le poche che non è stato possibile controllare sono contrassegnate come «non ancora verificata», e le affermazioni che si basano su di esse sono contrassegnate come «Verifica in sospeso». I valori numerici mantengono il contesto di misura indicato nella fonte.",
     "translationTitle": "Traduzioni",
@@ -355,7 +338,6 @@
     "contents": "Indice",
     "backToTop": "Torna all’inizio",
     "noJs": "La vista 3D interattiva richiede JavaScript. Tutte le spiegazioni si trovano qui sotto.",
-    "openIn3d": "Apri nella vista 3D",
     "illustration": "Illustrazione del primo piano tratta dal modello 3D: {name}"
   },
   "dimensions": {
@@ -478,7 +460,10 @@
     "makes": "Produce",
     "protects": "Protegge",
     "anchors": "Fa da ancoraggio a",
-    "worksWith": "Collabora con"
+    "worksWith": "Collabora con",
+    "formsOn": "Si forma su",
+    "encloses": "Racchiude",
+    "studdedWith": "Costellato di"
   },
   "structures": {
     "plasma-membrane": {
@@ -606,7 +591,8 @@
       "simplifications": [
         "Acqua, ioni e piccole molecole sono omessi.",
         "I granelli nella vista della cellula intera danno solo un’idea dell’affollamento.",
-        "Il movimento molecolare è enormemente rallentato."
+        "Il movimento molecolare è enormemente rallentato.",
+        "Il primo piano mostra meno proteine di quante ne contenga un vero citosol, per poter vedere l’interno del cubo."
       ],
       "sizeContext": "Quota del volume di una cellula del fegato (epatocita) occupata dal citosol, la parte fluida del citoplasma. Le proporzioni variano tra i diversi tipi cellulari.",
       "quantityContext": "Proteine per litro di cellula: un valore di lavoro assunto nelle stime di BioNumbers per una cellula del fegato e per una cellula del timo, non una misura diretta del citosol.",

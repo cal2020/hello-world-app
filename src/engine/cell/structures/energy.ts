@@ -184,9 +184,10 @@ export function buildMitochondria(ctx: BuildContext): StructureInstance {
     setFocused(value) {
       focused = value;
     },
-    update(dt, _time, uctx) {
+    update(_dt, _time, uctx) {
       wobble.value = uctx.calm ? 0 : 1;
-      reveal = THREE.MathUtils.clamp(reveal + (focused ? 1 : -1) * Math.max(dt, 0.016) * 2.5, 0, 1);
+      // Opening the hero is an interface transition: real time, instant with reduced motion.
+      reveal = uctx.instant ? (focused ? 1 : 0) : THREE.MathUtils.clamp(reveal + (focused ? 1 : -1) * uctx.uiDt * 2.5, 0, 1);
       uctx.camera.getWorldPosition(camPos);
       // Clip plane through the hero's axis, removing the half nearer the camera.
       const toCam = camPos.clone().sub(heroMid);

@@ -36,6 +36,10 @@ export interface UpdateContext {
   selected: StructureId | null;
   /** True when ambient/decorative motion should stop (reduced motion). */
   calm: boolean;
+  /** Real seconds since the last frame (interface transitions; keeps running while biology is frozen). */
+  uiDt: number;
+  /** Interface transitions should be instant (reduced motion). */
+  instant: boolean;
 }
 
 /**

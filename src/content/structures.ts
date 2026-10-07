@@ -27,7 +27,7 @@ export const STRUCTURE_META: StructureMeta[] = [
     color: '#6e9bff',
     parts: ['bilayer', 'phospholipid', 'cholesterol', 'channel', 'receptor', 'glycocalyx'],
     related: [
-      { id: 'cytoplasm', kind: 'contains' },
+      { id: 'cytoplasm', kind: 'encloses' },
       { id: 'actin', kind: 'supportedBy' },
       { id: 'endosomes', kind: 'sendsTo' },
       { id: 'vesicles-motors', kind: 'fusesWith' },
@@ -138,7 +138,7 @@ export const STRUCTURE_META: StructureMeta[] = [
     related: [
       { id: 'nucleus', kind: 'partOf' },
       { id: 'ribosomes', kind: 'makes' },
-      { id: 'chromosomes', kind: 'madeIn' },
+      { id: 'chromosomes', kind: 'formsOn' },
     ],
     model: {
       dimension: 'diameter',
@@ -179,7 +179,7 @@ export const STRUCTURE_META: StructureMeta[] = [
     related: [
       { id: 'nucleus', kind: 'continuousWith' },
       { id: 'smooth-er', kind: 'continuousWith' },
-      { id: 'ribosomes', kind: 'contains' },
+      { id: 'ribosomes', kind: 'studdedWith' },
       { id: 'golgi', kind: 'sendsTo' },
     ],
     model: {
