@@ -70,16 +70,16 @@ Verification details and results: [VERIFICATION.md](VERIFICATION.md).
 
 | Structure | Status | Close-up |
 | --- | --- | --- |
-| Nucleus | CLOSEUP_STATUS_nucleus | Nuclear pore cross-section with import and export traffic. |
-| Nucleolus | CLOSEUP_STATUS_nucleolus | rDNA “Christmas tree”, subunit assembly and exit. |
-| Ribosomes | CLOSEUP_STATUS_ribosomes | Translation: mRNA codons, tRNA cycle, growing chain. |
-| Rough ER and Golgi | CLOSEUP_STATUS_secretory | Translocation, signal cleavage, glycosylation, folding, COPII export; cisternal maturation through the Golgi. |
-| Vesicles and motors | CLOSEUP_STATUS_kinesin | Kinesin hand-over-hand stepping toward the plus end; dynein the other way. |
-| Mitochondria | CLOSEUP_STATUS_mito | Cut-open organelle; proton pumping and ATP synthase rotation. |
-| Endosomes and lysosomes | CLOSEUP_STATUS_endolyso | Uptake → recycling → degradation; lysosome digestion. |
-| Peroxisomes | CLOSEUP_STATUS_peroxisomes | Oxidase/catalase chemistry, fatty-acid shortening, protein import. |
-| Cytoskeleton | CLOSEUP_STATUS_cyto | Microtubule dynamic instability, actin treadmilling and branching, intermediate-filament assembly and stretch, centrioles. |
-| Every structure has an inspection view; priority close-ups (membrane, chromosomes/telomeres, ribosomes, mitochondria, motors) | CLOSEUP_STATUS_all | See screenshots. |
+| Nucleus | Done | Nuclear pore cross-section with import and export traffic. |
+| Nucleolus | Done | rDNA “Christmas tree”, subunit assembly and exit. |
+| Ribosomes | Done | Translation: mRNA codons, tRNA cycle, growing chain. |
+| Rough ER and Golgi | Done | Translocation, signal cleavage, glycosylation, folding, COPII export; cisternal maturation through the Golgi. |
+| Vesicles and motors | Done | Kinesin hand-over-hand stepping toward the plus end; dynein the other way. |
+| Mitochondria | Done | Cut-open organelle; proton pumping and ATP synthase rotation. |
+| Endosomes and lysosomes | Done | Uptake → recycling → degradation; lysosome digestion. |
+| Peroxisomes | Done | Oxidase/catalase chemistry, fatty-acid shortening, protein import. |
+| Cytoskeleton | Done | Microtubule dynamic instability, actin treadmilling and branching, intermediate-filament assembly and stretch, centrioles. |
+| Every structure has an inspection view; priority close-ups (membrane, chromosomes/telomeres, ribosomes, mitochondria, motors) | Done | See screenshots. |
 | Subtle living-cell motion in the whole cell | Done | Microtubule dynamic instability, vesicle transport, wobbling organelles, drifting cytosol specks. |
 
 ## 7. Content and languages
@@ -114,7 +114,7 @@ Verification details and results: [VERIFICATION.md](VERIFICATION.md).
 | Useful first view, lazy heavy parts, real progress, background pause, resources released | Done | Lazy 3D engine, close-ups and locales; rAF stops when hidden; disposal paths; object URLs revoked. |
 | Keyboard access, focus indicators, contrast, screen-reader semantics, motion setting, text equivalents | Done | axe scans: no WCAG A/AA violations; skip links; e2e keyboard test. |
 | Recovery from WebGL failure, context loss, locale failure, export failure | Done | e2e fallback tests; export errors shown as toasts. |
-| Text atlas with navigation and original illustrations when 3D is unavailable | Done | Text atlas with contents and the original cell illustration. |
+| Text atlas with navigation and original illustrations when 3D is unavailable | Done | Text atlas with contents; each structure has an original illustration rendered from its close-up (`public/illustrations/`). |
 
 ## 10–11. Process, acceptance and handoff
 

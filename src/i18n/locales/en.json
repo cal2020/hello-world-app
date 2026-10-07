@@ -87,7 +87,7 @@
     "closeupLoading": "Loading the close-up…",
     "closeupError": "The close-up could not be loaded.",
     "slowdown": "Animation slowed about ×{factor} compared with real time.",
-    "noTimescale": "Motion is illustrative and greatly slowed.",
+    "noTimescale": "Motion is illustrative: very fast molecular events are slowed down and slow processes are sped up.",
     "toScale": "Molecules are drawn to scale with each other.",
     "moleculesEnlarged": "Some components are drawn about ×{factor} larger than this view’s scale.",
     "frozen": "Biological animation is frozen.",
@@ -476,7 +476,8 @@
       "simplifications": [
         "Real membranes are packed far more densely with proteins than shown.",
         "In the whole-cell view the membrane is drawn about ten times thicker than reality.",
-        "Lipid motion in the close-up is slowed by roughly a million times or more."
+        "Lipid motion in the close-up is slowed by roughly a million times or more.",
+        "In the close-up the channel lets a short burst of ions through every few seconds; a real open channel passes millions of ions per second."
       ],
       "sizeContext": "Thickness of the lipid bilayer itself; proteins and sugar chains stick out beyond it. Rule-of-thumb value (BioNumbers, from Physical Biology of the Cell).",
       "quantityContext": "Lipid molecules in the plasma membrane of a small animal cell — an order-of-magnitude textbook estimate. Larger cells have proportionally more.",
@@ -630,7 +631,8 @@
       "simplifications": [
         "Only a few hundred pore complexes are drawn; a human nucleus has thousands.",
         "Import and export are shown as single particles moving steadily; real transport uses cycling receptors, energy from the Ran system, and very fast events.",
-        "The nucleus is drawn as a smooth ellipsoid; real nuclei can have folds and grooves."
+        "The nucleus is drawn as a smooth ellipsoid; real nuclei can have folds and grooves.",
+        "In the close-up the pore complex is built from simple shapes repeated eight times rather than from its roughly 30 different proteins."
       ],
       "sizeContext": "Share of a liver cell’s volume taken up by the nucleus; {range} in hepatocytes within liver tissue. Nuclear size varies between cell types.",
       "quantityContext": "Base pairs of DNA in one female (XX) diploid nucleus, calculated from the reference genome; {male} in a male cell.",
@@ -724,7 +726,8 @@
       "simplifications": [
         "Territories are drawn as tangled fibres in rounded regions; real territories are irregular and intermingle at their edges.",
         "Chromatin fibres are drawn several times thicker than real.",
-        "The condensed chromosome in the close-up belongs to a dividing cell, not to this interphase cell."
+        "The condensed chromosome in the close-up belongs to a dividing cell, not to this interphase cell.",
+        "In the close-up only the microtubules attached to the kinetochores are drawn, and the chromosome’s movement on the spindle is shown smaller and faster than in real cells."
       ],
       "sizeContext": "Combined length of the DNA in all the chromosomes of a female diploid cell, if stretched out end to end. In this interphase cell it is folded into a nucleus a few micrometres across.",
       "quantityContext": "Normal human diploid cell: {pairs} pairs — {autosomePairs} pairs of autosomes plus two sex chromosomes (XX in females, XY in males).",
@@ -797,7 +800,7 @@
       },
       "simplifications": [
         "Telomeres are shown as glowing points in the whole-cell view; they are really lengths of DNA.",
-        "The close-up shows only a few repeats; a real telomere contains hundreds to thousands.",
+        "The close-up shows about two hundred repeats and a loop about 90 nm across; a real telomere has about a thousand repeats or more, and real T-loops usually span several thousand base pairs.",
         "Shelterin is shown as simplified shapes rather than individual proteins."
       ],
       "sizeContext": "Length of the repeat stretch at each chromosome end in human somatic cells; it varies with age, tissue and individual.",
@@ -873,7 +876,7 @@
       },
       "simplifications": [
         "The three layers are drawn as neat shells; in real nucleoli they are irregular and interwoven.",
-        "The branching RNA chains are enlarged so they can be seen.",
+        "Only one ribosomal RNA gene is drawn, much shorter than the real gene and with far fewer polymerases; RNA chains and ribosome subunits are enlarged, and production is shown much faster than in reality.",
         "Subunit assembly involves hundreds of helper molecules that are not shown."
       ],
       "sizeContext": "Nucleoli vary in size with how actively a cell makes ribosomes: fast-growing cells have larger ones. A cell can have one nucleolus or several.",
@@ -949,7 +952,8 @@
       "simplifications": [
         "Ribosomes in the whole-cell view are enlarged and far fewer than in a real cell.",
         "The close-up shows only the main steps; initiation and many helper proteins are left out.",
-        "tRNAs are shown as simple L-shapes."
+        "tRNAs are shown as simple L-shapes.",
+        "The front of the large subunit is cut away in the close-up to show the transfer RNAs and the exit tunnel."
       ],
       "sizeContext": "Overall width; ribosomes are not spheres. About 25 nm is quoted for mammalian ribosomes.",
       "quantityContext": "HeLa cells (a human cancer cell line) growing in culture, estimated from their RNA content. Numbers differ between cell types and growth states.",
@@ -1031,7 +1035,9 @@
       "simplifications": [
         "The ER is drawn as a few tidy sheets; in real cells it is a far larger, constantly changing network.",
         "One cargo particle at a time illustrates the secretory journey; real cells move huge numbers of proteins at once.",
-        "The targeting machinery (signal recognition particle and its receptor) is not shown."
+        "The targeting machinery (signal recognition particle and its receptor) is not shown.",
+        "The close-up shows the signal sequence leading the chain into the lumen; in reality it sits in the translocon as a loop and is cut at the membrane’s luminal face.",
+        "The coated vesicle keeps its coat as it leaves; real vesicles lose their coat soon after budding."
       ],
       "sizeContext": "Distance between the two membranes of an ER sheet in mammalian cells ({yeast} in yeast).",
       "quantityContext": "Share of a liver cell’s volume taken up by rough-ER cisternae; cells that secrete a lot of protein have much more.",
@@ -1099,7 +1105,8 @@
       "simplifications": [
         "The tubular network is much sparser than in real cells.",
         "Calcium release is shown as regular bursts; real signals vary in timing and size.",
-        "Detoxifying enzymes, abundant in liver cells, are not shown separately."
+        "Detoxifying enzymes, abundant in liver cells, are not shown separately.",
+        "Calcium ions are drawn as glowing dots, larger than their true size."
       ],
       "sizeContext": "Diameter of ER tubules in mammalian cells.",
       "quantityContext": "Share of a liver cell’s volume taken up by smooth-ER and Golgi cisternae together; the textbook table does not separate them.",
@@ -1181,7 +1188,8 @@
       "simplifications": [
         "How cargo moves through the stack is still debated; the close-up shows the widely used cisternal-maturation picture.",
         "The real Golgi ribbon contains more stacks and many tubular connections.",
-        "Glycosylation is shown as a simple colour change of the sugar chains."
+        "Glycosylation is shown as a simple colour change of the sugar chains.",
+        "In the close-up each cisterna moves on by one position every 20 seconds; real maturation takes minutes, and the trans-Golgi network is really a tubular network."
       ],
       "sizeContext": "Approximate width of a Golgi stack in animal cells; a stack usually has a handful of cisternae.",
       "quantityContext": "Share of a liver cell’s volume taken up by Golgi and smooth-ER cisternae together; the textbook table does not separate them.",
@@ -1271,7 +1279,9 @@
       "simplifications": [
         "Vesicles in the whole-cell view move steadily; real transport stops, starts and sometimes reverses.",
         "Each vesicle is shown with one kind of motor; real cargo often carries several kinds at once.",
-        "Myosin transport along actin is described but not animated."
+        "Myosin transport along actin is described but not animated.",
+        "The close-up follows the kinesin, so the microtubule seems to slide backward under it; the vesicle glides smoothly instead of moving forward in 8 nm jumps.",
+        "Dynein is simplified to two ring-shaped heads with stalks, and it steps regularly; real dynein steps irregularly."
       ],
       "sizeContext": "Clathrin-coated vesicles formed at the plasma membrane of mammalian cells; other carriers range from smaller vesicles to long tubes.",
       "quantityContext": "Copies of a cargo protein in one carrier leaving the Golgi apparatus, in monkey kidney (COS) cells making a fluorescent viral cargo.",
@@ -1366,7 +1376,9 @@
       "simplifications": [
         "Mitochondria are drawn as separate tubes; in many cells they form branching, constantly fusing and dividing networks.",
         "The close-up shows one ATP synthase and one copy of each pump; real cristae are densely packed with them.",
-        "Electron carriers (ubiquinone, cytochrome c) and the chemistry of fuel breakdown are not shown."
+        "Electron carriers (ubiquinone, cytochrome c) and the chemistry of fuel breakdown are not shown.",
+        "The cristae are drawn as evenly spaced, nearly parallel plates; in real mitochondria their number, shape and spacing vary a lot.",
+        "Mitochondrial DNA is shown as bare rings; in cells it is packed with proteins into nucleoids."
       ],
       "sizeContext": "Typical diameter; lengths range from short rods to long, branching networks.",
       "quantityContext": "Rat liver cells (hepatocytes), counted in electron micrographs; numbers vary widely with cell type and size.",
@@ -1444,7 +1456,9 @@
       "simplifications": [
         "Lysosomes vary widely in size and shape; they are drawn as simple spheres.",
         "One fusion event at a time is shown; autophagy is described but not animated.",
-        "The enzymes are shown as a few generic shapes."
+        "The enzymes are shown as a few generic shapes.",
+        "Cargo is cut in half step by step before turning into amino acids; real hydrolases of dozens of kinds cut at many places at once.",
+        "Amino acids are drawn two to three times their true size so that they can be seen."
       ],
       "sizeContext": "Range seen by electron microscopy in eukaryotic cells; typically {typical}. Size changes with cell type and nutrient supply.",
       "quantityContext": "Broad range for mammalian cells; usually several hundred, dropping below {low} when cells are starved of nutrients.",
@@ -1528,7 +1542,9 @@
       "simplifications": [
         "Endosomes form a continuum of changing compartments; the model shows only two clear types.",
         "Only clathrin-mediated uptake is shown; cells use several other routes.",
-        "The three events are shown in sequence; in a real cell they happen all the time, everywhere at once."
+        "The three events are shown in sequence; in a real cell they happen all the time, everywhere at once.",
+        "The clathrin coat is drawn as a regular cage; real coats vary in size and shape, and helper proteins such as adaptors and dynamin are not shown.",
+        "The recycling tube grows straight to the plasma membrane; in cells, tubules pinch off as carriers that travel along microtubules."
       ],
       "sizeContext": "Endosomes range from small vesicles to large tubular compartments; incoming coated vesicles are {vesicle} across.",
       "quantityContext": "Share of a liver cell’s volume taken up by endosomes; a count per cell was not verified.",
@@ -1610,7 +1626,9 @@
       "simplifications": [
         "Only a few representative enzymes are shown; peroxisomes contain dozens.",
         "Fatty-acid shortening is shown as pieces being clipped off one by one, without the intermediate chemistry.",
-        "Peroxisome numbers and sizes vary greatly between cell types."
+        "Peroxisome numbers and sizes vary greatly between cell types.",
+        "Oxygen, hydrogen peroxide and water are drawn about three times their true size.",
+        "The fatty acid is drawn as a bare carbon chain without its coenzyme A, and only four shortening rounds are shown."
       ],
       "sizeContext": "Typical diameter range; liver cells are rich in peroxisomes.",
       "quantityContext": "Share of a liver cell’s volume taken up by peroxisomes; a count per cell was not verified.",
@@ -1684,7 +1702,8 @@
       "simplifications": [
         "Microtubules are drawn as smooth tubes in the whole-cell view.",
         "Growth and shrinkage follow a regular rhythm in the model; in cells they are random.",
-        "Proteins that bind microtubule ends and regulate them are not shown."
+        "Proteins that bind microtubule ends and regulate them are not shown.",
+        "In the close-up, free tubulin dimers arrive from close by; real dimers diffuse in from all around, and many attach and fall off again."
       ],
       "sizeContext": "Outer diameter of the hollow tube.",
       "quantityContext": "Protofilaments in the wall of most microtubules in cells. How many microtubules a cell has varies widely and is rarely counted.",
@@ -1760,7 +1779,9 @@
       "simplifications": [
         "The cortex is drawn as short straight segments; real filaments are longer and cross-linked.",
         "Stress fibres and crawling protrusions are described but not drawn in the rounded model cell.",
-        "Myosin motors are not shown."
+        "Myosin motors are not shown.",
+        "In the close-up the membrane stays still and the network flows downward; in a cell the network stays put and the membrane moves forward.",
+        "The branching pattern repeats every 20 seconds; real networks are random and denser, and capping proteins that stop growth are not shown."
       ],
       "sizeContext": "Filament diameter (textbook range).",
       "quantityContext": "Actin is one of the most abundant proteins in many animal cells; the number of filaments per cell is not a standard measurement.",
@@ -1833,7 +1854,8 @@
       "simplifications": [
         "Real intermediate-filament networks are denser and more interwoven.",
         "Only one filament type (vimentin) is represented; cells may contain several.",
-        "Assembly is shown as a tidy sequence; in cells it happens in parallel, and filaments also exchange subunits."
+        "Assembly is shown as a tidy sequence; in cells it happens in parallel, and filaments also exchange subunits.",
+        "In the close-up the unit-length filament is a neat ring of eight tetramers and the mature filament a rope of four strands; real packing is less regular, and stretching really unfolds the proteins locally."
       ],
       "sizeContext": "Filament diameter — between that of actin filaments and microtubules.",
       "quantityContext": "Human genes encoding intermediate-filament proteins; each cell type uses a particular set.",
@@ -1909,7 +1931,8 @@
       "simplifications": [
         "The pericentriolar material is drawn as a soft cloud; it is really an ordered protein scaffold.",
         "Only a few microtubule-starting complexes are shown.",
-        "The centrosome’s duplication during the cell cycle is described but not animated."
+        "The centrosome’s duplication during the cell cycle is described but not animated.",
+        "The centrioles’ inner cartwheel and linkers are left out, and the appendages are drawn as simple blades and struts."
       ],
       "sizeContext": "Width of each centriole; each is {length} long (vertebrate cells).",
       "quantityContext": "Centrioles in a cell before its DNA is copied: one pair, forming one centrosome. They are duplicated once per cell cycle.",
