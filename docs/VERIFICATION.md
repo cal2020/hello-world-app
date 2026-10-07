@@ -75,7 +75,7 @@ environment on 7 October 2026.
 | Unit tests | `npm test` | **61 passed** in 8 files: content integrity 9, locale completeness 13, quality controller 6, routing 6, scale bar 5, search 6, selection and Escape 9, tour timing and playback 7. |
 | Translations | `npm run i18n -- check <lang>` | **0 issues** for each of sr, fr, it, es, ru and zh (same keys and placeholders as English, valid plural categories, no leftover English). |
 | Production build | `npm run build` | Passed; **147 pages prerendered** (21 pages × 7 languages) plus the root redirect and the 404 page. Bundle sizes are in [PERFORMANCE.md](PERFORMANCE.md). |
-| Browser tests | `npm run test:e2e` | **17 passed** in 9.9 min (list below). |
+| Browser tests | `npm run test:e2e` | **17 passed** in 9.5 min (list below). |
 | Close-up check | `npm run check:closeups` | **21 of 21 views opened**, no console errors, every view showed labels, resources released (table below). |
 
 ### Browser tests (Playwright, Chromium + SwiftShader, reduced motion)
@@ -106,27 +106,27 @@ Quality: low. GPU resources after entering: 58 geometries, 8 textures; after the
 
 | Close-up view | Opened | Load | Draw calls | Triangles | Labels shown | Resources after leaving | Console errors |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| plasma-membrane | ok | 9.2 s | 11 | 110,114 | 9 | released | – |
-| cytoplasm | ok | 3.7 s | 25 | 53,818 | 6 | released | – |
-| nucleus | ok | 6.2 s | 14 | 27,262 | 8 | released | – |
-| chromosomes / metaphase | ok | 5.4 s | 10 | 72,530 | 4 | released | – |
-| chromosomes / nucleosomes | ok | 6.3 s | 8 | 84,146 | 3 | released | – |
-| telomeres | ok | 6.4 s | 14 | 50,158 | 5 | released | – |
-| nucleolus | ok | 4.9 s | 19 | 56,590 | 8 | released | – |
-| ribosomes | ok | 4.9 s | 15 | 19,574 | 6 | released | – |
-| rough-er | ok | 4.6 s | 29 | 26,028 | 7 | released | – |
-| smooth-er | ok | 13.9 s | 13 | 25,602 | 8 | released | – |
-| golgi | ok | 4.9 s | 18 | 94,050 | 8 | released | – |
-| vesicles-motors | ok | 5.3 s | 18 | 85,870 | 9 | released | – |
-| mitochondria / organelle | ok | 5.1 s | 7 | 59,424 | 7 | released | – |
-| mitochondria / atp-synthase | ok | 4.5 s | 19 | 34,494 | 7 | released | – |
-| lysosomes | ok | 5.4 s | 22 | 84,146 | 6 | released | – |
-| endosomes | ok | 4.7 s | 20 | 24,136 | 7 | released | – |
-| peroxisomes | ok | 3.8 s | 19 | 31,546 | 8 | released | – |
-| microtubules | ok | 5.4 s | 2 | 99,042 | 6 | released | – |
-| actin | ok | 5.9 s | 29 | 91,734 | 6 | released | – |
-| intermediate-filaments | ok | 5.4 s | 6 | 87,890 | 2 | released | – |
-| centrosome | ok | 5.7 s | 10 | 11,210 | 7 | released | – |
+| plasma-membrane | ok | 13.5 s | 11 | 110,114 | 9 | released | – |
+| cytoplasm | ok | 3.9 s | 25 | 53,818 | 6 | released | – |
+| nucleus | ok | 5.6 s | 14 | 27,262 | 8 | released | – |
+| chromosomes / metaphase | ok | 5.6 s | 10 | 72,530 | 4 | released | – |
+| chromosomes / nucleosomes | ok | 8.2 s | 8 | 84,146 | 3 | released | – |
+| telomeres | ok | 7.2 s | 14 | 50,158 | 5 | released | – |
+| nucleolus | ok | 4.8 s | 19 | 56,590 | 8 | released | – |
+| ribosomes | ok | 5.3 s | 15 | 19,574 | 6 | released | – |
+| rough-er | ok | 4.3 s | 29 | 26,028 | 7 | released | – |
+| smooth-er | ok | 5.5 s | 13 | 25,602 | 8 | released | – |
+| golgi | ok | 5.3 s | 18 | 94,050 | 8 | released | – |
+| vesicles-motors | ok | 4.6 s | 18 | 85,870 | 9 | released | – |
+| mitochondria / organelle | ok | 6.7 s | 7 | 59,424 | 7 | released | – |
+| mitochondria / atp-synthase | ok | 5.1 s | 19 | 34,494 | 7 | released | – |
+| lysosomes | ok | 5.1 s | 22 | 84,146 | 6 | released | – |
+| endosomes | ok | 5.7 s | 20 | 24,136 | 7 | released | – |
+| peroxisomes | ok | 5.8 s | 19 | 31,546 | 8 | released | – |
+| microtubules | ok | 5.6 s | 2 | 99,042 | 6 | released | – |
+| actin | ok | 5.8 s | 29 | 91,734 | 6 | released | – |
+| intermediate-filaments | ok | 6.3 s | 6 | 87,890 | 2 | released | – |
+| centrosome | ok | 4.9 s | 10 | 11,210 | 7 | released | – |
 
 Load times include fetching and building the close-up in software rendering
 on a shared 4-core container; the first close-up opened also compiles shared
