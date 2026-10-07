@@ -120,19 +120,28 @@
    *  which a JS object cannot give back once an integer-like key ("7") is among several keys: such a dict
    *  raises (JS-only ``KEY_ORDER_UNKNOWN``) instead of returning a possibly reordered list. */
   function py_list(v) {
-    if (Array.isArray(v)) return v.slice();
-    if (typeof v === "string") return Array.from(v);
+    const [xs, unknown] = py_list_deferred(v);
+    if (unknown) throw unknown();
+    return xs;
+  }
+  kernel._py_list = py_list;
+
+  /** ``list(v)``, but a dict whose insertion order JS cannot recover gives ``[keys, make_error]`` instead of raising,
+      so the caller can raise KEY_ORDER_UNKNOWN only where Python would actually return the list (any error Python
+      raises before that point surfaces first, with Python's class). The length is exact either way. */
+  function py_list_deferred(v) {
+    if (Array.isArray(v)) return [v.slice(), null];
+    if (typeof v === "string") return [Array.from(v), null];
     if (is_dict(v)) {
       const keys = Object.keys(v);
       if (keys.length > 1 && keys.some((k) => /^(?:0|[1-9][0-9]*)$/.test(k) && Number(k) < 4294967295)) {
-        throw pyerr("KEY_ORDER_UNKNOWN", "list() of a dict with integer-like keys " + pyr(keys) +
-          ": the JavaScript port cannot recover their insertion order");
+        return [keys, () => pyerr("KEY_ORDER_UNKNOWN", "list() of a dict with integer-like keys " + pyr(keys) +
+          ": the JavaScript port cannot recover their insertion order")];
       }
-      return keys;
+      return [keys, null];
     }
     throw pyerr("TypeError", "'" + py_type_name(v) + "' object is not iterable");
   }
-  kernel._py_list = py_list;
 
   /** ``x.get(key, default)`` on a value that should be a dict (AttributeError otherwise). */
   function py_get(d, key, dflt) {
@@ -1019,7 +1028,27 @@
     return null;
   }
 
+  const BUDGET_FIELDS = ["steps", "tool_calls", "model_calls", "tokens", "output_repairs"];
+
+  /** JS-only fail-closed range check (deviations/kernel.md): Python's budget counters and ``inc`` counters are
+      unbounded ints, but a JS number is exact only within +/-(2^53-1). Every addition here is of two safe integers,
+      so its result is exact exactly when it is still a safe integer; anything else would be a silently rounded value
+      that ``HX.canonical`` cannot hash. Raised only where Python would return a checkpoint carrying such a value. */
+  function _range_check(r) {
+    const b = r.checkpoint.budget;
+    const bad = BUDGET_FIELDS.filter((k) => !Number.isSafeInteger(b[k]));
+    if (bad.length) {
+      throw new KernelError("BUDGET_OVERFLOW", "run budget counter(s) " + pyr(bad) +
+        " left the exactly representable integer range (+/-(2^53-1)) of the JavaScript port", { fields: bad });
+    }
+    return r;
+  }
+
   kernel.advance = function (checkpoint, obs, pkg) {
+    return _range_check(_advance(checkpoint, obs, pkg));
+  };
+
+  function _advance(checkpoint, obs, pkg) {
     if (checkpoint.artifact_hash !== pkg.artifact_hash) {
       throw new KernelError("ARTIFACT_MISMATCH", "checkpoint is pinned to a different artifact");
     }
@@ -1067,7 +1096,12 @@
     }
     const edge = st.transitions[idx];
     if (py_truthy(edge.inc)) { /* the guard saw the old counter; the increment follows selection */
-      set_own(after, edge.inc, py_int(hasOwn(after, edge.inc) ? after[edge.inc] : 0) + 1);
+      const n = py_int(hasOwn(after, edge.inc) ? after[edge.inc] : 0) + 1;
+      if (!Number.isSafeInteger(n)) { /* JS-only fail-closed (deviations/kernel.md): Python's int is unbounded */
+        throw new KernelError("COUNTER_OVERFLOW", "counter '" + edge.inc + "' left the exactly representable " +
+          "integer range (+/-(2^53-1)) of the JavaScript port", { variable: edge.inc });
+      }
+      set_own(after, edge.inc, n);
     }
     const over = _over_budget(pkg, budget);
     if (over) {
@@ -1079,7 +1113,7 @@
     events.push({ type: "TRANSITION", from: st.id, to: edge.to, edge: clone(e), delta_keys: sorted(Object.keys(delta)),
       delta_digest: HX.canonical.digest(delta), revision: neu.revision });
     return KernelResult(neu, events, delta, e);
-  };
+  }
 
   function _finish(cp, obs, pkg, events) {
     const st = pkg.machine.states[cp.state_id];
@@ -1094,10 +1128,14 @@
     }
     const adm = hasOwn(obs.engine, "terminal_admission") ? obs.engine.terminal_admission : {};
     const a = clone(cp.assurance);
-    a.unresolved_effects = clone(py_list(py_get(adm, "unresolved_effects", [])));
+    const [unresolved, unresolved_order_unknown] = py_list_deferred(py_get(adm, "unresolved_effects", []));
+    a.unresolved_effects = clone(unresolved);
+    /* the list's length (truthiness) is exact; its order is needed only once Python returns it */
+    const order_known = () => { if (unresolved_order_unknown) throw unresolved_order_unknown(); };
     if (tc !== null && tc.category === "verified") {
       if (!py_truthy(py_get(adm, "evidence_valid", null)) || a.unresolved_effects.length) {
         a.missing_evidence = clone(py_list(py_get(adm, "missing", ["no valid evidence receipt"])));
+        order_known();
         return _stop(with_updates(cp, { assurance: a }), "FAILED", "TERMINAL_ADMISSION_DENIED",
           "verified terminal " + tid + " not supported by current evidence", events, { missing: a.missing_evidence });
       }
@@ -1109,6 +1147,7 @@
       evidence_receipts: clone(py_list(py_get(adm, "receipts", []))) };
     const neu = with_updates(cp, { status: "COMPLETED", outcome, assurance: a, revision: cp.revision + 1,
       evidence_refs: clone(py_list(py_get(adm, "receipts", []))) });
+    order_known();
     events.push({ type: "TERMINAL_ADMITTED", terminal: tid, category: outcome.category });
     return KernelResult(neu, events);
   }

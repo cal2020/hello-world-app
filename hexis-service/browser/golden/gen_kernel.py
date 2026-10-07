@@ -982,6 +982,102 @@ write("kernel_regex", {
 })
 print("kernel_regex:", len(re_vectors), "regex vectors,", len(schema_vectors), "schema vectors,", len(int_vectors["accepted"]), "accepted int vectors")
 
+# budget / inc counters near the JS-safe integer range: Python's ints are unbounded; the JS port fails closed with
+# KernelError BUDGET_OVERFLOW / COUNTER_OVERFLOW exactly where Python returns a checkpoint carrying an unsafe value
+SAFE_INT = 2**53 - 1
+
+
+def _unsafe(v):
+    if isinstance(v, bool):
+        return False
+    if isinstance(v, int):
+        return abs(v) > SAFE_INT
+    if isinstance(v, dict):
+        return any(_unsafe(x) for x in v.values())
+    if isinstance(v, (list, tuple)):
+        return any(_unsafe(x) for x in v)
+    return False
+
+
+def budget_case(state, kind, budget, usage, variables=None, outputs=None, failure=None, engine=None):
+    p = PACKAGES["owner_mix"]
+    case = {"state": state, "kind": kind, "budget": {k: str(v) for k, v in budget.items()},
+            "usage": usage, "variables": variables or {}, "outputs": outputs or {}, "failure": failure,
+            "engine": engine or {}}
+
+    def go():
+        cp = K.RunCheckpoint(tenant_id="t", run_id="r", artifact_hash=p.artifact_hash, state_id=state,
+                             variables=copy.deepcopy(variables or {}), budget=K.Budget(**budget))
+        obs = K.Observation(run_id="r", state_id=state, revision=0, kind=kind, outputs=copy.deepcopy(outputs or {}),
+                            usage=usage, engine=copy.deepcopy(engine or {}),
+                            **({"failure": failure} if failure is not None else {}))
+        r = K.advance(cp, obs, p)
+        d = result_dump(r)
+        if _unsafe(d):
+            cpd = d["checkpoint"]
+            return {"unsafe": True, "status": cpd["status"], "state_id": cpd["state_id"],
+                    "budget": {k: str(v) for k, v in cpd["budget"].items()},
+                    "unsafe_budget": sorted(k for k, v in cpd["budget"].items() if _unsafe(v)),
+                    "unsafe_variables": sorted(k for k, v in cpd["variables"].items() if _unsafe(v)),
+                    "codes": [x["code"] for x in cpd["assurance"]["diagnostics"]]}
+        return d
+    case["result"] = run(go)
+    return case
+
+
+B0 = {"steps": 0, "tool_calls": 0, "model_calls": 0, "tokens": 0, "output_repairs": 0}
+budget_cases = []
+for field in ("tokens", "tool_calls", "model_calls", "output_repairs"):
+    for start, use in ((9007199254740000, 9007199254740991), (SAFE_INT, 2), (SAFE_INT - 1, 1), (SAFE_INT, 0),
+                       (-SAFE_INT, -1), (-SAFE_INT, 1), (5, SAFE_INT - 5), (0, SAFE_INT)):
+        b = dict(B0, **{field: start})
+        u = {field: use}
+        budget_cases.append(budget_case("M", "model", b, u, outputs={"u": "go", "num": 1, "ghostvar": None}))
+        budget_cases.append(budget_case("M", "model", b, u, outputs={"u": "go", "num": 1, "ghostvar": None}, failure="f"))
+        budget_cases.append(budget_case("M", "model", b, u, outputs={"u": 5, "num": 1, "ghostvar": None}))  # OUTPUT_TYPE is raised first
+        budget_cases.append(budget_case("A", "end", b, u))
+for start in (SAFE_INT, SAFE_INT - 1, 0, -SAFE_INT):
+    budget_cases.append(budget_case("M", "model", dict(B0, steps=start), {}, outputs={"u": "go", "num": 1, "ghostvar": None}))
+    budget_cases.append(budget_case("A", "end", dict(B0, steps=start), {}))
+for loops in (SAFE_INT, SAFE_INT - 1, str(SAFE_INT), -SAFE_INT, 3):
+    budget_cases.append(budget_case("M", "model", B0, {}, variables={"loops": loops}, outputs={"u": "no", "num": 5, "ghostvar": None}))
+    budget_cases.append(budget_case("M", "model", dict(B0, tokens=SAFE_INT), {"tokens": 1},
+                                    variables={"loops": loops}, outputs={"u": "no", "num": 5, "ghostvar": None}))
+
+# terminal admission lists from dicts whose insertion order JS cannot recover (integer-like keys): the port raises
+# KEY_ORDER_UNKNOWN only where Python returns such a list; earlier Python errors surface with Python's class
+ADM_UNRESOLVED = [{"z": 1, "7": 2}, {"z": 1}, [], ["a"], None, True]
+ADM_RECEIPTS = [None, True, ["r"], {"z": 1, "7": 2}, {"z": 1}, "MISSING"]
+ADM_MISSING = ["MISSING", True, {"b": 1, "9": 2}, ["m"]]
+admission_cases = []
+VP = PACKAGES["verified"]
+for state in ("X", "V", "FALLBACK"):
+    for unres in ADM_UNRESOLVED:
+        for rec in ADM_RECEIPTS:
+            for miss in ADM_MISSING:
+                for ev in (True, False):
+                    adm = {"evidence_valid": ev, "unresolved_effects": unres}
+                    if rec != "MISSING":
+                        adm["receipts"] = rec
+                    if miss != "MISSING":
+                        adm["missing"] = miss
+                    if unres is None:
+                        del adm["unresolved_effects"]
+
+                    def go(adm=adm, state=state):
+                        cp = K.RunCheckpoint(tenant_id="t", run_id="r", artifact_hash=VP.artifact_hash, state_id=state,
+                                             variables={"out": "v", "extra": 3})
+                        obs = K.Observation(run_id="r", state_id=state, revision=0, kind="end",
+                                            engine={"terminal_admission": copy.deepcopy(adm)})
+                        return result_dump(K.advance(cp, obs, VP))
+                    admission_cases.append({"state": state, "admission": adm, "result": run(go)})
+
+write("kernel_followups", {"package": "owner_mix", "budget": budget_cases,
+                           "admission_package": "verified", "admission": admission_cases})
+print("kernel_followups:", len(budget_cases), "budget cases,",
+      sum(1 for c in budget_cases if c["result"].get("ok", {}).get("unsafe")), "unsafe,",
+      len(admission_cases), "admission cases")
+
 INDEX = {"walk_files": []}
 chunk, size, n = [], 0, 0
 

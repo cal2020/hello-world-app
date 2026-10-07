@@ -240,9 +240,22 @@
       if (e instanceof HX.HXError) throw e;
       return js_errs;
     }
-    const key = (p) => p.map((x) => (typeof x === "number" ? "#" + String(x).padStart(12, "0") : "$" + x)).join("\u0000");
-    const keyed = out.map((e, i) => [key(e[0]), i, e]);
-    keyed.sort((a, b) => cmp(a[0], b[0]) || a[1] - b[1]);
+    /* Python's ``sorted(..., key=lambda e: list(e.absolute_path))``: element-wise list comparison, a shorter prefix
+       first. Indices compare numerically and keys by code point (also keys containing NUL). Python never compares an
+       index with a key at the same position for one schema (that would raise); such paths keep a fixed order. */
+    const cmp_seg = (x, y) => {
+      if (typeof x === "number" && typeof y === "number") return x - y;
+      if (typeof x === "number") return -1;
+      if (typeof y === "number") return 1;
+      return cmp(x, y);
+    };
+    const cmp_path = (a, b) => {
+      const n = Math.min(a.length, b.length);
+      for (let i = 0; i < n; i++) { const c = cmp_seg(a[i], b[i]); if (c) return c; }
+      return a.length - b.length;
+    };
+    const keyed = out.map((e, i) => [e[0], i, e]);
+    keyed.sort((a, b) => cmp_path(a[0], b[0]) || a[1] - b[1]);
     const fmt = (p, m) => (p.length ? p.map(String).join("/") : "<root>") + ": " + m;
     const as_js = keyed.map(([, , e]) => fmt(e[0], e[2] === null ? e[1] : e[2])).sort(cmp);
     const want = js_errs.slice().sort(cmp);

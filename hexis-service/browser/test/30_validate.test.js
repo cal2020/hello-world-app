@@ -137,6 +137,26 @@
     assert.equal(HX.validate.VALIDATOR_VERSION, g.validator_version);
   });
 
+  test("documented deviation #6: integral-float counter init relies on strict_loads", () => {
+    const d = plain(base());
+    let counter = null;
+    for (const st of Object.values(d.machine.states)) for (const t of st.transitions) if (t.inc) counter = counter || t.inc;
+    assert.ok(counter, "the procurement package has a loop counter");
+    const v = d.machine.variables.find((x) => x.name === counter);
+    const codes = (init) => {
+      v.init = init;
+      const r = HX.validate.validate_package(HX.pkg.sealed(HX.pkg.normalize_package(plain(d))), HX.data.tool_catalog);
+      return r.findings.map((f) => f.code);
+    };
+    /* Python: init 0.0 -> COUNTER_INIT. JSON.parse cannot tell 0.0 from 0, so such a dump passes in JS ... */
+    assert.ok(codes(JSON.parse("0.0")).indexOf("COUNTER_INIT") < 0);
+    assert.ok(codes(0.5).indexOf("COUNTER_INIT") >= 0);
+    /* ... which is why every package/draft must go through strict_loads, which refuses the literal */
+    assert.throws(() => HX.canonical.strict_loads('{"init": 0.0}'), HX.canonical.CanonicalError);
+    assert.throws(() => HX.canonical.strict_loads(JSON.stringify(plain(d)).replace('"init":0.5', '"init":0.0')),
+      HX.canonical.CanonicalError);
+  });
+
   test("validate: conformance mutations (test_static_admission, test_review_admission_validator) match Python", () => {
     const g = golden("validate_conformance");
     for (const c of g.cases) check_case(c, g.variants, c.name);

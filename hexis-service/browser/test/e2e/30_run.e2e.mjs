@@ -11,7 +11,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
-const NEEDS = ["env", "service", "kernel", "broker", "store", "policy", "approvals", "fakes", "compile", "registry", "canonical", "catalog", "metrics"];
+const NEEDS = ["env", "service", "kernel", "broker", "store", "policy", "approvals", "fakes", "compile", "registry", "canonical", "catalog", "metrics",
+  "jsonschema", "guards", "efsm", "pkg", "clauses", "validate", "diff", "fixture"];
 
 function refined_json() {
   try { return JSON.parse(fs.readFileSync(path.join(ROOT, "golden", "runtime.json"), "utf8")).refined_json || null; } catch (e) { return null; }
@@ -46,6 +47,39 @@ async function state(page) {
 }
 
 const click = (page, id) => page.click("#" + id);
+
+/** The graph is fed from the run's events: the marked node is the checkpoint's state (or its terminal) with the
+    run's status, and the step badges number exactly the TRANSITION and FALLBACK_ENTERED events, 1..n. */
+async function graph_ok(page, assert, label) {
+  const g = await page.evaluate(() => {
+    const env = HXUI.lab.env, id = HXUI.lab.selected_run;
+    let run = null;
+    for (const t of ["acme", "globex"]) { run = env.store.get_run(t, id); if (run) break; }
+    const ins = env.service.inspect_run(id, env.principal(run.principal));
+    const steps = ins.events.filter((e) => e.type === "TRANSITION" || e.type === "FALLBACK_ENTERED").length;
+    const marks = [...document.querySelectorAll("#rn-graph .hxg-node.is-current, #rn-graph .hxg-node.is-reached, #rn-graph .hxg-node.is-stopped")];
+    const nums = [...document.querySelectorAll("#rn-graph .hxg-badge")].flatMap((b) => String(b.getAttribute("data-step")).split(" ")).map(Number);
+    return { status: run.status, state: ins.checkpoint.state_id, terminal: ins.checkpoint.outcome ? ins.checkpoint.outcome.terminal : null,
+      marks: marks.map((m) => [m.getAttribute("data-state"), m.getAttribute("data-status"), m.classList.contains("is-current")]), steps, nums: nums.sort((a, b) => a - b) };
+  });
+  assert.ok(g.marks.length >= 1, label + ": the graph marks where the run is");
+  const m = g.marks[0];
+  assert.ok(m[0] === g.state || m[0] === g.terminal, label + ": marked node " + m[0] + " is the checkpoint state " + g.state);
+  assert.equal(m[1], g.status, label + ": the marked node carries the run status");
+  if (["RUNNING", "WAITING_FOR_APPROVAL", "WAITING_FOR_INPUT"].includes(g.status)) assert.ok(m[2], label + ": a live run's node is the current one");
+  assert.deepEqual(g.nums, Array.from({ length: g.steps }, (_, i) => i + 1), label + ": one numbered badge per transition, in order");
+}
+
+/** Step until the checkpoint is at state_id (or the run stops). */
+async function step_to(page, assert, state_id) {
+  for (let i = 0; i < 12; i++) {
+    const s = await state(page);
+    if (s.state_id === state_id) return s;
+    assert.ok(!["COMPLETED", "FAILED", "CANCELLED"].includes(s.status), "the run stopped before " + state_id + " (" + s.status + " at " + s.state_id + ")");
+    await click(page, "rn-step");
+  }
+  throw new Error("never reached " + state_id);
+}
 async function disabled(page, id) {
   return page.evaluate((i) => { const b = document.getElementById(i); return { off: b.getAttribute("aria-disabled") === "true", why: b.getAttribute("aria-description") || "" }; }, id);
 }
@@ -119,13 +153,20 @@ export default async function (t) {
   /* ---- happy path with the approval negative demos */
   const r1 = await start(page, assert, "clean");
   assert.equal(r1, "run_0000000000000001", "deterministic ids: the first run id equals the Python reference's");
+  assert.equal(await page.evaluate(() => document.activeElement && document.activeElement.id), "rn-step", "after Start, focus moves to Step");
   await click(page, "rn-step");
   let s = await state(page);
   assert.equal(s.status, "RUNNING");
   assert.equal(s.state_id, "LOOKUP_SUPPLIER", "one step: READ_INTAKE -> LOOKUP_SUPPLIER");
+  await graph_ok(page, assert, "after Step");
   s = await until(page, assert, "WAITING_FOR_APPROVAL");
   assert.equal(s.state_id, "REQUEST_APPROVAL");
   assert.ok(s.approval, "the approval panel appears");
+  await graph_ok(page, assert, "after Run until blocked");
+  const wait_why = await disabled(page, "rn-step");
+  assert.ok(wait_why.off && /Waiting for approval/.test(wait_why.why), "Step waits for the approval, with a reason: " + wait_why.why);
+  assert.equal((await disabled(page, "rn-until")).off, true, "Run until blocked waits for the approval too");
+  assert.equal(await page.evaluate(() => document.getElementById("rn-step").classList.contains("hx-btn--primary")), false, "Approve is the only primary action");
   assert.equal(s.erp, 0, "nothing is written before approval");
   const scope = await page.evaluate(() => {
     const env = HXUI.lab.env;
@@ -153,6 +194,8 @@ export default async function (t) {
   s = await until(page, assert, "COMPLETED");
   assert.deepEqual([s.outcome.terminal, s.outcome.category], ["END_VERIFIED_DRAFT", "verified"]);
   assert.deepEqual(s.outcome_card, { terminal: "END_VERIFIED_DRAFT", category: "verified", status: "COMPLETED" }, "the outcome card shows the engine's outcome");
+  assert.equal(s.drive.tone, "ok", "a verified outcome reads as a success");
+  await graph_ok(page, assert, "completed");
   assert.equal(s.erp, 1);
   assert.equal(s.sum_erp, 1);
   assert.equal((await disabled(page, "rn-step")).off, true, "Step is disabled once the run has finished");
@@ -226,6 +269,7 @@ export default async function (t) {
     assert.equal(s.drive && s.drive.code, "SIMULATED_CRASH", point + ": the crash is shown inline");
     assert.match(s.drive.text, new RegExp("Worker crashed at " + point));
     assert.equal(s.crash, point);
+    assert.match(await page.evaluate(() => document.getElementById("rn-sum-status").textContent), new RegExp("Worker crashed at " + point), point + ": the summary carries the crash");
     const why = await disabled(page, "rn-step");
     assert.ok(why.off && /Restart the worker/.test(why.why), point + ": Step waits for a restart");
     await click(page, "rn-crash-restart");
@@ -245,6 +289,9 @@ export default async function (t) {
   /* worker-1 still holds the lease, so the canceller records the request and the worker finishes it (as in Python) */
   assert.equal(s.drive.code, "CANCEL_REQUESTED");
   assert.match(s.drive.text, /another worker holds the lease/);
+  assert.match(await page.evaluate(() => document.getElementById("rn-sum-status").textContent), /Cancel requested/, "the summary carries the pending cancel");
+  const cwhy = await disabled(page, "rn-cancel");
+  assert.ok(cwhy.off && /already requested/.test(cwhy.why), "Cancel cannot be pressed twice: " + cwhy.why);
   await click(page, "rn-step");
   s = await state(page);
   assert.equal(s.status, "CANCELLED");
@@ -255,6 +302,69 @@ export default async function (t) {
   s = await until(page, assert, "COMPLETED");
   assert.deepEqual([s.outcome.terminal, s.outcome.category], ["END_REVIEW", "fallback"], "the registry conflict stops for review");
   assert.equal(s.erp, drafts, "nothing written");
+  assert.equal(s.drive.tone, "crit", "a fallback outcome never reads as a success");
+  await graph_ok(page, assert, "registry conflict");
+  const conflict_ui = await page.evaluate(() => ({ why: (document.querySelector('#rn-outcome [data-key="why"]') || {}).textContent || "",
+    chip: document.querySelector(".rn-runs-table tbody tr[data-run='" + HXUI.lab.selected_run + "']").textContent }));
+  assert.match(conflict_ui.why, /lookup_status/, "the outcome says why it went to review: " + conflict_ui.why);
+  assert.match(conflict_ui.chip, /Completed · fallback/, "the runs list shows the outcome category");
+
+  /* ---- repairs exhausted (A10) */
+  await start(page, assert, "repairs-exhausted");
+  s = await until(page, assert, "COMPLETED");
+  assert.equal(s.outcome.terminal, "END_UNVERIFIED", "two repairs cannot fix the draft");
+  assert.equal(s.drive.tone, "warn", "an unverified outcome reads as a warning");
+  assert.equal(s.erp, drafts, "nothing written");
+
+  /* ---- prompt injection with the gullible model (A26), then back to the standard model */
+  await start(page, assert, "injection");
+  assert.equal(await page.evaluate(() => !!HXUI.lab.env.model.gullible), true, "the worker runs the gullible model");
+  s = await until(page, assert, "COMPLETED");
+  assert.deepEqual([s.outcome.terminal, s.outcome.category], ["END_REVIEW", "fallback"], "the output contract sends the injection to review");
+  await start(page, assert, "clean");
+  assert.equal(await page.evaluate(() => !!HXUI.lab.env.model.gullible), false, "a clean start restarts with the standard model");
+  await click(page, "rn-cancel");
+  if ((await state(page)).status !== "CANCELLED") await click(page, "rn-step");
+  assert.equal((await state(page)).status, "CANCELLED");
+
+  /* ---- approval expiry: +25 h, then answering is refused and the run ends unverified */
+  await start(page, assert, "clean");
+  await until(page, assert, "WAITING_FOR_APPROVAL");
+  await click(page, "rn-clock-25h");
+  assert.match(await page.evaluate(() => document.getElementById("rn-approval-state").textContent), /Expired/, "the approval card shows the expiry");
+  s = await approve(page, assert, "user:bob");
+  assert.equal(s.human.code, "INTERACTION_EXPIRED", "an expired approval is refused");
+  assert.equal((await disabled(page, "rn-step")).off, false, "Step records the expiry");
+  s = await until(page, assert, "COMPLETED");
+  assert.equal(s.outcome.terminal, "END_UNVERIFIED", "an expired approval ends unverified");
+
+  /* ---- A25: the draft changes after the verified read-back -> terminal admission denied */
+  await start(page, assert, "clean");
+  await until(page, assert, "WAITING_FOR_APPROVAL");
+  await approve(page, assert, "user:bob");
+  await step_to(page, assert, "END_VERIFIED_DRAFT");
+  await click(page, "rn-erp-modify");
+  await click(page, "rn-step");
+  s = await state(page);
+  assert.equal(s.status, "FAILED", "A25: the verified terminal is refused");
+  const a25 = await page.evaluate(() => { const env = HXUI.lab.env; const cp = env.store.latest_checkpoint("acme", HXUI.lab.selected_run);
+    const d = cp.assurance.diagnostics; return { code: d.length ? d[d.length - 1].code : null, refused: document.getElementById("rn-outcome").dataset.refused,
+      title: document.getElementById("rn-outcome-title").textContent }; });
+  assert.equal(a25.code, "TERMINAL_ADMISSION_DENIED");
+  assert.deepEqual([a25.refused, a25.title], ["1", "Verified outcome refused"], "the outcome card names the refusal");
+  assert.equal((await disabled(page, "rn-erp-modify")).off, true, "ERP changes are disabled once the run has finished");
+  drafts += 1;
+
+  /* ---- A28: tampered payload at the read-back -> unverified, no extra draft */
+  await start(page, assert, "clean");
+  await until(page, assert, "WAITING_FOR_APPROVAL");
+  await approve(page, assert, "user:bob");
+  await step_to(page, assert, "READ_BACK");
+  drafts += 1;
+  await click(page, "rn-erp-tamper");
+  s = await until(page, assert, "COMPLETED");
+  assert.equal(s.outcome.terminal, "END_UNVERIFIED", "A28: a tampered payload never verifies");
+  assert.equal(s.erp, drafts, "A28: no extra draft");
 
   /* ---- custom JSON: errors are inline and block Start */
   await page.check("#rn-sc-custom");
@@ -267,7 +377,13 @@ export default async function (t) {
 
   /* ---- missing documents on the refined machine */
   const text = refined_json();
-  const admitted = await page.evaluate((txt) => {
+  const can_admit_here = await page.evaluate(() => { const b = document.getElementById("rn-admit"); return !!b && !b.hidden; });
+  if (can_admit_here) {
+    await click(page, "rn-admit-refined");
+    s = await state(page);
+    assert.equal(s.start && s.start.code, "ADMITTED", "Admit refined machine admits it here: " + JSON.stringify(s.start));
+  }
+  const admitted = can_admit_here ? await page.evaluate(() => HX.registry.is_admitted_in(HXUI.lab.env.store, HXUI.lab.packages.refined.artifact_hash, "sandbox") ? "ADMITTED" : "not admitted") : await page.evaluate((txt) => {
     if (HX.update && HX.reference) {
       const env = HXUI.lab.env;
       const pkg = HXUI.lab.packages.initial;
@@ -327,10 +443,32 @@ export default async function (t) {
   const runs = await page.evaluate(() => [...document.querySelectorAll(".rn-runs-table tbody tr[data-run]")].map((r) => [r.dataset.run, r.dataset.status]));
   const engine_runs = await page.evaluate(() => HXUI.lab.env.store.list_runs("acme").map((id) => [id, HXUI.lab.env.store.get_run("acme", id).status]).reverse());
   assert.deepEqual(runs, engine_runs, "the runs list is the store's, newest first");
-  await click(page, "rn-run-" + r1);
+  await page.focus("#rn-run-" + r1);
+  await page.keyboard.press("Enter");
   s = await state(page);
-  assert.equal(s.shown_run, r1, "a click inspects an earlier run");
+  assert.equal(s.shown_run, r1, "Enter on a run inspects an earlier run");
   assert.equal(s.outcome_card.terminal, "END_VERIFIED_DRAFT");
+  assert.equal(await page.evaluate(() => document.activeElement && document.activeElement.id), "rn-run-" + r1, "focus stays on the runs list");
+  await page.click("#rn-insp-tab-timeline");
+  await page.focus("#rn-tl-timing");
+  await page.keyboard.press("Space");
+  const tl = await page.evaluate(() => ({ focus: document.activeElement && document.activeElement.id, sum: document.getElementById("rn-tl-sum").textContent }));
+  assert.equal(tl.focus, "rn-tl-timing", "toggling timing events keeps focus");
+  assert.doesNotMatch(tl.sum, /timing hidden/, "all events shown with timing on");
+  await page.keyboard.press("Space");
+  assert.match(await page.evaluate(() => document.getElementById("rn-tl-sum").textContent), /of \d+ events shown \(timing hidden\)/, "the timeline says how many events are shown");
+
+  /* ---- A21: revoke erp:draft:create after approval -> FAILED with a policy violation */
+  await start(page, assert, "clean");
+  await until(page, assert, "WAITING_FOR_APPROVAL");
+  await approve(page, assert, "user:bob");
+  await page.selectOption("#rn-pol-principal", "user:alice");
+  await page.selectOption("#rn-pol-cap", "erp:draft:create");
+  await click(page, "rn-pol-revoke");
+  assert.equal(await page.evaluate(() => document.getElementById("rn-pol-version").dataset.revoked), "1", "the revocation is listed");
+  s = await until(page, assert, "FAILED");
+  const a21 = await page.evaluate(() => HXUI.lab.env.store.latest_checkpoint("acme", HXUI.lab.selected_run).assurance.policy_violations.length);
+  assert.ok(a21 >= 1, "A21: the run fails with a policy violation");
 
   /* ---- Reset lab returns to rest */
   await page.click("#hx-reset");

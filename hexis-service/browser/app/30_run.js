@@ -460,7 +460,7 @@
     const text = S.custom_text === null ? example_task_text() : S.custom_text;
     let v;
     try { v = HX.canonical.strict_loads(text); } catch (err) {
-      const msg = String(err.message || err).replace(/\.$/, "");
+      const msg = String(err.message || err).replace(/\.$/, "").replace(/^invalid JSON:\s*/i, "");
       const at = where_in(text, msg);
       return { error: "Not valid JSON" + (at ? " at line " + at.line + ", column " + at.col : "") + ": " + msg + ". Fix it there, or press Reset to example." };
     }
@@ -979,7 +979,7 @@
     return h("dl", { class: "rn-scope", id: "rn-scope" },
       row("Tool", [code(scope.tool), " ", h("span", { class: "hx-faint" }, "v" + scope.tool_version)]),
       row("Args digest", HXUI.digest(scope.args_digest, { short: 19, label: "args digest", id: "rn-scope-args" })),
-      row("Business ref", HXUI.digest(scope.target && scope.target.business_reference, { short: 19, label: "business reference" })),
+      row("Business ref", HXUI.digest(scope.target && scope.target.business_reference, { short: 19, label: "business reference", id: "rn-scope-ref" })),
       row("Evidence", ev.length ? h("ul", { class: "rn-scope-ev" }, ev.map((e) => h("li", null, wrap_id(e.claim, "rn-claim"), " ", HXUI.digest(e.receipt_id, { short: 14, copy: false }))))
         : h("span", { class: "hx-faint" }, "none")),
       row("Policy", wrap_id(scope.policy_version)),

@@ -327,6 +327,19 @@
         assert.deepEqual(plain(K.advance(c0, ob({ z: 1, y: 2 }), vp).checkpoint.evidence_refs), ["z", "y"]);
       }
     }
+    /* 8. schema keywords outside HX.jsonschema's subset fail closed (python-jsonschema accepts these values) */
+    for (const kw of [{ propertyNames: { maxLength: 3 } }, { minProperties: 0 }, { prefixItems: [] }, { contains: {} },
+      { dependentRequired: {} }, { $defs: {} }, { if: {}, then: {} }, { unevaluatedProperties: true }]) {
+      const errs = K._schema_errors(Object.assign({ type: "object" }, kw), {});
+      assert.ok(errs.length >= 1 && errs.every((m) => /unsupported schema keyword/.test(m)), JSON.stringify(kw) + ": " + JSON.stringify(errs));
+    }
+    /* 2b. values beyond HX.canonical's limits are refused at construction (Python accepts the checkpoint) */
+    let deep = "x";
+    for (let i = 0; i < 70; i++) deep = [deep];
+    assert.throws(() => K.new_checkpoint({ tenant_id: "t", run_id: "r", artifact_hash: "h", state_id: "S",
+      variables: { zz: deep } }), (e) => e instanceof K.ValidationError && e.errors[0].type === "json_invalid");
+    assert.throws(() => K.new_observation({ run_id: "r", state_id: "R", revision: 0, kind: "model",
+      outputs: { doc: { big: "a".repeat(1048577) } } }), (e) => e instanceof K.ValidationError && e.errors[0].type === "json_invalid");
     /* 6. fill_template interpolates floats with Python's repr and never stringifies bools/null/containers */
     assert.equal(K.fill_template("v=${f}", { f: 1e-7 }), "v=1e-07");
     assert.equal(code(() => K.fill_template("v=${b}", { b: true })), "TEMPLATE_TYPE");
@@ -395,6 +408,83 @@
       });
     }
     assert.ok(n > 36000);
+  });
+
+  test("budget and inc counters beyond 2^53: Python's exact result, or KernelError BUDGET_OVERFLOW / COUNTER_OVERFLOW", () => {
+    const G = golden("kernel_followups");
+    const pkg = deep_freeze(HX.pkg.normalize_package(plain(golden("kernel").packages[G.package])));
+    const SAFE = Number.MAX_SAFE_INTEGER;
+    let unsafe = 0, exact = 0, raised = 0;
+    for (const c of G.budget) {
+      const label = JSON.stringify([c.state, c.budget, c.usage, c.variables, c.failure]);
+      const budget = {};
+      for (const k of Object.keys(c.budget)) budget[k] = Number(c.budget[k]);
+      const got = run(() => {
+        const cp = deep_freeze(K.new_checkpoint({ tenant_id: "t", run_id: "r", artifact_hash: pkg.artifact_hash,
+          state_id: c.state, variables: plain(c.variables), budget }));
+        const f = { run_id: "r", state_id: c.state, revision: 0, kind: c.kind, outputs: plain(c.outputs),
+          usage: plain(c.usage), engine: plain(c.engine) };
+        if (c.failure !== null) f.failure = c.failure;
+        return result_dump(K.advance(cp, deep_freeze(K.new_observation(f)), pkg));
+      });
+      const want = c.result;
+      if (want.ok && want.ok.unsafe) {
+        /* Python returns a checkpoint holding an integer JS cannot represent: the port fails closed */
+        unsafe++;
+        const code = want.ok.unsafe_variables.length ? "COUNTER_OVERFLOW" : "BUDGET_OVERFLOW";
+        assert.equal(got.exc, "KernelError", label + ": " + JSON.stringify(got));
+        assert.equal(got.code, code, label);
+        if (code === "BUDGET_OVERFLOW") assert.deepEqual(plain(got.detail).fields, want.ok.unsafe_budget, label);
+        else assert.deepEqual([got.detail.variable], want.ok.unsafe_variables, label);
+        for (const k of Object.keys(want.ok.budget)) {
+          if (want.ok.unsafe_budget.indexOf(k) < 0) assert.ok(Math.abs(Number(want.ok.budget[k])) <= SAFE, label);
+        }
+        continue;
+      }
+      same(got, want, label);
+      if (want.ok) { assert.deepEqual(got.ok, want.ok, label); exact++; } else raised++;
+      /* every value JS returns is hashable */
+      if (got.ok) HX.canonical.digest(got.ok.checkpoint);
+    }
+    assert.ok(unsafe >= 40 && exact >= 60 && raised >= 30, [unsafe, exact, raised].join(" "));
+  });
+
+  test("terminal admission: KEY_ORDER_UNKNOWN only where Python returns a list built from an integer-keyed dict", () => {
+    const G = golden("kernel_followups");
+    const pkg = deep_freeze(HX.pkg.normalize_package(plain(golden("kernel").packages[G.admission_package])));
+    const INTLIKE = /^(?:0|[1-9][0-9]*)$/;
+    const reordered = (xs) => Array.isArray(xs) && xs.length > 1 && xs.some((k) => INTLIKE.test(k)) &&
+      JSON.stringify(xs) !== JSON.stringify(Object.keys(Object.fromEntries(xs.map((k) => [k, 1]))));
+    let same_n = 0, refused = 0;
+    for (const c of G.admission) {
+      const label = c.state + " " + JSON.stringify(c.admission);
+      let got;
+      try {
+        got = run(() => {
+          const cp = K.new_checkpoint({ tenant_id: "t", run_id: "r", artifact_hash: pkg.artifact_hash, state_id: c.state,
+            variables: { out: "v", extra: 3 } });
+          const obs = K.new_observation({ run_id: "r", state_id: c.state, revision: 0, kind: "end",
+            engine: { terminal_admission: plain(c.admission) } });
+          return result_dump(K.advance(deep_freeze(cp), deep_freeze(obs), pkg));
+        });
+      } catch (e) {
+        if (!(e instanceof HX.HXError && e.code === "KEY_ORDER_UNKNOWN")) throw e;
+        got = { exc: "KEY_ORDER_UNKNOWN" };
+      }
+      if (got.exc === "KEY_ORDER_UNKNOWN") {
+        /* Python returned a list whose order (dict insertion order) JS cannot recover */
+        assert.ok(c.result.ok, label + ": Python raised " + JSON.stringify(c.result));
+        const cpd = c.result.ok.checkpoint;
+        assert.ok([cpd.assurance.unresolved_effects, cpd.assurance.missing_evidence, cpd.evidence_refs].some(reordered),
+          label + ": no reordered list in Python's result");
+        refused++;
+        continue;
+      }
+      same(got, c.result, label);
+      if (c.result.ok) assert.deepEqual(got.ok, c.result.ok, label);
+      same_n++;
+    }
+    assert.ok(refused > 50 && same_n > 500, refused + " " + same_n);
   });
 
   test("judge action with empty writes: IndexError like Python's delta[writes[0]]", () => {

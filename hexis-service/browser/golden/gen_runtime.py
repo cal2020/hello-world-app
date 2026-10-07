@@ -1128,6 +1128,14 @@ def schema_order_vectors():
         ({"type": ["object", "null"], "not": {"required": ["bad"]}, "oneOf": [{"required": ["p"]}, {"type": "object", "required": ["q"]}],
           "properties": {"p": {"type": "boolean"}, "q": {"uniqueItems": True}}},
          [{"bad": 1, "p": 1}, {"bad": 1, "q": [1, 1]}, {"bad": 1}, None, {"p": True}]),
+        # an object key containing NUL: Python sorts paths as lists ('a' < 'a\x00'), not as joined strings
+        ({"properties": {"a": {"properties": {"b": {"type": "string"}}}}, "additionalProperties": {"type": "string"}},
+         [{"a": {"b": 1}, "a\u0000": 1}, {"a\u0000": 1, "a": {"b": 1}, "a\u0000b": 2, "\u0000": 3}]),
+        # maxItems / maxLength 0: "is expected to be empty"
+        ({"maxItems": 0}, [["10"], []]), ({"maxLength": 0}, ["a", ""]),
+        ({"properties": {"l": {"maxItems": 0, "minItems": 1}, "s": {"maxLength": 0}, "t": {"maxLength": 1},
+                         "u": {"maxItems": 1}}},
+         [{"l": [1], "s": "xy", "t": "xy", "u": [1, 2]}, {"l": []}]),
     ]
     # (messages outside the shared subset, e.g. oneOf matching twice or patternProperties with
     # additionalProperties false, differ in HX.jsonschema and are left out here)

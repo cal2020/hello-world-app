@@ -72,7 +72,9 @@
       if ("minLength" in schema && len < schema.minLength) {
         errors.push([path, schema.minLength === 1 ? R(value) + " should be non-empty" : R(value) + " is too short"]);
       }
-      if ("maxLength" in schema && len > schema.maxLength) errors.push([path, R(value) + " is too long"]);
+      if ("maxLength" in schema && len > schema.maxLength) {
+        errors.push([path, schema.maxLength === 0 ? R(value) + " is expected to be empty" : R(value) + " is too long"]);
+      }
       if ("pattern" in schema) {
         const re = compile_pattern(schema.pattern);
         if (re === null) errors.push([path, "invalid pattern " + R(schema.pattern)]);
@@ -104,7 +106,7 @@
         errors.push([path, schema.minItems === 1 ? R(value) + " should be non-empty" : R(value) + " is too short"]);
       }
       if ("maxItems" in schema && value.length > schema.maxItems) {
-        errors.push([path, R(value) + " is too long"]);
+        errors.push([path, schema.maxItems === 0 ? R(value) + " is expected to be empty" : R(value) + " is too long"]);
       }
       if (schema.uniqueItems === true) {
         for (let i = 0; i < value.length; i++) {
