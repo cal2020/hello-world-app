@@ -363,29 +363,33 @@ export interface HoleClip {
 }
 
 /**
- * Cut a round opening (a fusion pore) into a membrane surface: fragments on
- * the `axis` side of `center` within `radius` of the axis are discarded.
+ * Cut round openings (fusion pores) into a membrane surface: for each hole,
+ * fragments on the `axis` side of `center` within `radius` of the axis are
+ * discarded. A huge radius turns a hole into a clipping plane.
  */
-export function addHoleClip(material: THREE.Material, hole: HoleClip, key: string): void {
+export function addHoleClip(material: THREE.Material, holes: HoleClip | HoleClip[], key: string): void {
+  const list = Array.isArray(holes) ? holes : [holes];
   const previous = material.onBeforeCompile;
   material.onBeforeCompile = (shader, renderer) => {
     previous.call(material, shader, renderer);
-    shader.uniforms.uHoleCenter = { value: hole.center };
-    shader.uniforms.uHoleAxis = { value: hole.axis };
-    shader.uniforms.uHoleRadius = hole.radius;
+    let decl = 'varying vec3 vHolePos;';
+    let test = '';
+    list.forEach((hole, i) => {
+      shader.uniforms[`uHoleCenter${i}`] = { value: hole.center };
+      shader.uniforms[`uHoleAxis${i}`] = { value: hole.axis };
+      shader.uniforms[`uHoleRadius${i}`] = hole.radius;
+      decl += `\nuniform vec3 uHoleCenter${i};\nuniform vec3 uHoleAxis${i};\nuniform float uHoleRadius${i};`;
+      test += `\n{ vec3 d = vHolePos - uHoleCenter${i}; float a = dot(d, uHoleAxis${i});
+  if (a > 0.0 && dot(d, d) - a * a < uHoleRadius${i} * uHoleRadius${i}) discard; }`;
+    });
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vHolePos;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvHolePos = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vHolePos;\nuniform vec3 uHoleCenter;\nuniform vec3 uHoleAxis;\nuniform float uHoleRadius;')
-      .replace(
-        '#include <clipping_planes_fragment>',
-        `#include <clipping_planes_fragment>
-{ vec3 d = vHolePos - uHoleCenter; float a = dot(d, uHoleAxis);
-  if (a > 0.0 && dot(d, d) - a * a < uHoleRadius * uHoleRadius) discard; }`,
-      );
+      .replace('#include <common>', `#include <common>\n${decl}`)
+      .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>${test}`);
   };
-  chainKey(material, key);
+  chainKey(material, `${key}:${list.length}`);
 }
 
 /**
@@ -551,4 +555,136 @@ export function cutBowl(options: CutBowlOptions): THREE.Group {
   rim.position.z = 0.05;
   group.add(outer, inner, rim);
   return group;
+}
+
+// ── Glow halos with per-point colour and size ─────────────────────────────
+
+export interface Halos {
+  points: THREE.Points;
+  positions: Float32Array;
+  colors: Float32Array;
+  /** Size in scene units. */
+  sizes: Float32Array;
+  alphas: Float32Array;
+  set(i: number, p: THREE.Vector3, alpha: number): void;
+  commit(): void;
+  dispose(): void;
+}
+
+/**
+ * Soft additive glows that mark very small molecules (a few ångström across)
+ * so they can be found next to much larger proteins. Like the kit's sparks,
+ * but each point has its own colour and size.
+ */
+export function halos(count: number, pointScale: { value: number }): Halos {
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3).fill(1);
+  const sizes = new Float32Array(count).fill(1);
+  const alphas = new Float32Array(count);
+  const geometry = new THREE.BufferGeometry();
+  const attrs = [
+    ['position', new THREE.BufferAttribute(positions, 3)],
+    ['aColor', new THREE.BufferAttribute(colors, 3)],
+    ['aSize', new THREE.BufferAttribute(sizes, 1)],
+    ['aAlpha', new THREE.BufferAttribute(alphas, 1)],
+  ] as const;
+  for (const [name, attr] of attrs) {
+    attr.setUsage(THREE.DynamicDrawUsage);
+    geometry.setAttribute(name, attr);
+  }
+  const material = new THREE.ShaderMaterial({
+    uniforms: { uScale: pointScale },
+    vertexShader: /* glsl */ `
+      attribute float aAlpha;
+      attribute float aSize;
+      attribute vec3 aColor;
+      uniform float uScale;
+      varying float vAlpha;
+      varying vec3 vColor;
+      void main() {
+        vAlpha = aAlpha;
+        vColor = aColor;
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        gl_PointSize = max(1.5, aSize * uScale / max(0.001, -mv.z));
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: /* glsl */ `
+      varying float vAlpha;
+      varying vec3 vColor;
+      void main() {
+        vec2 c = gl_PointCoord - 0.5;
+        float d = length(c) * 2.0;
+        if (d > 1.0 || vAlpha <= 0.0) discard;
+        float glow = pow(1.0 - d, 1.6);
+        gl_FragColor = vec4(vColor * (0.5 + glow), glow * vAlpha * 0.8);
+      }`,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+  const points = new THREE.Points(geometry, material);
+  points.frustumCulled = false;
+  return {
+    points,
+    positions,
+    colors,
+    sizes,
+    alphas,
+    set(i, p, alpha) {
+      positions[i * 3] = p.x;
+      positions[i * 3 + 1] = p.y;
+      positions[i * 3 + 2] = p.z;
+      alphas[i] = alpha;
+    },
+    commit() {
+      for (const [, attr] of attrs) attr.needsUpdate = true;
+    },
+    dispose() {
+      geometry.dispose();
+      material.dispose();
+    },
+  };
+}
+
+// ── Multi-coloured lumpy proteins ──────────────────────────────────────────
+
+/** Merge parts into one geometry, each painted in one colour (vertex colours). */
+export function paintedMerge(parts: { geometry: THREE.BufferGeometry; color: THREE.ColorRepresentation }[]): THREE.BufferGeometry {
+  const prepared = parts.map(({ geometry, color }) => {
+    const g = geometry.index ? geometry.toNonIndexed() : geometry;
+    if (g !== geometry) geometry.dispose();
+    if (g.attributes.uv) g.deleteAttribute('uv');
+    const c = new THREE.Color(color);
+    const colors = new Float32Array(g.attributes.position.count * 3);
+    for (let i = 0; i < colors.length; i += 3) {
+      colors[i] = c.r;
+      colors[i + 1] = c.g;
+      colors[i + 2] = c.b;
+    }
+    g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    return g;
+  });
+  const merged = mergeGeometries(prepared)!;
+  prepared.forEach((g) => g.dispose());
+  return merged;
+}
+
+export interface Lump {
+  at: [number, number, number];
+  /** Radius, or radii along x, y, z. */
+  r: number | [number, number, number];
+  color: THREE.ColorRepresentation;
+}
+
+/** A Goodsell-style protein built from coloured lumps (use with a vertex-coloured material). */
+export function paintedLumps(seed: string, lumps: Lump[], detail: number, roughness = 0.22): THREE.BufferGeometry {
+  return paintedMerge(
+    lumps.map((lump, i) => {
+      const g = blobGeometry(1, `${seed}:${i}`, roughness, detail);
+      const [sx, sy, sz] = typeof lump.r === 'number' ? [lump.r, lump.r, lump.r] : lump.r;
+      g.scale(sx, sy, sz);
+      g.translate(lump.at[0], lump.at[1], lump.at[2]);
+      return { geometry: g, color: lump.color };
+    }),
+  );
 }

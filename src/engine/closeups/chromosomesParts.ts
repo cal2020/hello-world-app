@@ -483,56 +483,125 @@ export function buildNucleosomes(ctx: BuildContext): CloseupViewBuild {
   // ── Layout: the cores sit along a gentle zigzag; each core's orientation is
   // searched so the DNA leaving one core runs smoothly into the next one
   // through a gently curved linker of 20–50 bp.
-  const coreX = [-36, -19.5, -2, 15, 35];
+  const coreX = [-30, -15, 0, 15, 30];
+  /** Target contour length of each linker (nm) — about 41, 47, 35 and 44 bp; all must stay within 20–50 bp. */
+  const linkerTarget = [14, 16, 12, 15];
+  const LINKER_MIN = 7.5;
+  const LINKER_MAX = 16.8;
   const count = coreX.length;
-  const spacingX = 18;
   const desired = coreX.map((x, i) => new THREE.Vector3(x, (i % 2 ? -1 : 1) * 3.2, (i % 2 ? 1 : -1) * 3.5));
   const viewDir = new THREE.Vector3(0.18, 0.42, 1).normalize();
   const poses: NucleosomePose[] = [];
   const candidate = new THREE.Quaternion();
   const ePos = new THREE.Vector3();
   const eTan = new THREE.Vector3();
-  const xPos = new THREE.Vector3();
-  const xTan = new THREE.Vector3();
   const link = new THREE.Vector3();
-  const toNext = new THREE.Vector3();
   const axis = new THREE.Vector3();
   const plusX = new THREE.Vector3(1, 0, 0);
   const angleBetween = (a: THREE.Vector3, b: THREE.Vector3) => Math.acos(THREE.MathUtils.clamp(a.dot(b), -1, 1));
-  for (let i = 0; i < count; i++) {
-    const prevExit = i > 0 ? exitPoint.clone().applyMatrix4(poses[i - 1].matrix) : null;
-    const prevTan = i > 0 ? exitTangent.clone().applyQuaternion(poses[i - 1].quaternion) : null;
-    const nextTarget = i < count - 1 ? desired[i + 1] : desired[i].clone().addScaledVector(plusX, spacingX);
-    const best = new THREE.Quaternion();
-    let bestCost = Infinity;
-    for (let k = 0; k < 5000; k++) {
-      randomQuaternion(rng, candidate);
-      ePos.copy(entryPoint).applyQuaternion(candidate).add(desired[i]);
-      eTan.copy(entryTangent).applyQuaternion(candidate);
-      let cost = 0;
-      if (prevExit && prevTan) {
-        link.subVectors(ePos, prevExit);
-        const d = link.length();
-        if (d < 6.5 || d > 14.5) continue;
-        link.divideScalar(d);
-        cost += angleBetween(prevTan, link) + angleBetween(link, eTan);
-      } else {
-        cost += 0.6 * angleBetween(eTan, plusX);
-      }
-      xPos.copy(exitPoint).applyQuaternion(candidate).add(desired[i]);
-      xTan.copy(exitTangent).applyQuaternion(candidate);
-      toNext.subVectors(nextTarget, xPos).normalize();
-      cost += 0.7 * angleBetween(xTan, toNext);
-      // Variety: alternate cores shown face-on and side-on to the default camera.
-      const facing = Math.abs(axis.set(0, 0, 1).applyQuaternion(candidate).dot(viewDir));
-      cost += 0.35 * (i % 2 === 0 ? 1 - facing : facing);
-      if (cost < bestCost) {
-        bestCost = cost;
-        best.copy(candidate);
+  /** Contour length of the linker Bézier (leaves along fromTan, arrives along toTan). */
+  const bz = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+  const bzA = new THREE.Vector3();
+  const bzB = new THREE.Vector3();
+  const linkerContour = (from: THREE.Vector3, fromTan: THREE.Vector3, to: THREE.Vector3, toTan: THREE.Vector3) => {
+    const d = from.distanceTo(to);
+    bz[0].copy(from);
+    bz[1].copy(from).addScaledVector(fromTan, d * 0.38);
+    bz[2].copy(to).addScaledVector(toTan, -d * 0.38);
+    bz[3].copy(to);
+    let length = 0;
+    bzA.copy(from);
+    for (let k = 1; k <= 16; k++) {
+      const t = k / 16;
+      const u = 1 - t;
+      bzB.set(0, 0, 0)
+        .addScaledVector(bz[0], u * u * u)
+        .addScaledVector(bz[1], 3 * u * u * t)
+        .addScaledVector(bz[2], 3 * u * t * t)
+        .addScaledVector(bz[3], t * t * t);
+      length += bzA.distanceTo(bzB);
+      bzA.copy(bzB);
+    }
+    return length;
+  };
+  /** Random unit vector within `maxAngle` of `axisDir`. */
+  const perturb = (axisDir: THREE.Vector3, maxAngle: number, target: THREE.Vector3) => {
+    const side = new THREE.Vector3().crossVectors(axisDir, Math.abs(axisDir.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : plusX).normalize();
+    const angle = maxAngle * Math.sqrt(rng.next());
+    side.applyAxisAngle(axisDir, rng.range(0, TAU));
+    return target.copy(axisDir).applyAxisAngle(side, angle).normalize();
+  };
+  const chord = new THREE.Vector3();
+  const tE = new THREE.Vector3();
+  const centerC = new THREE.Vector3();
+  const rollQ = new THREE.Quaternion();
+  const facingOf = (q: THREE.Quaternion) => Math.abs(axis.set(0, 0, 1).applyQuaternion(q).dot(viewDir));
+  // Beam search over the whole string: keep the best partial strings, extend each
+  // with random gently-bent linkers, so later cores can still head on to the right.
+  interface Partial {
+    poses: NucleosomePose[];
+    cost: number;
+  }
+  const BEAM = 24;
+  const EXPAND = 600;
+  let beam: Partial[] = [];
+  for (let k = 0; k < EXPAND * 4; k++) {
+    randomQuaternion(rng, candidate);
+    // A core's net through-direction (entry + exit tangents) is its local +x axis.
+    const cost = 1.5 * angleBetween(eTan.set(1, 0, 0).applyQuaternion(candidate), plusX) + 0.8 * (1 - facingOf(candidate));
+    beam.push({ poses: [{ center: desired[0].clone(), quaternion: candidate.clone(), matrix: new THREE.Matrix4().compose(desired[0], candidate, new THREE.Vector3(1, 1, 1)) }], cost });
+  }
+  beam.sort((a, b) => a.cost - b.cost);
+  beam = beam.slice(0, BEAM);
+  for (let i = 1; i < count; i++) {
+    const next: Partial[] = [];
+    for (const partial of beam) {
+      const prev = partial.poses[i - 1];
+      const prevExit = exitPoint.clone().applyMatrix4(prev.matrix);
+      const prevTan = exitTangent.clone().applyQuaternion(prev.quaternion);
+      for (let k = 0; k < EXPAND; k++) {
+        perturb(prevTan, 0.9, chord);
+        const length = linkerTarget[i - 1] * rng.range(0.85, 1.12);
+        ePos.copy(prevExit).addScaledVector(chord, length * 0.93);
+        perturb(chord, 0.9, tE);
+        candidate.setFromUnitVectors(entryTangent, tE);
+        rollQ.setFromAxisAngle(tE, rng.range(0, TAU));
+        candidate.premultiply(rollQ);
+        centerC.copy(entryPoint).applyQuaternion(candidate).negate().add(ePos);
+        const contour = linkerContour(prevExit, prevTan, ePos, tE);
+        if (contour < LINKER_MIN || contour > LINKER_MAX) continue;
+        let cost = 0.06 * centerC.distanceToSquared(desired[i]) + 0.15 * Math.abs(contour - linkerTarget[i - 1]);
+        for (let j = 0; j < i; j++) {
+          const dd = centerC.distanceTo(partial.poses[j].center);
+          if (dd < 14) cost += (14 - dd) * 6;
+        }
+        for (let j = 0; j < i - 1; j++) {
+          for (let u = 1; u < 4; u++) {
+            link.copy(prevExit).lerp(ePos, u / 4);
+            const dd = link.distanceTo(partial.poses[j].center);
+            if (dd < 8) cost += (8 - dd) * 4;
+          }
+        }
+        cost += 0.35 * (i % 2 === 0 ? 1 - facingOf(candidate) : facingOf(candidate));
+        cost += 0.8 * angleBetween(eTan.set(1, 0, 0).applyQuaternion(candidate), plusX);
+        const total = partial.cost + cost;
+        if (next.length >= BEAM * 4 && total > next[next.length - 1].cost) continue;
+        next.push({
+          poses: [...partial.poses, { center: centerC.clone(), quaternion: candidate.clone(), matrix: new THREE.Matrix4().compose(centerC, candidate, new THREE.Vector3(1, 1, 1)) }],
+          cost: total,
+        });
+        next.sort((a, b) => a.cost - b.cost);
+        if (next.length > BEAM * 4) next.length = BEAM * 4;
       }
     }
-    poses.push({ center: desired[i].clone(), quaternion: best, matrix: new THREE.Matrix4().compose(desired[i], best, new THREE.Vector3(1, 1, 1)) });
+    beam = next.slice(0, BEAM);
   }
+  // The last core's exit should head on out of the view (to the right).
+  beam.sort((a, b) => {
+    const tail = (p: Partial) => angleBetween(exitTangent.clone().applyQuaternion(p.poses[count - 1].quaternion), plusX);
+    return a.cost + tail(a) - (b.cost + tail(b));
+  });
+  poses.push(...beam[0].poses);
 
   // ── One continuous DNA axis through every wrap and linker.
   const points: THREE.Vector3[] = [];
@@ -541,7 +610,6 @@ export function buildNucleosomes(ctx: BuildContext): CloseupViewBuild {
     const n = Math.max(1, Math.round(from.distanceTo(to) / step));
     for (let k = 1; k <= n; k++) points.push(from.clone().lerp(to, k / n));
   };
-  const bezier = new THREE.CubicBezierCurve3();
   const first = poses[0];
   const leadDir = entryTangent.clone().applyQuaternion(first.quaternion);
   const leadStart = entryPoint.clone().applyMatrix4(first.matrix).addScaledVector(leadDir, -24 * NUC.rise);
@@ -557,10 +625,12 @@ export function buildNucleosomes(ctx: BuildContext): CloseupViewBuild {
       const fromTan = exitTangent.clone().applyQuaternion(poses[i - 1].quaternion);
       const toTan = entryTangent.clone().applyQuaternion(pose.quaternion);
       const d = from.distanceTo(entryW);
-      bezier.v0.copy(from);
-      bezier.v1.copy(from).addScaledVector(fromTan, d * 0.38);
-      bezier.v2.copy(entryW).addScaledVector(toTan, -d * 0.38);
-      bezier.v3.copy(entryW);
+      const bezier = new THREE.CubicBezierCurve3(
+        from.clone(),
+        from.clone().addScaledVector(fromTan, d * 0.38),
+        entryW.clone().addScaledVector(toTan, -d * 0.38),
+        entryW.clone(),
+      );
       const length = bezier.getLength();
       const n = Math.max(2, Math.round(length / 0.9));
       for (let k = 1; k <= n; k++) points.push(bezier.getPoint(k / n));
@@ -688,7 +758,8 @@ export function buildNucleosomes(ctx: BuildContext): CloseupViewBuild {
     const amp = calm ? 0.45 : 1;
     const speed = calm ? 0.45 : 1;
     const t = time * speed;
-    tails.forEach((tail, ti) => {
+    for (let ti = 0; ti < tails.length; ti++) {
+      const tail = tails[ti];
       bp.copy(tail.root).addScaledVector(tail.dir, 0.3);
       for (let k = 0; k < tail.beads; k++) {
         const wob = (0.25 + 0.14 * k) * amp;
@@ -700,7 +771,7 @@ export function buildNucleosomes(ctx: BuildContext): CloseupViewBuild {
         m4.makeScale(beadRadius, beadRadius, beadRadius).setPosition(bp);
         beads.setMatrixAt(ti * beadsPerTail + k, m4);
       }
-    });
+    }
     beads.instanceMatrix.needsUpdate = true;
   };
   updateTails(0, false);

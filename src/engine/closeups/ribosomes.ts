@@ -104,7 +104,8 @@ const create: CloseupFactory = (ctx) => {
 
   // Exit tunnel: a faint channel from the PTC to the exit.
   const poses = sitePoses();
-  const ptc = ACCEPTOR_LOCAL.clone().applyQuaternion(poses.P.quaternion).add(poses.P.position);
+  // Where the chain is held: the P-site tRNA's acceptor end (the tRNA is drawn at TRNA_SCALE).
+  const ptc = ACCEPTOR_LOCAL.clone().multiplyScalar(TRNA_SCALE).applyQuaternion(poses.P.quaternion).add(poses.P.position);
   const tunnelCurve = fineCurve([
     ptc.clone(),
     new THREE.Vector3(0.3, 10.1, -2.0),
@@ -251,7 +252,6 @@ const create: CloseupFactory = (ctx) => {
   const trnaArriving = new THREE.Vector3();
   const tiltQ = new THREE.Quaternion();
   const xAxis = new THREE.Vector3(1, 0, 0);
-  const color = new THREE.Color();
 
   const lerpPose = (a: TrnaPose, b: TrnaPose, t: number, target: THREE.Object3D) => {
     target.position.lerpVectors(a.position, b.position, t);
@@ -354,7 +354,7 @@ const create: CloseupFactory = (ctx) => {
         }
       }
       beads.setMatrixAt(count, m4.compose(pa, qa.identity(), scaleV.setScalar(radius)));
-      beads.setColorAt(count, color.copy(AA_CLASSES[aaClass(n)].bead));
+      beads.setColorAt(count, AA_CLASSES[aaClass(n)].bead);
       count++;
       if (n === c) pb.copy(pa);
       if (n === c - 1) tmp.copy(pa);
@@ -374,7 +374,9 @@ const create: CloseupFactory = (ctx) => {
       bond.scale.set(1, len * bondT, 1);
     }
     const flashA = phase > PH.bondStart && phase < PH.bondEnd + 0.08 ? Math.sin(Math.PI * THREE.MathUtils.clamp((phase - PH.bondStart) / (PH.bondEnd + 0.08 - PH.bondStart), 0, 1)) : 0;
-    flash.positions.set([(pb.x + tmp.x) / 2, (pb.y + tmp.y) / 2, (pb.z + tmp.z) / 2]);
+    flash.positions[0] = (pb.x + tmp.x) / 2;
+    flash.positions[1] = (pb.y + tmp.y) / 2;
+    flash.positions[2] = (pb.z + tmp.z) / 2;
     flash.alphas[0] = flashA * (calm ? 0.45 : 0.9);
     flash.commit();
   };

@@ -17,7 +17,7 @@ import {
   sparks,
   type Placement,
 } from './kit';
-import { addHoleClip, cutBowl, cutFaceMaterial, FusionNeck, membraneBands, membraneMaterial, wander, type HoleClip } from './energyParts';
+import { addHoleClip, cutBowl, cutFaceMaterial, FusionNeck, membraneBands, membraneMaterial, paintedMerge, wander, type HoleClip } from './energyParts';
 import type { CloseupFactory, CloseupLabel } from './types';
 
 /**
@@ -74,27 +74,6 @@ const TRANSPORTER_ANGLES = [10, 80, 258, 326];
 
 const dirAt = (deg: number, target = new THREE.Vector3()) => target.set(Math.cos(THREE.MathUtils.degToRad(deg)), Math.sin(THREE.MathUtils.degToRad(deg)), 0);
 
-/** Merge parts, each painted one colour (vertex colours). */
-function coloredMerge(parts: { geometry: THREE.BufferGeometry; color: THREE.ColorRepresentation }[]): THREE.BufferGeometry {
-  const prepared = parts.map(({ geometry, color }) => {
-    const g = geometry.index ? geometry.toNonIndexed() : geometry;
-    if (g !== geometry) geometry.dispose();
-    if (g.attributes.uv) g.deleteAttribute('uv');
-    const c = new THREE.Color(color);
-    const colors = new Float32Array(g.attributes.position.count * 3);
-    for (let i = 0; i < colors.length; i += 3) {
-      colors[i] = c.r;
-      colors[i + 1] = c.g;
-      colors[i + 2] = c.b;
-    }
-    g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    return g;
-  });
-  const merged = mergeGeometries(prepared)!;
-  prepared.forEach((g) => g.dispose());
-  return merged;
-}
-
 function lump(seed: string, x: number, y: number, z: number, sx: number, sy: number, sz: number, detail: number): THREE.BufferGeometry {
   const g = blobGeometry(1, seed, 0.22, detail);
   g.scale(sx, sy, sz);
@@ -124,7 +103,7 @@ function vAtpaseGeometry(detail: number): THREE.BufferGeometry {
     const curve = new THREE.LineCurve3(new THREE.Vector3(Math.cos(a) * 5.4, 3.0, Math.sin(a) * 5.4), new THREE.Vector3(Math.cos(a) * 4.6, 17.0, Math.sin(a) * 4.6));
     parts.push({ geometry: new THREE.TubeGeometry(curve, 4, 0.5, 5, false), color: COLORS.vStalk });
   }
-  return coloredMerge(parts);
+  return paintedMerge(parts);
 }
 
 function glycanGeometry(quality: 'low' | 'medium' | 'high'): THREE.BufferGeometry {

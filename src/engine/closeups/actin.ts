@@ -340,6 +340,8 @@ const create: CloseupFactory = (ctx) => {
   const membraneAnchor = new THREE.Vector3(-96, Y_MEMBRANE + 2.5, MEMBRANE_DEPTH / 2);
   const DEBUG = new URLSearchParams(window.location.search);
   const DEBUG_T = Number(DEBUG.get('cut') ?? 'NaN');
+  const DEBUG_R = Number(DEBUG.get('cur') ?? 'NaN');
+  const DEBUG_C = (DEBUG.get('cuc') ?? '').split(',').map(Number);
   const update = (t: number, calm: boolean) => {
     updateNetwork(t, calm);
     updateAnchors();
@@ -350,9 +352,9 @@ const create: CloseupFactory = (ctx) => {
     scene,
     views: [
       {
-        target: new THREE.Vector3(0, 62, 0),
-        radius: 140,
-        direction: new THREE.Vector3(0.06, 0.14, 1).normalize(),
+        target: DEBUG_C.length === 3 ? new THREE.Vector3(DEBUG_C[0], DEBUG_C[1], DEBUG_C[2]) : new THREE.Vector3(0, 62, 0),
+        radius: Number.isFinite(DEBUG_R) ? DEBUG_R : 140,
+        direction: new THREE.Vector3(0.05, 0.24, 1).normalize(),
         labels: [
           { part: 'barbed-end', anchor: () => anchors.barbed },
           { part: 'arp23', anchor: () => anchors.arp },

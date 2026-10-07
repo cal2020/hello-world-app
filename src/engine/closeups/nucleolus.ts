@@ -72,6 +72,7 @@ const LARGE_COLOR = new THREE.Color('#e3a83a');
 const PARTICLE_PINK = new THREE.Color('#ff7fb3');
 const PARTICLE_ORANGE = new THREE.Color('#f39a5a');
 const FADE_COLOR = new THREE.Color('#2a1a22');
+const BEAD_ORANGE = new THREE.Color('#ffb26b');
 
 function genePoint(s: number, target: THREE.Vector3): THREE.Vector3 {
   const a = THREE.MathUtils.lerp(GENE_FROM, GENE_TO, s);
@@ -335,7 +336,8 @@ const create: CloseupFactory = (ctx) => {
   addInstanceGlow(subunitMaterial, 0.24, 'subunits');
   const smalls = new THREE.InstancedMesh(smallGeometry, subunitMaterial, maxSubunits);
   const larges = new THREE.InstancedMesh(largeGeometry, subunitMaterial, maxSubunits);
-  for (const mesh of [segments, knobs, polymerases, particles, beads, smalls, larges]) {
+  const dynamicMeshes = [segments, knobs, polymerases, particles, beads, smalls, larges];
+  for (const mesh of dynamicMeshes) {
     mesh.frustumCulled = false;
     mesh.count = 0;
     root.add(mesh);
@@ -437,7 +439,7 @@ const create: CloseupFactory = (ctx) => {
         const u = Math.min(1, post / T.travel);
         const pathU = slot.splitU * smooth(u);
         slot.path.getPoint(pathU, p);
-        const r = THREE.MathUtils.lerp(1.25, 2.3, u);
+        const r = THREE.MathUtils.lerp(1.75, 2.4, u);
         if (post < T.travel) {
           particles.setMatrixAt(nParticle, m4.compose(p, q.setFromAxisAngle(zAxis, slot.spin + u * 1.5), sc.setScalar(r)));
           particles.setColorAt(nParticle, color.copy(PARTICLE_PINK).lerp(PARTICLE_ORANGE, smooth(u * 1.2)));
@@ -449,7 +451,7 @@ const create: CloseupFactory = (ctx) => {
             const br = local >= 1 ? 0 : 0.5;
             p2.copy(p).addScaledVector(slot.beadDirs[b], dist);
             beads.setMatrixAt(nBead, m4.makeScale(br, br, br).setPosition(p2));
-            beads.setColorAt(nBead, color.set(b % 2 ? '#f6d58c' : '#ffb26b'));
+            beads.setColorAt(nBead, b % 2 ? SMALL_COLOR : BEAD_ORANGE);
             nBead++;
           }
           continue;
@@ -467,18 +469,18 @@ const create: CloseupFactory = (ctx) => {
       const radius = Math.hypot(p.x, p.y);
       const edge = edgeRadius(SLICE, Math.atan2(p.y, p.x), noise, EDGE_NOISE);
       const fade = THREE.MathUtils.clamp((radius - (edge - 6)) / 12, 0, 1);
-      const vis = 1 - smooth(fade);
+      const vis = (1 - smooth(fade)) * (1 - smooth((driftT - 0.88) / 0.12));
       const loose = 1 + 0.25 * (1 - matureT);
       // Large subunit.
       dir.copy(slot.side).multiplyScalar(sep * 0.45);
       p.add(dir);
       const grow = 0.5 + 0.2 * splitT + 0.3 * matureT;
-      const lr = LARGE_RADIUS * loose * grow * (0.35 + 0.65 * vis);
+      const lr = LARGE_RADIUS * loose * grow * vis;
       larges.setMatrixAt(nSub, m4.compose(p, q.setFromAxisAngle(zAxis, slot.spin + sub * 0.25), sc.set(lr, lr * (1.06 - 0.12 * matureT), lr)));
       larges.setColorAt(nSub, color.copy(PARTICLE_ORANGE).lerp(LARGE_COLOR, matureT).lerp(FADE_COLOR, fade * 0.85));
       // Small subunit.
       p2.addScaledVector(dir, -1.25);
-      const sr = SMALL_RADIUS * loose * grow * (0.35 + 0.65 * vis);
+      const sr = SMALL_RADIUS * loose * grow * vis;
       smalls.setMatrixAt(nSub, m4.compose(p2, q.setFromAxisAngle(zAxis, slot.spin * 1.3 - sub * 0.3), sc.set(sr, sr * (1.08 - 0.14 * matureT), sr)));
       smalls.setColorAt(nSub, color.copy(PARTICLE_ORANGE).lerp(SMALL_COLOR, matureT).lerp(FADE_COLOR, fade * 0.85));
       nSub++;
@@ -498,7 +500,7 @@ const create: CloseupFactory = (ctx) => {
     beads.count = nBead;
     smalls.count = nSub;
     larges.count = nSub;
-    for (const mesh of [segments, knobs, polymerases, particles, beads, smalls, larges]) {
+    for (const mesh of dynamicMeshes) {
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     }

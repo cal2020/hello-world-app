@@ -266,16 +266,47 @@ const create: CloseupFactory = (ctx) => {
 
   // ── Shelterin.
   const detail = quality === 'low' ? 1 : 2;
+  const jiggleAmp = new THREE.Vector3(0.28, 0.28, 0.28);
+
+  // POT1–TPP1 on the single-stranded parts: the overhang bridge and the displaced strand.
+  const potShape = potGeometry(detail);
+  const potMaterial = instancedMaterial({ vertexColors: true, roughness: 0.5 });
+  addInstanceGlow(potMaterial, 0.2, 'pot1');
+  addJiggle(potMaterial, jiggle, jiggleAmp, 0.7, 'shelterinJiggle');
+  const potPlacements: Placement[] = [];
+  const potSpots: { curve: THREE.CatmullRomCurve3; u: number; up: THREE.Vector3 }[] = [
+    { curve: bridgeCurve, u: 0.2, up: VIEW_DIR.clone().add(new THREE.Vector3(-0.3, 0.5, 0)) },
+    { curve: bridgeCurve, u: 0.72, up: VIEW_DIR.clone().add(new THREE.Vector3(-0.2, -0.5, 0)) },
+    { curve: bulgeCurve, u: 0.2, up: bulgeOut },
+    { curve: bulgeCurve, u: 0.5, up: bulgeOut },
+    { curve: bulgeCurve, u: 0.82, up: bulgeOut },
+  ];
+  const tpp1Local = new THREE.Vector3(1.2, 3.75, 0.5);
+  const tpp1Centers: THREE.Vector3[] = [];
+  potSpots.forEach((spot) => {
+    const position = spot.curve.getPointAt(spot.u);
+    const q = frameQuaternion(spot.curve.getTangentAt(spot.u), spot.up);
+    potPlacements.push({ position, quaternion: q });
+    tpp1Centers.push(tpp1Local.clone().applyQuaternion(q).add(position));
+  });
+  const potMesh = instanced(potShape, potMaterial, potPlacements);
+  setSeeds(
+    potMesh,
+    potPlacements.map((_, i) => 100 + i),
+  );
+  root.add(potMesh);
+
+  // TRF1/TRF2 dimers every ~20 nm along the duplex, TRF2 clustered at the junction.
   const trfShape = trfGeometry(detail);
   const trfMaterial = instancedMaterial({ roughness: 0.55 });
   addInstanceGlow(trfMaterial, 0.2, 'trf');
-  const jiggleAmp = new THREE.Vector3(0.28, 0.28, 0.28);
   addJiggle(trfMaterial, jiggle, jiggleAmp, 0.7, 'shelterinJiggle');
-
   interface Site {
     index: number;
     kind: 'TRF1' | 'TRF2';
     up: THREE.Vector3;
+    /** POT1–TPP1 this dimer is bridged to by TIN2 (index into potSpots). */
+    partner?: number;
   }
   const sites: Site[] = [];
   const upAt = (i: number, flip: number) => {
@@ -285,17 +316,20 @@ const create: CloseupFactory = (ctx) => {
     const up = onLoop ? outward.multiplyScalar(0.55).addScaledVector(VIEW_DIR, 0.85) : VIEW_DIR.clone().add(new THREE.Vector3(0, 0.45 * flip, 0));
     return up.normalize();
   };
+  /** Junction dimers turn their TRFH domain toward their TPP1 partner. */
+  const upToward = (i: number, partner: number) => tpp1Centers[partner].clone().sub(duplex.centers[i]).normalize().add(VIEW_DIR.clone().multiplyScalar(0.35)).normalize();
   const incoming = [17, 82, 142, 204, 266, 330, 396];
   incoming.forEach((back, k) => {
     const index = j0 - back;
     if (index < 12) return;
-    sites.push({ index, kind: k % 2 === 0 ? 'TRF2' : 'TRF1', up: upAt(index, k % 2 ? 1 : -1) });
+    if (k === 0) sites.push({ index, kind: 'TRF2', up: upToward(index, 1), partner: 1 });
+    else sites.push({ index, kind: k % 2 === 0 ? 'TRF2' : 'TRF1', up: upAt(index, k % 2 ? 1 : -1) });
   });
-  sites.push({ index: j1 + 14, kind: 'TRF2', up: upAt(j1 + 14, 1) });
+  sites.push({ index: j1 + 8, kind: 'TRF2', up: upToward(j1 + 8, 4), partner: 4 });
   for (let index = j1 + 74, k = 0; index < N - 60; index += 60, k++) {
     sites.push({ index, kind: k % 3 === 1 ? 'TRF2' : 'TRF1', up: upAt(index, 1) });
   }
-  sites.push({ index: N - 14, kind: 'TRF2', up: upAt(N - 14, 1) });
+  sites.push({ index: N - 7, kind: 'TRF2', up: upToward(N - 7, 0), partner: 0 });
   const sliderSite = sites.findIndex((s) => j0 - s.index === 204);
 
   const trfPlacements: Placement[] = sites.map((s) => ({
@@ -331,70 +365,31 @@ const create: CloseupFactory = (ctx) => {
   );
   root.add(rapMesh);
 
-  // POT1–TPP1 on the single-stranded parts: the overhang bridge and the displaced strand.
-  const potShape = potGeometry(detail);
-  const potMaterial = instancedMaterial({ vertexColors: true, roughness: 0.5 });
-  addInstanceGlow(potMaterial, 0.2, 'pot1');
-  addJiggle(potMaterial, jiggle, jiggleAmp, 0.7, 'shelterinJiggle');
-  const potPlacements: Placement[] = [];
-  const potSpots: { curve: THREE.CatmullRomCurve3; u: number; up: THREE.Vector3 }[] = [
-    { curve: bridgeCurve, u: 0.3, up: VIEW_DIR.clone().add(new THREE.Vector3(-0.3, 0.5, 0)) },
-    { curve: bridgeCurve, u: 0.72, up: VIEW_DIR.clone().add(new THREE.Vector3(-0.2, -0.5, 0)) },
-    { curve: bulgeCurve, u: 0.22, up: bulgeOut },
-    { curve: bulgeCurve, u: 0.47, up: bulgeOut },
-    { curve: bulgeCurve, u: 0.72, up: bulgeOut },
-  ];
-  const tpp1Local = new THREE.Vector3(1.2, 3.75, 0.5);
-  const tpp1Centers: THREE.Vector3[] = [];
-  potSpots.forEach((spot) => {
-    const position = spot.curve.getPointAt(spot.u);
-    const q = frameQuaternion(spot.curve.getTangentAt(spot.u), spot.up);
-    potPlacements.push({ position, quaternion: q });
-    tpp1Centers.push(tpp1Local.clone().applyQuaternion(q).add(position));
-  });
-  const potMesh = instanced(potShape, potMaterial, potPlacements);
-  setSeeds(
-    potMesh,
-    potPlacements.map((_, i) => 100 + i),
-  );
-  root.add(potMesh);
-
-  // TIN2 bridges TRF1/TRF2 to TPP1 where they meet near the junction.
-  const trfhTop = new THREE.Vector3(0, 5.2, 0);
+  // TIN2 bridges each junction TRF2 to its TPP1 partner: a small protein with two short arms.
+  const trfhTop = new THREE.Vector3(0, 5.0, 0);
   const tinPlacements: Placement[] = [];
   const tinSeeds: number[] = [];
-  tpp1Centers.forEach((tpp, k) => {
-    let best = -1;
-    let bestD = Infinity;
-    trfPlacements.forEach((p, i) => {
-      const top = trfhTop.clone().applyQuaternion(p.quaternion!).add(p.position);
-      const d = top.distanceTo(tpp);
-      if (d < bestD) {
-        bestD = d;
-        best = i;
-      }
-    });
-    if (best < 0 || bestD > 9.5) return;
-    const top = trfhTop.clone().applyQuaternion(trfPlacements[best].quaternion!).add(trfPlacements[best].position);
+  sites.forEach((site, i) => {
+    if (site.partner === undefined) return;
+    const top = trfhTop.clone().applyQuaternion(trfPlacements[i].quaternion!).add(trfPlacements[i].position);
+    const tpp = tpp1Centers[site.partner];
     const along = new THREE.Vector3().subVectors(tpp, top);
-    const length = Math.max(0.6, along.length() - 2.8);
+    const length = Math.max(0.8, along.length() - 2.6);
     tinPlacements.push({
-      position: top.clone().lerp(tpp, 0.5),
+      position: top.clone().addScaledVector(along.clone().normalize(), 1.3 + length / 2),
       quaternion: alignY(along),
       scale: new THREE.Vector3(1, length, 1),
       color: TIN2_COLOR,
     });
-    tinSeeds.push(100 + k);
+    tinSeeds.push(i + 1);
   });
-  const tinShape = new THREE.CapsuleGeometry(0.55, 1, 2, 8);
+  const tinShape = new THREE.CapsuleGeometry(0.62, 1, 2, 8);
   const tinMaterial = instancedMaterial({ roughness: 0.5 });
   addInstanceGlow(tinMaterial, 0.2, 'tin2');
   addJiggle(tinMaterial, jiggle, jiggleAmp, 0.7, 'shelterinJiggle');
-  if (tinPlacements.length) {
-    const tinMesh = instanced(tinShape, tinMaterial, tinPlacements);
-    setSeeds(tinMesh, tinSeeds);
-    root.add(tinMesh);
-  }
+  const tinMesh = instanced(tinShape, tinMaterial, tinPlacements);
+  setSeeds(tinMesh, tinSeeds);
+  root.add(tinMesh);
 
   // ── Labels.
   const towardCamera = (p: THREE.Vector3, amount: number) => p.clone().addScaledVector(VIEW_DIR, amount);
@@ -462,10 +457,6 @@ const create: CloseupFactory = (ctx) => {
     dispose() {
       disposables.forEach((d) => d.dispose());
       disposeScene(scene);
-      if (!tinPlacements.length) {
-        tinShape.dispose();
-        tinMaterial.dispose();
-      }
     },
   };
 };

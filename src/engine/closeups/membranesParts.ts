@@ -281,7 +281,8 @@ export function cutawayMaterial(
     clippingPlanes: [plane],
     ...options,
   });
-  const cap = new THREE.Color(capColor);
+  // A THREE.Color passed in is used by reference, so the cap colour can be animated.
+  const cap = capColor instanceof THREE.Color ? capColor : new THREE.Color(capColor);
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uCapColor = { value: cap };
     shader.fragmentShader = shader.fragmentShader
