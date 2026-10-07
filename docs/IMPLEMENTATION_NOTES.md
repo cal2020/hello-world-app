@@ -10,8 +10,10 @@ The brief asks for a review of <https://cellulahumana.com/>. **The reference
 could not be observed from the build environment**: the sandbox's network
 egress policy denied `cellulahumana.com` (HTTP 403 from the proxy, and the
 WebFetch tool reported `EGRESS_BLOCKED`), and archived copies were also
-unreachable. Nothing in this project is therefore based on direct observation
-of the reference's pages, controls, mobile layout or code.
+unreachable. A retry during the final verification was blocked the same way,
+and a web search returned no records of the site. Nothing in this project is
+therefore based on direct observation of the reference's pages, controls,
+mobile layout or code.
 
 The feature inventory below is taken from the reference's **documented
 experience as described in the brief**, and every other behaviour is marked as
