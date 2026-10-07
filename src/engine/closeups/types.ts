@@ -17,6 +17,13 @@ export interface CloseupViewSpec {
   radius: number;
   direction: THREE.Vector3;
   labels: CloseupLabel[];
+  /**
+   * Seconds into the close-up's clock at which the view opens: a representative
+   * moment with its key parts labelled. It is the still image readers see with
+   * biological motion frozen (reduced motion), and playback continues from it.
+   * Default 0.
+   */
+  posterTime?: number;
 }
 
 export interface CloseupContext {
@@ -27,8 +34,9 @@ export interface CloseupContext {
 
 /**
  * A dedicated detail scene at molecular/organelle scale, loaded on demand.
- * `update` receives biological time (dt = 0 while frozen) so the freeze
- * control applies to close-ups too.
+ * `update` receives the close-up's own biological clock (dt = 0 while frozen)
+ * so the freeze control applies to close-ups too. Animations are pure
+ * functions of `time`, so any moment can be shown directly.
  */
 export interface CloseupScene {
   scene: THREE.Scene;

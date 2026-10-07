@@ -329,6 +329,7 @@ const create: CloseupFactory = (ctx) => {
         target: new THREE.Vector3(16, 0, 0),
         radius: 65,
         direction: view.clone(),
+        posterTime: 8.0, // Opens on a new microtubule growing from the centrosome.
         labels: [
           { part: 'mother-centriole', anchor: () => motherAnchor },
           { part: 'daughter-centriole', anchor: () => daughterAnchor },

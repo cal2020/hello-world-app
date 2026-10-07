@@ -197,6 +197,7 @@ const create: CloseupFactory = (ctx) => {
         target: new THREE.Vector3(2, 5, -6),
         radius: 56,
         direction: new THREE.Vector3(0.12, 0.1, 1).normalize(),
+        posterTime: 7.0, // Opens on vesicles arriving, recycling and leaving for lysosomes.
         labels,
       },
     ],

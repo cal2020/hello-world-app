@@ -552,6 +552,7 @@ const create: CloseupFactory = (ctx) => {
         target: new THREE.Vector3(-3, -29, -12),
         radius: 48,
         direction: new THREE.Vector3(0, 0.16, 1).normalize(),
+        posterTime: 11.75, // Opens on a fatty acid being shortened; oxygen in, water out.
         labels,
       },
     ],

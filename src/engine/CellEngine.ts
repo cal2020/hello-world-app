@@ -140,6 +140,8 @@ export class CellEngine implements EngineController {
   private overviewPose: Pose | null = null;
   private closeup: { id: StructureId; scene: CloseupScene; viewIndex: number } | null = null;
   private closeupToken = 0;
+  /** The open close-up's own biological clock (starts at the view's poster moment). */
+  private closeupTime = 0;
   private labels: LabelLayer | null = null;
   private labelMode = '';
   private picker: Picker;
@@ -220,6 +222,7 @@ export class CellEngine implements EngineController {
         memory: () => ({ ...gl.info.memory, programs: gl.info.programs?.length ?? 0 }),
         render: () => ({ ...gl.info.render }),
         quality: () => this.quality,
+        closeupLabels: (times: number[]) => this.probeCloseupLabels(times),
       };
     }
     this.canvas.addEventListener('webglcontextlost', this.onContextLost);
@@ -577,6 +580,8 @@ export class CellEngine implements EngineController {
       if (this.closeup.viewIndex !== index) {
         this.closeup.viewIndex = index;
         this.closeup.scene.setView(index);
+        // A frozen close-up shows the new view's representative moment.
+        if (appStore.getState().bioFrozen) this.closeupTime = this.closeup.scene.views[index].posterTime ?? 0;
         this.labelMode = '';
         this.frameCloseup(true);
       }
@@ -596,6 +601,8 @@ export class CellEngine implements EngineController {
       const scene = factory({ quality: this.quality, pointScale: this.pointScale });
       this.closeup = { id, scene, viewIndex: index };
       scene.setView(index);
+      // Open on the view's representative moment (labelled), frozen or playing on from there.
+      this.closeupTime = scene.views[index].posterTime ?? 0;
       if (this.renderPass) this.renderPass.scene = scene.scene;
       this.labelMode = '';
       this.frameCloseup(true, true);
@@ -605,6 +612,19 @@ export class CellEngine implements EngineController {
       console.error(error);
       appStore.setState({ closeupStatus: 'error', viewState: 'focused' });
     }
+  }
+
+  /** Debug (?perf=1): for the open close-up view, which labels are in their phase at each time. */
+  private probeCloseupLabels(times: number[]): { labels: string[]; inPhase: boolean[][] } | null {
+    const closeup = this.closeup;
+    if (!closeup) return null;
+    const view = closeup.scene.views[closeup.viewIndex];
+    const inPhase = times.map((time) => {
+      closeup.scene.update(0, time, false);
+      return view.labels.map((label) => !label.visible || label.visible());
+    });
+    closeup.scene.update(0, this.closeupTime, reducedMotion(appStore.getState()));
+    return { labels: view.labels.map((label) => label.part ?? label.textKey ?? ''), inPhase };
   }
 
   private frameCloseup(animated: boolean, entering = false): void {
@@ -887,7 +907,8 @@ export class CellEngine implements EngineController {
     if (!this.closeup) {
       for (const instance of this.structures.values()) instance.update(bioDt, this.time.value, uctx);
     } else {
-      this.closeup.scene.update(bioDt, this.time.value, reduce);
+      this.closeupTime += bioDt;
+      this.closeup.scene.update(bioDt, this.closeupTime, reduce);
     }
 
     this.updateLabels(state);

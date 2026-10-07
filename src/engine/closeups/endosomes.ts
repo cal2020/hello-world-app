@@ -568,6 +568,7 @@ const create: CloseupFactory = (ctx) => {
         target: new THREE.Vector3(57, -50, -30),
         radius: 285,
         direction: new THREE.Vector3(0, 0.12, 1).normalize(),
+        posterTime: 4.5, // Opens on event 1, a coated pit taking up cargo.
         labels,
       },
     ],

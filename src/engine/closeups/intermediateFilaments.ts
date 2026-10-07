@@ -439,6 +439,7 @@ const create: CloseupFactory = (ctx) => {
         target: new THREE.Vector3(0, 0, 0),
         radius: 90,
         direction: new THREE.Vector3(0, 0.3, 1).normalize(),
+        posterTime: 14.5, // Opens on a unit-length filament joining the filament end.
         labels: [
           { textKey: 'closeupCaptions.pull', anchor: () => pullAnchor, visible: () => pulling },
           { part: 'dimer', anchor: () => dimerAnchor, visible: () => !sweeping && s1 > 0.5 && Math.abs(X_DIMER - focus) < IN_VIEW },

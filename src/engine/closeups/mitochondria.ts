@@ -42,6 +42,7 @@ const create: CloseupFactory = (ctx) => {
         target: new THREE.Vector3(2.5, -1.5, -3),
         radius: 37,
         direction: new THREE.Vector3(0.16, 0.3, 1).normalize(),
+        posterTime: 2.5, // Opens on the rotor turning as ATP is released.
         labels: synthase.labels,
       },
     ],

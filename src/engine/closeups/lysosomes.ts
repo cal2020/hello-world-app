@@ -589,6 +589,7 @@ const create: CloseupFactory = (ctx) => {
         target: new THREE.Vector3(-66, 0, -14),
         radius: 212,
         direction: new THREE.Vector3(0.06, 0.12, 1).normalize(),
+        posterTime: 5.75, // Opens on a late endosome fusing with the lysosome.
         labels,
       },
     ],

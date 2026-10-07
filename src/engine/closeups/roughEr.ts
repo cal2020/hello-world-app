@@ -362,6 +362,7 @@ const create: CloseupFactory = (ctx) => {
         target: new THREE.Vector3(10, 20, -4),
         radius: 84,
         direction: new THREE.Vector3(0.1, 0.24, 1).normalize(),
+        posterTime: 7.5, // Opens on the new chain in the lumen: glycans added, a chaperone folding it.
         labels,
       },
     ],

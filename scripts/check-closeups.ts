@@ -3,10 +3,11 @@
  * reports, per view: load time, draw calls, triangles, console errors, and
  * whether GPU resources are released after returning to the cell.
  *
- * Resources are compared over two passes: the first visit of each view may
+ * Resources are compared over two passes. The first visit of each view may
  * fill small caches (one background texture per close-up colour, a few shared
- * shapes, compiled shader programs); a real leak grows again on the second
- * visit, so the verdict compares counts after pass 2 with those after pass 1.
+ * shapes, compiled shader programs), so pass 1 only fills them. In pass 2 every
+ * cache is already full: a view whose visit leaves more geometries or textures
+ * behind than there were just before it leaks, and is reported as such.
  *
  *   npm run build && npm run preview   (one terminal)
  *   npm run check:closeups             (another; add -- --quality=high to force a level)
@@ -45,8 +46,12 @@ async function main(): Promise<void> {
 
   const rows: string[] = [];
   let failed = false;
-  const afterFirstPass = new Map<string, { geometries: number; textures: number; programs: number }>();
+  let previous: Awaited<ReturnType<typeof memory>>;
+  let afterPass1 = baseline;
   for (const pass of [1, 2]) {
+  // Counts just before the first view of this pass (after pass 1: every first-visit cache filled).
+  previous = await memory();
+  if (pass === 2) afterPass1 = previous;
   for (const meta of STRUCTURE_META) {
     for (let index = 0; index < meta.closeup.views.length; index++) {
       const view = meta.closeup.views[index];
@@ -90,20 +95,19 @@ async function main(): Promise<void> {
       const newErrors = errors.slice(before);
       if (status !== 'ok' || newErrors.length) failed = true;
       if (pass === 1) {
-        afterFirstPass.set(key, after);
         rows.push(
           `| ${meta.id}${meta.closeup.views.length > 1 ? ` / ${view.id}` : ''} | ${status} | ${(loadMs / 1000).toFixed(1)} s | ${stats.calls} | ${stats.triangles.toLocaleString('en')} | ${labels} | RESOURCES:${key} | ${newErrors.length ? newErrors.join('; ').slice(0, 120) : '–'} |`,
         );
       } else {
-        const first = afterFirstPass.get(key)!;
-        const grew = after.geometries > first.geometries || after.textures > first.textures;
+        const grew = after.geometries > previous.geometries || after.textures > previous.textures;
         if (grew) failed = true;
         const index = rows.findIndex((row) => row.includes(`RESOURCES:${key} `));
         rows[index] = rows[index].replace(
           `RESOURCES:${key}`,
-          grew ? `LEAK (+${after.geometries - first.geometries} geometries, +${after.textures - first.textures} textures on revisit)` : 'released',
+          grew ? `LEAK (+${after.geometries - previous.geometries} geometries, +${after.textures - previous.textures} textures on revisit)` : 'released',
         );
       }
+      previous = after;
       console.error(`pass ${pass} ${key}: ${status}`);
     }
   }
@@ -111,7 +115,7 @@ async function main(): Promise<void> {
   const end = await memory();
   await browser.close();
   console.log(
-    `Quality: ${quality}. GPU resources after entering: ${baseline.geometries} geometries, ${baseline.textures} textures; after two passes over all close-ups: ${end.geometries} geometries, ${end.textures} textures (first-visit caches only).\n`,
+    `Quality: ${quality}. GPU resources after entering: ${baseline.geometries} geometries, ${baseline.textures} textures; after the first pass over all close-ups: ${afterPass1.geometries} geometries, ${afterPass1.textures} textures (first-visit caches); after the second pass: ${end.geometries} geometries, ${end.textures} textures.\n`,
   );
   console.log('| Close-up view | Opened | Load | Draw calls | Triangles | Labels shown | Resources after leaving | Console errors |');
   console.log('| --- | --- | --- | --- | --- | --- | --- | --- |');

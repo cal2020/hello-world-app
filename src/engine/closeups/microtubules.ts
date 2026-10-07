@@ -371,6 +371,7 @@ const create: CloseupFactory = (ctx) => {
         target: new THREE.Vector3(0, 8, 0),
         radius: 110,
         direction: view.clone(),
+        posterTime: 8.0, // Opens on a growing end with its GTP cap.
         labels: [
           { textKey: 'closeupCaptions.growing', anchor: () => captionAnchor, visible: () => phase() === 'growing' },
           { textKey: 'closeupCaptions.catastrophe', anchor: () => captionAnchor, visible: () => phase() === 'catastrophe' },

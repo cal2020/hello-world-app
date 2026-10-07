@@ -335,6 +335,7 @@ const create: CloseupFactory = (ctx) => {
         target: new THREE.Vector3(0, -8, -4),
         radius: 130,
         direction: new THREE.Vector3(0.14, 0.33, 1).normalize(),
+        posterTime: 3.5, // Opens on import cargo passing through the pore.
         labels,
       },
     ],

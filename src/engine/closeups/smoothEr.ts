@@ -280,6 +280,7 @@ const create: CloseupFactory = (ctx) => {
         target: new THREE.Vector3(0, 4, 2),
         radius: 118,
         direction: new THREE.Vector3(0.2, 1.05, 0.9).normalize(),
+        posterTime: 1.75, // Opens on calcium ions released from the lumen.
         labels,
       },
     ],
