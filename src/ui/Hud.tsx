@@ -202,7 +202,7 @@ export function Hud() {
         <TourButton />
         <LabelsButton />
         <FreezeButton />
-        {layout === 'medium' && <ExportButton />}
+        {layout === 'medium' && <ExportButton iconOnly />}
         {compact && (
           <button type="button" className="btn" onClick={() => openModal('settings')} aria-label={t.t('controls.more')} data-testid="more">
             <Icon name="more" />

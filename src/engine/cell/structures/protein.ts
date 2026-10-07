@@ -529,10 +529,15 @@ export function buildGolgi(ctx: BuildContext): StructureInstance {
       return best;
     },
     framing() {
-      const up = new THREE.Vector3(0, 1, 0);
-      const side = new THREE.Vector3().crossVectors(middle.normal, up).normalize();
-      const dir = side.multiplyScalar(0.75).addScaledVector(up, 0.35).addScaledVector(FRONT, 0.4).normalize();
-      return { target: middle.center.clone().addScaledVector(middle.normal, 0.2), radius: 1.05, direction: dir };
+      // See the middle stack obliquely from across the ribbon (from above), tilted toward its
+      // trans side, so the cisternae read as a curved stack. Looking along the ribbon would
+      // put the neighbouring stacks in the way, and the view would end up face-on. The radius
+      // keeps the stack's own pick sphere (≤ 0.69 µm) inside the engine's "clear" margin
+      // (0.6 × radius), so the stack never counts as blocking its own view.
+      const across = new THREE.Vector3().crossVectors(middle.normal, middle.tangent).normalize();
+      if (across.y < 0) across.negate();
+      const dir = across.multiplyScalar(0.85).addScaledVector(middle.normal, 0.4).addScaledVector(FRONT, 0.3).normalize();
+      return { target: middle.center.clone().addScaledVector(middle.normal, 0.2), radius: 1.15, direction: dir };
     },
     labelAnchors() {
       return layout.golgiStacks.map((s) => s.center.clone().addScaledVector(s.normal, 0.17));

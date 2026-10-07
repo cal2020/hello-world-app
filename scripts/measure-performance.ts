@@ -45,6 +45,9 @@ async function main(): Promise<void> {
   let renderer = '';
   for (const scenario of SCENARIOS) {
     const context = await browser.newContext({ viewport: scenario.viewport, isMobile: !!scenario.mobile, hasTouch: !!scenario.mobile, deviceScaleFactor: scenario.mobile ? 2 : 1 });
+    // tsx keeps function names by wrapping named functions in __name(); the
+    // callbacks passed to page.evaluate run in the page, which lacks that helper.
+    await context.addInitScript({ content: 'globalThis.__name = (fn) => fn;' });
     const page = await context.newPage();
     const sep = scenario.path.includes('?') ? '&' : '?';
     await page.goto(`${base}${scenario.path}${sep}perf=1&quality=${scenario.quality}`, { waitUntil: 'domcontentloaded' });

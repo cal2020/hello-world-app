@@ -42,7 +42,7 @@
   },
   "search": {
     "label": "Rechercher une structure",
-    "placeholder": "Rechercher, p. ex. « membrane cellulaire »",
+    "placeholder": "Rechercher, p. ex. « membrane »",
     "clear": "Effacer la recherche",
     "results": {
       "one": "{count} résultat",

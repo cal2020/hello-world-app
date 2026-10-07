@@ -573,8 +573,8 @@ const create: CloseupFactory = (ctx) => {
     scene,
     views: [
       {
-        target: new THREE.Vector3(14, 58, 0),
-        radius: 86,
+        target: new THREE.Vector3(14, 70, 0),
+        radius: 98, // Room for the whole vesicle above the kinesin, below the top bar.
         direction: new THREE.Vector3(0.12, 0.3, 1).normalize(),
         labels: [
           { part: 'kinesin', anchor: () => anchors.kinesin },

@@ -1112,10 +1112,20 @@ textarea {
   pointer-events: auto;
 }
 
+.hud-bottom > .scale-indicator,
+.hud-bottom > .zoom-controls {
+  flex-shrink: 0;
+}
+
+/* Long button labels in some languages wrap inside the toolbar rather than
+   pushing the zoom buttons over the reading panel. */
 .toolbar {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
   gap: 6px;
+  min-width: 0;
   padding: 6px;
   border-radius: 16px;
   margin: 0 auto;
@@ -1317,6 +1327,10 @@ textarea {
   margin-top: 6px;
   min-height: 34px;
   font-size: var(--fs-xs);
+  /* Long translations wrap instead of running past the inset. */
+  white-space: normal;
+  line-height: 1.25;
+  text-align: center;
 }
 
 /* ── Overlays: entry, failure, tour ──────────────────────────────────────── */
@@ -1750,6 +1764,11 @@ kbd {
   padding: calc(var(--topbar-h) + 30px + var(--safe-top)) calc(16px + var(--safe-right)) calc(40px + var(--safe-bottom))
     calc(16px + var(--safe-left));
   background: var(--bg);
+}
+
+/* Wide screens keep the structure list beside the atlas, not over it. */
+.app[data-layout='wide'] .text-atlas {
+  padding-left: calc(var(--nav-w) + 24px + var(--safe-left));
 }
 
 .atlas-static {

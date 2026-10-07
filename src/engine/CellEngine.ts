@@ -1070,7 +1070,9 @@ export class CellEngine implements EngineController {
     const t = state.translator;
     const closeupView = this.closeup ? structureRecord(this.closeup.id).closeup.views[this.closeup.viewIndex] : null;
     const unitNm = closeupView ? closeupView.unitNm : 1000;
-    const reading = computeScale({ fovDeg: this.camera.fov, distance: this.rig.distance(), viewportHeightPx: this.height, unitNm, maxBarPx: 120 });
+    // Phones keep the bar shorter so the scale box and the toolbar share the bottom row.
+    const maxBarPx = state.layout === 'compact' || state.layout === 'compact-landscape' ? 80 : 120;
+    const reading = computeScale({ fovDeg: this.camera.fov, distance: this.rig.distance(), viewportHeightPx: this.height, unitNm, maxBarPx });
     const length = splitLength(reading.lengthNm);
     let context: string;
     if (closeupView) {
