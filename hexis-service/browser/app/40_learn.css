@@ -27,7 +27,7 @@
 .ln-arrow { color: var(--ink-3); }
 @container ln (max-width: 46rem) {
   .ln-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ln-sum-item:first-child { grid-column: 1 / -1; }
+  .ln-sum-item:first-child, .ln-sum-item:last-child { grid-column: 1 / -1; }
 }
 
 /* ------------------------------------------------------------------ shared pieces */
@@ -148,6 +148,11 @@
   border-radius: var(--r-2);
   color: var(--ink-2);
 }
-.ln-notrun p { flex: 1 1 20rem; min-width: 0; }
+.ln-notrun-body { flex: 1 1 20rem; min-width: 0; display: grid; gap: var(--sp-1); }
+/* per-task table, folded (narrow): one line per arm, labels in a column so initial and refined line up */
+.hx-table-wrap.is-folded .ln-tasks-table .hx-fold { display: grid; gap: 0.25rem; }
+.ln-tasks-table .hx-fold-sep { display: none; }
+.ln-tasks-table .hx-fold-item { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); align-items: baseline; gap: var(--sp-2); min-width: 0; }
+.ln-tasks-table .hx-fold-label { white-space: nowrap; }
 .ln-metric { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.5rem; }
 @container ln (max-width: 34rem) { .ln-key { display: none; } }

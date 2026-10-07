@@ -5,6 +5,12 @@
 // (EXCLUDED, the candidate's gates fail with an ORDERING_VIOLATION path, active version unchanged) and the
 // evaluation tables. Every status on screen is compared with what the engine's store holds.
 
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const GOLDEN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "golden", "eval.json");
+
 async function goto_learn(t) {
   await t.open();
   await t.page.evaluate(() => HXUI.go("learn"));
@@ -114,6 +120,11 @@ export default async function (t) {
   assert.equal(await page.getAttribute("#ln", "data-active"), e.refined);
   assert.equal(await page.evaluate(() => HXUI.lab.packages.refined.artifact_hash), e.refined, "the Run workbench sees the refined package");
   assert.equal(await page.getAttribute("#ln-admit", "aria-disabled"), "true", "the active candidate cannot be admitted twice");
+  /* the success path: the admitted proposal says so, and no stale warning */
+  assert.equal(await page.getAttribute("#ln-proposal", "data-now"), "admitted");
+  assert.ok(await page.$("#ln-proposal-admitted"), "the proposal shows it is now active");
+  assert.doesNotMatch(await page.textContent("#ln-propose-body"), /active version changed/);
+  assert.equal(await page.getAttribute("#ln-race", "aria-disabled"), "true", "a refined active version has nothing to race");
 
   /* proposing the same trace against the new parent: NO_CHANGE, and the race explains why it cannot run */
   await click(page, "ln-propose");
@@ -147,6 +158,30 @@ export default async function (t) {
 
   /* ---- evaluation */
   await page.waitForSelector("#ln-eval");
+  /* the values shown equal the Python run (golden/eval.json, run "heldout") */
+  const gold = JSON.parse(fs.readFileSync(GOLDEN, "utf8")).runs.find((r) => r.name === "heldout").result;
+  const py = await page.evaluate((g) => {
+    const f = (v) => HX.eval.fmt2(v);
+    const cell = (sel, i) => document.querySelectorAll(sel + " td")[i].textContent.trim();
+    const arms = ["initial_compiled", "trace_refined"];
+    const rows = Array.from(document.querySelectorAll("#ln-eval-tasks tr[data-task]"));
+    return {
+      shown: [cell("#ln-eval-summary tr[data-metric=business_success]", 1), cell("#ln-eval-summary tr[data-metric=business_success]", 2)],
+      want: arms.map((a) => f(g.arms[a].summary.business_success)),
+      held_shown: [cell("#ln-eval-heldout tr[data-metric=business_success]", 1), cell("#ln-eval-heldout tr[data-metric=business_success]", 2)],
+      held_want: arms.map((a) => f(g.arms[a].strictly_heldout_summary.business_success)),
+      terms: rows.map((tr) => [tr.dataset.task, tr.querySelectorAll("td")[2].querySelector("code")?.textContent, tr.querySelectorAll("td")[3].querySelector("code")?.textContent]),
+      terms_want: g.arms.initial_compiled.rows.map((r, i) => [r.task, r.terminal, g.arms.trace_refined.rows[i].terminal]),
+      overlap: rows.filter((tr) => tr.dataset.overlap === "yes").map((tr) => tr.dataset.task),
+      summary_note: document.getElementById("ln-sum-eval").textContent,
+    };
+  }, gold);
+  assert.deepEqual(py.shown, py.want, "business_success equals the Python run");
+  assert.deepEqual(py.held_shown, py.held_want, "strictly held-out business_success equals the Python run");
+  assert.deepEqual(py.terms, py.terms_want, "per-task terminals equal the Python run");
+  assert.deepEqual(py.overlap, Object.keys(gold.dev_overlap), "dev-overlap tasks equal the Python run");
+  assert.match(py.summary_note, new RegExp("all " + gold.arms.initial_compiled.summary.tasks + " tasks"));
+  assert.match(py.summary_note, new RegExp("strictly held out \\(\\d+\\): " + py.held_want[0] + " → " + py.held_want[1]));
   const ev = await page.evaluate(() => {
     const r = HXUI.learn.state().evaluation.result;
     const cell = (sel, i) => document.querySelectorAll(sel + " td")[i].textContent.trim();
@@ -188,4 +223,54 @@ export default async function (t) {
   e = await engine(page);
   assert.equal(e.active[0], e.initial);
   assert.equal(e.protected.length, 2);
+
+  /* ---- Admit is a compare-and-swap: another admission moves the pointer after the proposal, so admitting the
+     stale proposal ends in CONFLICT and changes nothing */
+  assert.equal(await page.getAttribute("#ln-proposal", "data-status"), "CANDIDATE");
+  const variant = await page.evaluate(() => {
+    const env = HXUI.lab.env;
+    const skill = HXUI.lab.packages.initial.machine.skill_id;
+    const [hash] = env.store.get_active("sandbox", skill);
+    const parent = env.service.package(hash);
+    const a = env.store.archive(skill);
+    const prot = a.protected.map((x) => HX.traces.from_jsonl(env.store.trace_body(x.trace_id))[0]);
+    const dev = HX.reference.missing_docs_trace();
+    const inner = new HX.reference.FixtureAligner();
+    const aligner = { model_id: inner.model_id, propose: (ctx) => inner.propose(ctx).map((o) => o.op === "add_state"
+      ? Object.assign({}, o, { state: Object.assign({}, o.state, { action: Object.assign({}, o.state.action, { prompt: "Send the ids again." }) }) }) : o) };
+    const skill_text = HX.env.skill_source().text;
+    const p = HX.update.propose_update(parent, dev, prot, [], env.catalog, aligner, skill_text);
+    const r = HX.registry.admit(env.store, p.candidate, env.catalog, { expected_parent_hash: hash, approver: env.principal("user:dana"),
+      environment: "sandbox", deployment_policy: HX.fixture.deployment_policy(), protected: prot.concat([dev]), negative: [],
+      now: env.clock(), skill_text });
+    HXUI.lab_changed("packages");
+    return { status: r.status, hash: p.candidate.artifact_hash, active: env.store.get_active("sandbox", skill) };
+  });
+  assert.equal(variant.status, "ADMITTED", "the other admission went through");
+  assert.equal(variant.active[0], variant.hash);
+  await page.waitForFunction(() => document.getElementById("ln-proposal").dataset.now === "stale");
+  assert.match(await page.textContent("#ln-propose-body"), /The active version changed after this proposal/);
+  assert.equal(await page.getAttribute("#ln-admit", "aria-disabled"), null, "the stale candidate can still be submitted");
+  await click(page, "ln-admit");
+  assert.equal(await page.getAttribute("#ln-admission", "data-status"), "CONFLICT");
+  assert.equal(await page.getAttribute("#ln-admission-pointer", "data-moved"), "false");
+  assert.match(await page.textContent("#ln-admission"), /rebase onto the new parent/);
+  e = await engine(page);
+  assert.deepEqual(e.active, variant.active, "a CONFLICT leaves the active pointer where the other admission put it");
+
+  /* ---- the designed unavailable state when the evaluation module is missing */
+  const unav = await page.evaluate(() => {
+    const ev = HX.eval;
+    delete HX.eval;
+    try {
+      HXUI.learn.refresh();
+      const body = document.getElementById("ln-evaluate-body");
+      return { state: body.dataset.state, missing: body.querySelector(".hx-unavailable")?.dataset.missing || null,
+        hidden: document.getElementById("ln-eval-run").hidden, sum: document.getElementById("ln-sum-eval").textContent };
+    } finally { HX.eval = ev; HXUI.learn.refresh(); }
+  });
+  assert.equal(unav.state, "unavailable");
+  assert.match(unav.missing || "", /HX\.eval/);
+  assert.equal(unav.hidden, true, "no evaluate button without the module");
+  assert.match(unav.sum, /not in this build/);
 }

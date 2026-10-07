@@ -184,7 +184,9 @@ def overlap_vectors() -> list:
               {"id": "late-only", "input": {"supplier_ref": "SUP-1"},
                "responses": {"input": {"document_ids": ["DOC-LATE-40002", "DOC-A", "DOC-LATE-40002"]}}},
               {"id": "both", "input": {"supplier_ref": "SUP-40002"},
-               "responses": {"input": {"document_ids": ["Z", "DOC-LATE-40002"]}}}]
+               "responses": {"input": {"document_ids": ["Z", "DOC-LATE-40002"]}}},
+              # non-dict tasks: Python's subscript TypeError wording
+              "input", ["x"], 5, None]
     for i in range(40):
         t = {"id": f"r{i}", "input": {}}
         if rng.random() < 0.7:
@@ -228,10 +230,32 @@ def summarize_vectors() -> list:
     return out
 
 
+def fmt2_vectors() -> list:
+    """``format(v, '.2f')`` (the report's fmt2) over exact binary ties, huge magnitudes and random doubles; values as
+    ``repr`` text (integral floats cannot be stored as JSON numbers)."""
+    import struct
+    rng = random.Random(2468)
+    xs = [500000000000000.125, 1000000000000000.125, 0.125, 0.375, 2.675, 1.005, -0.125, -0.0, 0.0, 5e-324, 1e300,
+          1.7976931348623157e308, 0.005, 0.015, 0.025, 123.455, 2.0 ** 52 + 0.5, 2.0 ** 53, 1e21, 1e22, 9e13 + 0.125,
+          1e15 + 0.125, 2.0 ** 50 - 0.125]
+    while len(xs) < 600:
+        k = rng.random()
+        if k < 0.3:
+            x = struct.unpack("d", struct.pack("Q", rng.getrandbits(64)))[0]
+        elif k < 0.7:
+            x = rng.randint(-10 ** 8, 10 ** 8) / 8 * rng.choice([1, 1e-3, 1e3, 1e10, 1e14, 1e15, 1e16])
+        else:
+            x = rng.uniform(-1e6, 1e6)
+        if x == x and abs(x) != float("inf"):
+            xs.append(x)
+    return [[repr(x), format(x, ".2f")] for x in xs]
+
+
 def main() -> None:
     runs = [run_variant(n, t) for n, t in variants()]
     write("eval", {"clock0": CLOCK0, "commit": COMMIT, "heldout": HELDOUT, "runs": runs,
-                   "dev_overlap": overlap_vectors(), "summarize": summarize_vectors()})
+                   "dev_overlap": overlap_vectors(), "summarize": summarize_vectors(),
+                   "fmt2": fmt2_vectors()})
     for r in runs:
         print(r["name"], r["error"], r["timer_calls"], r["ids_used"], file=sys.stderr)
 

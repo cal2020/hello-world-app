@@ -633,16 +633,6 @@
     const rbw = rep.errors().filter((x) => x.code === "READ_BEFORE_WRITE");
     A.ok(rbw.some((x) => x.state === "EXTRACT_DRAFT" && x.variable === "existing_supplier"), "READ_BEFORE_WRITE for existing_supplier at EXTRACT_DRAFT, got " + short(rep.codes()));
   }, { python: "test_A04_definite_assignment_rejects_unsafe_path" });
-  def(AC, "a08", "A08", "overlapping guards: counterexample and unknown", N_COMPILE, (ctx) => {
-    const catalog = catalog_of();
-    const over = mutate(pkg_of(ctx), (m) => { m.states.VALIDATE_DRAFT.transitions[1].if = "validation_status in ['pass', 'repairable'] and repair_count < 2"; });
-    const f = validate(over, catalog).errors().filter((x) => x.code === "GUARDS_OVERLAP");
-    A.ok(f.length, "GUARDS_OVERLAP for the widened repair guard");
-    A.eq(f[0].detail.counterexample.validation_status, "pass", "counterexample validation_status");
-    const unk = mutate(pkg_of(ctx), (m) => { m.states.VALIDATE_DRAFT.transitions[1].if = "validation_status == 'repairable' and repair_count < readback_count"; });
-    A.ok(validate(unk, catalog).codes().has("GUARDS_DISJOINTNESS_UNKNOWN"), "GUARDS_DISJOINTNESS_UNKNOWN for a variable-to-variable comparison");
-    return "counterexample " + JSON.stringify(f[0].detail.counterexample);
-  }, { python: "test_A08_overlapping_guards_counterexample_and_unknown" });
   def(AC, "a05-template", "A05", "missing template binding is explicit", ["kernel"], () => {
     const K = HX.kernel;
     A.eq(A.code(() => K.fill_template({ draft_id: "${erp_draft_id}" }, {})), "MISSING_INPUT_BINDING", "missing binding");
@@ -689,6 +679,17 @@
     A.eq(r.checkpoint.state_id, "A", "state");
     A.deep(r.checkpoint.variables, { flag: false, count: 0, note: "" }, "variables");
   }, { python: "test_A07_falsy_values_accepted_by_schema_not_truthiness" });
+  def(AC, "a08", "A08", "overlapping guards: counterexample and unknown", N_COMPILE, (ctx) => {
+    const catalog = catalog_of();
+    const over = mutate(pkg_of(ctx), (m) => { m.states.VALIDATE_DRAFT.transitions[1].if = "validation_status in ['pass', 'repairable'] and repair_count < 2"; });
+    const f = validate(over, catalog).errors().filter((x) => x.code === "GUARDS_OVERLAP");
+    A.ok(f.length, "GUARDS_OVERLAP for the widened repair guard");
+    A.eq(f[0].detail.counterexample.validation_status, "pass", "counterexample validation_status");
+    const unk = mutate(pkg_of(ctx), (m) => { m.states.VALIDATE_DRAFT.transitions[1].if = "validation_status == 'repairable' and repair_count < readback_count"; });
+    A.ok(validate(unk, catalog).codes().has("GUARDS_DISJOINTNESS_UNKNOWN"), "GUARDS_DISJOINTNESS_UNKNOWN for a variable-to-variable comparison");
+    const ce = f[0].detail.counterexample;
+    return "counterexample " + Object.keys(ce).map((k) => k + " = " + JSON.stringify(ce[k])).join(", ");
+  }, { python: "test_A08_overlapping_guards_counterexample_and_unknown" });
   def(AC, "a09", "A09", "guard reading a variable that was never set fails explicitly", N_COMPILE.concat(["kernel"]), (ctx) => {
     const K = HX.kernel;
     const p = falsy_pkg(ctx, "ghost == 'x'");
@@ -1168,7 +1169,8 @@
     const c = BY_KEY.get(key);
     if (!c) return { status: "skip", ms: 0, message: "There is no check named " + key + "." };
     const miss = missing(c);
-    if (miss.length) return { status: "skip", ms: 0, message: "Needs engine modules that are not in this build: " + miss.join(", ") + "." };
+    if (miss.length) return { status: "skip", ms: 0, missing: miss, message: "Needs engine modules that are not in this build: " +
+      (miss.length > 3 ? miss.slice(0, 3).join(", ") + " and " + (miss.length - 3) + " more" : miss.join(", ")) + "." };
     if (c.embed && !embed()) return { status: "skip", ms: 0, message: "Needs the embedded golden sample, which this build does not include (app/embed.json)." };
     const t0 = now();
     try {

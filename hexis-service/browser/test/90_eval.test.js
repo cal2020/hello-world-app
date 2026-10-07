@@ -73,12 +73,12 @@
     assert.deepEqual(strip_env(HX.eval.run_eval({ tasks: HX.data.heldout_tasks.tasks, timer: () => 0 })), want.result);
   });
 
-  test("eval: dev_overlap equals Python's on 212 vectors (4 development traces, curated and random tasks)", () => {
+  test("eval: dev_overlap equals Python's on 228 vectors (4 development traces, curated, random and non-dict tasks)", () => {
     const R = HX.reference;
     const devs = { missing: R.missing_docs_trace(), shortcut: R.shortcut_trace(), forbidden: R.forbidden_write_trace(),
       duplicate: R.duplicate_write_trace() };
     const vs = G().dev_overlap;
-    assert.equal(vs.length, 212);
+    assert.equal(vs.length, 228);
     let errors = 0, hits = 0;
     for (const v of vs) {
       const got = exc(() => HX.eval.dev_overlap(v.task, devs[v.dev]));
@@ -104,6 +104,9 @@
     assert.equal(HX.eval._py_sum([26, 0.1, 0.1, -3]), 23.200000000000003);
     assert.equal(HX.eval._py_sum([0.1, 0.1, 0.1]), 0.30000000000000004);
     assert.equal(HX.eval._py_sum([1, 2, true]), 4);
+    /* an int beyond a C long leaves the float fast path; CPython 3.12 folds the compensation in first */
+    assert.equal(HX.eval._py_sum([9223372036854774784, 0.3, -4539.513350737699, -474.4863524893228, -1e19]), -7.766279631452303e+17);
+    assert.equal(HX.eval._py_sum([0.1, 0.1, 0.1, 1e19, 0.1]), 1e19);
     assert.deepEqual(HX.eval.summarize([]), { tasks: 0 });
   });
 
@@ -114,8 +117,22 @@
       [45 / 7, "6.43"], [0.005, "0.01"], [0.015, "0.01"], [2.675, "2.67"], [1e22, "10000000000000000000000.00"],
       [true, "1.00"]];
     for (const [v, s] of cases) assert.equal(F(v), s, String(v));
+    /* Python format(v, ".2f") over exact ties at large magnitudes and random doubles (golden fmt2) */
+    assert.equal(F(500000000000000.125), "500000000000000.12");
+    assert.equal(F(1000000000000000.125), "1000000000000000.12");
+    const G2 = G().fmt2;
+    assert.ok(G2.length >= 600);
+    for (const [r, s] of G2) assert.equal(F(Number(r)), s, r);
     assert.deepEqual(Array.from(HX.eval.RATIO_METRICS), ["business_success", "procedural_conformance", "terminal_honesty",
       "fallback_rate", "failure_fallback_rate", "mean_steps"]);
+  });
+
+  test("eval: run_eval with non-dict tasks raises Python's TypeError wording", () => {
+    const msg = (tasks) => { try { HX.eval.run_eval({ tasks }); } catch (e) { return [e.code, e.message]; } return null; };
+    /* Python: t["id"] on the task */
+    assert.deepEqual(msg(["x"]), ["TypeError", "string indices must be integers, not 'str'"]);
+    assert.deepEqual(msg([["x"]]), ["TypeError", "list indices must be integers or slices, not str"]);
+    assert.deepEqual(msg([5]), ["TypeError", "'int' object is not subscriptable"]);
   });
 
   test("eval: documented deviation: non-str task ids are refused (Python accepts any hashable id)", () => {

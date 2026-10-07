@@ -70,7 +70,8 @@
 .st-checks tr[data-status="fail"] td { background: color-mix(in srgb, var(--crit-tint) 55%, transparent); }
 .st-checks tr[data-status="running"] td { background: color-mix(in srgb, var(--accent-tint) 55%, transparent); }
 /* the detail column takes the room the name does not need; long Python names wrap anywhere */
-.st-checks th:first-child, .st-checks td:first-child { width: 46%; }
+.st-checks th:first-child, .st-checks td:first-child { width: 46%; min-width: 14rem; }
 
 .st-file { overflow-wrap: anywhere; }
 .st-sample-table td:first-child { min-width: 12rem; }
+.st-headline-sub { margin-top: -0.4rem; color: var(--ink-2); text-wrap: pretty; }

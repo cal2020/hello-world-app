@@ -367,15 +367,34 @@
   }
   fakes.DocumentStore = DocumentStore;
 
-  /** Python ``dict(records)`` for the registry: a dict (``"tenant|ref"`` keys), a Map, or a list of
-   *  ``[[tenant, ref], record]`` pairs; anything else fails like Python's ``dict()``. */
-  /* Registry keys. Python keys the dict by ``(tenant, ref)`` tuples; the port's public ``records`` Map uses
-     ``"tenant|ref"`` strings (split at the first "|"). Keys Python accepts but that the "|" form cannot express get
-     internal encodings that keep Python's lookup result: a tuple whose tenant contains "|" ("\u0000" + JSON), and
-     any other hashable key (a string without "|", a number, null, a tuple of another length), which Python's
-     ``(tenant, ref)`` lookup can never hit ("\u0001" + JSON). Dicts are unhashable (TypeError, like Python). */
-  function tuple_key(tenant, ref) {
-    return tenant.indexOf("|") < 0 ? tenant + "|" + ref : "\u0000" + JSON.stringify([tenant, ref]);
+  /** Python ``dict(records)`` for the registry: a dict (``"tenant|ref"`` keys), a Map (keys as in ``this.records``),
+   *  or a list of ``[key, record]`` pairs (a JS array key stands for a tuple); anything else fails like Python's
+   *  ``dict()``. */
+  /* Registry keys. Python keys the dict by ``(tenant, ref)`` tuples and looks up ``(ctx tenant, supplier_ref)`` with
+     Python equality. The port's public ``records`` Map keys a (str, str) pair whose tenant has no "|" as
+     ``"tenant|ref"``; every other hashable key gets the internal encoding "\u0000" + py_key(key), where py_key
+     follows Python's ==/hash (True == 1 == 1.0, None, str, tuples element-wise), so e.g. ``("acme", 5)`` or
+     ``(5, "R")`` hit the matching lookup as in Python, while a str key (list-of-pairs form) never equals a tuple.
+     Only the object form (and a Map) read a "t|r" str key as the tuple ("t", "r") (deviations/models.md). Dicts are
+     unhashable (TypeError, like Python). */
+  let nan_seq = 0;
+  function py_key(v) {
+    if (typeof v === "boolean") return "n:" + (v ? 1 : 0);
+    if (typeof v === "number") {
+      if (Number.isNaN(v)) return "nan:" + nan_seq++; /* a NaN key only equals itself (identity) */
+      return "n:" + String(Object.is(v, -0) ? 0 : v);
+    }
+    if (typeof v === "string") return "s:" + v;
+    if (v === null || v === undefined) return "N";
+    if (Array.isArray(v)) return "t:" + JSON.stringify(v.map(py_key));
+    throw pyerr("TypeError", "unhashable type: '" + type_name(v) + "'");
+  }
+  function tuple_key(key) {
+    if (Array.isArray(key) && key.length === 2 && typeof key[0] === "string" && typeof key[1] === "string" &&
+        key[0].indexOf("|") < 0) {
+      return key[0] + "|" + key[1];
+    }
+    return "\u0000" + py_key(key);
   }
   function check_hashable(key) {
     if (is_dict(key)) throw pyerr("TypeError", "unhashable type: 'dict'");
@@ -385,18 +404,18 @@
     const out = new Map();
     const add = (key, rec) => {
       check_hashable(key);
-      let k;
-      if (Array.isArray(key) && key.length === 2 && typeof key[0] === "string" && typeof key[1] === "string") {
-        k = tuple_key(key[0], key[1]);
-      } else if (typeof key === "string" && key.indexOf("|") >= 0) {
-        k = key;
-      } else {
-        k = "\u0001" + JSON.stringify(typeof key === "string" ? ["str", key] : [typeof key, key]);
-      }
-      out.set(k, rec);
+      out.set(tuple_key(key), rec);
+    };
+    /* object / Map form: a str key "t|r" stands for the tuple ("t", "r"); an internal key (Map round trip) is kept */
+    const add_str = (key, rec) => {
+      if (typeof key === "string" && key.charAt(0) === "\u0000") out.set(key, rec);
+      else if (typeof key === "string" && key.indexOf("|") >= 0) {
+        const i = key.indexOf("|");
+        add([key.slice(0, i), key.slice(i + 1)], rec);
+      } else add(key, rec);
     };
     if (records instanceof Map) {
-      for (const [k, v] of records) add(k, v);
+      for (const [k, v] of records) add_str(k, v);
     } else if (Array.isArray(records)) {
       records.forEach((pair, i) => {
         if (!Array.isArray(pair) && typeof pair !== "string" && !is_dict(pair)) {
@@ -407,10 +426,10 @@
         if (xs.length !== 2) {
           throw pyerr("ValueError", "dictionary update sequence element #" + i + " has length " + xs.length + "; 2 is required");
         }
-        add(xs[0], xs[1]);
+        add(xs[0], xs[1]); /* Python's key as given: a str stays a str even when it contains "|" */
       });
     } else if (is_dict(records)) {
-      for (const k of Object.keys(records)) add(k, records[k]);
+      for (const k of Object.keys(records)) add_str(k, records[k]);
     } else if (typeof records === "string") {
       /* dict("ab"): element #0 is the one-character string "a" */
       throw pyerr("ValueError", "dictionary update sequence element #0 has length 1; 2 is required");
@@ -455,7 +474,7 @@
 
   class SupplierRegistry {
     /** ``SupplierRegistry(records=None)``: ``dict(records or DEFAULT_REGISTRY)`` with Python truthiness.
-     *  ``records``: ``{"tenant|ref": record_or_null}``, a Map, or ``[[tenant, ref], record]`` entries.
+     *  ``records``: ``{"tenant|ref": record_or_null}``, a Map, or ``[key, record]`` entries (``[tenant, ref]`` keys).
      *  ``this.records`` is a Map keyed ``"tenant|ref"``. */
     constructor(records) {
       const empty = records instanceof Map ? records.size === 0 : !py_truthy(records);
@@ -466,11 +485,8 @@
       const tenant = item(ctx, "tenant_id");
       const ref = item(args, "supplier_ref");
       for (const x of [tenant, ref]) if (unhashable(x)) throw pyerr("TypeError", "unhashable type: '" + type_name(x) + "'");
-      let rec = null;
-      if (typeof tenant === "string" && typeof ref === "string") {
-        const k = tuple_key(tenant, ref);
-        rec = this.records.has(k) ? this.records.get(k) : null;
-      }
+      const k = tuple_key([tenant, ref]);
+      const rec = this.records.has(k) ? this.records.get(k) : null;
       if (rec === null || rec === undefined) return { status: "new", existing: {} };
       if (!py_eq(item(rec, "business_unit"), item(args, "business_unit"))) return { status: "conflict", existing: clone_json(rec) };
       return { status: "exists_compatible", existing: clone_json(rec) };

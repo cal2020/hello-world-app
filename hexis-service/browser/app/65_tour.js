@@ -71,7 +71,8 @@
   }
   function fact(label, value) { return h("div", { class: "tour-fact" }, h("dt", null, label), h("dd", null, value)); }
   const STATUS_TONE = { COMPLETED: "ok", ADMITTED: "ok", CANDIDATE: "ok", WAITING_FOR_APPROVAL: "warn", WAITING_FOR_INPUT: "warn",
-    FAILED: "crit", REJECTED: "crit", EXCLUDED: "crit", CONFLICT: "warn", DENY: "crit", ALLOW: "ok" };
+    FAILED: "crit", REJECTED: "crit", EXCLUDED: "crit", CONFLICT: "warn", DENY: "crit", ALLOW: "ok",
+    REFUSED: "ok", UNCHANGED: "ok", CHANGED: "crit", END_VERIFIED_DRAFT: "ok", END_UNVERIFIED: "warn", END_REVIEW: "warn", validated: "ok", PASSED: "ok" };
   const chip = (t) => HXUI.chip(String(t), STATUS_TONE[t] || "neutral", { mono: /^[A-Z_]+$/.test(String(t)) });
 
   function copy_for(r) {

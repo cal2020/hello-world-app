@@ -31,7 +31,7 @@ from hexis_service.demo import procurement_demo as PD
 from hexis_service.demo.env import ManualClock
 
 CLOCK0 = 1790000000.25
-SCENARIOS = ["full", "timeout-after-commit", "no-fault"]
+SCENARIOS = ["full", "timeout-after-commit", "no-fault", None]  # None: run_demo(scenario=None) injects no fault
 HEAD = re.compile(r"^== (\d\w*)\. ")
 
 

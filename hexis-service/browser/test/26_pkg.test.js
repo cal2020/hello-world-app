@@ -216,16 +216,21 @@
     assert.ok(stricter >= strict.length);
   });
 
-  test("Python re acceptance: py_regex_check agrees with CPython 3.12 re.compile (accept/reject and exception class)", () => {
+  test("Python re acceptance: py_regex_check agrees with CPython 3.12 re.compile (accept/reject, exception class and message)", () => {
     const G = golden("models_regex");
     assert.ok(G.patterns.length >= 10000);
-    let accepted = 0, stricter = 0;
-    for (const [p, kind, mayBeStricter] of G.patterns) {
+    let accepted = 0, stricter = 0, messages = 0;
+    for (const [p, kind, mayBeStricter, message] of G.patterns) {
       const r = C.py_regex_check(p);
       const label = JSON.stringify(p.length > 80 ? p.slice(0, 80) + "..." : p);
       if (kind !== null) {
         assert.ok(r !== null, `${label}: Python raises ${kind}, the port accepts`);
-        if (!mayBeStricter) assert.equal(r.kind, kind, `${label}: exception class (${r.message})`);
+        if (!mayBeStricter) {
+          assert.equal(r.kind, kind, `${label}: exception class (${r.message})`);
+          /* str(exc), positions (and line/column for multi-line patterns) included */
+          assert.equal(r.message, message, `${label}: message`);
+          messages++;
+        }
       } else if (r !== null) {
         assert.ok(mayBeStricter, `${label}: Python accepts, the port says ${r.kind}: ${r.message}`);
         stricter++;
@@ -235,6 +240,11 @@
     }
     assert.ok(accepted >= 3000, `only ${accepted} accepted`);
     assert.ok(stricter > 0 && stricter <= 400);
+    assert.ok(messages >= 8000, `only ${messages} messages compared`);
+    /* the verifier's repros: Python's positions */
+    assert.equal(C.py_regex_check("[z-a]").message, "bad character range z-a at position 1");
+    assert.equal(C.py_regex_check("a{2,1}").message, "min repeat greater than max repeat at position 2");
+    assert.equal(C.py_regex_check("(?P<1>x)").message, "bad character in group name '1' at position 4");
     /* the documented stricter classes */
     assert.equal(C.py_regex_check("\\N{DIGIT ONE}").kind, "error");
     assert.equal(C.py_regex_check("(?P<é>a)").kind, "error");

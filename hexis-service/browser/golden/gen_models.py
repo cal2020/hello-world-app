@@ -1115,6 +1115,16 @@ pattern_set.update(TARGETED_RE)
 NAMED_ESCAPE = re.compile(r"\\N")
 
 
+def re_message(p: str):
+    """str() of the exception re.compile(p) raises (positions included), or None."""
+    re.purge()
+    try:
+        re.compile(p)
+    except Exception as exc:  # noqa: BLE001
+        return str(exc)
+    return None
+
+
 def strict_only(p: str) -> bool:
     """Patterns the JS port may reject although Python accepts them (documented): \\N{...} escapes,
     non-ASCII group names and groups nested deeper than 100 levels."""
@@ -1130,10 +1140,10 @@ def strict_only(p: str) -> bool:
 
 regex_cases = []
 for p in sorted(pattern_set):
-    regex_cases.append([p, re_kind(p), strict_only(p)])
+    regex_cases.append([p, re_kind(p), strict_only(p), re_message(p)])
 
 # python-jsonschema's verdict on a schema carrying the pattern is exactly re.compile's (checked here)
-for i, (p, kind, _) in enumerate(regex_cases):
+for i, (p, kind, _, _) in enumerate(regex_cases):
     if i % 7:
         continue
     c = ToolCatalog.model_validate({"catalog_id": "c", "version": "1", "tools": {"t": {
@@ -1145,8 +1155,8 @@ for i, (p, kind, _) in enumerate(regex_cases):
 
 # random Draft 2020-12 schemas (supported keywords, annotations, a few unsupported ones) with regexes from the
 # pool above (half of them valid for Python): Python's check_schemas verdict per tool schema
-SCHEMA_PATTERNS_OK = [p for p, k, _ in regex_cases if len(p) < 30 and k is None]
-SCHEMA_PATTERNS_BAD = [p for p, k, _ in regex_cases if len(p) < 30 and k is not None]
+SCHEMA_PATTERNS_OK = [p for p, k, _, _ in regex_cases if len(p) < 30 and k is None]
+SCHEMA_PATTERNS_BAD = [p for p, k, _, _ in regex_cases if len(p) < 30 and k is not None]
 SCHEMA_PATTERNS = SCHEMA_PATTERNS_OK + rrng.sample(SCHEMA_PATTERNS_BAD, len(SCHEMA_PATTERNS_OK))
 SUP_KW = ["type", "enum", "const", "required", "properties", "additionalProperties", "patternProperties", "items",
           "minItems", "maxItems", "uniqueItems", "minLength", "maxLength", "pattern", "minimum", "maximum",
@@ -1227,8 +1237,8 @@ for _ in range(2400):
     schema_fuzz.append([jtext(s_in), jtext(s_out), names])
 
 write("models_regex", {"patterns": regex_cases, "schemas": schema_fuzz})
-print(f"regex: {len(regex_cases)} patterns ({sum(k is None for _, k, _ in regex_cases)} accepted by Python, "
-      f"{sum(s for _, _, s in regex_cases)} may be stricter in JS); {len(schema_fuzz)} catalogs "
+print(f"regex: {len(regex_cases)} patterns ({sum(k is None for _, k, _, _ in regex_cases)} accepted by Python, "
+      f"{sum(s for _, _, s, _ in regex_cases)} may be stricter in JS); {len(schema_fuzz)} catalogs "
       f"({sum(bool(c[2]) for c in schema_fuzz)} with invalid schemas)")
 
 print(f"efsm: {len(efsm_cases)} cases ({sum(c['py'] == 'ok' for c in efsm_cases)} ok), "

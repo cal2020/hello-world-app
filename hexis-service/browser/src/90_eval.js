@@ -54,7 +54,11 @@
   /** Python ``d[k]``. */
   function item(d, k) {
     if (Array.isArray(d) || typeof d === "string") {
-      if (typeof k === "string") throw pyerr("TypeError", (Array.isArray(d) ? "list" : "string") + " indices must be integers or slices, not str");
+      /* CPython 3.12 wording: str "...integers, not 'str'", list "...integers or slices, not str" */
+      if (typeof k === "string") {
+        throw pyerr("TypeError", Array.isArray(d) ? "list indices must be integers or slices, not str"
+          : "string indices must be integers, not 'str'");
+      }
     }
     if (!is_dict(d)) throw pyerr("TypeError", "'" + tname(d) + "' object is not subscriptable");
     return HX.broker._item(d, k);
@@ -220,7 +224,8 @@
    *  (bools count as ints) and other numbers for floats (deviations/demo.md: an integral Python float such as
    *  ``2.0`` or ``1e16`` cannot be told apart). Ints add exactly until the first float; from then on floats use
    *  Neumaier compensation while ints that fit a C long are added to the running double WITHOUT compensation, as
-   *  CPython does; an int beyond a C long leaves the fast path for plain ``+``. */
+   *  CPython does; an int beyond a C long leaves the fast path (folding the pending compensation into the running
+   *  double first, like CPython 3.12.3) and the rest is plain ``+``. */
   const LONG_MAX = 2n ** 63n - 1n, LONG_MIN = -(2n ** 63n);
   function py_sum(xs) {
     const nums = xs.map((x) => {
@@ -259,11 +264,11 @@
         left = true;
         break;
       }
-      if (!left) {
-        if (c !== 0 && Number.isFinite(c)) f += c;
-        return f;
-      }
-      result = f; /* CPython drops the compensation when it leaves the fast path */
+      /* CPython 3.12 folds the compensation into the running double both at the end and when an int beyond a
+       * C long makes it leave the fast path (``if (c && Py_IS_FINITE(c)) f_result += c;``) */
+      if (c !== 0 && Number.isFinite(c)) f += c;
+      if (!left) return f;
+      result = f;
       for (; i < nums.length; i++) result = add(result, nums[i]);
       return typeof result === "bigint" ? Number(result) : result;
     }
@@ -290,7 +295,7 @@
     if (!Array.isArray(tasks)) throw pyerr("TypeError", "tasks must be a list");
     for (const t of tasks) {
       /* deviation (deviations/demo.md): task ids are dict keys of the result; only str ids are accepted */
-      if (!is_dict(t)) throw pyerr("TypeError", "'" + tname(t) + "' object is not subscriptable");
+      if (!is_dict(t)) item(t, "id"); /* Python's t["id"] error (str / list indices, or not subscriptable) */
       if (typeof item(t, "id") !== "string") throw pyerr("TypeError", "task ids must be strings in the JavaScript port");
     }
     return tasks;

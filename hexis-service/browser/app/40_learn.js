@@ -71,6 +71,7 @@
   };
 
   /* ---------------------------------------------------------------- small helpers */
+  function with_id(el, id) { el.id = id; return el; }
   function short(hash, n) {
     const s = String(hash || "");
     return s.length > (n || 19) ? s.slice(0, n || 19) + "…" : s;
@@ -79,7 +80,9 @@
   function plural(n, one, many) { return n + " " + (n === 1 ? one : many || one + "s"); }
   function err_of(e) {
     const is_hx = globalThis.HX && HX.HXError && e instanceof HX.HXError;
-    return { code: is_hx ? String(e.code || e.name || "HXError") : (e && e.name) || "Error", message: String((e && e.message) || e) };
+    /* HX.HXError's message is "CODE: msg"; the chip already shows the code, so the text is the bare msg */
+    return { code: is_hx ? String(e.code || e.name || "HXError") : (e && e.name) || "Error",
+      message: is_hx && e.msg !== undefined ? String(e.msg) : String((e && e.message) || e) };
   }
   /** run fn after the browser has painted the "working" state (engine calls are synchronous) */
   function after_paint(fn) {
@@ -112,7 +115,8 @@
   function initial_package() {
     const lab = HXUI.lab;
     if (lab.packages && lab.packages.initial && lab.packages.initial.machine) return lab.packages.initial;
-    if (lab.compile && lab.compile.package && lab.compile.package.machine) return lab.compile.package;
+    /* only a package the Compile section validated (as 30_run.js compiled_package() does) */
+    if (lab.compile && lab.compile.status === "validated" && lab.compile.package && lab.compile.package.machine) return lab.compile.package;
     if (!base_pkg) {
       const r = HX.compile.compile_procurement();
       if (!r || !r.package) throw new HX.HXError("COMPILE_FAILED", "The compiler returned no package (status " + (r ? r.status : "none") + ").");
@@ -335,6 +339,7 @@
   }
 
   function do_admit(p) {
+    if (!p || !p.prop || !p.prop.candidate) throw new HX.HXError("NO_CANDIDATE", "There is no candidate to admit. Propose an update with the missing-documents trace first.");
     const env = get_env();
     const before = env.store.get_active(ENVIRONMENT, skill_id());
     const sets = archive_sets(env);
@@ -474,11 +479,13 @@
   function act(name, fn, paint) {
     if (S.busy[name]) return;
     sync_store();
-    S.busy[name] = true;
+    const mine = S; /* a Reset lab between the click and the call replaces S: the queued call is dropped */
+    mine.busy[name] = true;
     paint();
     after_paint(() => {
+      if (S !== mine) { mine.busy[name] = false; return; }
       try { fn(); } finally {
-        S.busy[name] = false;
+        mine.busy[name] = false;
         paint_all();
       }
     });
@@ -488,19 +495,21 @@
   function render(el) {
     const root = h("div", { class: "ln", id: "ln", dataset: { init: S.init } });
     const summary = h("dl", { class: "ln-summary", id: "ln-summary", "aria-label": "Learn from traces at a glance" });
-    const live = h("p", { class: "hx-visually-hidden", id: "ln-live", role: "status", "aria-live": "polite" });
     const body = h("div", { class: "ln-body hx-ruled" });
-    P = { root, summary, live, body, panels: {} };
+    P = { root, summary, body, panels: {} };
     P.panels.archive = archive_panel();
     P.panels.propose = propose_panel();
     P.panels.admit = admit_panel();
     P.panels.shortcut = shortcut_panel();
     P.panels.evaluate = evaluate_panel();
     body.append(P.panels.archive.el, P.panels.propose.el, P.panels.admit.el, P.panels.shortcut.el, P.panels.evaluate.el);
-    root.append(summary, live, body);
+    root.append(summary, body);
     el.replaceChildren(root);
     paint_all();
   }
+
+  let cur_panel = null; /* the panel being painted: candidate_graph() registers its view there */
+  const open_graphs = new Set(); /* ids of graph disclosures the viewer opened: a repaint keeps them open */
 
   function paint_all() {
     if (!P || !P.root.isConnected) return;
@@ -512,6 +521,10 @@
     } catch (e) { P.root.dataset.active = ""; }
     paint_summary();
     for (const k of Object.keys(P.panels)) {
+      /* every paint replaces the panel body, so the graph views drawn into the old body go first */
+      for (const v of P.panels[k].views || []) { try { v.destroy(); } catch (e) { /* already gone */ } }
+      P.panels[k].views = [];
+      cur_panel = P.panels[k];
       try { P.panels[k].paint(); } catch (e) {
         P.panels[k].body.replaceChildren(error_notice("This panel could not be shown", e, "Reset the lab to start again."));
       }
@@ -529,7 +542,8 @@
   }
 
   function pending(text) {
-    return h("p", { class: "ln-pending", role: "status" }, h("span", { class: "ln-spinner", "aria-hidden": "true" }), text);
+    /* not a live region: HXUI.announce reports the outcome once the call returns */
+    return h("p", { class: "ln-pending" }, h("span", { class: "ln-spinner", "aria-hidden": "true" }), text);
   }
 
   /* ---- summary strip */
@@ -548,7 +562,7 @@
     let a = null, ar = null;
     try { a = active(env); ar = archive(env); } catch (e) { a = null; }
     const prop = S.proposal && S.proposal.prop;
-    const ev = S.evaluation && S.evaluation.result;
+    const ev = !HXUI.engine_missing(EVAL_NEEDS).length && S.evaluation && S.evaluation.result;
     const items = [
       sum_item("active", "Active version",
         a ? [h("span", { class: "hx-mono", title: a.hash }, short(a.hash, 19)), HXUI.chip(a.kind, a.kind === "refined" ? "accent" : "neutral")] : h("span", { class: "hx-faint" }, "none"),
@@ -564,9 +578,20 @@
           h("span", { class: "ln-arrow", "aria-hidden": "true" }, "→"), h("span", { class: "hx-visually-hidden" }, " initial, then refined "),
           h("span", { class: "hx-num" }, HX.eval.fmt2(ev.arms.trace_refined.summary.business_success))]
           : h("span", { class: "hx-faint" }, HXUI.engine_missing(EVAL_NEEDS).length ? "not in this build" : "not run yet"),
-        ev ? "initial → refined, held-out" : null),
+        ev ? eval_note(ev) : null),
     ];
     P.summary.replaceChildren(...items);
+  }
+
+  /** the summary's eval note: the whole-set pair is labelled as such, next to the strictly held-out pair */
+  function eval_note(ev) {
+    const a0 = ev.arms.initial_compiled, a1 = ev.arms.trace_refined;
+    const n = a0.summary.tasks, ov = Object.keys(ev.dev_overlap || {}).length;
+    const whole = "initial → refined, all " + plural(n, "task");
+    if (!ov) return whole + ", all held out";
+    return [whole + " (" + ov + " overlap" + (ov === 1 ? "s" : "") + " the dev trace)", h("br"),
+      h("span", { id: "ln-sum-heldout" }, "strictly held out (" + a0.strictly_heldout_summary.tasks + "): " +
+        HX.eval.fmt2(a0.strictly_heldout_summary.business_success) + " → " + HX.eval.fmt2(a1.strictly_heldout_summary.business_success))];
   }
 
   /* ---- protected archive */
@@ -621,7 +646,9 @@
           { key: "outcome", label: "Outcome", nowrap: true, fold: true, fold_label: "ends", render: (t) => trace_terminal(t) },
           { key: "records", label: "Records", align: "right", fold: true, fold_label: "records", render: (t) => h("span", { class: "hx-num" }, String(t.records.length)) },
           { key: "verdict", label: "Verdict", fold: true, render: (t) => t.verdict },
-          { key: "digest", label: "Records digest", fold: true, render: (t) => HXUI.digest(HX.traces.records_digest(t), { short: 15, label: "records digest of " + t.trace_id }) },
+          { key: "digest", label: "Records digest", render: (t, i) => HXUI.digest(HX.traces.records_digest(t), { short: 15, label: "records digest of " + t.trace_id, id: "ln-arch-digest-" + i }),
+            /* the folded line gets its own working copy button with a stable id (a clone would have neither) */
+            fold: (t, i) => HXUI.digest(HX.traces.records_digest(t), { short: 15, label: "records digest of " + t.trace_id, id: "ln-arch-digest-fold-" + i }) },
         ],
         rows: prot, empty: "No protected traces yet.",
         row_attrs: (t) => ({ dataset: { trace: t.trace_id } }),
@@ -691,13 +718,12 @@
     } });
     const field = HXUI.field("Development trace", sel, { hint: "" });
     const btn = HXUI.button("Propose update", { id: "ln-propose", variant: "primary", icon: "play", on_click: () => act("propose", () => propose_now(false), paint_all) });
-    const why = h("p", { class: "ln-why", id: "ln-trace-why" });
     const form = h("form", { class: "ln-form", id: "ln-propose-form", on: { submit: (e) => { e.preventDefault(); btn.click(); } } },
-      h("div", { class: "ln-form-row" }, field, h("div", { class: "ln-form-act" }, btn)), why);
+      h("div", { class: "ln-form-row" }, field, h("div", { class: "ln-form-act" }, btn)));
+    /* the trace's explanation is the select's hint, so it stays next to the select it describes */
     function paint_choice() {
       const opt = TRACES.find((t) => t.id === S.choice) || TRACES[0];
-      field.hx.set_hint("Aligner: " + opt.aligner + ". Parent: the active version.");
-      why.replaceChildren(opt.why);
+      field.hx.set_hint(opt.why + " Aligner: " + opt.aligner + "; parent: the active version.");
     }
     const p = panel("propose", "Propose an update", ["Pick a development trace. ", { code: "propose_update" },
       " checks that the trace is intact and eligible, asks the aligner for operations, builds a candidate and runs it through every gate against the stored archive. Nothing is admitted here."], form);
@@ -728,23 +754,31 @@
   function proposal_view(r) {
     const prop = r.prop;
     const env = HXUI.lab.env;
-    let stale = false;
-    try { stale = active(env).hash !== r.parent_hash; } catch (e) { stale = false; }
-    const head = h("div", { class: "ln-result-head", id: "ln-proposal", dataset: { status: prop.status, trace: r.dev.trace_id } },
+    /* where the proposal stands against the store now: its candidate is active (admitted), its parent is
+       still active (admissible), or the pointer moved elsewhere (stale: admitting it ends in CONFLICT) */
+    let now = "parent";
+    try {
+      const a = active(env).hash;
+      if (prop.candidate && a === prop.candidate.artifact_hash) now = "admitted";
+      else if (a !== r.parent_hash) now = "stale";
+    } catch (e) { now = "parent"; }
+    const n_att = prop.attempts.length;
+    const head = h("div", { class: "ln-result-head", id: "ln-proposal", dataset: { status: prop.status, trace: r.dev.trace_id, now } },
       status_chip(prop.status, "ln-proposal-status"),
-      h("p", { class: "ln-verdict" }, VERDICT[prop.status] || ""));
+      now === "admitted" ? with_id(HXUI.chip("Admitted · now active", "ok", { icon: "check" }), "ln-proposal-admitted") : null,
+      h("p", { class: "ln-verdict" }, now === "admitted" ? "Every gate passed, and admission made this candidate the active version." : VERDICT[prop.status] || ""),
+      n_att ? h("span", { class: "ln-sum-note", id: "ln-proposal-attempts" }, plural(n_att, "attempt")) : null);
     const facts = dl([
       ["Trace", h("span", { class: "hx-mono ln-wrap" }, prop.trace_id)],
       ["Parent", [HXUI.digest(r.parent_hash, { short: 19, label: "parent hash", id: "ln-proposal-parent" }), " ", HXUI.chip(r.parent_kind, "neutral")]],
       prop.candidate ? ["Candidate", HXUI.digest(prop.candidate.artifact_hash, { short: 19, label: "candidate hash", id: "ln-proposal-candidate" })] : null,
-      ["Attempts", h("span", { class: "hx-num" }, String(prop.attempts.length))],
     ]);
     const parts = [head, facts];
-    if (stale) parts.push(HXUI.notice("warn", "The active version changed after this proposal", "Its parent is no longer active, so admitting it now ends in CONFLICT. Propose again to rerun the gates against the new parent."));
+    if (now === "stale") parts.push(HXUI.notice("warn", "The active version changed after this proposal", "Its parent is no longer active, so admitting it now ends in CONFLICT. Propose again to rerun the gates against the new parent."));
     if (prop.status === "EXCLUDED") {
       parts.push(h("div", { class: "ln-block" }, h("p", { class: "ln-sub" }, "Why the trace was excluded"),
         h("ul", { class: "ln-list", id: "ln-proposal-diagnostics" }, prop.diagnostics.map((d) => h("li", null, h("span", { class: "hx-mono ln-wrap" }, String(d))))),
-        prop.negative_additions.length ? h("p", { class: "ln-note" }, "Goes to the negative corpus: ", prop.negative_additions.map((t) => tid(t))) : null));
+        prop.negative_additions.length ? h("p", { class: "ln-note", id: "ln-proposal-negative" }, "Would be added to the negative corpus (this section does not store it): ", prop.negative_additions.map((t) => tid(t))) : null));
       return h("div", { class: "ln-result" }, parts);
     }
     if (prop.status === "NO_CHANGE") {
@@ -756,13 +790,24 @@
       return h("div", { class: "ln-result" }, parts);
     }
     if (prop.gates && Object.keys(prop.gates).length) parts.push(gates_table(prop.gates, "ln-gates"));
-    if (prop.status === "CANDIDATE") parts.push(diff_view(prop.diff), candidate_graph(prop.candidate, prop.diff.states_added || [], "ln-prop-graph", "Candidate machine, new states highlighted"));
+    if (prop.status === "CANDIDATE") {
+      parts.push(diff_view(prop.diff), candidate_graph(prop.candidate, { highlight: prop.diff.states_added || [] }, "ln-prop-graph",
+        "Show the candidate machine", "Candidate machine, new states highlighted"));
+    }
     if (prop.status === "REJECTED") {
       parts.push(attempts_view(prop.attempts));
-      parts.push(h("ul", { class: "ln-list" }, prop.diagnostics.map((d) => h("li", null, String(d)))));
+      /* the engine's own diagnostics, minus the line that only repeats the verdict above */
+      const diag = (prop.diagnostics || []).map(String).filter((d) => !/^all candidate attempts failed/i.test(d));
+      if (diag.length) parts.push(h("div", { class: "ln-block", id: "ln-proposal-engine" }, h("p", { class: "ln-sub" }, "Engine diagnostics"),
+        h("ul", { class: "ln-list" }, diag.map((d) => h("li", null, h("span", { class: "hx-mono ln-wrap" }, d))))));
     }
     if (prop.requires_review && prop.requires_review.length) parts.push(HXUI.notice("warn", "Needs review", prop.requires_review.join("; ")));
     return h("div", { class: "ln-result" }, parts);
+  }
+
+  /** the engine mirrors Python's messages, which print lists of names as ['a', 'b']: show them as a, b */
+  function plain_lists(msg) {
+    return String(msg).replace(/\[((?:'[^'\]]*'(?:, )?)+)\]/g, (m, inner) => inner.split(/, (?=')/).map((x) => x.slice(1, -1)).join(", "));
   }
 
   function gate_detail(key, g) {
@@ -771,7 +816,7 @@
     if (key === "static_validation") {
       if (!g.findings.length) return "validate_package found no errors.";
       return h("div", { class: "ln-findings" }, g.findings.map((f) => h("div", { class: "ln-finding" },
-        HXUI.chip(f.code, "crit", { mono: true }), " ", h("span", null, f.message),
+        HXUI.chip(f.code, "crit", { mono: true }), " ", h("span", null, plain_lists(f.message)),
         f.detail && Array.isArray(f.detail.path) ? h("div", { class: "ln-path" }, h("span", { class: "hx-label" }, "Counterexample "), chain(f.detail.path)) : null)));
     }
     if (key === "new_trace_replay") {
@@ -793,11 +838,15 @@
     return "";
   }
 
+  function gates_chip(gates) {
+    return HXUI.chip(gates.passed ? "All gates passed" : "Gates failed", gates.passed ? "ok" : "crit", { icon: gates.passed ? "check" : "cross" });
+  }
+
+  /** the gate table; with no_title the caller shows the heading and gates_chip() in its own row */
   function gates_table(gates, id, no_title) {
     const rows = GATES.map((g) => ({ key: g.key, label: g.label, gate: gates[g.key] }));
     const wrap = h("div", { class: "ln-block", id, dataset: { passed: String(!!gates.passed) } },
-      h("div", { class: "ln-sub-row" }, no_title ? h("span") : h("p", { class: "ln-sub" }, "Gates"),
-        HXUI.chip(gates.passed ? "All gates passed" : "Gates failed", gates.passed ? "ok" : "crit", { icon: gates.passed ? "check" : "cross" })),
+      no_title ? null : h("div", { class: "ln-sub-row" }, h("p", { class: "ln-sub" }, "Gates"), gates_chip(gates)),
       HXUI.table({
         caption: "Gate results", caption_hidden: true, class: "ln-gates-table",
         columns: [
@@ -847,20 +896,42 @@
       }));
   }
 
-  /** a disclosure that draws the machine the first time it opens (the graph measures its container) */
-  function candidate_graph(pkg, highlight, id, title) {
+  /** the transitions a state path takes in a machine, as graph view.update() visits: [{from, to, edge}] */
+  function path_edges(machine, path) {
+    const raw = machine && machine.states;
+    const st = (id) => Array.isArray(raw) ? raw.find((x) => x && x.id === id) : raw ? raw[id] : null;
+    const out = [];
+    for (let i = 0; i + 1 < (path || []).length; i++) {
+      const s = st(path[i]);
+      const k = s && Array.isArray(s.transitions) ? s.transitions.findIndex((t) => t && t.to === path[i + 1]) : -1;
+      out.push({ from: path[i], to: path[i + 1], edge: k >= 0 ? k : null });
+    }
+    return out;
+  }
+
+  /** A disclosure that draws the machine the first time it opens (the graph measures its container).
+      mark: {highlight: [state ids]} or {path: [state ids]} (drawn as numbered steps, the run treatment).
+      The view registers with the panel being painted, which destroys it on its next paint; a disclosure the
+      viewer opened opens again after a repaint. */
+  function candidate_graph(pkg, mark, id, summary, title) {
     if (!HXUI.graph || typeof HXUI.graph.create !== "function") return null;
     const box = h("div", { class: "ln-graph" });
     const det = h("details", { class: "ln-details", id },
-      h("summary", { class: "ln-summary-line" }, title), box);
+      h("summary", { class: "ln-summary-line", id: id + "-toggle" }, summary), box);
+    const owner = cur_panel;
     let view = null;
     det.addEventListener("toggle", () => {
-      if (!det.open || view) return;
+      if (det.open) open_graphs.add(id); else open_graphs.delete(id);
+      if (!det.open || view || !det.isConnected) return;
       try {
         view = HXUI.graph.create(box, pkg.machine, { title, interactions: pkg.contracts ? pkg.contracts.interactions : undefined });
-        view.highlight(highlight || []);
+        if (owner) (owner.views = owner.views || []).push(view);
+        if (mark && Array.isArray(mark.path) && mark.path.length > 1) {
+          view.update({ current: mark.path[mark.path.length - 1], visited: path_edges(pkg.machine, mark.path) });
+        } else view.highlight((mark && mark.highlight) || []);
       } catch (e) { box.replaceChildren(error_notice("The graph could not be drawn", e)); }
     });
+    if (open_graphs.has(id)) det.open = true;
     return det;
   }
 
@@ -911,7 +982,10 @@
       /* race */
       let rwhy = null;
       if (S.busy.race) rwhy = "Racing…";
-      else if (r && r.prop && r.opt.id === "missing-docs" && r.prop.status === "NO_CHANGE" && a && a.hash === r.parent_hash) {
+      else if ((r && r.prop && r.opt.id === "missing-docs" && r.prop.status === "NO_CHANGE" && a && a.hash === r.parent_hash)
+        || (a && a.kind === "refined")) {
+        /* the only refinement this lab admits comes from the missing-documents trace (Admit, a race or the
+           Run workbench's refined machine), so a refined active version already represents it */
         rwhy = "The active version already represents the missing-documents trace, so both proposals would be NO_CHANGE. Reset the lab to race from the initial machine.";
       }
       HXUI.set_disabled(race, !!rwhy, rwhy);
@@ -930,11 +1004,11 @@
 
   function pointer_change(before, after, id) {
     const same = before && after && before[0] === after[0] && before[1] === after[1];
-    const cell = (x) => x ? [HXUI.digest(x[0], { short: 19, label: "version hash" }), h("span", { class: "ln-sum-note" }, " v" + x[1])] : h("span", { class: "hx-faint" }, "none");
+    const cell = (x, which) => x ? [HXUI.digest(x[0], { short: 19, label: which + " version hash", id: id + "-" + which }), h("span", { class: "ln-sum-note" }, " v" + x[1])] : h("span", { class: "hx-faint" }, "none");
     return h("div", { class: "ln-move", id, dataset: { moved: String(!same) } },
-      h("div", { class: "ln-move-cell" }, h("span", { class: "hx-label" }, "Before"), h("span", { class: "ln-move-val" }, cell(before))),
+      h("div", { class: "ln-move-cell" }, h("span", { class: "hx-label" }, "Before"), h("span", { class: "ln-move-val" }, cell(before, "before"))),
       h("span", { class: "ln-move-arrow", "aria-hidden": "true" }, "→"),
-      h("div", { class: "ln-move-cell" }, h("span", { class: "hx-label" }, "After"), h("span", { class: "ln-move-val" }, cell(after))),
+      h("div", { class: "ln-move-cell" }, h("span", { class: "hx-label" }, "After"), h("span", { class: "ln-move-val" }, cell(after, "after"))),
       HXUI.chip(same ? "Pointer unchanged" : "Pointer moved", same ? "neutral" : "accent"));
   }
 
@@ -945,19 +1019,27 @@
     return h("div", { class: "ln-result", id: "ln-admission", dataset: { status: res.status } },
       h("p", { class: "ln-sub" }, "Admission"),
       h("div", { class: "ln-result-head" }, status_chip(res.status, "ln-admission-status"),
-        h("p", { class: "ln-verdict" }, res.status === "ADMITTED" ? "The candidate is the new active version, and the archive now includes its originating trace."
-          : res.status === "CONFLICT" ? "The active version is no longer the expected parent. Nothing changed; rebase and rerun every gate."
+        res.status === "CONFLICT" ? h("p", { class: "ln-verdict", title: (res.reasons || []).join(" ") || null }, CONFLICT_TEXT)
+          : h("p", { class: "ln-verdict" }, res.status === "ADMITTED" ? "The candidate is the new active version, and the archive now includes its originating trace."
             : "Admission refused the candidate. Nothing changed.")),
       dl([
-        ["Candidate", HXUI.digest(x.candidate_hash, { short: 19, label: "candidate hash" })],
-        ["Expected parent", HXUI.digest(x.parent_hash, { short: 19, label: "expected parent hash" })],
+        ["Candidate", HXUI.digest(x.candidate_hash, { short: 19, label: "candidate hash", id: "ln-admission-candidate" })],
+        ["Expected parent", HXUI.digest(x.parent_hash, { short: 19, label: "expected parent hash", id: "ln-admission-parent" })],
         res.archive_version ? ["Archive version", h("span", { class: "hx-num" }, "v" + res.archive_version)] : null,
         rec.key_id ? ["Signed with", [code(rec.key_id), " ", HXUI.chip("demo key", "info")]] : null,
-        rec.signature ? ["Signature", HXUI.digest(rec.signature, { short: 22, label: "admission signature" })] : null,
+        rec.signature ? ["Signature", HXUI.digest(rec.signature, { short: 22, label: "admission signature", id: "ln-admission-signature" })] : null,
         rec.admitted_at ? ["Admitted at", h("span", { class: "hx-mono" }, rec.admitted_at)] : null,
       ]),
-      res.reasons && res.reasons.length ? h("ul", { class: "ln-list" }, res.reasons.map((s) => h("li", null, s))) : null,
+      res.reasons && res.reasons.length && res.status !== "CONFLICT" ? h("ul", { class: "ln-list" }, res.reasons.map((s) => h("li", null, h("span", { class: "ln-wrap" }, s)))) : null,
       pointer_change(x.before, x.after, "ln-admission-pointer"));
+  }
+
+  /** CONFLICT in plain words; the engine's reason (two full hashes) stays in the tooltip, and the
+      Before / After box below shows both versions */
+  const CONFLICT_TEXT = "The active version is no longer the expected parent, so nothing changed: rebase onto the new parent and rerun all gates. Before and After below show both versions.";
+  function conflict_copy(res) {
+    return h("span", { class: "ln-conflict", title: (res.reasons || []).join(" ") || null },
+      "The active version is no longer the expected parent: rebase onto the new parent and rerun all gates.");
   }
 
   function race_view(x) {
@@ -972,9 +1054,11 @@
         caption: "Racing admissions", caption_hidden: true, class: "ln-race-table",
         columns: [
           { key: "label", label: "Proposal", render: (r) => r.label },
-          { key: "cand", label: "Candidate", fold: true, fold_label: "candidate", render: (r) => HXUI.digest(r.prop.candidate.artifact_hash, { short: 15, label: "candidate hash" }) },
+          { key: "cand", label: "Candidate", fold_label: "candidate", render: (r) => HXUI.digest(r.prop.candidate.artifact_hash, { short: 15, label: "candidate hash", id: "ln-race-cand-" + r.id }),
+            fold: (r) => HXUI.digest(r.prop.candidate.artifact_hash, { short: 15, label: "candidate hash", id: "ln-race-cand-fold-" + r.id }) },
           { key: "status", label: "Admission", nowrap: true, render: (r) => status_chip(r.res.status) },
-          { key: "why", label: "Detail", fold: true, render: (r) => r.res.status === "ADMITTED" ? "Active, archive v" + r.res.archive_version + "." : h("span", { class: "ln-wrap" }, (r.res.reasons || []).join(" ")) },
+          { key: "why", label: "Detail", fold: true, render: (r) => r.res.status === "ADMITTED" ? "Active, archive v" + r.res.archive_version + "."
+            : r.res.status === "CONFLICT" ? conflict_copy(r.res) : h("span", { class: "ln-wrap" }, (r.res.reasons || []).join(" ")) },
         ],
         rows: x.rows, row_attrs: (r) => ({ dataset: { race: r.id, status: r.res.status } }),
       }),
@@ -986,8 +1070,8 @@
   /* ---- shortcut */
   function shortcut_panel() {
     const btn = HXUI.button("Check the shortcut again", { id: "ln-sc-run", icon: "reset", on_click: () => act("shortcut", () => shortcut_now(false), paint_all) });
-    const p = panel("shortcut", "Refuse a shortcut", ["The shortcut trace repairs a draft and goes straight to approval. Its eligibility check excludes it; the candidate an unconstrained aligner would build from it (",
-      chain(["REPAIR_DRAFT", "REQUEST_APPROVAL"]), ") is then run through every gate anyway, with the trace in the negative corpus. It is never submitted for admission."],
+    const p = panel("shortcut", "Refuse a shortcut", ["The shortcut trace repairs a draft and goes straight to approval. Its eligibility check excludes it. The candidate an unconstrained aligner would build from it adds the edge ",
+      chain(["REPAIR_DRAFT", "REQUEST_APPROVAL"]), " and is then run through every gate anyway, with the trace in the negative corpus. It is never submitted for admission."],
     h("div", { class: "hx-action-row" }, btn));
     p.paint = () => {
       HXUI.set_disabled(btn, !!S.busy.shortcut || S.init !== "done" && !S.shortcut, S.busy.shortcut ? "Checking…" : "The archive is being prepared.");
@@ -1000,6 +1084,8 @@
       const viol = (x.gates.static_validation.findings || []).filter((f) => f.code === "ORDERING_VIOLATION");
       const path_states = [];
       for (const f of viol) for (const s of (f.detail && f.detail.path) || []) if (path_states.indexOf(s) < 0) path_states.push(s);
+      const first = viol.find((f) => f.detail && Array.isArray(f.detail.path));
+      const path = first ? first.detail.path : [];
       p.body.replaceChildren(h("div", { class: "ln-result", id: "ln-shortcut", dataset: { eligibility: x.p_sc.status, passed: String(!!x.gates.passed), unchanged: String(same) } },
         h("div", { class: "ln-steps" },
           h("div", { class: "ln-step" }, h("p", { class: "ln-sub" }, "1 · Trace eligibility"),
@@ -1011,10 +1097,12 @@
               HXUI.chip(x.parent_kind, x.parent_kind === "refined" ? "accent" : "neutral"),
               x.after ? h("span", { class: "ln-sum-note" }, "archive v" + x.after[1]) : null),
             h("p", { class: "ln-why" }, same ? "The store's active pointer reads the same before and after this check." : "The active pointer moved during this check."))),
-        h("div", { class: "ln-sub-row" }, h("p", { class: "ln-sub" }, "3 · The shortcut candidate, run through every gate anyway"),
-          h("span", { class: "ln-sum-note" }, "with ", tid(x.sc.trace_id), " in the negative corpus")),
+        h("div", { class: "ln-block" },
+          h("div", { class: "ln-sub-row" }, h("p", { class: "ln-sub" }, "3 · The shortcut candidate, run through every gate anyway"), gates_chip(x.gates)),
+          h("p", { class: "ln-why" }, "With ", tid(x.sc.trace_id), " in the negative corpus.")),
         gates_table(x.gates, "ln-sc-gates", true),
-        candidate_graph(x.cand, path_states, "ln-sc-graph", "Shortcut candidate, counterexample path highlighted")));
+        candidate_graph(x.cand, path.length > 1 ? { path } : { highlight: path_states }, "ln-sc-graph", "Show the shortcut candidate",
+          path.length > 1 ? "Shortcut candidate, counterexample drawn as numbered steps" : "Shortcut candidate, counterexample states highlighted")));
     };
     return p;
   }
@@ -1049,10 +1137,13 @@
       }
       HXUI.set_disabled(btn, !!S.busy.eval || S.init !== "done" && !S.evaluation, S.busy.eval ? "Evaluating…" : "Waiting for the other panels.");
       const x = S.evaluation;
-      if (S.busy.eval || !x) { p.meta.replaceChildren(); p.body.replaceChildren(pending(S.busy.eval ? "Running 2 arms of held-out tasks in this page…" : "Queued after the proposal and the shortcut check…")); p.body.dataset.state = "pending"; return; }
+      if (S.busy.eval || !x) { p.meta.replaceChildren(); p.body.replaceChildren(pending(S.busy.eval ? "Running the initial and the refined machine on the held-out tasks in this page…" : "Queued after the proposal and the shortcut check…")); p.body.dataset.state = "pending"; return; }
       if (x.error) { p.body.replaceChildren(error_notice("The evaluation failed", x.error, "Reload the page to try again.")); p.body.dataset.state = "error"; return; }
       p.body.dataset.state = "done";
-      p.meta.replaceChildren(HXUI.chip("2 × " + x.tasks + " tasks", "neutral"), HXUI.chip("Fixture mode", "info"));
+      const n_arms = Object.keys(x.result.arms || {}).length;
+      const mode = String(x.result.mode || "").split(/[\s(]/)[0];
+      p.meta.replaceChildren(HXUI.chip(n_arms + " × " + x.tasks + " tasks", "neutral"),
+        mode ? with_id(HXUI.chip(mode.charAt(0).toUpperCase() + mode.slice(1) + " mode", "info", { title: x.result.mode }), "ln-eval-mode") : null);
       p.body.replaceChildren(eval_view(x));
     };
     return p;
@@ -1085,11 +1176,11 @@
       r.human_interactions ? h("span", { class: "ln-sum-note" }, plural(r.human_interactions, "interaction")) : null);
     const held = a0.strictly_heldout_summary;
     return h("div", { class: "ln-result", id: "ln-eval", dataset: { tasks: String(x.tasks) } },
-      h("p", { class: "ln-timing", id: "ln-eval-timing" }, "Ran 2 × " + x.tasks + " tasks in " + ms_text(x.ms) + " in this page. Deterministic fixtures: a rerun gives the same numbers."),
+      h("p", { class: "ln-timing", id: "ln-eval-timing" }, "Ran " + Object.keys(res.arms).length + " × " + x.tasks + " tasks in " + ms_text(x.ms) + " in this page. Deterministic fixtures: a rerun gives the same numbers."),
       dl([
-        ["Initial", [HXUI.digest(res.artifacts.initial, { short: 19, label: "initial artifact hash" }), " ", parity(res.artifacts.initial, pb && pb.initial_artifact_hash)]],
-        ["Trace-refined", [HXUI.digest(res.artifacts.refined, { short: 19, label: "refined artifact hash" }), " ", parity(res.artifacts.refined, pb && pb.refined_artifact_hash)]],
-        ["Task set", HXUI.digest(res.task_set_digest, { short: 19, label: "task set digest" })],
+        ["Initial", [HXUI.digest(res.artifacts.initial, { short: 19, label: "initial artifact hash", id: "ln-eval-initial" }), " ", parity(res.artifacts.initial, pb && pb.initial_artifact_hash)]],
+        ["Trace-refined", [HXUI.digest(res.artifacts.refined, { short: 19, label: "refined artifact hash", id: "ln-eval-refined" }), " ", parity(res.artifacts.refined, pb && pb.refined_artifact_hash)]],
+        ["Task set", HXUI.digest(res.task_set_digest, { short: 19, label: "task set digest", id: "ln-eval-taskset" })],
       ]),
       h("div", { class: "ln-block", id: "ln-eval-summary" }, h("p", { class: "ln-sub" }, "All " + x.tasks + " tasks"),
         metric_table(METRICS, a0.summary, a1.summary, "Summary over all tasks", "ln-eval-summary")),
@@ -1102,7 +1193,7 @@
         HXUI.table({
           caption: "Per-task results", caption_hidden: true, class: "ln-tasks-table",
           columns: [
-            { key: "task", label: "Task", render: (r) => h("span", { class: "hx-mono ln-wrap" }, r.task) },
+            { key: "task", label: "Task", nowrap: true, render: (r) => h("span", { class: "hx-mono" }, r.task) },
             { key: "expected", label: "Expected", nowrap: true, fold: true, fold_label: "expects", render: (r) => r.expected },
             { key: "initial", label: "Initial", fold: true, fold_label: "initial", render: outcome },
             { key: "refined", label: "Trace-refined", fold: true, fold_label: "refined", render: (r) => by_task[r.task] ? outcome(by_task[r.task]) : "–" },
@@ -1112,8 +1203,19 @@
           ],
           rows: a0.rows, row_attrs: (r) => ({ dataset: { task: r.task, overlap: ov[r.task] ? "yes" : "no" } }),
         })),
-      h("div", { class: "ln-notrun", id: "ln-eval-notrun" }, HXUI.chip("Not run", "neutral"),
-        h("p", null, "Direct prompting baseline (skill prompt + ReAct): it needs a live model, and this page has none. These numbers describe deterministic fixture behavior, not model quality.")));
+      not_run_view(res));
+  }
+
+  const NOT_RUN_LABELS = { direct_skill_prompting_react: "Direct prompting baseline (skill prompt + ReAct)" };
+  /** the arms the engine reports as not run (result.not_run, else HX.eval.NOT_RUN), each with the engine's reason */
+  function not_run_view(res) {
+    const nr = res.not_run || HX.eval.NOT_RUN || {};
+    const keys = Object.keys(nr);
+    if (!keys.length) return null;
+    return h("div", { class: "ln-notrun", id: "ln-eval-notrun" }, HXUI.chip("Not run", "neutral"),
+      h("div", { class: "ln-notrun-body" }, keys.map((k) => h("p", { dataset: { arm: k } },
+        NOT_RUN_LABELS[k] || k, ": it needs a live model, and this page has none ", h("span", { class: "hx-faint" }, "(engine: " + nr[k] + ")"), ".")),
+        h("p", null, "These numbers describe deterministic fixture behavior, not model quality.")));
   }
 
   /* ---------------------------------------------------------------- wiring */

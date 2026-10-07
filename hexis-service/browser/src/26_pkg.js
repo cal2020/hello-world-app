@@ -394,6 +394,17 @@
   const ascii_letter = (c) => /^[A-Za-z]$/.test(c);
   const is_alpha = (c) => /^\p{L}$/u.test(c);
   const repr = (v) => HX.util.py_repr(v);
+  const plen = (t) => Array.from(t).length; /* Python len() of a str: code points */
+  /** re.error(msg, pattern, pos): "msg at position N", plus " (line L, column C)" when the pattern has a newline. */
+  function re_error(msg, cps, pos) {
+    let out = msg + " at position " + pos;
+    if (cps.indexOf("\n") >= 0) {
+      let line = 1, last = -1;
+      for (let k = 0; k < pos && k < cps.length; k++) if (cps[k] === "\n") { line++; last = k; }
+      out += " (line " + line + ", column " + (pos - last) + ")";
+    }
+    return new PyReError(out);
+  }
 
   /** re/_parser.py Tokenizer over code points. A token is one code point or a backslash pair. */
   class ReTokenizer {
@@ -416,7 +427,7 @@
       if (ch === "\\") {
         index += 1;
         if (index >= this.cps.length) {
-          throw new PyReError("bad escape (end of pattern) at position " + (this.cps.length - 1));
+          throw re_error("bad escape (end of pattern)", this.cps, this.cps.length - 1);
         }
         ch += this.cps[index];
         n = 2;
@@ -454,10 +465,10 @@
         this._advance();
         if (c === null) {
           if (!out) throw this.error("missing " + name);
-          throw this.error("missing " + terminator + ", unterminated name");
+          throw this.error("missing " + terminator + ", unterminated name", plen(out));
         }
         if (c === terminator) {
-          if (!out) throw this.error("missing " + name);
+          if (!out) throw this.error("missing " + name, 1);
           break;
         }
         out += c;
@@ -471,12 +482,15 @@
       this.index = index;
       this._advance();
     }
-    error(msg) {
-      return new PyReError(msg + " at position " + this.tell());
+    /** Python ``Tokenizer.error(msg, offset)``: the position is ``tell() - offset``. */
+    error(msg, offset) {
+      return re_error(msg, this.cps, this.tell() - (offset || 0));
     }
-    checkgroupname(name) {
+    checkgroupname(name, offset) {
       /* Python: str.isidentifier(); the port accepts ASCII identifiers only (stricter) */
-      if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) throw this.error("bad character in group name " + repr(name));
+      if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) {
+        throw this.error("bad character in group name " + repr(name), plen(name) + offset);
+      }
     }
   }
 
@@ -498,7 +512,7 @@
       if (name !== null) {
         if (this.groupdict.has(name)) {
           throw src.error("redefinition of group name " + repr(name) + " as group " + gid + "; was group " +
-            this.groupdict.get(name));
+            this.groupdict.get(name), plen(name) + 1);
         }
         this.groupdict.set(name, gid);
       }
@@ -583,7 +597,8 @@
 
   function re_int(digits) {
     if (digits.length > PY_RE.MAX_STR_DIGITS) {
-      throw new PyReError("Exceeds the limit (4300 digits) for integer string conversion", "ValueError");
+      throw new PyReError("Exceeds the limit (4300 digits) for integer string conversion: value has " + digits.length +
+        " digits; use sys.set_int_max_str_digits() to increase the limit", "ValueError");
     }
     return Number(digits); /* exact below 2^53; larger values only ever compare >= MAXREPEAT / MAXGROUPS */
   }
@@ -591,12 +606,12 @@
   function re_hex_escape(src, esc, c) {
     const n = c === "x" ? 2 : c === "u" ? 4 : 8;
     esc += src.getwhile(n, RE_HEX);
-    if (esc.length !== n + 2) throw src.error("incomplete escape " + esc);
+    if (esc.length !== n + 2) throw src.error("incomplete escape " + esc, plen(esc));
     const v = parseInt(esc.slice(2), 16);
     if (c === "U" && v > 0x10ffff) {
       /* chr(c): ValueError (caught: "bad escape") up to INT_MAX, OverflowError (escapes) above */
       if (v > 0x7fffffff) throw new PyReError("Python int too large to convert to C int", "OverflowError");
-      throw src.error("bad escape " + esc);
+      throw src.error("bad escape " + esc, plen(esc));
     }
     return ["LITERAL", v];
   }
@@ -607,14 +622,14 @@
     if (hasOwn(RE_CATEGORIES, esc) && RE_CATEGORIES[esc] === "IN") return ["IN"];
     const c = esc.slice(1);
     if (c === "x" || c === "u" || c === "U") return re_hex_escape(src, esc, c);
-    if (c === "N") throw src.error("bad escape " + esc + " (named Unicode escapes are not supported by the JS port)");
+    if (c === "N") throw src.error("bad escape " + esc + " (named Unicode escapes are not supported by the JS port)", plen(esc));
     if (tin(c, RE_OCT)) {
       esc += src.getwhile(2, RE_OCT);
       const v = parseInt(esc.slice(1), 8);
-      if (v > 0o377) throw src.error("octal escape value " + esc + " outside of range 0-0o377");
+      if (v > 0o377) throw src.error("octal escape value " + esc + " outside of range 0-0o377", plen(esc));
       return ["LITERAL", v];
     }
-    if (tin(c, RE_DIGITS) || ascii_letter(c)) throw src.error("bad escape " + esc);
+    if (tin(c, RE_DIGITS) || ascii_letter(c)) throw src.error("bad escape " + esc, plen(esc));
     return ["LITERAL", c.codePointAt(0)];
   }
 
@@ -624,7 +639,7 @@
     if (hasOwn(RE_ESCAPES, esc)) return ["LITERAL", RE_ESCAPES[esc]];
     const c = esc.slice(1);
     if (c === "x" || c === "u" || c === "U") return re_hex_escape(src, esc, c);
-    if (c === "N") throw src.error("bad escape " + esc + " (named Unicode escapes are not supported by the JS port)");
+    if (c === "N") throw src.error("bad escape " + esc + " (named Unicode escapes are not supported by the JS port)", plen(esc));
     if (c === "0") {
       esc += src.getwhile(2, RE_OCT);
       return ["LITERAL", parseInt(esc.slice(1), 8)];
@@ -636,19 +651,19 @@
         if (tin(esc[1], RE_OCT) && tin(esc[2], RE_OCT) && tin(src.next, RE_OCT)) {
           esc += src.get();
           const v = parseInt(esc.slice(1), 8);
-          if (v > 0o377) throw src.error("octal escape value " + esc + " outside of range 0-0o377");
+          if (v > 0o377) throw src.error("octal escape value " + esc + " outside of range 0-0o377", plen(esc));
           return ["LITERAL", v];
         }
       }
       const group = parseInt(esc.slice(1), 10);
       if (group < state.groups) {
-        if (!state.checkgroup(group)) throw src.error("cannot refer to an open group");
+        if (!state.checkgroup(group)) throw src.error("cannot refer to an open group", plen(esc));
         state.checklookbehindgroup(group, src);
         return ["GROUPREF", group];
       }
-      throw src.error("invalid group reference " + group);
+      throw src.error("invalid group reference " + group, plen(esc) - 1);
     }
-    if (ascii_letter(c)) throw src.error("bad escape " + esc);
+    if (ascii_letter(c)) throw src.error("bad escape " + esc, plen(esc));
     return ["LITERAL", c.codePointAt(0)];
   }
 
@@ -686,18 +701,18 @@
         ch = src.get();
         if (ch === null) throw src.error("missing -, : or )");
         if (tin(ch, ")-:")) break;
-        if (!is_flag_char(ch)) throw src.error(is_alpha(ch) ? "unknown flag" : "missing -, : or )");
+        if (!is_flag_char(ch)) throw src.error(is_alpha(ch) ? "unknown flag" : "missing -, : or )", plen(ch));
       }
     }
     if (ch === ")") {
       state.flags |= add;
       return null;
     }
-    if (add & RE_GLOBAL_FLAGS) throw src.error("bad inline flags: cannot turn on global flag");
+    if (add & RE_GLOBAL_FLAGS) throw src.error("bad inline flags: cannot turn on global flag", 1);
     if (ch === "-") {
       ch = src.get();
       if (ch === null) throw src.error("missing flag");
-      if (!is_flag_char(ch)) throw src.error(is_alpha(ch) ? "unknown flag" : "missing flag");
+      if (!is_flag_char(ch)) throw src.error(is_alpha(ch) ? "unknown flag" : "missing flag", plen(ch));
       while (true) {
         const flag = RE_FLAGS[ch];
         if (flag & RE_TYPE_FLAGS) throw src.error("bad inline flags: cannot turn off flags 'a', 'u' and 'L'");
@@ -705,11 +720,11 @@
         ch = src.get();
         if (ch === null) throw src.error("missing :");
         if (ch === ":") break;
-        if (!is_flag_char(ch)) throw src.error(is_alpha(ch) ? "unknown flag" : "missing :");
+        if (!is_flag_char(ch)) throw src.error(is_alpha(ch) ? "unknown flag" : "missing :", plen(ch));
       }
     }
-    if (del & RE_GLOBAL_FLAGS) throw src.error("bad inline flags: cannot turn off global flag");
-    if (add & del) throw src.error("bad inline flags: flag turned on and off");
+    if (del & RE_GLOBAL_FLAGS) throw src.error("bad inline flags: cannot turn off global flag", 1);
+    if (add & del) throw src.error("bad inline flags: flag turned on and off", 1);
     return [add, del];
   }
 
@@ -739,25 +754,26 @@
         data.push(["LITERAL", tok.codePointAt(0)]);
       } else if (tok === "[") {
         /* character set; its NOT_LITERAL/LITERAL/IN result is one unit of width */
+        const here = src.tell() - 1;
         let set = 0;
         src.match("^");
         while (true) {
           const t = src.get();
-          if (t === null) throw src.error("unterminated character set");
+          if (t === null) throw src.error("unterminated character set", src.tell() - here);
           let code1;
           if (t === "]" && set) break;
           else if (t[0] === "\\") code1 = re_class_escape(src, t);
           else code1 = ["LITERAL", t.codePointAt(0)];
           if (src.match("-")) {
             const that = src.get();
-            if (that === null) throw src.error("unterminated character set");
+            if (that === null) throw src.error("unterminated character set", src.tell() - here);
             if (that === "]") {
               set += 2;
               break;
             }
             const code2 = that[0] === "\\" ? re_class_escape(src, that) : ["LITERAL", that.codePointAt(0)];
             if (code1[0] !== "LITERAL" || code2[0] !== "LITERAL" || code2[1] < code1[1]) {
-              throw src.error("bad character range " + t + "-" + that);
+              throw src.error("bad character range " + t + "-" + that, plen(t) + 1 + plen(that));
             }
           }
           set += 1;
@@ -802,12 +818,12 @@
           if (hi) {
             max = re_int(hi);
             if (max >= PY_RE.MAXREPEAT) throw new PyReError("the repetition number is too large", "OverflowError");
-            if (max < min) throw src.error("min repeat greater than max repeat");
+            if (max < min) throw src.error("min repeat greater than max repeat", src.tell() - here);
           }
         }
         const last = data.length ? data[data.length - 1] : null;
-        if (last === null || last[0] === "AT") throw src.error("nothing to repeat");
-        if (RE_REPEAT_OPS.indexOf(last[0]) >= 0) throw src.error("multiple repeat");
+        if (last === null || last[0] === "AT") throw src.error("nothing to repeat", src.tell() - here + plen(tok));
+        if (RE_REPEAT_OPS.indexOf(last[0]) >= 0) throw src.error("multiple repeat", src.tell() - here + plen(tok));
         let item = new ReSubPattern(state, [last]);
         if (last[0] === "SUBPATTERN" && last[1] === null && !last[2] && !last[3]) item = last[4];
         let op = "MAX_REPEAT";
@@ -817,6 +833,7 @@
       } else if (tok === ".") {
         data.push(["ANY"]);
       } else if (tok === "(") {
+        const start = src.tell() - 1;
         let capture = true, atomic = false, name = null, add_flags = 0, del_flags = 0;
         if (src.match("?")) {
           let ch = src.get();
@@ -824,26 +841,26 @@
           if (ch === "P") {
             if (src.match("<")) {
               name = src.getuntil(">", "group name");
-              src.checkgroupname(name);
+              src.checkgroupname(name, 1);
             } else if (src.match("=")) {
               name = src.getuntil(")", "group name");
-              src.checkgroupname(name);
+              src.checkgroupname(name, 1);
               const gid = state.groupdict.has(name) ? state.groupdict.get(name) : null;
-              if (gid === null) throw src.error("unknown group name " + repr(name));
-              if (!state.checkgroup(gid)) throw src.error("cannot refer to an open group");
+              if (gid === null) throw src.error("unknown group name " + repr(name), plen(name) + 1);
+              if (!state.checkgroup(gid)) throw src.error("cannot refer to an open group", plen(name) + 1);
               state.checklookbehindgroup(gid, src);
               data.push(["GROUPREF", gid]);
               continue;
             } else {
               ch = src.get();
               if (ch === null) throw src.error("unexpected end of pattern");
-              throw src.error("unknown extension ?P" + ch);
+              throw src.error("unknown extension ?P" + ch, plen(ch) + 2);
             }
           } else if (ch === ":") {
             capture = false;
           } else if (ch === "#") {
             while (true) {
-              if (src.next === null) throw src.error("missing ), unterminated comment");
+              if (src.next === null) throw src.error("missing ), unterminated comment", src.tell() - start);
               if (src.get() === ")") break;
             }
             continue;
@@ -852,14 +869,14 @@
             if (ch === "<") {
               ch = src.get();
               if (ch === null) throw src.error("unexpected end of pattern");
-              if (!tin(ch, "=!")) throw src.error("unknown extension ?<" + ch);
+              if (!tin(ch, "=!")) throw src.error("unknown extension ?<" + ch, plen(ch) + 2);
               dir = -1;
               outer_lookbehind = state.lookbehindgroups;
               if (outer_lookbehind === null) state.lookbehindgroups = state.groups;
             }
             const p = re_parse_sub(src, state, verbose, nested + 1, depth + 1);
             if (dir < 0 && outer_lookbehind === null) state.lookbehindgroups = null;
-            if (!src.match(")")) throw src.error("missing ), unterminated subpattern");
+            if (!src.match(")")) throw src.error("missing ), unterminated subpattern", src.tell() - start);
             data.push([ch === "=" ? "ASSERT" : "ASSERT_NOT", dir, p]);
             continue;
           } else if (ch === "(") {
@@ -867,13 +884,13 @@
             const condname = src.getuntil(")", "group name");
             let condgroup;
             if (!/^[0-9]+$/.test(condname)) {
-              src.checkgroupname(condname);
+              src.checkgroupname(condname, 1);
               condgroup = state.groupdict.has(condname) ? state.groupdict.get(condname) : null;
-              if (condgroup === null) throw src.error("unknown group name " + repr(condname));
+              if (condgroup === null) throw src.error("unknown group name " + repr(condname), plen(condname) + 1);
             } else {
               condgroup = re_int(condname);
-              if (!condgroup) throw src.error("bad group number");
-              if (condgroup >= PY_RE.MAXGROUPS) throw src.error("invalid group reference " + condname);
+              if (!condgroup) throw src.error("bad group number", plen(condname) + 1);
+              if (condgroup >= PY_RE.MAXGROUPS) throw src.error("invalid group reference " + condname.replace(/^0+(?=[0-9])/, ""), plen(condname) + 1);
               if (!state.grouprefpos.has(condgroup)) state.grouprefpos.set(condgroup, src.tell() - condname.length - 1);
             }
             state.checklookbehindgroup(condgroup, src);
@@ -883,7 +900,7 @@
               item_no = re_parse(src, state, verbose, nested + 1, false, depth + 1);
               if (src.next === "|") throw src.error("conditional backref with more than two branches");
             }
-            if (!src.match(")")) throw src.error("missing ), unterminated subpattern");
+            if (!src.match(")")) throw src.error("missing ), unterminated subpattern", src.tell() - start);
             data.push(["GROUPREF_EXISTS", condgroup, item_yes, item_no]);
             continue;
           } else if (ch === ">") {
@@ -892,7 +909,7 @@
           } else if (is_flag_char(ch) || ch === "-") {
             const flags = re_parse_flags(src, state, ch);
             if (flags === null) {
-              if (!first || data.length) throw src.error("global flags not at the start of the expression");
+              if (!first || data.length) throw src.error("global flags not at the start of the expression", src.tell() - start);
               verbose = state.flags & RE_F.VERBOSE;
               continue;
             }
@@ -900,13 +917,13 @@
             del_flags = flags[1];
             capture = false;
           } else {
-            throw src.error("unknown extension ?" + ch);
+            throw src.error("unknown extension ?" + ch, plen(ch) + 1);
           }
         }
         const group = capture ? state.opengroup(name, src) : null;
         const sub_verbose = (verbose || (add_flags & RE_F.VERBOSE)) && !(del_flags & RE_F.VERBOSE);
         const p = re_parse_sub(src, state, sub_verbose, nested + 1, depth + 1);
-        if (!src.match(")")) throw src.error("missing ), unterminated subpattern");
+        if (!src.match(")")) throw src.error("missing ), unterminated subpattern", src.tell() - start);
         if (group !== null) state.closegroup(group, p);
         if (atomic) data.push(["ATOMIC_GROUP", p]);
         else data.push(["SUBPATTERN", group, add_flags, del_flags, p]);
@@ -959,7 +976,7 @@
       else if (state.flags & RE_F.UNICODE) throw new PyReError("ASCII and UNICODE flags are incompatible", "ValueError");
       if (src.next !== null) throw src.error("unbalanced parenthesis");
       for (const [g, pos] of state.grouprefpos) {
-        if (g >= state.groups) throw new PyReError("invalid group reference " + g + " at position " + pos);
+        if (g >= state.groups) throw re_error("invalid group reference " + g, src.cps, pos);
       }
       re_compile_check(p.data, state.flags);
       return null;

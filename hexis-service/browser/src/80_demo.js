@@ -80,7 +80,9 @@
   class Demo {
     constructor(opts) {
       const o = opts || {};
-      const scenario = o.scenario === undefined || o.scenario === null ? "full" : String(o.scenario);
+      /* Python's default applies only when the argument is omitted: run_demo(scenario=None) records None and, like
+         any value outside FAULT_SCENARIOS, injects no fault (``scenario in (...)`` compares with ==) */
+      const scenario = o.scenario === undefined ? "full" : o.scenario;
       this.scenario = scenario;
       this.fault = demo.FAULT_SCENARIOS.indexOf(scenario) >= 0;
       this.steps = STEPS.map(([id, title]) => ({ id, title: id === "4" && !this.fault ? NO_FAULT_TITLE_4 : title }));

@@ -151,6 +151,21 @@
     assert.equal(new FK.SupplierRegistry({ nobar: { business_unit: "B" } }).lookup({ supplier_ref: "SUP-1", business_unit: "B" },
       { tenant_id: "acme" }).status, "new");
     assert.throws(() => new FK.SupplierRegistry([[{ x: 1 }, 1]]), (e) => e.code === "TypeError" && /unhashable/.test(e.message));
+    /* non-str tuple parts match with Python == (verified against Python 3.12: all exists_compatible), and a str key
+       with "|" in the list-of-pairs form stays a str (Python: new) */
+    const BN = { business_unit: "BU-NA" };
+    const st = (recs, tenant, ref) => new FK.SupplierRegistry(recs).lookup({ supplier_ref: ref, business_unit: "BU-NA" }, { tenant_id: tenant }).status;
+    assert.equal(st([[["acme", 5], BN]], "acme", 5), "exists_compatible");
+    assert.equal(st([[[5, "R"], BN]], 5, "R"), "exists_compatible");
+    assert.equal(st([[["acme", null], BN]], "acme", null), "exists_compatible");
+    assert.equal(st([[["acme", 1], BN]], "acme", true), "exists_compatible");
+    assert.equal(st([["acme|R", BN]], "acme", "R"), "new");
+    /* the object form keeps the "t|r" convention, and a records Map round-trips */
+    assert.equal(st({ "acme|R": BN }, "acme", "R"), "exists_compatible");
+    const rt = new FK.SupplierRegistry([[["acme", 5], BN], [["a|b", "c"], BN], ["k|v", BN]]);
+    assert.equal(st(rt.records, "acme", 5), "exists_compatible");
+    assert.equal(st(rt.records, "a|b", "c"), "exists_compatible");
+    assert.equal(st(rt.records, "k", "v"), "new");
   });
 
   test("documented (models.md): integer-like free-form keys reorder validate_draft issues, which changes downstream digests", () => {

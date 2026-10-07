@@ -126,7 +126,8 @@
     }
     if (n.fail) return { tone: "crit", icon: "stop", text: plural(n.fail, "check failed", "checks failed") + ". Each failure below shows its assertion." };
     if (n.skip && !n.pass) return { tone: "neutral", icon: "info", text: "No check could run in this build." };
-    return { tone: "ok", icon: "check", text: n.skip ? "Every check that could run passed." : "All " + n.total + " checks passed." };
+    return { tone: "ok", icon: "check", text: n.skip ? "Every check that could run passed." : "All " + n.total + " checks passed.",
+      sub: n.skip ? plural(n.skip, "check needs", "checks need") + " parts of the engine that are not in this build." : null };
   }
 
   function summary_block() {
@@ -150,6 +151,7 @@
         : ["Ran ", plural(n.total, "check", "checks"), " in this page in ", ms_text(total_ms), " (", ms_text(S.engine_ms), " of engine time; the rest is yielding to the page between checks)."]);
     return h("div", { class: "st-summary" },
       h("p", { class: ["st-headline", "hx-tone-" + hl.tone] }, hl.icon ? HXUI.icon(hl.icon) : h("span", { class: "st-spinner", "aria-hidden": "true" }), h("span", null, hl.text)),
+      hl.sub ? h("p", { class: "st-headline-sub" }, hl.sub) : null,
       meter,
       h("div", { class: "st-chips" }, chips),
       timing);

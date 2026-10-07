@@ -127,7 +127,9 @@ Representation note (not a behavior change): the typed maps above, and `HX.efsm.
   `re/_compiler.py` makes on the parsed tree (fixed-width look-behind, "looks too much behind", template flag) and
   `fix_flags`. It returns `null` or `{kind, message}`, where `kind` is the Python exception class (`error` for
   `re.error`, `OverflowError` for repeat bounds >= 4294967295 or `\U` values above 2^31-1, `ValueError` for digit
-  strings beyond 4300 digits or `(?a)(?u)`). It reproduces empty classes (`[]`, `[^]`), `\c` escapes, references to
+  strings beyond 4300 digits or `(?a)(?u)`), and `message` is Python's `str(exc)` including the position (code point
+  index, with Python's per-error offsets) and, for a multi-line pattern, `(line L, column C)`; golden `models_regex`
+  compares the message of every rejected pattern outside the stricter classes below. It reproduces empty classes (`[]`, `[^]`), `\c` escapes, references to
   undefined or still-open groups, references inside a look-behind to its own groups, variable look-behind widths
   (also through groups, alternations, repeats, conditionals and references), repeat-bound overflow, flags, verbose
   mode, conditionals, atomic groups and possessive repeats. A schema regex is accepted only if this check passes
@@ -165,14 +167,19 @@ Representation note (not a behavior change): the typed maps above, and `HX.efsm.
 
 * `DEFAULT_REGISTRY` tuple keys `(tenant, ref)` become `"tenant|ref"` strings, split at the first `|`.
   `SupplierRegistry.records` is a `Map` keyed that way. The constructor also accepts `[[tenant, ref], record]`
-  entries (a JS array stands for a Python tuple). Like Python's `dict()`, it accepts **any hashable key**: a pair
-  whose tenant contains `|` is kept under an internal key and matches exactly that tenant (`[["a|b", "c"], rec]`
-  matches tenant `"a|b"`, ref `"c"`, as in Python), and a key that is not a `(tenant, ref)` pair (an object key or
-  string without `|`, a number, `null`, a tuple of another length, the characters of a 2-character string element)
-  is stored but never matches, as Python's `(tenant, ref)` lookup never hits it. A dict key is `TypeError` "unhashable
-  type: 'dict'". The only convention that differs from Python is the object form: a plain-object key `"t|r"` stands
-  for the tuple `("t", "r")` (Python's dict would hold the string). Test: `55_fakes` "SupplierRegistry.lookup …"
-  (golden `registry`).
+  entries (a JS array stands for a Python tuple). Like Python's `dict()`, it accepts **any hashable key**, and lookup
+  of `(tenant_id, supplier_ref)` uses Python equality: tuple parts need not be strings (`[["acme", 5], rec]` matches
+  ref `5`, `[[5, "R"], rec]` tenant `5`, `[["acme", null], rec]` ref `null`, `[["acme", 1], rec]` ref `true`, since
+  `True == 1`), a pair whose tenant contains `|` matches exactly that tenant (`[["a|b", "c"], rec]` matches tenant
+  `"a|b"`, ref `"c"`), and a key that is not a 2-tuple (a str, a number, `null`, a tuple of another length, the
+  characters of a 2-character string element) is stored but never matches. In the list-of-pairs form a str key stays
+  a str even when it contains `|` (`[["acme|R", rec]]` does not match tenant `"acme"`, ref `"R"`, as in Python). Such
+  keys live in `records` under an internal encoding (`"\u0000"` + a Python-equality key); passing a `records` Map back
+  to the constructor round-trips them. A dict key is `TypeError` "unhashable type: 'dict'". The only convention that
+  differs from Python is the object form (and a `Map` with `"t|r"` keys): a str key `"t|r"` stands for the tuple
+  `("t", "r")` (Python's dict would hold the string), and since JS object keys are strings, it cannot express a tuple
+  with non-str parts. An int key part beyond 2^53 is rounded like any JS number. Test: `55_fakes` "SupplierRegistry.lookup …"
+  (golden `registry` plus direct cases; a 6,000-case random key fuzz against Python 3.12 gave 0 mismatches).
 * `SupplierRegistry.lookup` returns a **copy** of the stored record, where Python returns the stored dict itself.
   The result is the same, and the copy keeps registry state from aliasing into run variables.
 * `SupplierRegistry(records)` is `dict(records or DEFAULT_REGISTRY)` with Python truthiness (`0`, `""`, `[]`, `false`

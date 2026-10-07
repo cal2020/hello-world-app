@@ -33,7 +33,9 @@
     }
   }
 
-  for (const sc of ["full", "timeout-after-commit", "no-fault"]) {
+  for (const sc of ["full", "timeout-after-commit", "no-fault", null]) {
+    /* null: Python's run_demo(scenario=None) records None and injects no fault (only an omitted argument is "full") */
+    const faulty = sc === "full" || sc === "timeout-after-commit";
     test("demo: scenario " + sc + " step lines, summary, artifacts, timer/id draws equal Python's", () => {
       const want = G().scenarios.find((s) => s.scenario === sc);
       assert.ok(want, "golden scenario " + sc);
@@ -55,7 +57,7 @@
       /* headings: the step's own heading starts its lines (step 4 has none without a fault) */
       for (const r of results) {
         const m = r.lines.length ? HEAD_RE.exec(r.lines[0]) : null;
-        if (r.id === "4" && sc === "no-fault") assert.equal(m, null);
+        if (r.id === "4" && !faulty) assert.equal(m, null);
         else assert.equal(m && m[1], r.id, "heading of step " + r.id);
       }
       /* summary (returned and as summary.json), artifacts */
@@ -73,7 +75,7 @@
       assert.equal(d.ctx.pkg.artifact_hash, HX.data.python_build.initial_artifact_hash);
       assert.equal(d.ctx.refined.artifact_hash, HX.data.python_build.refined_artifact_hash);
       assert.equal(results[0].facts.admission, "ADMITTED");
-      assert.equal(results[3].facts.fault_injected, sc !== "no-fault");
+      assert.equal(results[3].facts.fault_injected, faulty);
       assert.deepEqual(results[3].facts.reconciliation_events, want.summary.steps.run.reconciliation_events);
       assert.equal(results[6].facts.active_unchanged, true);
       assert.deepEqual(results[6].facts.violations.map((v) => v.path[v.path.length - 1]), ["PERSIST_DRAFT", "REQUEST_APPROVAL"]);
