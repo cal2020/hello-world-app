@@ -2060,6 +2060,74 @@ kbd {
   scroll-behavior: auto !important;
 }
 
+/* Prerendered page (no JavaScript, or before the app mounts). */
+.static-page {
+  padding: max(20px, var(--safe-top)) 16px 48px;
+}
+
+.static-page .atlas-header {
+  margin: 0 0 18px;
+}
+
+.static-brand {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+}
+
+.static-brand a {
+  color: var(--text-1);
+  text-decoration: none;
+}
+
+.static-brand span {
+  color: var(--text-3);
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
+}
+
+.static-note {
+  margin: 0 0 10px;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+
+.static-languages ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-sm);
+}
+
+.static-languages a[aria-current='page'] {
+  color: var(--text-1);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.static-page main .entry-preview {
+  display: block;
+  width: min(240px, 60vw);
+  margin: 22px auto 0;
+}
+
+.static-prev-next {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px 18px;
+  padding: 0 26px 24px;
+  font-size: var(--fs-sm);
+}
+
+.static-page .atlas-toc h2 {
+  font-size: var(--fs-xl);
+  margin-bottom: 8px;
+}
+
 /* Static (prerendered / no-JS) pages show the atlas until the app mounts. */
 html.js-pending .static-page {
   display: none;

@@ -9,8 +9,8 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && tsx scripts/prerender.tsx",
-    "build:fast": "vite build && tsx scripts/prerender.tsx",
+    "build": "tsc -b && vite build && tsx scripts/prerender.ts",
+    "build:fast": "vite build && tsx scripts/prerender.ts",
     "preview": "vite preview --port 4173 --strictPort",
     "typecheck": "tsc -b",
     "lint": "eslint .",
@@ -33,6 +33,7 @@
     "zustand": "5.0.15"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@eslint/js": "10.0.1",
     "@playwright/test": "1.56.1",
     "@types/node": "22.20.5",

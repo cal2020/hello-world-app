@@ -21,7 +21,9 @@ export default defineConfig({
   build: {
     target: 'es2022',
     sourcemap: false,
-    chunkSizeWarningLimit: 900,
+    // The 3D viewer chunk (three.js, React Three Fiber, post-processing) is ~1.1 MB
+    // (~0.3 MB gzipped) and loads only after the page is interactive.
+    chunkSizeWarningLimit: 1200,
   },
   test: {
     include: ['tests/unit/**/*.test.ts'],
