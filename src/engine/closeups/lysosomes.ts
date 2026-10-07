@@ -374,6 +374,10 @@ const create: CloseupFactory = (ctx) => {
   const endoState = { visible: true, scale: 1 };
   const beadsState = { visible: false };
 
+  const hidden = new THREE.Matrix4().makeScale(0, 0, 0);
+  const SPLIT_AT = [0, T.splits[0], T.splits[1], T.splits[2]];
+  const neckPoint = (offset: THREE.Vector3, target: THREE.Vector3) => target.set(neckB.x - 4, offset.y * 0.25, Math.min(-12, offset.z * 0.7));
+  const transferU = (lt: number, k: number) => smooth((lt - T.transferStart - k * T.transferStep) / T.transferDuration);
   const bezier = (a: THREE.Vector3, c: THREE.Vector3, b: THREE.Vector3, u: number, target: THREE.Vector3) => {
     const k = 1 - u;
     return target.set(
@@ -416,42 +420,42 @@ const create: CloseupFactory = (ctx) => {
     neckB.set(-Math.sqrt(Math.max(0, (R_L - MEMBRANE) * (R_L - MEMBRANE) - rho * rho)), 0, 0);
     neck.set(neckA, neckB, endoState.visible ? rho : 0);
     // Glycans give way where the pore is open.
-    poreGlycans.forEach(({ i, p }, k) => {
+    for (let k = 0; k < poreGlycans.length; k++) {
+      const { i, p } = poreGlycans[k];
       const open = rho > 0.5 && p.position.y * p.position.y + p.position.z * p.position.z < (rho + 4) * (rho + 4);
-      if (open) glycans.setMatrixAt(i, m.makeScale(0, 0, 0));
-      else glycans.setMatrixAt(i, glycanMatrices[k]);
-    });
+      glycans.setMatrixAt(i, open ? hidden : glycanMatrices[k]);
+    }
     glycans.instanceMatrix.needsUpdate = true;
 
     // Cargo and vesicles travel from the endosome through the neck into the lumen.
-    const neckPoint = (offset: THREE.Vector3, target: THREE.Vector3) => target.set(neckB.x - 4, offset.y * 0.25, Math.min(-12, offset.z * 0.7));
-    const transferU = (k: number) => smooth((lt - T.transferStart - k * T.transferStep) / T.transferDuration);
-    aggregates.forEach((agg, a) => {
-      const u = transferU(a);
+    for (let a = 0; a < aggregates.length; a++) {
+      const agg = aggregates[a];
+      const u = transferU(lt, a);
       v.copy(endoCenter).add(agg.offset);
       if (u <= 0) aggCenter[a].copy(v);
       else bezier(v, neckPoint(agg.offset, w), agg.dest, u, aggCenter[a]);
       wander(a * 5 + 1, lt * 0.7, 1.2 * amp, w);
       aggCenter[a].add(w);
-    });
-    ilvs.forEach((ilv, i) => {
-      const u = transferU(aggregates.length + i);
+    }
+    for (let i = 0; i < ilvs.length; i++) {
+      const ilv = ilvs[i];
+      const u = transferU(lt, aggregates.length + i);
       v.copy(endoCenter).add(ilv.offset);
       if (u <= 0) w.copy(v);
       else bezier(v, neckPoint(ilv.offset, w), ilv.dest, u, w);
       const digest = 1 - smooth((lt - T.ilvDigest[0] - i * 0.4) / (T.ilvDigest[1] - T.ilvDigest[0]));
       const visible = (u > 0 || endoState.visible) && digest > 0.01 && lt < T.ilvDigest[1] + 2;
       const r = ilv.r * digest * (u > 0 ? 1 : Math.min(1, endoState.scale * 1.2));
-      ilvMesh.setMatrixAt(i, visible ? m.compose(w, q.identity(), s.setScalar(Math.max(0.001, r))) : m.makeScale(0, 0, 0));
-    });
+      ilvMesh.setMatrixAt(i, visible ? m.compose(w, q.identity(), s.setScalar(Math.max(0.001, r))) : hidden);
+    }
     ilvMesh.instanceMatrix.needsUpdate = true;
 
     // Pieces: binary splitting 1 → 2 → 4 → 8, then amino acids.
     const [s1, s2, s3, s4] = T.splits;
     const level = lt < s1 ? 0 : lt < s2 ? 1 : lt < s3 ? 2 : 3;
-    const splitAt = [0, s1, s2, s3];
     const dissolve = smooth((lt - s4) / 0.5);
-    aggregates.forEach((agg, a) => {
+    for (let a = 0; a < aggregates.length; a++) {
+      const agg = aggregates[a];
       const base = a * nodesPerTree;
       nodePos[base].copy(aggCenter[a]);
       for (let n = 1; n < nodesPerTree; n++) {
@@ -459,7 +463,7 @@ const create: CloseupFactory = (ctx) => {
         const parent = Math.floor((n - 1) / 2);
         const sign = n % 2 === 1 ? 1 : -1;
         const rc = pieceRadius(agg.r, l);
-        const sinceSplit = Math.max(0, lt - splitAt[l]);
+        const sinceSplit = Math.max(0, lt - SPLIT_AT[l]);
         const d = rc * (0.35 + 0.8 * (1 - Math.exp(-sinceSplit / 0.35)) + 0.5 * smooth(sinceSplit / 2.5));
         nodePos[base + n].copy(nodePos[base + parent]).addScaledVector(pieceDirs[base + parent], sign * d);
       }
@@ -467,14 +471,14 @@ const create: CloseupFactory = (ctx) => {
         const l = Math.floor(Math.log2(n + 1));
         const show = l === level && lt < s4 + 0.5 && (lt >= T.transferStart || endoState.visible);
         if (!show) {
-          pieces.setMatrixAt(base + n, m.makeScale(0, 0, 0));
+          pieces.setMatrixAt(base + n, hidden);
           continue;
         }
         const r = pieceRadius(agg.r, l) * (l === 3 ? 1 - dissolve : 1);
         q.copy(pieceRot[base + n]).multiply(tmpQuat.setFromAxisAngle(tmpAxis, lt * 0.3 * amp + n));
         pieces.setMatrixAt(base + n, m.compose(nodePos[base + n], q, s.setScalar(Math.max(0.001, r))));
       }
-    });
+    }
     pieces.instanceMatrix.needsUpdate = true;
 
     // Hydrolase workers gather on the cargo, cut, then drift back.
@@ -503,7 +507,7 @@ const create: CloseupFactory = (ctx) => {
       const age = lt - s4;
       const p = beadPositions[b];
       if (age < 0 || age > info.delay + info.travel + 1.5) {
-        beads.setMatrixAt(b, m.makeScale(0, 0, 0));
+        beads.setMatrixAt(b, hidden);
         continue;
       }
       const birth = v.copy(nodePos[info.tree * nodesPerTree + info.node]).add(info.offset);
@@ -541,8 +545,8 @@ const create: CloseupFactory = (ctx) => {
       lumenProtons.alphas[i] = 0.6;
     }
     lumenProtons.commit();
-    PUMP_ANGLES.forEach((deg, i) => {
-      const dir = dirAt(deg, tmpDir);
+    for (let i = 0; i < PUMP_ANGLES.length; i++) {
+      const dir = dirAt(PUMP_ANGLES[i], tmpDir);
       for (let k = 0; k < 2; k++) {
         const slot = i * 2 + k;
         const period = 2.4;
@@ -555,7 +559,7 @@ const create: CloseupFactory = (ctx) => {
         pumped.positions[slot * 3 + 2] = v.z;
         pumped.alphas[slot] = Math.min(1, u / 0.12) * (1 - u);
       }
-    });
+    }
     pumped.commit();
   };
   update(0, false);

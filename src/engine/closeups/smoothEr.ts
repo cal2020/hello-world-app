@@ -294,7 +294,7 @@ const create: CloseupFactory = (ctx) => {
       state.bursting = false;
       channelFrames.forEach((frame, c) => {
         const local = (((t - c * (CHANNEL_PERIOD / 2)) % CHANNEL_PERIOD) + CHANNEL_PERIOD) % CHANNEL_PERIOD;
-        const open = sstep(-0.1, 0.25, local) * (1 - sstep(1.3, 2, local));
+        const open = sstep(0, 0.35, local) * (1 - sstep(1.3, 2, local));
         _normal.set(0, 1, 0).applyQuaternion(frame.quaternion);
         const mouthIn = _a.copy(frame.position).addScaledVector(_normal, -MEMBRANE - 1.5);
         const mouthOut = _b.copy(frame.position).addScaledVector(_normal, 4);

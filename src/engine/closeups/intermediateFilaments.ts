@@ -357,10 +357,6 @@ const create: CloseupFactory = (ctx) => {
     if (chevrons.instanceColor) chevrons.instanceColor.needsUpdate = true;
   };
 
-  const DEBUG = new URLSearchParams(window.location.search);
-  const DEBUG_T = Number(DEBUG.get('cut') ?? 'NaN');
-  const DEBUG_R = Number(DEBUG.get('cur') ?? 'NaN');
-  const DEBUG_C = (DEBUG.get('cuc') ?? '').split(',').map(Number);
   update(0, false);
 
   const dimerAnchor = new THREE.Vector3(X_DIMER - 6, 0.8, 1.2);
@@ -374,8 +370,8 @@ const create: CloseupFactory = (ctx) => {
     scene,
     views: [
       {
-        target: DEBUG_C.length === 3 ? new THREE.Vector3(DEBUG_C[0], DEBUG_C[1], DEBUG_C[2]) : new THREE.Vector3(16, 0, 0),
-        radius: Number.isFinite(DEBUG_R) ? DEBUG_R : 280,
+        target: new THREE.Vector3(16, 0, 0),
+        radius: 280,
         direction: new THREE.Vector3(0, 0.3, 1).normalize(),
         labels: [
           { textKey: 'closeupCaptions.pull', anchor: () => pullAnchor, visible: () => pulling },
@@ -394,8 +390,7 @@ const create: CloseupFactory = (ctx) => {
     ],
     setView() {},
     update(_dt, time, calm) {
-      const dbg = window as unknown as { __cut?: number };
-      update(dbg.__cut ?? (Number.isFinite(DEBUG_T) ? DEBUG_T : time), calm);
+      update(time, calm);
     },
     dispose() {
       together.dispose();

@@ -82,7 +82,7 @@ export const STRUCTURE_META: StructureMeta[] = [
       enlargement: 1,
       drawn: { low: 1, medium: 1, high: 1 },
     },
-    closeup: { views: [{ id: 'pore', unitNm: 1, moleculeEnlargement: 1, slowdown: 20 }] },
+    closeup: { views: [{ id: 'pore', unitNm: 1, moleculeEnlargement: 1, slowdown: null }] },
   },
   {
     id: 'chromosomes',
@@ -189,7 +189,7 @@ export const STRUCTURE_META: StructureMeta[] = [
       enlargement: 1,
       drawn: null,
     },
-    closeup: { views: [{ id: 'translocation', unitNm: 1, moleculeEnlargement: 1, slowdown: 10 }] },
+    closeup: { views: [{ id: 'translocation', unitNm: 1, moleculeEnlargement: 1, slowdown: null }] },
   },
   {
     id: 'smooth-er',

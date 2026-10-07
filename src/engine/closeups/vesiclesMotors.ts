@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Simplex3 } from '../core/noise';
 import { Rng } from '../core/random';
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { mergeGeometries, noisyEllipsoid } from '../core/geometry';
 import { createCloseupScene, disposeScene, easeInOut } from './common';
 import {
@@ -197,11 +198,16 @@ const create: CloseupFactory = (ctx) => {
     for (let i = 0; i < pos.count; i++) {
       v.fromBufferAttribute(pos, i);
       const d = n.fbm(v.x * 0.05, v.y * 0.05, v.z * 0.05, 3) * amplitude;
-      v.addScaledVector(v.clone().normalize(), d);
+      v.multiplyScalar(1 + d / v.length());
       pos.setXYZ(i, v.x, v.y, v.z);
     }
-    g.computeVertexNormals();
-    return g;
+    // Weld the seam so the translucent membrane shades without a visible line.
+    g.deleteAttribute('uv');
+    g.deleteAttribute('normal');
+    const welded = mergeVertices(g);
+    g.dispose();
+    welded.computeVertexNormals();
+    return welded;
   };
   const sphereSegments = byQuality(q, { low: 44, medium: 56, high: 72 });
   const vesicleInner = new THREE.Mesh(
@@ -319,7 +325,6 @@ const create: CloseupFactory = (ctx) => {
 
   // ── Per-frame scratch ─────────────────────────────────────────────────
   const headPos = [new THREE.Vector3(), new THREE.Vector3()];
-  const headQuat = [new THREE.Quaternion(), new THREE.Quaternion()];
   const neck = new THREE.Vector3();
   const v1 = new THREE.Vector3();
   const v2 = new THREE.Vector3();
@@ -362,7 +367,6 @@ const create: CloseupFactory = (ctx) => {
 
   const setHead = (h: number, position: THREE.Vector3, quaternion: THREE.Quaternion) => {
     headPos[h].copy(position);
-    headQuat[h].copy(quaternion);
     heads.setMatrixAt(h, tmpM.compose(position, quaternion, one));
   };
 
@@ -530,7 +534,7 @@ const create: CloseupFactory = (ctx) => {
     dynein.visible = dyneinAlpha > 0.01;
     if (!dynein.visible) return;
     dyneinMaterial.opacity = dyneinAlpha;
-    cargoMaterials.forEach((m, i) => (m.opacity = cargoOpacity[i] * dyneinAlpha));
+    for (let i = 0; i < cargoMaterials.length; i++) cargoMaterials[i].opacity = cargoOpacity[i] * dyneinAlpha;
 
     const stalkDir = v3.copy(dyneinOut).multiplyScalar(Math.cos(0.68)).addScaledVector(X, Math.sin(0.68)).normalize();
     const sites = [lead, trail];
@@ -563,18 +567,14 @@ const create: CloseupFactory = (ctx) => {
     anchors.dynein.copy(ringCentres[0]).addScaledVector(dyneinFace, -2.5);
   };
 
-  const DEBUG = new URLSearchParams(window.location.search);
-  const DEBUG_T = Number(DEBUG.get('cut') ?? 'NaN');
-  const DEBUG_R = Number(DEBUG.get('cur') ?? 'NaN');
-  const DEBUG_C = (DEBUG.get('cuc') ?? '').split(',').map(Number);
   update(0, false);
 
   return {
     scene,
     views: [
       {
-        target: DEBUG_C.length === 3 ? new THREE.Vector3(DEBUG_C[0], DEBUG_C[1], DEBUG_C[2]) : new THREE.Vector3(14, 58, 0),
-        radius: Number.isFinite(DEBUG_R) ? DEBUG_R : 86,
+        target: new THREE.Vector3(14, 58, 0),
+        radius: 86,
         direction: new THREE.Vector3(0.12, 0.3, 1).normalize(),
         labels: [
           { part: 'kinesin', anchor: () => anchors.kinesin },
@@ -591,8 +591,7 @@ const create: CloseupFactory = (ctx) => {
     ],
     setView() {},
     update(_dt, time, calm) {
-      const dbg = window as unknown as { __cut?: number };
-      update(dbg.__cut ?? (Number.isFinite(DEBUG_T) ? DEBUG_T : time), calm);
+      update(time, calm);
     },
     dispose() {
       atp.dispose();

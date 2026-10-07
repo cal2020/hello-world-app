@@ -169,9 +169,9 @@ const create: CloseupFactory = (ctx) => {
     let scale = sacRadius(p) / CISTERNA.radius;
     let opacity = 1;
     if (p < 0) {
-      // Forming from COPII vesicles: grows with each fusion.
-      scale *= 0.35 + 0.65 * fused;
-      opacity = 0.55 + 0.45 * fused;
+      // Forming from COPII vesicles: appears with the first fusion and grows with each one.
+      scale *= 0.25 + 0.75 * fused;
+      opacity = sstep(0, 0.25, fused) * (0.6 + 0.4 * fused);
     } else if (p > 4.3) {
       scale *= 1 - 0.45 * sstep(4.3, 4.85, p);
       opacity = 1 - sstep(4.85, 5, p);
@@ -225,7 +225,7 @@ const create: CloseupFactory = (ctx) => {
         sac.material.opacity = st.opacity;
         sac.material.depthWrite = st.opacity > 0.95;
         // Cargo inside this cisterna (fewer in the forming one), with growing sugar sprigs.
-        const sprigBeads = THREE.MathUtils.clamp(Math.round(1.5 + 1.4 * st.p), 1, SPRIG);
+        const sprigLevel = THREE.MathUtils.clamp(1.5 + 1.4 * st.p, 1, SPRIG); // sugars added continuously
         const sugarColor = st.p < 2 ? _color.copy(sugarEarly).lerp(sugarMid, THREE.MathUtils.clamp(st.p / 2, 0, 1)) : _color.copy(sugarMid).lerp(sugarLate, THREE.MathUtils.clamp((st.p - 2) / 2.5, 0, 1));
         for (let c = 0; c < CARGO_PER_SAC; c++) {
           const slot = cargoSlots[c];
@@ -237,11 +237,11 @@ const create: CloseupFactory = (ctx) => {
           // Sprig along the lumen (vertical), branching as it grows.
           _q.setFromUnitVectors(_up, _dir.set(0, slot.dir, -0.25).normalize());
           for (let k = 0; k < SPRIG; k++) {
-            const on = present && k < sprigBeads;
+            const grow = present ? THREE.MathUtils.clamp(sprigLevel - k, 0, 1) : 0;
             _a.copy(slot.tree[k]).applyQuaternion(_q);
             _a.x *= 0.35; // keep the sprig inside the thin lumen
             _a.add(_p).addScaledVector(_dir, 0.45);
-            sugars.setMatrixAt(si, _m.compose(_a, _q, _s.setScalar(on ? 0.2 * Math.min(1, st.opacity * 1.5) : 0)));
+            sugars.setMatrixAt(si, _m.compose(_a, _q, _s.setScalar(0.2 * grow * Math.min(1, st.opacity * 1.5))));
             sugars.setColorAt(si++, sugarColor);
           }
         }

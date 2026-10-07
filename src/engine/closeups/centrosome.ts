@@ -320,18 +320,14 @@ const create: CloseupFactory = (ctx) => {
   });
   const ringAnchor = rings[frontRing].position.clone().addScaledVector(view, 1.2);
 
-  const DEBUG = new URLSearchParams(window.location.search);
-  const DEBUG_T = Number(DEBUG.get('cut') ?? 'NaN');
-  const DEBUG_R = Number(DEBUG.get('cur') ?? 'NaN');
-  const DEBUG_C = (DEBUG.get('cuc') ?? '').split(',').map(Number);
   update(0, false);
 
   return {
     scene,
     views: [
       {
-        target: DEBUG_C.length === 3 ? new THREE.Vector3(DEBUG_C[0], DEBUG_C[1], DEBUG_C[2]) : new THREE.Vector3(16, 0, 0),
-        radius: Number.isFinite(DEBUG_R) ? DEBUG_R : 65,
+        target: new THREE.Vector3(16, 0, 0),
+        radius: 65,
         direction: view.clone(),
         labels: [
           { part: 'mother-centriole', anchor: () => motherAnchor },
@@ -346,8 +342,7 @@ const create: CloseupFactory = (ctx) => {
     ],
     setView() {},
     update(_dt, time, calm) {
-      const dbg = window as unknown as { __cut?: number };
-      update(dbg.__cut ?? (Number.isFinite(DEBUG_T) ? DEBUG_T : time), calm);
+      update(time, calm);
     },
     dispose() {
       pcm.dispose();

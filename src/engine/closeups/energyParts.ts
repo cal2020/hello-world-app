@@ -531,6 +531,8 @@ export interface CutBowlOptions {
   /** Colour of the luminal (inner) surface. */
   innerColor?: THREE.ColorRepresentation;
   segments?: number;
+  /** Colours of the banded cut edge (head groups, hydrophobic core). */
+  band?: { head: THREE.ColorRepresentation; core: THREE.ColorRepresentation };
 }
 
 /**
@@ -551,7 +553,10 @@ export function cutBowl(options: CutBowlOptions): THREE.Group {
   const outer = new THREE.Mesh(hemisphere(options.radius), membraneMaterial(options.color, { side: THREE.FrontSide }));
   const innerColor = options.innerColor ?? new THREE.Color(options.color).multiplyScalar(0.6);
   const inner = new THREE.Mesh(hemisphere(options.radius - options.thickness), membraneMaterial(innerColor, { side: THREE.BackSide, rim: 0.25 }));
-  const rim = new THREE.Mesh(bilayerRingGeometry(options.radius - options.thickness, options.radius, segments), bandMaterial());
+  const ring = options.band
+    ? bilayerRingGeometry(options.radius - options.thickness, options.radius, segments, new THREE.Color(options.band.head), new THREE.Color(options.band.core))
+    : bilayerRingGeometry(options.radius - options.thickness, options.radius, segments);
+  const rim = new THREE.Mesh(ring, bandMaterial());
   rim.position.z = 0.05;
   group.add(outer, inner, rim);
   return group;

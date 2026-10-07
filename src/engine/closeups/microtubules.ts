@@ -220,8 +220,7 @@ const create: CloseupFactory = (ctx) => {
       if (!growing) attached = ADDED;
       const zipper = growing ? ADDED : zipperAt(plan, tau);
       let present = attached;
-      for (const f of plan.fragments) if (tau >= f.release) present = Math.min(present, f.lo);
-      if (tau >= plan.fragments[plan.fragments.length - 1].release) present = 0;
+      for (let f = 0; f < plan.fragments.length; f++) if (tau >= plan.fragments[f].release) present = Math.min(present, plan.fragments[f].lo);
       const top = plan.base + present;
       tipSum += Math.min(top, plan.base + zipper);
       const peeling = !growing && zipper < ADDED - 1e-3;
@@ -272,7 +271,8 @@ const create: CloseupFactory = (ctx) => {
   /** Curled pieces that broke off: rigid drift outward and up, turning, fading. */
   const updateFragments = (p: number, plan: PfPlan, calm: boolean) => {
     const slot0 = latticeCount + p * 18;
-    plan.fragments.forEach((f, fi) => {
+    for (let fi = 0; fi < plan.fragments.length; fi++) {
+      const f = plan.fragments[fi];
       let age = tau - f.release;
       if (age < 0) age += LOOP;
       const alive = age >= 0 && age < FRAGMENT_LIFE;
@@ -314,14 +314,15 @@ const create: CloseupFactory = (ctx) => {
         mesh.setMatrixAt(i, m4);
         mesh.setColorAt(i, colorFor(k % 2 === 1, 0));
       }
-    });
+    }
   };
 
   const qb = new THREE.Quaternion();
   const updateFree = (t: number, calm: boolean) => {
     const wander = calm ? 0.4 : 1;
     sv.setScalar(1);
-    free.forEach((f, i) => {
+    for (let i = 0; i < free.length; i++) {
+      const f = free[i];
       const s = t * 0.07 * wander;
       const pos = freePos[i].set(
         f.home.x + noise.noise(f.seed, s, 0) * 16,
@@ -341,7 +342,7 @@ const create: CloseupFactory = (ctx) => {
       v1.set(0, 2.05, 0).applyQuaternion(qa);
       mesh.setMatrixAt(freeBase + i * 2, m4.compose(v3.copy(pos).sub(v1).sub(tube.position), qa, sv));
       mesh.setMatrixAt(freeBase + i * 2 + 1, m4.compose(v3.copy(pos).add(v1).sub(tube.position), qa, sv));
-    });
+    }
   };
 
   const update = (t: number, calm: boolean) => {
@@ -361,18 +362,14 @@ const create: CloseupFactory = (ctx) => {
   const freeAnchor = new THREE.Vector3();
   const phase = () => (tau < 3.2 || tau >= SHRINK_END ? 'rescue' : tau < GROW_END ? 'growing' : tau < SHRINK_START + 1.2 ? 'catastrophe' : 'shrinking');
 
-  const DEBUG = new URLSearchParams(window.location.search);
-  const DEBUG_T = Number(DEBUG.get('cut') ?? 'NaN');
-  const DEBUG_R = Number(DEBUG.get('cur') ?? 'NaN');
-  const DEBUG_C = (DEBUG.get('cuc') ?? '').split(',').map(Number);
   update(0, false);
 
   return {
     scene,
     views: [
       {
-        target: DEBUG_C.length === 3 ? new THREE.Vector3(DEBUG_C[0], DEBUG_C[1], DEBUG_C[2]) : new THREE.Vector3(0, 8, 0),
-        radius: Number.isFinite(DEBUG_R) ? DEBUG_R : 110,
+        target: new THREE.Vector3(0, 8, 0),
+        radius: 110,
         direction: view.clone(),
         labels: [
           { textKey: 'closeupCaptions.growing', anchor: () => captionAnchor, visible: () => phase() === 'growing' },
@@ -389,8 +386,7 @@ const create: CloseupFactory = (ctx) => {
     ],
     setView() {},
     update(_dt, time, calm) {
-      const dbg = window as unknown as { __cut?: number };
-      update(dbg.__cut ?? (Number.isFinite(DEBUG_T) ? DEBUG_T : time), calm);
+      update(time, calm);
       tipAnchor.copy(front).multiplyScalar(11).setY(tipY + 2);
       capAnchor.copy(front).multiplyScalar(12.6).setY(tipY - 13);
       captionAnchor.set(-30, tipY + 12, 6);

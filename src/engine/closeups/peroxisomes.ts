@@ -74,7 +74,7 @@ const create: CloseupFactory = (ctx) => {
   // ── Membrane: the organelle cut open (back half of a 400-nm sphere); we look at its lower part ──
   const dockX = 32;
   const pore: HoleClip = { center: new THREE.Vector3(), axis: new THREE.Vector3(0, 1, 0), radius: { value: 0 } };
-  const bowl = cutBowl({ radius: R, thickness: MEM, color: COLORS.membrane, innerColor: COLORS.membraneInner, segments: byQuality(quality, { low: 72, medium: 96, high: 120 }) });
+  const bowl = cutBowl({ radius: R, thickness: MEM, color: COLORS.membrane, innerColor: COLORS.membraneInner, band: { head: '#eef9c4', core: '#93bf3c' }, segments: byQuality(quality, { low: 72, medium: 96, high: 120 }) });
   bowl.position.copy(C);
   bowl.children.forEach((child, i) => addHoleClip((child as THREE.Mesh).material as THREE.Material, pore, `peroxBowl${i}`));
   root.add(bowl);
@@ -105,7 +105,7 @@ const create: CloseupFactory = (ctx) => {
     catalaseLumps.push({ at: [d.x, d.y + 0.6, d.z], r: 1.5, color: i % 2 ? COLORS.catalase2 : COLORS.catalase });
   });
   const catalase = protein('catalase', catalaseLumps);
-  catalase.position.set(10, -17, -9);
+  catalase.position.set(5, -21, -9);
   catalase.rotation.set(0.3, 0.5, 0.1);
 
   // ── ABCD1 transporter in the membrane, and the docking complex for PEX5 ──

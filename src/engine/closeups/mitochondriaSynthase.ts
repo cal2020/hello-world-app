@@ -420,10 +420,10 @@ export function buildSynthaseView(quality: QualityLevel, jiggle: JiggleUniforms,
       const rotorAngle = -turn * Math.PI * 2;
       rotor.rotation.y = rotorAngle;
       // Gentle thermal wobble of the complexes (they stay in the membrane).
-      proteins.forEach((p, i) => {
+      for (let i = 0; i < proteins.length; i++) {
         wander(i * 3.7 + 1, time * 0.8, 0.12 * thermal.amount, tmp);
-        p.position.set(proteinHomes[i].x + tmp.x, proteinHomes[i].y + tmp.y * 0.4, proteinHomes[i].z + tmp.z * 0.5);
-      });
+        proteins[i].position.set(proteinHomes[i].x + tmp.x, proteinHomes[i].y + tmp.y * 0.4, proteinHomes[i].z + tmp.z * 0.5);
+      }
 
       // Cloud and matrix protons wander.
       for (let i = 0; i < cloudCount + belowCount; i++) {
@@ -436,7 +436,8 @@ export function buildSynthaseView(quality: QualityLevel, jiggle: JiggleUniforms,
       // Pumped protons: up from the matrix, through the complex, out into the crista lumen.
       protons.commit();
       let index = 0;
-      pumpSites.forEach((site, s) => {
+      for (let s = 0; s < pumpSites.length; s++) {
+        const site = pumpSites[s];
         for (let k = 0; k < 2; k++) {
           const slot = s * 2 + k;
           const cycleTime = time / TURN - site.phase / TURN;
@@ -459,7 +460,7 @@ export function buildSynthaseView(quality: QualityLevel, jiggle: JiggleUniforms,
             setMoving(index++, tmp, 1 - out * out);
           }
         }
-      });
+      }
 
       // Protons flowing down through ATP synthase, riding on the c-ring.
       const step = TURN / C_SUBUNITS;
@@ -519,11 +520,12 @@ export function buildSynthaseView(quality: QualityLevel, jiggle: JiggleUniforms,
       atpMesh.instanceMatrix.needsUpdate = true;
 
       // The β subunit that is releasing ATP opens slightly.
-      betas.forEach((b, i) => {
+      for (let i = 0; i < betas.length; i++) {
+        const b = betas[i];
         const phase = ((time / release - i) % 3 + 3) % 3; // 0 at its release
         const pulse = Math.exp(-((Math.min(phase, 3 - phase) / 0.35) ** 2));
         b.mesh.position.set(b.home.x + Math.cos(b.angle) * 0.35 * pulse, b.home.y, b.home.z - Math.sin(b.angle) * 0.35 * pulse);
-      });
+      }
     },
     dispose() {
       disposables.forEach((d) => d.dispose());

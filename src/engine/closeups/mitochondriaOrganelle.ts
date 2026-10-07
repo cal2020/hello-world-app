@@ -385,29 +385,26 @@ export function buildOrganelleView(quality: QualityLevel, jiggle: JiggleUniforms
   disposables.push(granuleGeometry);
 
   // ── Labels ──
-  let riboAnchor = new THREE.Vector3(-20, -10, -3);
+  // Anchors sit along the upper half of the section (label boxes are placed above their anchors), spread out in x.
+  let riboAnchor = new THREE.Vector3(-64, 14, -3);
   let best = -Infinity;
   for (const s of spots) {
-    const score = s.position.z * 1.5 - Math.abs(s.position.x + 20) * 0.5 - Math.abs(s.position.y + 10) * 0.5;
+    const score = s.position.z * 1.5 - Math.abs(s.position.x + 64) * 0.5 - Math.abs(s.position.y - 14) * 0.5;
     if (score > best) {
       best = score;
       riboAnchor = s.position.clone();
     }
   }
-  const labelCrista = cristae.reduce((a, b) => (Math.abs(b.x - 16.5) < Math.abs(a.x - 16.5) ? b : a));
-  const cristaTip = labelCrista.c.clone().addScaledVector(labelCrista.eu, Math.min(labelCrista.tip, labelCrista.rho) + H);
-  cristaTip.z = 0.05;
-  const xsSorted = cristae.map((c) => c.x).sort((a, b) => a - b);
-  const gapIndex = xsSorted.findIndex((x) => x > -66);
-  const matrixGap = (xsSorted[gapIndex - 1] + xsSorted[gapIndex]) / 2;
-  const nucleoidLabel = nucleoidTops[4];
+  const labelCrista = cristae.reduce((a, b) => (b.side === -1 && Math.abs(b.x + 25.5) < Math.abs(a.x + 25.5) ? b : a), cristae[6]);
+  const cristaAnchor = labelCrista.c.clone().addScaledVector(labelCrista.eu, -labelCrista.rho + 3);
+  cristaAnchor.z = 0.05;
   const labels: CloseupLabel[] = [
-    { part: 'outer-membrane', anchor: anchorOn(group, new THREE.Vector3(-72, R_OUTER * Math.cos(0.22), -R_OUTER * Math.sin(0.22))) },
-    { part: 'intermembrane-space', anchor: anchorOn(group, new THREE.Vector3(52, R_IB_MID + IM / 2 + IMS / 2, 0.05)) },
-    { part: 'inner-membrane', anchor: anchorOn(group, new THREE.Vector3(-44, -R_IB_MID, 0.05)) },
-    { part: 'cristae', anchor: anchorOn(group, cristaTip) },
-    { part: 'matrix', anchor: anchorOn(group, new THREE.Vector3(matrixGap, -4, -13)) },
-    { part: 'mtdna', anchor: anchorOn(group, nucleoidLabel) },
+    { part: 'outer-membrane', anchor: anchorOn(group, new THREE.Vector3(-82, R_OUTER * Math.cos(0.22), -R_OUTER * Math.sin(0.22))) },
+    { part: 'intermembrane-space', anchor: anchorOn(group, new THREE.Vector3(-42.5, R_IB_MID + IM / 2 + IMS / 2, 0.05)) },
+    { part: 'inner-membrane', anchor: anchorOn(group, new THREE.Vector3(12, R_IB_MID, 0.05)) },
+    { part: 'cristae', anchor: anchorOn(group, cristaAnchor) },
+    { part: 'matrix', anchor: anchorOn(group, new THREE.Vector3(0, 13, -8)) },
+    { part: 'mtdna', anchor: anchorOn(group, nucleoidTops[3]) },
     { textKey: 'closeupCaptions.mitoRibosomes', anchor: anchorOn(group, riboAnchor) },
   ];
 
