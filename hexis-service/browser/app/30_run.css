@@ -12,7 +12,7 @@
   top: calc(env(safe-area-inset-top, 0px) + var(--rn-sticky-top, 0px));
   z-index: 5;
   display: grid;
-  grid-template-columns: minmax(0, 1.6fr) repeat(5, minmax(0, auto));
+  grid-template-columns: minmax(11rem, 1.2fr) minmax(9rem, 1.4fr) repeat(4, minmax(0, auto));
   gap: var(--sp-3) var(--sp-5);
   padding: var(--sp-3) var(--sp-4);
   background: var(--surface-2);
@@ -25,7 +25,8 @@
 .rn-sum-note { font-size: var(--fs-2); font-weight: 400; color: var(--ink-3); }
 .rn-sum-value .hx-num { font-size: var(--fs-4); font-weight: 600; font-variant-numeric: tabular-nums; }
 .rn-clock { font-size: var(--fs-2); font-weight: 400; }
-@container rn (max-width: 60rem) {
+.rn-sum-flag { font-weight: 400; }
+@container rn (max-width: 52rem) {
   .rn-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); position: static; }
 }
 @container rn (max-width: 30rem) {
@@ -55,20 +56,34 @@
 .rn-sc.is-disabled { cursor: not-allowed; background: var(--surface-2); border-style: dashed; }
 .rn-sc.is-disabled .rn-sc-title, .rn-sc.is-disabled .rn-sc-body { color: var(--ink-3); }
 .rn-sc-input { grid-row: 1 / span 4; margin: 0.2rem 0 0; accent-color: var(--accent); width: 1rem; height: 1rem; }
+.rn-sc > :not(.rn-sc-input) { grid-column: 2; }
 .rn-sc-input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .rn-sc:has(.rn-sc-input:focus-visible) { border-color: var(--focus); }
-.rn-sc-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.3rem 0.5rem; min-width: 0; }
 .rn-sc-title { font-weight: 600; color: var(--ink); }
+.rn-sc-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; min-width: 0; }
 .rn-sc-body { font-size: var(--fs-2); line-height: 1.5; color: var(--ink-2); text-wrap: pretty; }
 .rn-sc-body .hx-inline { font-size: var(--fs-1); }
-.rn-sc-model { display: flex; }
-.rn-sc-reason { font-size: var(--fs-2); color: var(--ink-2); text-wrap: pretty; }
+.rn-sc-reason { display: block; font-size: var(--fs-2); color: var(--ink-2); text-wrap: pretty; }
+.rn-sc-reason[hidden] { display: none; }
+/* once a run exists, narrow screens show the cards as a compact list: the selected one keeps its text */
+@container rn (max-width: 40rem) {
+  .rn-sc-grid.is-compact { gap: var(--sp-2); }
+  .rn-sc-grid.is-compact .rn-sc { padding-block: var(--sp-2); }
+  .rn-sc-grid.is-compact .rn-sc:not(.is-selected) .rn-sc-body,
+  .rn-sc-grid.is-compact .rn-sc:not(.is-selected) .rn-sc-tags { display: none; }
+}
+.rn-admit { display: grid; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); border: 1px dashed var(--rule-strong); border-radius: var(--r-2); background: var(--surface-2); min-width: 0; }
+.rn-admit[hidden] { display: none; }
+.rn-admit-text { font-size: var(--fs-2); color: var(--ink-2); text-wrap: pretty; }
+.rn-custom-wrap { gap: var(--sp-2); }
+.rn-custom-wrap[hidden] { display: none; }
 .rn-custom-wrap { display: grid; min-width: 0; }
 .rn-custom { min-height: 12rem; white-space: pre; overflow-x: auto; }
 
 .rn-start-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--sp-3) var(--sp-5); min-width: 0; }
 .rn-start-row > .hx-field { flex: 1 1 16rem; max-width: 26rem; }
-.rn-start-go { display: flex; align-items: flex-end; align-self: stretch; padding-top: 1.45rem; }
+/* the button lines up with the controls, not with the hints under them: label line height + the field's gap */
+.rn-start-go { display: flex; align-self: flex-start; padding-top: calc(var(--fs-2) * 1.45 + 0.35rem); }
 .rn-seg-field { display: grid; gap: 0.35rem; margin: 0; padding: 0; border: 0; min-width: 0; }
 .rn-seg-field legend { padding: 0; margin-bottom: 0.35rem; }
 .rn-seg { display: inline-flex; border: 1px solid var(--rule-strong); border-radius: var(--r-1); background: var(--surface); width: max-content; overflow: hidden; }
@@ -92,7 +107,12 @@
 .rn-code { font-family: var(--font-mono); font-weight: 500; color: var(--tone-ink); }
 .rn-err-msg { overflow-wrap: anywhere; color: var(--ink); }
 .rn-err-fix { color: var(--ink-2); }
-.rn-res-line { display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 0.35rem; overflow-wrap: anywhere; }
+.rn-res-line { display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 0.35rem; }
+.rn-nw { white-space: nowrap; }
+.rn-move { display: inline-flex; align-items: baseline; flex-wrap: nowrap; max-width: 100%; }
+.rn-wrapid { overflow-wrap: anywhere; word-break: normal; min-width: 0; }
+.rn-pair { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.rn-claim { font-size: var(--fs-1); }
 .rn-res-detail { color: var(--ink-3); }
 
 /* ------------------------------------------------------------------ runs list */
@@ -127,6 +147,8 @@
 .rn-clock-row { grid-template-columns: auto 1fr 1fr; align-items: center; }
 .rn-clock-label { font-size: var(--fs-2); color: var(--ink-2); padding-right: var(--sp-2); }
 .rn-drive > .rn-result { margin-top: var(--sp-2); }
+.rn-drive-wait { font-size: var(--fs-2); color: var(--ink-2); text-wrap: pretty; }
+.rn-drive-wait[hidden] { display: none; }
 
 /* approval / input / outcome cards */
 .rn-human-slot { display: grid; gap: var(--sp-3); min-width: 0; }
@@ -137,7 +159,7 @@
 .rn-scope { display: grid; gap: 0.4rem; min-width: 0; font-size: var(--fs-2); }
 .rn-scope-row { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: var(--sp-2); align-items: baseline; min-width: 0; }
 .rn-scope dt { color: var(--ink-3); }
-.rn-scope dd { margin: 0; min-width: 0; color: var(--ink); overflow-wrap: anywhere; }
+.rn-scope dd { margin: 0; min-width: 0; color: var(--ink); overflow-wrap: break-word; }
 .rn-scope-ev { display: grid; gap: 0.2rem; padding: 0; list-style: none; }
 .rn-scope-ev li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; }
 .rn-check { display: flex; align-items: center; gap: 0.5rem; font-size: var(--fs-2); color: var(--ink-2); cursor: pointer; }
@@ -146,7 +168,11 @@
 .rn-outcome { display: grid; gap: var(--sp-3); border-color: var(--tone-line); border-left: 3px solid var(--tone-ink); }
 .rn-out-terminal { font-size: var(--fs-3); }
 .rn-out-terminal .hx-inline { font-size: var(--fs-3); font-weight: 500; }
-.rn-out-list { display: grid; gap: 0.25rem; padding-left: 1rem; margin: 0; }
+.rn-out-list { display: grid; gap: 0.25rem; padding-left: 1rem; margin: 0; min-width: 0; }
+.rn-out-list > li { min-width: 0; overflow-wrap: anywhere; }
+.rn-diag-code { font-weight: 600; }
+.rn-out-lead { font-size: var(--fs-2); color: var(--ink); text-wrap: pretty; }
+.rn-ev-ids { display: flex; flex-wrap: wrap; gap: 0.25rem; }
 @container rn (max-width: 30rem) {
   .rn-scope-row { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
 }
@@ -187,10 +213,16 @@
   .rn-ev-detail { grid-column: 2; }
 }
 .rn-id { font-size: var(--fs-1); }
-.rn-val { font-family: var(--font-mono); font-size: var(--fs-1); color: var(--ink); overflow-wrap: anywhere; white-space: normal; }
+/* JSON values wrap at the spaces after "," and ":"; only a token longer than the line (a digest) breaks inside */
+.rn-val { font-family: var(--font-mono); font-size: var(--fs-1); color: var(--ink); overflow-wrap: anywhere; word-break: normal; white-space: normal; }
+.rn-var-name { display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 0.4rem; }
+.rn-ix-id { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.1rem 0.4rem; }
 .rn-vars tr.is-changed td { background: color-mix(in srgb, var(--accent-tint) 60%, transparent); }
 .rn-vars tr.is-changed td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
-.rn-vars td:last-child { min-width: 16rem; }
+.rn-vars td:first-child { width: 14rem; }
+@container rn (max-width: 40rem) {
+  .rn-vars td:first-child { width: auto; }
+}
 .rn-inval { display: grid; gap: 0.2rem; justify-items: start; }
 .rn-inval-why { font-size: var(--fs-1); color: var(--ink-3); }
 .rn-more > summary { cursor: pointer; font-size: var(--fs-2); color: var(--ink-2); padding-block: 0.25rem; }
@@ -213,3 +245,9 @@
 @media (prefers-reduced-motion: reduce) {
   .rn-sc, .rn-run-btn { transition: none; }
 }
+
+/* the outcome card lives in the narrow side column: each label sits above its value */
+.rn-outcome .rn-scope-row { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
+.rn-outcome .rn-scope-row + .rn-scope-row { padding-top: 0.2rem; }
+.rn-sum-flag { max-width: 100%; white-space: normal; padding-block: 0.15rem; }
+.rn-sum-flag .hx-chip-text { white-space: normal; overflow: visible; text-overflow: clip; }

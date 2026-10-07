@@ -289,7 +289,7 @@
     const c = is_hx ? err.code : "Error";
     const msg = String((err && err.message) || err);
     const hint = is_hx ? hint_for(c, ctx) : (ctx && ctx.plain ? "" : "This is not an engine error; reload the page if it repeats.");
-    return { tone: "crit", code: c, title: c, body: [h("p", { class: "rn-err-msg" }, msg), hint ? h("p", { class: "rn-err-fix" }, hint) : null] };
+    return { tone: "crit", error: true, code: c, title: c, body: [h("p", { class: "rn-err-msg" }, msg), hint ? h("p", { class: "rn-err-fix" }, hint) : null] };
   }
 
   function set_result(area, res) { S.results[area] = res; }
@@ -333,7 +333,7 @@
     box.dataset.tone = r.tone;
     const body = [].concat(r.body || []);
     if (r.crash) body.push(h("div", { class: "hx-actions" }, HXUI.button("Restart worker to recover", { id: "rn-crash-restart", variant: "primary", size: "sm", icon: "reset", on_click: do_restart })));
-    box.replaceChildren(HXUI.notice(r.tone, r.code && r.tone === "crit" && !r.crash ? [h("span", { class: "rn-code" }, r.code), " ", r.title === r.code ? "" : r.title] : r.title, body.length ? body : null));
+    box.replaceChildren(HXUI.notice(r.tone, r.code && r.error ? [h("span", { class: "rn-code" }, r.code), " ", r.title === r.code ? "" : r.title] : r.title, body.length ? body : null));
   }
 
   /* ---------------------------------------------------------------- actions */
@@ -982,7 +982,7 @@
       row("Business ref", HXUI.digest(scope.target && scope.target.business_reference, { short: 19, label: "business reference" })),
       row("Evidence", ev.length ? h("ul", { class: "rn-scope-ev" }, ev.map((e) => h("li", null, wrap_id(e.claim, "rn-claim"), " ", HXUI.digest(e.receipt_id, { short: 14, copy: false }))))
         : h("span", { class: "hx-faint" }, "none")),
-      row("Policy", code(scope.policy_version)),
+      row("Policy", wrap_id(scope.policy_version)),
       row("Role", code(scope.required_role)),
       row("Expires", h("span", { class: "hx-mono rn-nw", id: "rn-scope-expires" }, iso(scope.expires_at))),
       row("Scope digest", HXUI.digest(ix.scope_digest, { short: 19, label: "scope digest", id: "rn-scope-digest" })));
@@ -1087,7 +1087,7 @@
     const events = snap.ins.events || [];
     const list = (arr) => arr && arr.length ? h("ul", { class: "rn-out-list" }, arr.map((x) => h("li", null, typeof x === "string" ? x : F().compact_json(x, 200)))) : h("span", { class: "hx-faint" }, "none");
     const row = (k, v, id) => h("div", { class: "rn-scope-row", dataset: { key: id } }, h("dt", null, k), h("dd", null, v));
-    const diag = (a.diagnostics || []).map((d) => [code(d.code || "?"), " ", d.message || F().compact_json(d, 160)]);
+    const diag = (a.diagnostics || []).map((d) => [wrap_id(d.code || "?", "rn-diag-code"), " ", d.message || F().compact_json(d, 160)]);
     const tone = out ? CATEGORY_TONE[out.category] || "neutral" : STATUS_TONE[run.status] || "neutral";
     const stop = run.status === "FAILED" ? stop_event(events) : null;
     const refused = !!(stop && stop.code === "TERMINAL_ADMISSION_DENIED") ||
@@ -1103,8 +1103,12 @@
     const last = last_transition(events);
     let why = null;
     if (a.entered_fallback) why = [HXUI.chip("fallback", "crit"), " ", a.fallback_reason || "the step failed and the machine's fallback took over"];
-    else if (out && out.category !== "verified" && last && last.to === out.terminal) {
-      why = [move(last.from, last.to), " because ", last.edge && last.edge.if ? code(last.edge.if) : "no other edge applied (default edge)"];
+    else if (out && out.category !== "verified" && last && (last.to === out.terminal || last.to === cp.state_id)) {
+      const vars = cp.variables || {};
+      const vals = (last.delta_keys || []).filter((k) => vars[k] !== null && vars[k] !== undefined && typeof vars[k] !== "object")
+        .map((k, i) => [i ? ", " : "", code(k + " = " + JSON.stringify(vars[k]))]);
+      why = [move(last.from, last.to), " ", last.edge && last.edge.if ? ["because ", wrap_id(last.edge.if)] : "by the default edge",
+        vals.length ? [" after ", vals] : null];
     }
     box.dataset.status = run.status;
     box.dataset.terminal = out ? out.terminal : "";
@@ -1112,8 +1116,8 @@
     box.dataset.refused = refused ? "1" : "";
     box.className = "hx-card rn-outcome hx-tone-" + tone;
     const fallback_text = a.entered_fallback ? h("span", null, HXUI.chip("entered", "crit"), " ", a.fallback_reason || "")
-      : out && out.category === "fallback" ? "not entered (" + out.terminal + " was reached by a guarded edge)" : "not entered";
-    box.replaceChildren(
+      : out && out.category === "fallback" ? "not entered: the machine routed to " + out.terminal + " by its own edge (see Why)" : "not entered";
+    box.replaceChildren(...[
       h("div", { class: "rn-human-head" },
         h("h4", { class: "rn-human-title", id: "rn-outcome-title" }, title),
         out ? HXUI.chip(out.category, tone, { icon: out.category === "verified" ? "check" : "alert" }) : status_chip(run.status)),
@@ -1127,7 +1131,7 @@
         row("Missing evidence", list(a.missing_evidence), "missing"),
         row("Policy violations", list(a.policy_violations), "violations"),
         row("Unresolved effects", list(a.unresolved_effects), "unresolved"),
-        row("Diagnostics", diag.length ? h("ul", { class: "rn-out-list" }, diag.map((d) => h("li", null, d))) : h("span", { class: "hx-faint" }, "none"), "diagnostics")));
+        row("Diagnostics", diag.length ? h("ul", { class: "rn-out-list" }, diag.map((d) => h("li", null, d))) : h("span", { class: "hx-faint" }, "none"), "diagnostics"))].filter(Boolean));
   }
 
   /* ---- trouble: faults, policy, ERP */
@@ -1204,8 +1208,8 @@
       const now = (doc.principals[p] || {}).capabilities || [];
       for (const c of base[p].capabilities || []) if (now.indexOf(c) < 0) revoked.push([p, c]);
     }
-    T.pol_version.replaceChildren("Policy version ", code(env ? env.policy.version : doc.policy_version), ". ",
-      revoked.length ? ["Revoked in this lab: ", revoked.map(([p, c], i) => [i ? ", " : "", code(c), " from ", code(p)]), ". Reset lab restores the policy."]
+    T.pol_version.replaceChildren("Policy version ", wrap_id(env ? env.policy.version : doc.policy_version), ". ",
+      revoked.length ? h("span", null, "Revoked in this lab: ", revoked.map(([p, c], i) => [i ? ", " : "", code(c), " from ", code(p)]), ". Reset lab restores the policy.")
         : "Nothing revoked.");
     T.pol_version.dataset.revoked = String(revoked.length);
     /* ERP */
@@ -1215,9 +1219,9 @@
       : !draft ? "The run has no ERP draft yet. It writes one at PERSIST_DRAFT, after approval." : "";
     HXUI.set_disabled(T.modify, !!r, r);
     HXUI.set_disabled(T.tamper, !!r, r);
-    T.erp_note.replaceChildren(r ? r : ["Acts on draft ", code(draft), " of ", code(snap.run.run_id), " at ", code(snap.cp.state_id), ". ",
+    T.erp_note.replaceChildren(r ? r : h("span", null, "Acts on draft ", code(draft), " of ", code(snap.run.run_id), " at ", code(snap.cp.state_id), ". ",
       snap.cp.state_id === "END_VERIFIED_DRAFT" ? "Modify now, then Step, to see A25: terminal admission denied."
-        : "Tamper, then Step, for A28 (ends unverified). For A25, Step to END_VERIFIED_DRAFT first, then Modify."]);
+        : "Tamper, then Step, for A28 (ends unverified). For A25, Step to END_VERIFIED_DRAFT first, then Modify."));
     for (const a of ["faults", "policy", "erp"]) result_view(a);
   }
 

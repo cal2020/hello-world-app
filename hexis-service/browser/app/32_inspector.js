@@ -16,6 +16,13 @@
   const HXUI = globalThis.HXUI;
   const h = (...a) => HXUI.h(...a);
   const code = (t) => h("code", { class: "hx-inline" }, t);
+  /** a long identifier as plain mono text that may wrap after "_", "-", "/", ":", "." or ", " */
+  function wrap_id(t) {
+    const parts = String(t === null || t === undefined ? "" : t).split(/(?<=[_\-/:.,])/);
+    const kids = [];
+    parts.forEach((p, i) => { if (i) kids.push(h("wbr")); kids.push(p); });
+    return h("span", { class: "hx-mono rn-wrapid" }, kids);
+  }
   const mono = (t, cls) => h("span", { class: ["hx-mono", cls] }, t);
 
   /* ---------------------------------------------------------------- formatting */
@@ -106,9 +113,11 @@
     const box = h("input", { type: "checkbox", id: "rn-tl-timing", checked: !!st.timing });
     box.addEventListener("change", () => { st.timing = box.checked; st.refresh(); });
     const transitions = events.filter((e) => e.type === "TRANSITION").length;
+    const hidden = events.length - shown.length;
     return h("div", { class: "rn-tab" },
       h("div", { class: "rn-tab-head" },
-        h("p", { class: "rn-tab-sum" }, events.length + " events, " + transitions + (transitions === 1 ? " transition" : " transitions") + ". Newest last."),
+        h("p", { class: "rn-tab-sum", id: "rn-tl-sum" }, (hidden ? shown.length + " of " + events.length + " events shown (timing hidden), " : events.length + " events, ") +
+          transitions + (transitions === 1 ? " transition" : " transitions") + ". Newest last; numbers are the event sequence."),
         h("label", { class: "rn-check", for: "rn-tl-timing" }, box, "Show timing events")),
       h("ol", { class: "rn-timeline", "aria-label": "Run events", id: "rn-timeline" }, shown.map((e) =>
         h("li", { class: "rn-ev", dataset: { type: e.type, seq: e.sequence } },
@@ -118,7 +127,22 @@
   }
 
   /* ---------------------------------------------------------------- variables */
-  function variables(d) {
+  /** JSON with a space after "," and ":" so long values wrap between tokens, never inside one */
+  function spaced_json(v, max) {
+    let s;
+    try { s = JSON.stringify(v, null, 1); } catch (e) { s = String(v); }
+    if (s === undefined) s = "undefined";
+    s = s.replace(/\n\s*/g, " ").replace(/\[ /g, "[").replace(/ \]/g, "]").replace(/\{ /g, "{").replace(/ \}/g, "}");
+    const m = max || 140;
+    return s.length > m ? s.slice(0, m - 1) + "…" : s;
+  }
+
+  /** JSON text with each short string literal kept on one line ("BU-EMEA" never breaks at its hyphen) */
+  function json_tokens(text) {
+    return text.split(/("(?:[^"\\]|\\.)*"?)/).map((part, i) => i % 2 && part.length <= 32 ? h("span", { class: "rn-nw" }, part) : part);
+  }
+
+  function variables(d, st) {
     const cps = d.checkpoints || [];
     const cur = d.ins.checkpoint.variables || {};
     const prev = cps.length > 1 ? cps[cps.length - 2].variables || {} : {};
@@ -130,20 +154,28 @@
     return h("div", { class: "rn-tab" },
       h("p", { class: "rn-tab-sum" }, "Checkpoint revision " + d.ins.checkpoint.revision + " at ", code(d.ins.checkpoint.state_id), ". ",
         set + " of " + keys.length + " variables set; ",
-        cps.length > 1 ? (n_changed ? n_changed + (n_changed === 1 ? " changed" : " changed") + " in the last step (marked)." : "none changed in the last step.") : "this is the initial checkpoint."),
+        cps.length > 1 ? (n_changed ? n_changed + " changed in the last step (marked)." : "none changed in the last step.") : "this is the initial checkpoint."),
       HXUI.table({
         caption: "Checkpoint variables", caption_hidden: true, class: "rn-vars",
         columns: [
-          { key: "k", label: "Variable", mono: true, nowrap: true, render: (r) => [r.k, r.changed ? h("span", { class: "hx-visually-hidden" }, " (changed)") : null] },
-          { key: "c", label: "Last step", nowrap: true, render: (r) => r.changed ? HXUI.chip("changed", "accent") : h("span", { class: "hx-faint" }, "same") },
+          { key: "k", label: "Variable", render: (r) => h("span", { class: "rn-var-name" }, h("span", { class: "hx-mono" }, r.k),
+            r.changed ? HXUI.chip("changed", "accent") : null) },
           { key: "v", label: "Value", render: (r) => r.v === null || r.v === undefined ? h("span", { class: "hx-faint" }, "null")
-            : h("code", { class: "rn-val", title: compact_json(r.v, 4000) }, compact_json(r.v, 120)) },
+            : h("code", { class: "rn-val", title: compact_json(r.v, 4000) }, json_tokens(spaced_json(r.v, 160))) },
         ],
         rows,
         row_attrs: (r) => ({ class: r.changed ? "is-changed" : null, dataset: { var: r.k, changed: r.changed ? "1" : "0" } }),
       }),
-      h("details", { class: "rn-more" }, h("summary", null, "Budget used"),
-        HXUI.json_view(d.ins.checkpoint.budget || {}, { open_depth: 1, label: "Budget" })));
+      keep_open(st, "budget", h("details", { class: "rn-more", id: "rn-budget" }, h("summary", { id: "rn-budget-summary" }, "Budget used"),
+        HXUI.json_view(d.ins.checkpoint.budget || {}, { open_depth: 1, label: "Budget" }))));
+  }
+
+  /** a <details> whose open state survives the re-render after every step */
+  function keep_open(st, key, el) {
+    st.open = st.open || {};
+    if (st.open[key]) el.open = true;
+    el.addEventListener("toggle", () => { st.open[key] = el.open; });
+    return el;
   }
 
   /* ---------------------------------------------------------------- ledger */
@@ -155,11 +187,11 @@
       HXUI.table({
         caption: "Action intents", class: "rn-intents",
         columns: [
-          { key: "revision", label: "Rev", align: "right", render: (r) => h("span", { class: "hx-num" }, r.revision) },
-          { key: "state_id", label: "State", mono: true, nowrap: true },
           { key: "tool", label: "Tool", mono: true, nowrap: true },
-          { key: "status", label: "Status", render: (r) => schip(r.status) },
-          { key: "attempts", label: "Attempts", align: "right", fold: true, fold_label: "Attempts" },
+          { key: "status", label: "Status", nowrap: true, render: (r) => schip(r.status) },
+          { key: "state_id", label: "State", mono: true, nowrap: true, fold: true },
+          { key: "revision", label: "Rev", align: "right", fold: true, fold_label: "rev", render: (r) => h("span", { class: "hx-num" }, r.revision) },
+          { key: "attempts", label: "Attempts", align: "right", fold: true, fold_label: "attempts" },
           { key: "logical_action_id", label: "Logical action", fold: true, render: (r) => idcell(r.logical_action_id, 16) },
         ],
         rows: intents, empty: "No intents yet: the run has not reached a tool state.",
@@ -169,9 +201,9 @@
         caption: "Action receipts", class: "rn-receipts",
         columns: [
           { key: "tool", label: "Tool", mono: true, nowrap: true },
-          { key: "dispatch_state", label: "Dispatch", render: (r) => schip(r.dispatch_state) },
-          { key: "certainty", label: "Certainty", render: (r) => r.certainty ? schip(r.certainty) : h("span", { class: "hx-faint" }, "none") },
-          { key: "external_ref", label: "External ref", mono: true, render: (r) => r.external_ref || h("span", { class: "hx-faint" }, "none") },
+          { key: "dispatch_state", label: "Dispatch · certainty", render: (r) => h("span", { class: "rn-pair" }, schip(r.dispatch_state),
+            r.certainty ? schip(r.certainty) : h("span", { class: "hx-faint" }, "no certainty")) },
+          { key: "external_ref", label: "External ref", mono: true, fold: true, fold_label: "ref", render: (r) => r.external_ref || h("span", { class: "hx-faint" }, "none") },
           { key: "seq", label: "Receipt", fold: true, render: (r) => idcell(r.logical_action_id + "#" + r.seq, 18) },
         ],
         rows: receipts, empty: "No receipts yet.",
@@ -188,12 +220,12 @@
       HXUI.table({
         caption: "Evidence receipts", caption_hidden: true, class: "rn-evidence",
         columns: [
-          { key: "claim", label: "Claim", mono: true },
-          { key: "result", label: "Result", render: (r) => schip(r.result) },
+          { key: "claim", label: "Claim", render: (r) => wrap_id(r.claim) },
           { key: "valid", label: "Validity", render: (r) => r.invalidated_at === null || r.invalidated_at === undefined
             ? HXUI.chip("Valid", "ok", { icon: "check" })
             : h("span", { class: "rn-inval" }, HXUI.chip("Invalidated", "warn", { icon: "alert" }), h("span", { class: "rn-inval-why" }, r.invalidation_reason || "")) },
-          { key: "verifier", label: "Verifier", mono: true, nowrap: true, fold: true, fold_label: "Verifier" },
+          { key: "result", label: "Result", nowrap: true, fold: true, fold_label: "result", render: (r) => schip(r.result) },
+          { key: "verifier", label: "Verifier", mono: true, nowrap: true, fold: true, fold_label: "verifier" },
           { key: "receipt_id", label: "Receipt", fold: true, render: (r) => idcell(r.receipt_id, 18) },
         ],
         rows: ev, empty: "No evidence yet: validation and verification tools issue it.",
@@ -216,27 +248,35 @@
       HXUI.table({
         caption: "Interactions", caption_hidden: true, class: "rn-ix",
         columns: [
-          { key: "id", label: "Interaction", mono: true, nowrap: true, render: (r) => r.ix.interaction_id },
-          { key: "type", label: "Type", render: (r) => r.ix.type || "" },
-          { key: "status", label: "Status", render: (r) => schip(r.ix.status || "?") },
-          { key: "resp", label: "Answer", render: (r) => r.resp ? [code(r.resp.responder), ": ", code(compact_json(r.resp.response, 80))] : h("span", { class: "hx-faint" }, "none yet") },
-          { key: "scope", label: "Scope digest", fold: true, render: (r) => idcell(r.ix.scope_digest, 19) },
+          { key: "id", label: "Interaction", render: (r) => h("span", { class: "rn-ix-id" }, h("span", null, r.ix.type === "approval" ? "Approval" : r.ix.type === "input" ? "Input" : r.ix.type || "?"),
+            " ", h("span", { class: "hx-mono rn-id" }, r.ix.interaction_id)) },
+          { key: "status", label: "Status", nowrap: true, render: (r) => schip(r.ix.status || "?") },
+          { key: "resp", label: "Answer", fold: true, fold_label: "answer", render: (r) => r.resp ? [h("span", { class: "hx-mono" }, r.resp.responder), ": ", wrap_id(spaced_json(r.resp.response, 80))] : h("span", { class: "hx-faint" }, "none yet") },
+          { key: "scope", label: "Scope digest", fold: true, fold_label: "scope", render: (r) => idcell(r.ix.scope_digest, 19) },
         ],
         rows, empty: "No interactions: the run has not asked anyone for approval or input.",
       }));
   }
 
   /* ---------------------------------------------------------------- ERP */
+  /** The fake ERP's drafts for a tenant. FakeERP has no public listing yet (see the run group's open issues), so
+      this is the one place that reads its rows; without them the table falls back to read_draft by id. */
+  function erp_drafts(e, tenant) {
+    if (!e) return [];
+    if (typeof e.list_drafts === "function") { try { return e.list_drafts(tenant) || []; } catch (err) { /* fall through */ } }
+    if (Array.isArray(e._rows)) return e._rows.filter((r) => r.tenant_id === tenant);
+    return [];
+  }
   function erp(d) {
     const e = d.env.erp;
-    const rows = Array.isArray(e && e._rows) ? e._rows.filter((r) => r.tenant_id === d.run.tenant_id) : [];
+    const rows = erp_drafts(e, d.run.tenant_id);
     const calls = Array.isArray(e && e.calls) ? e.calls : [];
     let n = 0;
     try { n = e.count(d.run.tenant_id); } catch (err) { n = rows.length; }
     const payload = (r) => { try { return JSON.parse(r.payload); } catch (err) { return r.payload; } };
     return h("div", { class: "rn-tab" },
       h("p", { class: "rn-tab-sum", id: "rn-erp-count", dataset: { count: n } }, "The fake ERP holds " + n + (n === 1 ? " draft" : " drafts") + " for tenant ", code(d.run.tenant_id),
-        " (every run in this lab). Its call log lists ", String(calls.length), calls.length === 1 ? " call" : " calls", " since the last restart."),
+        " (every run in this lab). The call log of this ERP connection lists ", String(calls.length), calls.length === 1 ? " call" : " calls", "."),
       HXUI.table({
         caption: "ERP drafts", class: "rn-erp-drafts",
         columns: [
@@ -254,7 +294,7 @@
           { key: "op", label: "Operation", mono: true, render: (r) => r[0] },
           { key: "key", label: "Idempotency key", render: (r) => idcell(r[1], 22) },
         ],
-        rows: calls, empty: "No create calls since the last restart.",
+        rows: calls, empty: "No create calls on this ERP connection yet.",
       }));
   }
 
@@ -277,7 +317,7 @@
         const v = Number(r[x.key]) || 0;
         return v > 0 ? h("span", { class: ["rn-split-seg", x.cls], style: { flexGrow: String(v) }, title: x.label + ": " + secs(v) }) : null;
       }));
-    const keys = HX.metrics._keys_of ? HX.metrics._keys_of(rep.by_state, true) : Object.keys(rep.by_state);
+    const keys = Object.keys(rep.by_state || {}).sort();
     const states = keys.map((k) => Object.assign({ state: k }, rep.by_state[k]));
     return h("div", { class: "rn-tab" },
       h("p", { class: "rn-tab-sum" }, "From ", code("HX.metrics.collect"), " over this run's TIMING events. Latencies come from the lab's counter timer (0.125 s per reading), so they repeat exactly; human wait is logical clock time."),
@@ -288,7 +328,7 @@
         h("div", { class: "rn-split-item", dataset: { key: "human_wait_s" } },
           h("dt", null, h("span", { class: "rn-split-sw is-human", "aria-hidden": "true" }), "Human wait"),
           h("dd", { class: "hx-num" }, secs(r.human_wait_s))),
-        h("div", { class: "rn-split-item" }, h("dt", null, "Steps"), h("dd", { class: "hx-num" }, String(r.steps))),
+        h("div", { class: "rn-split-item" }, h("dt", { title: "Timed steps, including steps that paused or retried; the summary counts transitions" }, "Timed steps"), h("dd", { class: "hx-num" }, String(r.steps))),
         h("div", { class: "rn-split-item" }, h("dt", null, "Tokens"), h("dd", { class: "hx-num" }, String(r.tokens))),
         h("div", { class: "rn-split-item" }, h("dt", null, "Cost"), h("dd", null, r.cost_usd === null || r.cost_usd === undefined ? h("span", { title: "The fixture model reports no cost; unknown is never shown as 0." }, "unknown") : "$" + r.cost_usd)),
         h("div", { class: "rn-split-item" }, h("dt", null, "Uncertain effects"), h("dd", { class: "hx-num" }, String(r.uncertain_effects)))),
@@ -297,7 +337,7 @@
         caption: "Latency by state", class: "rn-by-state",
         columns: [
           { key: "state", label: "State", mono: true, nowrap: true },
-          { key: "count", label: "Steps", align: "right" },
+          { key: "count", label: "Timed steps", align: "right" },
           { key: "lat", label: "Total", align: "right", nowrap: true, render: (x) => secs(x.latency_s && x.latency_s.total) },
           { key: "engine_s", label: "Engine", align: "right", nowrap: true, fold: true, fold_label: "Engine", render: (x) => secs(x.engine_s) },
           { key: "model_s", label: "Model", align: "right", nowrap: true, fold: true, fold_label: "Model", render: (x) => secs(x.model_s) },
@@ -323,7 +363,17 @@
     create(id, opts) {
       const o = opts || {};
       let data = null;
-      const st = { timing: false, refresh: () => tabs.hx.refresh() };
+      /* re-rendering a tab keeps keyboard focus on the same control (by id) and <details> open states (st.open) */
+      const repaint = () => {
+        const a = document.activeElement;
+        const keep = a && tabs.contains(a) && a.id ? a.id : null;
+        tabs.hx.refresh();
+        if (keep && !(document.activeElement && document.activeElement.id === keep)) {
+          const el = document.getElementById(keep);
+          if (el && tabs.contains(el)) { try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); } }
+        }
+      };
+      const st = { timing: false, open: {}, refresh: repaint };
       const tabs = HXUI.tabs(id, TABS.map((t) => ({
         id: t.id, label: t.label,
         render: () => {
@@ -335,7 +385,7 @@
       })), { selected: o.selected || "timeline", label: "Run inspector", on_change: o.on_change });
       return {
         el: tabs,
-        update(d) { data = d; tabs.hx.refresh(); },
+        update(d) { data = d; repaint(); },
         select(tid) { tabs.hx.select(tid); },
         selected() { return tabs.hx.selected(); },
       };
