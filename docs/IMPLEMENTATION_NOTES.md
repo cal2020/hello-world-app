@@ -72,9 +72,11 @@ Node.js ≥ 22.12 is required (Vite 8 / Vitest 5 engines).
   (separate molecular or anatomical scene, lazy-loaded, with a breadcrumb and a
   location inset that links back to the whole-cell location).
 * **Routes.** `/{lang}/` (whole cell), `/{lang}/{slug}/` (structure),
-  `/{lang}/{slug}/?view=closeup`, `/{lang}/about/`. Slugs are stable English
-  identifiers shared by every language; titles, descriptions and alternate
-  links are localised. `/` redirects to the saved or browser language.
+  `/{lang}/{slug}/?view=closeup`, `…&detail={viewId}` for a structure's second
+  close-up view, `/{lang}/about/`. Slugs are stable English identifiers shared
+  by every language; titles, descriptions and alternate links are localised.
+  `/` redirects to the saved or browser language. Every route is also
+  prerendered as a static page (`scripts/prerender.ts`).
 * **Navigation wraps.** Previous/next and arrow keys wrap from the last
   structure to the first and vice versa (stated in Help and on the controls).
 * **Tour.** Uses `history.replaceState` for its steps so that a tour does not
@@ -86,7 +88,23 @@ Node.js ≥ 22.12 is required (Vite 8 / Vitest 5 engines).
   least 0.3, so faded ("ghosted") structures never intercept clicks — the same
   rule drives visuals and picking.
 * **Cutaway.** The plasma membrane and nuclear envelope open a cap centred on
-  the line of sight, so the interior stays visible from any orbit angle.
+  the line of sight, so the interior stays visible from any orbit angle. Its
+  glowing edge dims while an interior structure is in focus.
+* **Unobstructed focus.** When a structure is selected, the camera keeps its
+  preferred viewing direction unless other copies of the structure (or strongly
+  visible context) would block the line of sight; then it picks the nearest
+  clear direction within ~50°. Anything closer to the camera than ~45 % of the
+  focus distance dissolves (dithered), and dissolved objects cannot be clicked.
+* **Close-up toolkit.** Close-ups share `src/engine/closeups/kit.ts`: lipid
+  bilayers with individual lipids, banded cut membranes, DNA/RNA helices,
+  coiled coils, actin and microtubule lattices, tRNA and ribosome shapes, glowing
+  ion particles and GPU-side thermal motion. Close-up animations are pure
+  functions of biological time, so freezing stops them exactly.
+* **Translations.** A language-neutral registry (`src/content/`) holds numbers,
+  sources and structure metadata; locale files hold all prose. Six translations
+  were produced with AI assistance and are checked automatically (keys,
+  placeholders, plural categories, no leftover English); unit strings may be
+  plural objects for languages such as French (“1 milliard *de* molécules”).
 
 ## 5. Scientific sourcing method
 
@@ -111,4 +129,5 @@ access.
 
 ## 7. Running checklist
 
-Status is kept current in `docs/CHECKLIST.md`.
+Status is kept current in `docs/CHECKLIST.md`; verification results are in
+`docs/VERIFICATION.md` and performance notes in `docs/PERFORMANCE.md`.
