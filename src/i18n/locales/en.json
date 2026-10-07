@@ -306,7 +306,7 @@
     "creditsTitle": "Credits",
     "credits": "Concept inspired by the Cellula Humana experience. Code, geometry, illustrations and text in this project are original. Built with React, Three.js, React Three Fiber and camera-controls.",
     "licensesTitle": "Licences",
-    "licenses": "Fonts: Alegreya and Alegreya Sans (Huerta Tipográfica) and Noto Sans SC (Google, Adobe), all under the SIL Open Font License 1.1. Software libraries are MIT-licensed. No external images or 3D models are used; see ASSET_LICENSES.md in the source repository.",
+    "licenses": "Fonts: Alegreya and Alegreya Sans (Huerta Tipográfica) and Noto Sans SC (Google, Adobe), all under the SIL Open Font License 1.1. Software libraries are MIT-licensed, apart from one small BSD-licensed helper (ieee754). No external images or 3D models are used; see ASSET_LICENSES.md in the source repository.",
     "close": "Close"
   },
   "errors": {

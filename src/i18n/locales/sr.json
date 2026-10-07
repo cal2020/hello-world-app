@@ -310,7 +310,7 @@
     "creditsTitle": "Zasluge",
     "credits": "Koncept je inspirisan interaktivnim projektom Cellula Humana. Kôd, geometrija, ilustracije i tekst u ovom projektu su originalni. Napravljeno pomoću biblioteka React, Three.js, React Three Fiber i camera-controls.",
     "licensesTitle": "Licence",
-    "licenses": "Fontovi: Alegreya i Alegreya Sans (Huerta Tipográfica) i Noto Sans SC (Google, Adobe), svi pod licencom SIL Open Font License 1.1. Softverske biblioteke su pod MIT licencom. Ne koriste se spoljne slike niti 3D modeli; pogledajte ASSET_LICENSES.md u repozitorijumu izvornog koda.",
+    "licenses": "Fontovi: Alegreya i Alegreya Sans (Huerta Tipográfica) i Noto Sans SC (Google, Adobe), svi pod licencom SIL Open Font License 1.1. Softverske biblioteke su pod MIT licencom, osim jedne male pomoćne biblioteke pod BSD licencom (ieee754). Ne koriste se spoljne slike niti 3D modeli; pogledajte ASSET_LICENSES.md u repozitorijumu izvornog koda.",
     "close": "Zatvori"
   },
   "errors": {

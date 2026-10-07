@@ -314,7 +314,7 @@
     "creditsTitle": "Авторы",
     "credits": "Концепция вдохновлена проектом Cellula Humana. Код, геометрия, иллюстрации и тексты этого проекта оригинальны. Создано с использованием React, Three.js, React Three Fiber и camera-controls.",
     "licensesTitle": "Лицензии",
-    "licenses": "Шрифты: Alegreya и Alegreya Sans (Huerta Tipográfica), а также Noto Sans SC (Google, Adobe) — все распространяются по лицензии SIL Open Font License 1.1. Программные библиотеки распространяются по лицензии MIT. Сторонние изображения и 3D-модели не используются; подробнее — в файле ASSET_LICENSES.md в репозитории исходного кода.",
+    "licenses": "Шрифты: Alegreya и Alegreya Sans (Huerta Tipográfica), а также Noto Sans SC (Google, Adobe) — все распространяются по лицензии SIL Open Font License 1.1. Программные библиотеки распространяются по лицензии MIT, кроме одной небольшой вспомогательной библиотеки под лицензией BSD (ieee754). Сторонние изображения и 3D-модели не используются; подробнее — в файле ASSET_LICENSES.md в репозитории исходного кода.",
     "close": "Закрыть"
   },
   "errors": {

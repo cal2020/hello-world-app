@@ -302,7 +302,7 @@
     "creditsTitle": "致谢",
     "credits": "创意受 Cellula Humana 体验启发。本项目中的代码、几何模型、插图和文字均为原创。使用 React、Three.js、React Three Fiber 和 camera-controls 构建。",
     "licensesTitle": "许可",
-    "licenses": "字体：Alegreya 和 Alegreya Sans（Huerta Tipográfica）以及 Noto Sans SC（Google、Adobe），均采用 SIL Open Font License 1.1 许可。软件库采用 MIT 许可。本项目未使用任何外部图片或 3D 模型；详见源代码仓库中的 ASSET_LICENSES.md。",
+    "licenses": "字体：Alegreya 和 Alegreya Sans（Huerta Tipográfica）以及 Noto Sans SC（Google、Adobe），均采用 SIL Open Font License 1.1 许可。软件库采用 MIT 许可，仅一个小型辅助库（ieee754）采用 BSD 许可。本项目未使用任何外部图片或 3D 模型；详见源代码仓库中的 ASSET_LICENSES.md。",
     "close": "关闭"
   },
   "errors": {
