@@ -67,3 +67,8 @@ export function citationLine(source: {
 export function joinSentences(t: Translator, ...parts: Array<string | null | undefined | false>): string {
   return parts.filter((part): part is string => !!part).join(t.lang === 'zh' ? '' : ' ');
 }
+
+/** Original illustration rendered from a structure's close-up (scripts/illustrations.ts). */
+export function illustrationUrl(id: string, base: string = import.meta.env?.BASE_URL ?? '/'): string {
+  return `${base}illustrations/${id}.jpg`;
+}

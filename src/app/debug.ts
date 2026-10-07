@@ -7,6 +7,7 @@
  *   ?simulate=context-loss   lose the WebGL context 3 s after entering
  *   ?quality=low|medium|high force a quality level for this visit
  *   ?perf=1                  show the frame-time overlay
+ *   ?capture=1               show only the 3D view, centred (illustration capture)
  */
 const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
 
@@ -15,4 +16,5 @@ export const debugParams = {
   simulate: params.get('simulate'),
   quality: params.get('quality') as 'low' | 'medium' | 'high' | null,
   perf: params.get('perf') === '1',
+  capture: params.get('capture') === '1',
 };

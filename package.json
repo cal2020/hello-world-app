@@ -21,7 +21,8 @@
     "check:links": "tsx scripts/check-links.ts",
     "screenshots": "tsx scripts/screenshots.ts",
     "perf": "tsx scripts/measure-performance.ts",
-    "i18n": "tsx scripts/i18n.ts"
+    "i18n": "tsx scripts/i18n.ts",
+    "illustrations": "tsx scripts/illustrations.ts"
   },
   "dependencies": {
     "@fontsource/alegreya": "5.3.0",

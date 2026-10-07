@@ -16,6 +16,8 @@ import { AtlasBanner, LocaleBanner } from './ui/Banners';
 import { TextAtlas } from './ui/TextAtlas';
 import { ViewerHost } from './ui/ViewerHost';
 import { LocationInset } from './ui/LocationInset';
+import { debugParams } from './app/debug';
+import { illustrationUrl } from './content/text';
 
 /** DOM layers the renderer updates directly every frame (labels, leader lines, hover tip). */
 function OverlayLayers() {
@@ -48,6 +50,10 @@ function OverlayLayers() {
  */
 function useViewInsets(deps: unknown[]) {
   useLayoutEffect(() => {
+    if (debugParams.capture) {
+      publishInsets({ left: 0, right: 0, top: 0, bottom: 0 });
+      return;
+    }
     const measure = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
@@ -119,6 +125,19 @@ export function App() {
 
   useViewInsets([layout, sheet, textAtlas, listOpen, viewportHeight]);
 
+  if (debugParams.capture) {
+    // Illustration capture (scripts/illustrations.ts): only the 3D view, no panels.
+    return (
+      <div className="app app-capture" data-layout={layout} data-phase={phase} data-closeup={closeupStatus} data-view-state={viewState}>
+        <div className="viewer" id="viewer">
+          <ViewerHost />
+          <OverlayLayers />
+        </div>
+        <EntryOverlay />
+      </div>
+    );
+  }
+
   const sheetH = layout === 'compact' ? sheetHeight(sheet, viewportHeight) : 0;
   const style = layout === 'compact' ? ({ '--sheet-h': `${sheetH}px` } as React.CSSProperties) : undefined;
 
@@ -149,7 +168,12 @@ export function App() {
       <ReadingPanel />
       {textAtlas && (
         <main className="text-atlas" data-testid="text-atlas">
-          <TextAtlas t={t} banner={<AtlasBanner />} onSelect={(id) => selectStructure(id, { source: 'atlas' })} />
+          <TextAtlas
+            t={t}
+            banner={<AtlasBanner />}
+            onSelect={(id) => selectStructure(id, { source: 'atlas' })}
+            illustrationFor={(id) => illustrationUrl(id)}
+          />
         </main>
       )}
       {!textAtlas && <Hud />}

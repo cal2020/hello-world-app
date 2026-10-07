@@ -33,7 +33,7 @@ function normalizeBase(value: string): string {
 const escapeHtml = (text: string) =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-function headTags(head: HeadInfo): string {
+function headTags(head: HeadInfo, image?: string): string {
   const abs = (path: string) => `${siteUrl}${path}`;
   const lines = [
     `<meta name="description" content="${escapeHtml(head.description)}" />`,
@@ -45,14 +45,18 @@ function headTags(head: HeadInfo): string {
     `<meta property="og:locale" content="${head.langTag.replace('-', '_')}" />`,
   ];
   if (siteUrl) lines.push(`<meta property="og:url" content="${escapeHtml(abs(head.canonicalPath))}" />`);
+  if (siteUrl && image) {
+    lines.push(`<meta property="og:image" content="${escapeHtml(abs(image))}" />`);
+    lines.push(`<meta name="twitter:card" content="summary_large_image" />`);
+  }
   return lines.join('\n    ');
 }
 
-function fill(template: string, head: HeadInfo, html: string): string {
+function fill(template: string, head: HeadInfo, html: string, image?: string): string {
   return template
     .replace(/<html lang="[^"]*">/, `<html lang="${head.langTag}">`)
     .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(head.title)}</title>`)
-    .replace('<!--app-head-->', headTags(head))
+    .replace('<!--app-head-->', headTags(head, image))
     .replace('<body>', '<body class="atlas-page">')
     .replace('<!--app-html-->', html);
 }
@@ -86,7 +90,8 @@ async function main(): Promise<void> {
     for (const route of entry.routesFor(lang)) {
       const { html, head } = entry.renderPage(route, base);
       const path = buildPath(route, base);
-      write(fileFor(path), fill(template, head, html));
+      const image = `${base}illustrations/${route.structure ?? 'cell'}.jpg`;
+      write(fileFor(path), fill(template, head, html, image));
       written.push(path);
     }
   }

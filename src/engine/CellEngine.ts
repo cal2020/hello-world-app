@@ -828,6 +828,10 @@ export class CellEngine implements EngineController {
 
   private render(): void {
     const scene = this.closeup ? this.closeup.scene.scene : this.scene;
+    // Count draw calls and triangles over all passes of a frame (post-processing
+    // would otherwise leave only the last full-screen pass in the statistics).
+    this.gl.info.autoReset = false;
+    this.gl.info.reset();
     if (this.composer && this.renderPass) {
       this.renderPass.scene = scene;
       this.composer.render();

@@ -2170,3 +2170,13 @@ html.js-pending body::before {
     color: #000;
   }
 }
+
+/* Illustration capture (?capture=1): the 3D view alone, no overlays. */
+.app-capture .label-layer,
+.app-capture .hover-tip {
+  display: none;
+}
+
+.static-figure {
+  margin: 22px 26px 0;
+}

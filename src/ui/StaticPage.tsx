@@ -1,12 +1,11 @@
 import { GROUPS } from '../content/registry';
-import { structureName } from '../content/text';
+import { illustrationUrl, structureName } from '../content/text';
 import type { StructureId } from '../content/types';
 import { LANGS, LANG_INFO } from '../i18n/languages';
 import type { Translator } from '../i18n/translator';
 import { buildPath, type Route } from '../app/routing';
 import { neighbor } from '../app/actions';
 import { AboutContent } from './AboutContent';
-import { CellIllustration } from './CellIllustration';
 import { OverviewArticle } from './OverviewArticle';
 import { StructureArticle } from './StructureArticle';
 
@@ -61,7 +60,14 @@ export function StaticPage({ route, t, base, languages, notFound }: StaticPagePr
           </article>
         ) : route.structure ? (
           <>
-            <StructureArticle id={route.structure} t={t} mode="static" headingLevel="h1" hrefFor={structureHref} />
+            <StructureArticle
+              id={route.structure}
+              t={t}
+              mode="static"
+              headingLevel="h1"
+              hrefFor={structureHref}
+              illustration={{ src: illustrationUrl(route.structure, base), alt: t.t('atlas.illustration', { name: structureName(t, route.structure) }) }}
+            />
             <nav className="static-prev-next" aria-label={t.t('nav.breadcrumb')}>
               <a href={structureHref(neighbor(route.structure, -1))} rel="prev">
                 ← {t.t('nav.previousNamed', { name: structureName(t, neighbor(route.structure, -1)) })}
@@ -74,7 +80,9 @@ export function StaticPage({ route, t, base, languages, notFound }: StaticPagePr
           </>
         ) : (
           <>
-            <CellIllustration className="entry-preview" title={t.t('loading.previewAlt')} />
+            <figure className="atlas-figure static-figure">
+              <img src={illustrationUrl('cell', base)} alt={t.t('loading.previewAlt')} width={960} height={600} decoding="async" />
+            </figure>
             <OverviewArticle t={t} mode="static" headingLevel="h1" hrefFor={structureHref} withDescriptions />
           </>
         )}
