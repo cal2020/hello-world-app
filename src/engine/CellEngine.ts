@@ -214,6 +214,14 @@ export class CellEngine implements EngineController {
     });
     const coarse = window.matchMedia('(pointer: coarse)').matches;
     this.perf = new PerfMonitor(debugParams.perf, coarse);
+    if (debugParams.perf) {
+      // Diagnostics for scripts/check-closeups.ts (resource counts and frame statistics).
+      (window as Window & { __HCA_DEBUG__?: unknown }).__HCA_DEBUG__ = {
+        memory: () => ({ ...gl.info.memory, programs: gl.info.programs?.length ?? 0 }),
+        render: () => ({ ...gl.info.render }),
+        quality: () => this.quality,
+      };
+    }
     this.canvas.addEventListener('webglcontextlost', this.onContextLost);
     document.addEventListener('visibilitychange', this.onVisibility);
   }
