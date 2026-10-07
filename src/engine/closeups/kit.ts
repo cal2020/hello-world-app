@@ -21,6 +21,19 @@ export function byQuality<T>(quality: QualityLevel, values: { low: T; medium: T;
   return values[quality];
 }
 
+/**
+ * three.js measures curves with 200 samples by default, which spaces points
+ * unevenly along long curves (e.g. hundreds of base pairs). Raise the
+ * resolution so arc-length lookups are accurate to about `step`.
+ */
+export function refineCurve(curve: THREE.Curve<THREE.Vector3>, step: number): void {
+  const divisions = Math.min(40_000, Math.max(curve.arcLengthDivisions, Math.ceil(curve.getLength() / step)));
+  if (divisions !== curve.arcLengthDivisions) {
+    curve.arcLengthDivisions = divisions;
+    curve.updateArcLengths();
+  }
+}
+
 // ── Materials ──────────────────────────────────────────────────────────────
 
 /** Matte, softly self-lit "molecule" material in the atlas style. */
@@ -569,6 +582,7 @@ export function doubleHelix(options: HelixOptions): Helix {
   const backboneRadius = options.backboneRadius ?? 0.28;
   const offset = options.strandOffset ?? 2.4;
   const curve = options.curve;
+  refineCurve(curve, rise / 2);
   const length = curve.getLength();
   const bpCount = Math.max(2, Math.floor(length / rise));
   const frames = curve.computeFrenetFrames(bpCount * 2, false);
@@ -659,6 +673,7 @@ export interface Strand {
 export function singleStrand(options: StrandOptions): Strand {
   const spacing = options.spacing ?? 0.6;
   const curve = options.curve;
+  refineCurve(curve, spacing / 2);
   const length = curve.getLength();
   const count = Math.max(2, Math.floor(length / spacing));
   const backboneRadius = options.backboneRadius ?? 0.3;
@@ -707,6 +722,7 @@ export function coiledCoilGeometry(curve: THREE.Curve<THREE.Vector3>, options: {
   const coilRadius = options.coilRadius ?? 0.5;
   const strandRadius = options.strandRadius ?? 0.5;
   const pitch = options.pitch ?? 14;
+  refineCurve(curve, 0.4);
   const length = curve.getLength();
   const samples = Math.max(16, Math.ceil(length / 0.8));
   const frames = curve.computeFrenetFrames(samples, false);
@@ -752,6 +768,7 @@ export interface ActinFilament {
 
 export function actinFilament(options: ActinFilamentOptions): ActinFilament {
   const curve = options.curve;
+  refineCurve(curve, ACTIN.rise / 2);
   const length = curve.getLength();
   const count = Math.max(2, Math.floor(length / ACTIN.rise));
   const frames = curve.computeFrenetFrames(count, false);

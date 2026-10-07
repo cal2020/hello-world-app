@@ -21,8 +21,8 @@ import type { CloseupFactory } from './types';
  * The end of a chromosome's DNA (1 unit = 1 nm), drawn to scale: a B-DNA
  * duplex of TTAGGG repeats (one coloured segment = 6 bp ≈ 2 nm) comes in from
  * the left, curves round into a loop ~90 nm across, and its 3′ single-stranded
- * overhang (~130 nt) tucks back into the duplex where the loop closes: it
- * pairs with the C-rich strand over ~94 bp and displaces the G-rich strand as
+ * overhang (~134 nt) tucks back into the duplex where the loop closes: it
+ * pairs with the C-rich strand over ~100 bp and displaces the G-rich strand as
  * a small D-loop. Shelterin coats the repeats: TRF1/TRF2 dimers (violet) on
  * the duplex — clustered at the junction — and POT1–TPP1 (teal) on the single
  * strands, with TIN2 bridges between them.

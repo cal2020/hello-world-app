@@ -525,11 +525,12 @@ export function buildNucleosomes(ctx: BuildContext): CloseupViewBuild {
     return length;
   };
   /** Random unit vector within `maxAngle` of `axisDir`. */
+  const perturbSide = new THREE.Vector3();
   const perturb = (axisDir: THREE.Vector3, maxAngle: number, target: THREE.Vector3) => {
-    const side = new THREE.Vector3().crossVectors(axisDir, Math.abs(axisDir.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : plusX).normalize();
+    perturbSide.crossVectors(axisDir, Math.abs(axisDir.y) < 0.9 ? UP : plusX).normalize();
     const angle = maxAngle * Math.sqrt(rng.next());
-    side.applyAxisAngle(axisDir, rng.range(0, TAU));
-    return target.copy(axisDir).applyAxisAngle(side, angle).normalize();
+    perturbSide.applyAxisAngle(axisDir, rng.range(0, TAU));
+    return target.copy(axisDir).applyAxisAngle(perturbSide, angle).normalize();
   };
   const chord = new THREE.Vector3();
   const tE = new THREE.Vector3();
@@ -543,7 +544,7 @@ export function buildNucleosomes(ctx: BuildContext): CloseupViewBuild {
     cost: number;
   }
   const BEAM = 24;
-  const EXPAND = 600;
+  const EXPAND = 280;
   let beam: Partial[] = [];
   for (let k = 0; k < EXPAND * 4; k++) {
     randomQuaternion(rng, candidate);
@@ -553,9 +554,15 @@ export function buildNucleosomes(ctx: BuildContext): CloseupViewBuild {
   }
   beam.sort((a, b) => a.cost - b.cost);
   beam = beam.slice(0, BEAM);
+  interface Candidate {
+    parent: number;
+    cost: number;
+    center: THREE.Vector3;
+    quaternion: THREE.Quaternion;
+  }
   for (let i = 1; i < count; i++) {
-    const next: Partial[] = [];
-    for (const partial of beam) {
+    const candidates: Candidate[] = [];
+    beam.forEach((partial, parent) => {
       const prev = partial.poses[i - 1];
       const prevExit = exitPoint.clone().applyMatrix4(prev.matrix);
       const prevTan = exitTangent.clone().applyQuaternion(prev.quaternion);
@@ -584,17 +591,14 @@ export function buildNucleosomes(ctx: BuildContext): CloseupViewBuild {
         }
         cost += 0.35 * (i % 2 === 0 ? 1 - facingOf(candidate) : facingOf(candidate));
         cost += 0.8 * angleBetween(eTan.set(1, 0, 0).applyQuaternion(candidate), plusX);
-        const total = partial.cost + cost;
-        if (next.length >= BEAM * 4 && total > next[next.length - 1].cost) continue;
-        next.push({
-          poses: [...partial.poses, { center: centerC.clone(), quaternion: candidate.clone(), matrix: new THREE.Matrix4().compose(centerC, candidate, new THREE.Vector3(1, 1, 1)) }],
-          cost: total,
-        });
-        next.sort((a, b) => a.cost - b.cost);
-        if (next.length > BEAM * 4) next.length = BEAM * 4;
+        candidates.push({ parent, cost: partial.cost + cost, center: centerC.clone(), quaternion: candidate.clone() });
       }
-    }
-    beam = next.slice(0, BEAM);
+    });
+    candidates.sort((a, b) => a.cost - b.cost);
+    beam = candidates.slice(0, BEAM).map((c) => ({
+      poses: [...beam[c.parent].poses, { center: c.center, quaternion: c.quaternion, matrix: new THREE.Matrix4().compose(c.center, c.quaternion, new THREE.Vector3(1, 1, 1)) }],
+      cost: c.cost,
+    }));
   }
   // The last core's exit should head on out of the view (to the right).
   beam.sort((a, b) => {
@@ -814,7 +818,7 @@ export function buildNucleosomes(ctx: BuildContext): CloseupViewBuild {
   return {
     group,
     target: center.clone(),
-    radius: 45,
+    radius: 40,
     direction,
     labels: [
       { part: 'nucleosome', anchor: anchorOn(fiber, toFiber(faceAnchor(mid))) },

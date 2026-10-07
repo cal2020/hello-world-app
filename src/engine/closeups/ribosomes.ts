@@ -29,7 +29,7 @@ import { fineCurve } from './telomeresParts';
 import type { CloseupFactory } from './types';
 
 /**
- * Translation (1 unit = 1 nm, slowdown 10): an 80S ribosome ~28 nm across.
+ * Translation (1 unit = 1 nm, slowdown 10): an 80S ribosome ~30 nm across.
  * One elongation cycle takes 2 s (real ≈ 0.2 s): an aminoacyl-tRNA arrives
  * in the A site with its anticodon on the codon, the growing chain is
  * transferred from the P-site tRNA onto its amino acid (peptide bond), then
