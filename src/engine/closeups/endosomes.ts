@@ -526,7 +526,7 @@ const create: CloseupFactory = (ctx) => {
     pit: new THREE.Vector3(),
     early: new THREE.Vector3(),
     late: new THREE.Vector3(),
-    tube: tubePath.point(0.62, new THREE.Vector3()).add(new THREE.Vector3(TUBE_R * 0.9, -TUBE_R * 0.3, 0)),
+    tube: tubePath.point(0.12, new THREE.Vector3()).add(new THREE.Vector3(TUBE_R * 0.95, -TUBE_R * 0.25, 0)),
     ilv: new THREE.Vector3(),
     receptor: new THREE.Vector3(),
     lysosome: L_C.clone().add(dirAt(-12, new THREE.Vector3()).multiplyScalar(R_LY)),
@@ -565,8 +565,8 @@ const create: CloseupFactory = (ctx) => {
     scene,
     views: [
       {
-        target: new THREE.Vector3(57, -52, -30),
-        radius: 262,
+        target: new THREE.Vector3(57, -50, -30),
+        radius: 285,
         direction: new THREE.Vector3(0, 0.12, 1).normalize(),
         labels,
       },

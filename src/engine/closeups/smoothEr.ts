@@ -10,7 +10,7 @@ import type { CloseupFactory } from './types';
 /**
  * A three-way junction of smooth-ER tubes (1 unit = 1 nm): 40 nm wide tubes
  * with a 5 nm membrane, drawn semi-transparent so the calcium store inside is
- * visible. SERCA pumps move calcium ions in one at a time (with an ATP cue);
+ * visible. SERCA pumps move calcium ions in, two per ATP (with an ATP cue);
  * every 6 s one of two release channels opens and a burst of ions streams
  * into the cytosol, after which the pumps slowly refill the store.
  * Lipid-making enzymes sit in the membrane.
@@ -206,7 +206,7 @@ const create: CloseupFactory = (ctx) => {
     })),
   );
   const cytosolHomes = Array.from({ length: CYTOSOL_IONS }, () => new THREE.Vector3(ionRng.range(-90, 90), ionRng.range(26, 60), ionRng.range(-70, 60)));
-  const total = storeCount + channelFrames.length * POOL + PUMPS + CYTOSOL_IONS;
+  const total = storeCount + channelFrames.length * POOL + PUMPS * 2 + CYTOSOL_IONS;
   // Two layers sharing positions: lumen ions are drawn before the translucent tube walls (seen through them).
   const ionsLumen = glowPoints({ count: total, color: ION_COLOR, size: ION_SIZE, pointScale: ctx.pointScale });
   const ionsCytosol = glowPoints({ count: total, color: ION_COLOR, size: ION_SIZE * 1.25, pointScale: ctx.pointScale, share: ionsLumen });
@@ -228,6 +228,7 @@ const create: CloseupFactory = (ctx) => {
   });
 
   const _ion = new THREE.Vector3();
+  const _side = new THREE.Vector3();
   const _a = new THREE.Vector3();
   const _b = new THREE.Vector3();
   const _normal = new THREE.Vector3();
@@ -352,39 +353,48 @@ const create: CloseupFactory = (ctx) => {
       if (channels.instanceColor) channels.instanceColor.needsUpdate = true;
       channelGlow.commit();
 
-      // Pumps: one ion at a time from the cytosol into the lumen, powered by ATP.
+      // Pumps: two ions per ATP from the cytosol into the lumen. They bind one after the
+      // other, sit side by side while ATP is used, then cross the membrane together.
       state.atp = false;
       for (let p = 0; p < PUMPS; p++) {
         const frame = pumpFrames[p];
         const ps = (((t + p * 0.45) % PUMP_PERIOD) + PUMP_PERIOD) % PUMP_PERIOD;
         _normal.set(0, 1, 0).applyQuaternion(frame.quaternion);
-        const site = _a.copy(frame.position).addScaledVector(_normal, 2.4);
-        let lumenAlpha = 0;
-        let cytosolAlpha = 0;
-        if (ps < 1) {
-          _ion.set(Math.cos(p * 2.1) * 9, 12, Math.sin(p * 2.1) * 9).applyQuaternion(frame.quaternion).add(frame.position).lerp(site, sstep(0, 1, ps));
-          cytosolAlpha = sstep(0, 0.35, ps);
-        } else if (ps < 1.5) {
-          _ion.copy(site);
-          cytosolAlpha = 1;
-        } else if (ps < 2) {
-          _b.copy(frame.position).addScaledVector(_normal, -MEMBRANE - 3);
-          _ion.copy(site).lerp(_b, sstep(1.5, 2, ps));
-          if (ps < 1.75) cytosolAlpha = 1;
-          else lumenAlpha = 1;
-        } else if (ps < 3) {
-          _b.copy(frame.position).addScaledVector(_normal, -MEMBRANE - 3);
-          branches[frame.branch].sampler.at(frame.u, frame.angle, 4, _p);
-          _ion.copy(_b).lerp(_p, sstep(2, 3, ps));
-          lumenAlpha = 1 - sstep(2.4, 3, ps);
-        } else {
-          _ion.copy(site);
+        _side.set(1, 0, 0).applyQuaternion(frame.quaternion);
+        for (let n = 0; n < 2; n++) {
+          const sign = n === 0 ? 1 : -1;
+          const arrive = n * 0.25;
+          const site = _a.copy(frame.position).addScaledVector(_normal, 2.4).addScaledVector(_side, 0.9 * sign);
+          let lumenAlpha = 0;
+          let cytosolAlpha = 0;
+          if (ps < arrive) {
+            _ion.copy(site);
+          } else if (ps < arrive + 0.8) {
+            const angle = p * 2.1 + n * 2.6;
+            _ion.set(Math.cos(angle) * 9, 12, Math.sin(angle) * 9).applyQuaternion(frame.quaternion).add(frame.position).lerp(site, sstep(arrive, arrive + 0.8, ps));
+            cytosolAlpha = sstep(arrive, arrive + 0.3, ps);
+          } else if (ps < 1.5) {
+            _ion.copy(site);
+            cytosolAlpha = 1;
+          } else if (ps < 2) {
+            _b.copy(frame.position).addScaledVector(_normal, -MEMBRANE - 3).addScaledVector(_side, 0.9 * sign);
+            _ion.copy(site).lerp(_b, sstep(1.5, 2, ps));
+            if (ps < 1.75) cytosolAlpha = 1;
+            else lumenAlpha = 1;
+          } else if (ps < 3) {
+            _b.copy(frame.position).addScaledVector(_normal, -MEMBRANE - 3).addScaledVector(_side, 0.9 * sign);
+            branches[frame.branch].sampler.at(frame.u, frame.angle + sign * 0.5, 4, _p);
+            _ion.copy(_b).lerp(_p, sstep(2, 3, ps));
+            lumenAlpha = 1 - sstep(2.4, 3, ps);
+          } else {
+            _ion.copy(site);
+          }
+          write(k++, _ion, lumenAlpha, cytosolAlpha);
         }
-        write(k++, _ion, lumenAlpha, cytosolAlpha);
         const cue = Math.sin(Math.PI * sstep(0.75, 1.55, ps));
         atpCues.alphas[p] = cue * (calm ? 0.6 : 1);
         if (p === 4 && cue > 0.35) state.atp = true;
-        // The head tilts as it hands the ion across.
+        // The head tilts as it hands the ions across.
         const nod = Math.sin(Math.PI * sstep(1, 2, ps)) * 0.16 * (calm ? 0.5 : 1);
         _q.setFromAxisAngle(_z, nod);
         _q2.copy(frame.quaternion).multiply(_q);

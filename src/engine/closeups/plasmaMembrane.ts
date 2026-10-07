@@ -61,7 +61,7 @@ const create: CloseupFactory = (ctx) => {
     const toChannel = Math.hypot(s.x - CHANNEL.x, s.z - CHANNEL.z);
     const toReceptor = Math.hypot(s.x - RECEPTOR.x, s.z - RECEPTOR.z);
     if (toChannel < 4.3 || toReceptor < 1.2) continue;
-    if (pick.chance(0.22)) cholesterolSites.push(s);
+    if (pick.chance(0.4)) cholesterolSites.push(s); // ≈0.7 cholesterol per phospholipid
     else phospholipidSites.push(s);
   }
   const lipids = phospholipidMeshes(phospholipidSites, {

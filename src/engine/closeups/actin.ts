@@ -192,7 +192,7 @@ const create: CloseupFactory = (ctx) => {
   const tilt = new THREE.Quaternion();
   let advance = 0;
 
-  /** Advance since the current generation of slot k of a lineage was born (slots are reused every 8 generations). */
+  /** Advance since the current generation of slot k of a lineage was born (each slot is reused every SLOTS generations). */
   const ageOf = (lineage: Lineage, k: number, H: number) => {
     const n = k + SLOTS * Math.floor((H - lineage.offset + ARRIVE - k * RISE_PER_BIRTH) / (SLOTS * RISE_PER_BIRTH));
     return H - (lineage.offset + n * RISE_PER_BIRTH);
@@ -207,7 +207,7 @@ const create: CloseupFactory = (ctx) => {
       const front = lineage.front[parity];
       const half = 0.5 * RISE_PER_BIRTH * TAN;
       const sign = parity === 0 ? -1 : 1;
-      // Branch point (pointed end) of this generation: it was born 20 nm under the membrane and has flowed down since.
+      // Branch point (pointed end) of this generation: born ~20 nm under the membrane, it has flowed down since.
       const depth = lineage.branchDepth;
       slot.base.set(lineage.x + sign * half * Math.cos(lineage.phi), Y_MEMBRANE - depth - h, lineage.z + sign * half * Math.sin(lineage.phi));
       filament.mesh.position.copy(slot.base);
@@ -246,8 +246,8 @@ const create: CloseupFactory = (ctx) => {
       if (h >= 0 && h < lineage.capAt && next < lineage.maxSubunits) {
         const at = addedAt(lineage, next);
         const prev = next > 0 ? addedAt(lineage, next - 1) : 0;
-        const window = Math.max(0.5, 0.65 * (at - prev));
-        const k = (h - (at - window)) / window;
+        const span = Math.max(0.5, 0.65 * (at - prev));
+        const k = (h - (at - span)) / span;
         if (k > 0 && k < 1) {
           const e = easeInOut(k);
           v2.copy(filament.positions[next]).add(slot.base);
@@ -338,10 +338,6 @@ const create: CloseupFactory = (ctx) => {
 
   const cortexAnchor = new THREE.Vector3(-118, 40, 24);
   const membraneAnchor = new THREE.Vector3(-96, Y_MEMBRANE + 2.5, MEMBRANE_DEPTH / 2);
-  const DEBUG = new URLSearchParams(window.location.search);
-  const DEBUG_T = Number(DEBUG.get('cut') ?? 'NaN');
-  const DEBUG_R = Number(DEBUG.get('cur') ?? 'NaN');
-  const DEBUG_C = (DEBUG.get('cuc') ?? '').split(',').map(Number);
   const update = (t: number, calm: boolean) => {
     updateNetwork(t, calm);
     updateAnchors();
@@ -352,8 +348,8 @@ const create: CloseupFactory = (ctx) => {
     scene,
     views: [
       {
-        target: DEBUG_C.length === 3 ? new THREE.Vector3(DEBUG_C[0], DEBUG_C[1], DEBUG_C[2]) : new THREE.Vector3(0, 62, 0),
-        radius: Number.isFinite(DEBUG_R) ? DEBUG_R : 140,
+        target: new THREE.Vector3(0, 62, 0),
+        radius: 140,
         direction: new THREE.Vector3(0.05, 0.24, 1).normalize(),
         labels: [
           { part: 'barbed-end', anchor: () => anchors.barbed },
@@ -368,8 +364,7 @@ const create: CloseupFactory = (ctx) => {
     ],
     setView() {},
     update(_dt, time, calm) {
-      const dbg = window as unknown as { __cut?: number };
-      update(dbg.__cut ?? (Number.isFinite(DEBUG_T) ? DEBUG_T : time), calm);
+      update(time, calm);
     },
     dispose() {
       slots.forEach((s) => s.filament.dispose());

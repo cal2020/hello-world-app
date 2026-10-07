@@ -8,7 +8,7 @@ import { ballGeometry, mergeParts } from './membranesParts';
 /**
  * Pieces of the plasma-membrane close-up. The phospholipid layer follows
  * kit.lipidBilayer (same lattice, sizes and thermal motion) but is adapted:
- * cheaper geometry at low quality (the 40 nm patch holds ~3,400
+ * cheaper geometry at low quality (the 40 nm patch holds ~2,600
  * phospholipids), cholesterol in some lattice sites, and the per-lipid
  * jiggle seed is exposed so glycolipid sugar chains move with their lipid.
  */
