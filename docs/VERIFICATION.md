@@ -146,4 +146,46 @@ low frame rates of software rendering (a few frames per second); motion timing
 was therefore also checked through the code's pure time functions (close-up
 animations are functions of biological time, so frozen frames are exact).
 
-INSPECTION_PLACEHOLDER
+What was checked by looking at rendered pages: the 18 screenshots in
+[docs/screenshots/](screenshots/), a contact sheet of all 21 close-up views
+frozen at their poster moments (as a reduced-motion reader sees them), the 20
+text-atlas illustrations, and extra checks of each fix below.
+
+| Area | Observed |
+| --- | --- |
+| Entry and overview | Title card with “Enter the cell” and the text-atlas link; after entering, the cut-open cell with labels, the structure list on the left and the overview text on the right; scale bar in µm. |
+| Focused structures | Mitochondria “In the cell”: the selected mitochondrion is cut open in place (outer and inner membrane, cristae, matrix labelled) and nearer mitochondria dissolve out of the way. Nucleus: envelope opened, chromatin territories and nucleoli visible, pores labelled. Golgi: an oblique view of the stack with cis → trans labels in order. |
+| Close-ups | All 21 views open with their labels; frozen, each shows its poster moment. Scale bars switch to nm and state the enlargement relative to the whole cell (×210 for ATP synthase, ×260 for the ribosome, ×270 for the membrane). |
+| Teaching animations | Playing frames show the intended events: ATP leaving ATP synthase, a tRNA in the ribosome with the chain leaving the exit tunnel, kinesin on the microtubule with plus-end chevrons and dynein going the other way, export through the nuclear pore. |
+| Languages | French, Chinese, Spanish, Serbian, Russian and Italian pages show fully translated panels, labels, controls and scale text; Chinese uses its own font. |
+| Fallback | `?renderer=fail` shows the failure notice and the text atlas with contents and an illustration for every structure. |
+| Tablet and phone | Tablet: list in a drawer, reading panel on the right, toolbar and zoom buttons beside it. Phone: bottom sheet with a drag handle, compact toolbar, scale box and location inset. |
+
+**Defects found in this review and fixed** (commit “Fix layout and framing
+problems found in the screenshot review”):
+
+1. The text atlas slid 20 px under the structure list on wide screens (first
+   letters of headings hidden) — it now starts beside the list.
+2. On tablets in Spanish, Russian and Serbian the longer toolbar labels pushed
+   the zoom buttons over the reading panel — the toolbar now wraps, and its
+   export button is icon-only on tablets.
+3. On phones the scale box overlapped the first toolbar button — the bar is
+   capped at 80 px there; the location inset's “Back to the cell view” button
+   text now wraps instead of being clipped (Italian).
+4. The Golgi “In the cell” view looked straight into the cup of the stack, so
+   cis, medial and trans labels overlapped. Cause: the stack's own pick sphere
+   was a hair inside the engine's “clear” margin, so the stack counted as
+   blocking its own view and the camera swung round. The framing now looks
+   obliquely across the ribbon with a radius that keeps the margin clear.
+5. The kinesin close-up let the vesicle run up behind the top bar — the view
+   now leaves room for it.
+6. The French search placeholder was clipped (“« membrane c…”) — French and
+   Russian examples were shortened.
+7. With motion frozen, the intermediate-filament close-up opened without any
+   labels and several others without their event captions — close-ups now
+   open on a labelled poster moment (see “Close-up views” above).
+
+Known compromises: the scene deliberately fills the window behind translucent
+panels, so large objects can pass behind a panel; in a browser with hardware
+compositing the panels blur what is behind them. Live motion was only seen at
+the low frame rates of software rendering.
