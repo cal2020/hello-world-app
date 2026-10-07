@@ -103,8 +103,9 @@ async function main(): Promise<void> {
     }
     // Let labels settle and a few frames render.
     await page.waitForTimeout(shot.waitMs ?? 3000);
-    await page.screenshot({ path: join(out, `${shot.name}.png`), timeout: 120_000 });
-    console.log(`${shot.name}.png  (${((Date.now() - started) / 1000).toFixed(0)} s)`);
+    // JPEG keeps the repository small; at quality 90 interface text stays crisp.
+    await page.screenshot({ path: join(out, `${shot.name}.jpg`), type: 'jpeg', quality: 90, timeout: 120_000 });
+    console.log(`${shot.name}.jpg  (${((Date.now() - started) / 1000).toFixed(0)} s)`);
     await context.close();
   }
   await browser.close();
