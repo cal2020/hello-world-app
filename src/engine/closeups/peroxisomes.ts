@@ -20,9 +20,9 @@ const R = 200; // peroxisome radius (400 nm)
 const MEM = 6; // membrane thickness
 const C = new THREE.Vector3(0, 150, 0); // sphere centre: the lowest point of the cut edge is at y = −50
 const R_MID = R - MEM / 2;
-// Small molecules are drawn about 2.5× their true size (O atom radius 0.15 nm, H 0.11 nm).
-const O_R = 0.42;
-const H_R = 0.27;
+// Small molecules are drawn about 3× their true size (O atom radius 0.15 nm, H 0.11 nm).
+const O_R = 0.48;
+const H_R = 0.3;
 
 const COLORS = {
   membrane: '#b5e853',
@@ -72,7 +72,7 @@ const create: CloseupFactory = (ctx) => {
   const detail = quality === 'low' ? 1 : 2;
 
   // ── Membrane: the organelle cut open (back half of a 400-nm sphere); we look at its lower part ──
-  const dockX = 42;
+  const dockX = 32;
   const pore: HoleClip = { center: new THREE.Vector3(), axis: new THREE.Vector3(0, 1, 0), radius: { value: 0 } };
   const bowl = cutBowl({ radius: R, thickness: MEM, color: COLORS.membrane, innerColor: COLORS.membraneInner, segments: byQuality(quality, { low: 72, medium: 96, high: 120 }) });
   bowl.position.copy(C);
@@ -95,7 +95,7 @@ const create: CloseupFactory = (ctx) => {
     { at: [2.5, 0.1, 0], r: [2.9, 3.3, 3.0], color: COLORS.oxidase2 },
     { at: [3.3, -2.3, 0.8], r: 1.7, color: COLORS.oxidase2 },
   ]);
-  oxidase.position.set(-22, -4, -9);
+  oxidase.position.set(-24, -6, -9);
   const catalaseLumps: Lump[] = [];
   const tetra = [new THREE.Vector3(1, 1, 1), new THREE.Vector3(-1, -1, 1), new THREE.Vector3(-1, 1, -1), new THREE.Vector3(1, -1, -1)];
   tetra.forEach((v, i) => {
@@ -105,11 +105,11 @@ const create: CloseupFactory = (ctx) => {
     catalaseLumps.push({ at: [d.x, d.y + 0.6, d.z], r: 1.5, color: i % 2 ? COLORS.catalase2 : COLORS.catalase });
   });
   const catalase = protein('catalase', catalaseLumps);
-  catalase.position.set(14, -12, -9);
+  catalase.position.set(10, -17, -9);
   catalase.rotation.set(0.3, 0.5, 0.1);
 
   // ── ABCD1 transporter in the membrane, and the docking complex for PEX5 ──
-  const abcdX = -33;
+  const abcdX = -36;
   const abcd = protein('abcd1', [
     { at: [-1.7, 0, 0], r: [2.1, 3.4, 2.3], color: COLORS.abcd1 },
     { at: [1.7, 0, 0], r: [2.1, 3.4, 2.3], color: COLORS.abcd1 },
@@ -149,7 +149,7 @@ const create: CloseupFactory = (ctx) => {
     { at: [2.6, 1.4, -0.5], r: 1.9, color: COLORS.betaOx },
     { at: [-2.2, 1.6, 0.4], r: 1.7, color: COLORS.betaOx },
   ]);
-  betaOx.position.set(-25, -30, -8);
+  betaOx.position.set(-27, -31, -8);
 
   // ── Crowded matrix: background enzymes (and more catalase) jiggling behind the stage ──
   const shapes = proteinShapes('perox-bg', 4, detail, 0.28);
@@ -163,7 +163,7 @@ const create: CloseupFactory = (ctx) => {
   const seedBuckets: number[][] = shapes.map(() => []);
   const featured = [oxidase.position, catalase.position, betaOx.position];
   const inside = (p: THREE.Vector3, r: number) => p.distanceTo(C) < R - MEM - r - 1;
-  const onStage = (p: THREE.Vector3, r: number) => p.z + r > -21 && p.x > -60 && p.x < 34 && p.y > -48 && p.y < 34;
+  const onStage = (p: THREE.Vector3, r: number) => p.z + r > -21 && p.x > -60 && p.x < 30 && p.y > -50 && p.y < 26;
   for (let i = 0, placed = 0; i < bgCount * 8 && placed < bgCount; i++) {
     const p = new THREE.Vector3(rng.range(-110, 110), rng.range(-55, 95), rng.range(-160, -6));
     const r = rng.range(2.4, 5.2);
@@ -208,12 +208,12 @@ const create: CloseupFactory = (ctx) => {
     glow.sizes[i] = size;
   };
   // Halo slots: 0–1 O2/H2O2 n, 2–3 water n, 4 O2 out, 5 bound O, 6–7 substrate n, 8–11 C2 pieces, 12–14 chain.
-  setHalo(2, '#9fd4ff', 3.4);
-  setHalo(3, '#9fd4ff', 3.4);
-  setHalo(4, '#ff5a5a', 3.4);
-  setHalo(5, '#ff5a5a', 2.0);
-  setHalo(6, '#ffae5c', 3.6);
-  setHalo(7, '#ffae5c', 3.6);
+  setHalo(2, '#7fc4ff', 4.6);
+  setHalo(3, '#7fc4ff', 4.6);
+  setHalo(4, '#ff4a4a', 4.6);
+  setHalo(5, '#ff4a4a', 2.6);
+  setHalo(6, '#ff9c40', 4.6);
+  setHalo(7, '#ff9c40', 4.6);
   for (let i = 8; i < 12; i++) setHalo(i, '#ffd36b', 2.4);
   for (let i = 12; i < 15; i++) setHalo(i, '#ffcf5a', 2.6);
 
@@ -224,7 +224,7 @@ const create: CloseupFactory = (ctx) => {
   const colorSubstrate = new THREE.Color(COLORS.substrate);
   const colorProduct = new THREE.Color(COLORS.product);
   const haloO2 = new THREE.Color('#ff5a5a');
-  const haloPeroxide = new THREE.Color('#e2ccff');
+  const haloPeroxide = new THREE.Color('#c9a8ff');
 
   // Reaction geometry.
   const oxidaseHome = oxidase.position.clone();
@@ -232,10 +232,10 @@ const create: CloseupFactory = (ctx) => {
   const oxSite = oxidase.position.clone().add(new THREE.Vector3(0, 0.6, 4.4));
   const catSite = catalase.position.clone().add(new THREE.Vector3(0, 0.4, 5.6));
   const starts = [
-    { substrate: new THREE.Vector3(-50, 20, -6), o2: new THREE.Vector3(-34, 32, -5), away: new THREE.Vector3(-52, -12, -6) },
-    { substrate: new THREE.Vector3(-50, -16, -5), o2: new THREE.Vector3(-4, 26, -5), away: new THREE.Vector3(-46, 26, -7) },
+    { substrate: new THREE.Vector3(-50, 16, -6), o2: new THREE.Vector3(-34, 26, -5), away: new THREE.Vector3(-52, -14, -6) },
+    { substrate: new THREE.Vector3(-50, -18, -5), o2: new THREE.Vector3(-6, 20, -5), away: new THREE.Vector3(-46, 20, -7) },
   ];
-  const substrateLocal = [new THREE.Vector3(-0.66, 0, 0), new THREE.Vector3(-0.2, 0.34, 0), new THREE.Vector3(0.26, 0, 0.1), new THREE.Vector3(0.7, 0.32, 0)];
+  const substrateLocal = [new THREE.Vector3(-0.9, 0, 0), new THREE.Vector3(-0.28, 0.46, 0), new THREE.Vector3(0.34, 0, 0.12), new THREE.Vector3(0.96, 0.44, 0)];
   const waterAway = [new THREE.Vector3(-4, 16, 2), new THREE.Vector3(15, 6, 3)];
   const o2AwayTarget = catSite.clone().add(new THREE.Vector3(-14, 12, 1));
 
@@ -254,7 +254,7 @@ const create: CloseupFactory = (ctx) => {
   const pieceDrift = [new THREE.Vector3(-6, 9, 2), new THREE.Vector3(-9, 4, 3), new THREE.Vector3(-4, 11, 1), new THREE.Vector3(-10, 8, 2)];
 
   // PEX5 path.
-  const pexStart = new THREE.Vector3(58, -96, 3);
+  const pexStart = new THREE.Vector3(27, -72, 3);
   const pexDock = new THREE.Vector3(dockX, floorY(dockX), 1.2).addScaledVector(dockUp, -10);
   const pexInserted = new THREE.Vector3(dockX, floorY(dockX), 1.2).addScaledVector(dockUp, -1.5);
   const enzymeDestination = new THREE.Vector3(dockX - 9, floorY(dockX) + 20, -4);
@@ -274,8 +274,8 @@ const create: CloseupFactory = (ctx) => {
   const substrateCenter = [new THREE.Vector3(), new THREE.Vector3()];
   const chainPos = Array.from({ length: chainCount }, () => new THREE.Vector3());
   const state = { peroxide: -1, water: -1, oxygen: -1, chainVisible: false };
-  const hLocal = [new THREE.Vector3(-0.72, 0.42, 0.2), new THREE.Vector3(0.72, 0.42, -0.2)];
-  const waterH = [new THREE.Vector3(-0.5, 0.38, 0), new THREE.Vector3(0.5, 0.38, 0)];
+  const hLocal = [new THREE.Vector3(-1.75, 1.0, 0.45).multiplyScalar(O_R), new THREE.Vector3(1.75, 1.0, -0.45).multiplyScalar(O_R)];
+  const waterH = [new THREE.Vector3(-1.2, 0.9, 0).multiplyScalar(O_R), new THREE.Vector3(1.2, 0.9, 0).multiplyScalar(O_R)];
 
   const atomAt = (i: number, p: THREE.Vector3, radius: number, color: THREE.Color) => {
     atoms.setMatrixAt(i, m.compose(p, q.identity(), s.setScalar(radius)));
@@ -301,7 +301,7 @@ const create: CloseupFactory = (ctx) => {
     glow.colors[i * 3] = haloColor.r;
     glow.colors[i * 3 + 1] = haloColor.g;
     glow.colors[i * 3 + 2] = haloColor.b;
-    glow.sizes[i] = 3.4;
+    glow.sizes[i] = 4.6;
   };
 
   const update = (t: number, calm: boolean) => {
@@ -340,10 +340,10 @@ const create: CloseupFactory = (ctx) => {
       for (let b = 0; b < 4; b++) {
         rotated.copy(substrateLocal[b]).applyQuaternion(rot).multiplyScalar(Math.max(substrateScale, 0.001));
         v.copy(substrateCenter[n]).add(rotated);
-        substrateMesh.setMatrixAt(n * 4 + b, substrateScale > 0.01 ? m.compose(v, q.identity(), s.setScalar(0.34 * substrateScale)) : hidden);
+        substrateMesh.setMatrixAt(n * 4 + b, substrateScale > 0.01 ? m.compose(v, q.identity(), s.setScalar(0.45 * substrateScale)) : hidden);
         substrateMesh.setColorAt(n * 4 + b, tmpColor.copy(colorSubstrate).lerp(colorProduct, reacted));
       }
-      glow.set(6 + n, substrateCenter[n], 0.55 * substrateScale);
+      glow.set(6 + n, substrateCenter[n], 0.32 * substrateScale);
 
       // The oxygen molecule: O2 → (oxidase) H2O2 → (catalase) water.
       const convertTime = ox.travel[1] + T.convert;
@@ -378,7 +378,7 @@ const create: CloseupFactory = (ctx) => {
           atomAt(index, v.copy(mol).add(rotated), O_R * molScale, tmpColor);
         } else atoms.setMatrixAt(index, hidden);
       }
-      glow.set(n, mol, 0.6 * molScale);
+      glow.set(n, mol, 0.34 * molScale);
       setHaloColor(n, peroxideMix);
 
       // Water after conversion at catalase.
@@ -391,7 +391,7 @@ const create: CloseupFactory = (ctx) => {
         atomAt(n * 2, waterCenter[n], O_R * waterFade, colorWater);
         state.water = n;
       }
-      glow.set(2 + n, waterCenter[n], 0.6 * waterFade);
+      glow.set(2 + n, waterCenter[n], 0.34 * waterFade);
 
       // Hydrogens: carried over from the substrate onto the oxygens, later part of the water.
       for (let h = 0; h < 2; h++) {
@@ -428,7 +428,7 @@ const create: CloseupFactory = (ctx) => {
       atomAt(1, v.copy(o2OutCenter).add(rotated), O_R * fade, colorO2);
       rotated.set(O_R * 0.85, 0, 0).applyQuaternion(rot);
       atomAt(3, v.copy(o2OutCenter).add(rotated), O_R * fade, colorO2);
-      glow.set(4, o2OutCenter, 0.6 * fade);
+      glow.set(4, o2OutCenter, 0.34 * fade);
     } else glow.set(4, o2OutCenter, 0);
     if (lt >= T.o2Away[1] || lt < T.ox[0].approach[0]) atoms.setMatrixAt(1, hidden);
     if (lt >= T.o2Away[1] || lt < T.ox[1].approach[0]) atoms.setMatrixAt(3, hidden);
@@ -519,7 +519,7 @@ const create: CloseupFactory = (ctx) => {
   // ── Labels ──
   const anchors = {
     membrane: new THREE.Vector3(-12, floorY(-12), 0.2),
-    matrix: new THREE.Vector3(-40, 40, -40),
+    matrix: new THREE.Vector3(-38, 30, -40),
     catalase: new THREE.Vector3(),
     oxidase: new THREE.Vector3(),
     pex5: new THREE.Vector3(),
@@ -549,8 +549,8 @@ const create: CloseupFactory = (ctx) => {
     scene,
     views: [
       {
-        target: new THREE.Vector3(0, -20, -12),
-        radius: 58,
+        target: new THREE.Vector3(-3, -29, -12),
+        radius: 48,
         direction: new THREE.Vector3(0, 0.16, 1).normalize(),
         labels,
       },

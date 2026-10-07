@@ -3,7 +3,6 @@ import { Simplex3 } from '../core/noise';
 import { Rng } from '../core/random';
 import { blobGeometry, createCloseupScene, disposeScene } from './common';
 import { actinFilament, addInstanceGlow, addJiggle, anchorOn, createJiggle, instanced, instancedMaterial, moleculeMaterial, setSeeds, type Placement } from './kit';
-import { debugTime } from './membranesDebug';
 import { ballGeometry, bezier, glowPoints, glycanTree, mergeParts, pulse, sstep } from './membranesParts';
 import { CHOLESTEROL_LENGTH, LIPID_JIGGLE, cholesterolGeometry, lipidLattice, phospholipidMeshes, type LipidSite } from './plasmaMembraneParts';
 import type { CloseupFactory } from './types';
@@ -291,8 +290,7 @@ const create: CloseupFactory = (ctx) => {
       },
     ],
     setView() {},
-    update(_dt, rawTime, calm) {
-      const t = debugTime(rawTime);
+    update(_dt, t, calm) {
       time.value = t;
       jiggle.amount.value = calm ? 0.3 : 1;
       const amp = calm ? 0.35 : 1;

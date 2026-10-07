@@ -15,7 +15,6 @@ import {
   singleStrand,
   type Placement,
 } from './kit';
-import { debugTime } from './membranesDebug';
 import { BAND_CORE, BAND_HEAD, ballGeometry, cutawayMaterial, glowPoints, glycanTree, mergeParts, sstep } from './membranesParts';
 import { createBud } from './roughErParts';
 import type { CloseupFactory } from './types';
@@ -367,8 +366,7 @@ const create: CloseupFactory = (ctx) => {
       },
     ],
     setView() {},
-    update(_dt, rawTime, calm) {
-      const t = debugTime(rawTime);
+    update(_dt, t, calm) {
       const local = ((t % LOOP) + LOOP) % LOOP;
       const amp = calm ? 0.4 : 1;
       const wiggle = 1.2 * amp;

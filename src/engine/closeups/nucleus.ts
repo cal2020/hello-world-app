@@ -3,7 +3,6 @@ import { Simplex3 } from '../core/noise';
 import { Rng } from '../core/random';
 import { blobGeometry, createCloseupScene, disposeScene } from './common';
 import { addInstanceGlow, anchorOn, bandMaterial, bilayerStripGeometry, byQuality, instanced, instancedMaterial, membraneMaterial, moleculeMaterial, type Placement } from './kit';
-import { debugTime } from './membranesDebug';
 import { ballGeometry, bandArcGeometry, bezier, cutawayMaterial, glowPoints, mergeParts, paramSurface, sstep } from './membranesParts';
 import type { CloseupFactory } from './types';
 
@@ -340,8 +339,7 @@ const create: CloseupFactory = (ctx) => {
       },
     ],
     setView() {},
-    update(_dt, rawTime, calm) {
-      const t = debugTime(rawTime);
+    update(_dt, t, calm) {
       const amp = calm ? 0.35 : 1;
       const local = ((t % LOOP) + LOOP) % LOOP;
 

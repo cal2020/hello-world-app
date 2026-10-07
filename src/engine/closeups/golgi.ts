@@ -4,7 +4,6 @@ import { Rng } from '../core/random';
 import { blobGeometry, createCloseupScene, disposeScene } from './common';
 import { addInstanceGlow, anchorOn, instancedMaterial } from './kit';
 import { CISTERNA, cisternaColor, cisternaGeometry, coatDirections, cupOffset } from './golgiParts';
-import { debugTime } from './membranesDebug';
 import { ballGeometry, cutawayMaterial, glycanTree, hollowBallGeometry, sstep } from './membranesParts';
 import type { CloseupFactory } from './types';
 
@@ -149,7 +148,7 @@ const create: CloseupFactory = (ctx) => {
     { part: 'tgn', anchor: anchorOn(root, new THREE.Vector3(slotX(4.2) + 1.2, -6, 0)) },
     { part: 'copii', anchor: anchorOn(marks.copii, new THREE.Vector3(0, 3.3, 0)), visible: () => shown.copii },
     { part: 'copi', anchor: anchorOn(marks.copi, new THREE.Vector3(0, 2.5, 0)), visible: () => shown.copi },
-    { part: 'secretory-vesicle', anchor: anchorOn(marks.secretory, new THREE.Vector3(0, 5, 0)), visible: () => shown.secretory },
+    { part: 'secretory-vesicle', anchor: anchorOn(marks.secretory, new THREE.Vector3(4, -2, 0)), visible: () => shown.secretory },
     { textKey: 'closeupCaptions.toLysosomes', anchor: anchorOn(marks.clathrin, new THREE.Vector3(0, -4, 0)), visible: () => shown.clathrin },
     { textKey: 'closeupCaptions.fromEr', anchor: anchorOn(root, new THREE.Vector3(-38, 22, -2)) },
   ];
@@ -202,8 +201,7 @@ const create: CloseupFactory = (ctx) => {
       },
     ],
     setView() {},
-    update(_dt, rawTime, calm) {
-      const t = debugTime(rawTime);
+    update(_dt, t, calm) {
       const local = ((t % LOOP) + LOOP) % LOOP;
       const tau = local / LOOP;
       const generation = Math.floor(t / LOOP); // a cisterna keeps its identity j − generation as it moves along
@@ -317,12 +315,12 @@ const create: CloseupFactory = (ctx) => {
               const u = sstep(BUD, BUD + LEAVE, s);
               radius = r;
               _p.copy(_a).addScaledVector(_dir, r * 0.85 + 0.4);
-              _p.x += 22 * u;
-              _p.y += v.side * 18 * u;
+              _p.x += (v.side > 0 ? 24 : 22) * u;
+              _p.y += v.side * (v.side > 0 ? 8 : 18) * u;
               alpha = 1 - sstep(BUD + LEAVE - 1.2, BUD + LEAVE, s);
             }
             _p.x += noise.noise(i, t * 0.4, 0) * 0.3 * amp;
-            const labelled = s > 0.6 && s < BUD + LEAVE - 1.4;
+            const labelled = s > 0.6 && s < BUD + (v.kind === 'secretory' ? 2 : LEAVE - 1.4);
             if (v.kind === 'secretory') {
               shown.secretory ||= labelled;
               if (labelled) marks.secretory.position.copy(_p);
