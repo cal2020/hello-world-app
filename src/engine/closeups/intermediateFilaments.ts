@@ -14,11 +14,13 @@ import type { CloseupFactory } from './types';
  * tetramers gather into a ~16 nm-wide unit-length filament (ULF); a ULF
  * docks onto the end of the mature filament and the joint compacts to
  * ~10 nm; finally the 250 nm filament is pulled, stretches to 1.8× (and
- * thins) without breaking, and relaxes. One 20 s loop; each stage resets
- * just before it assembles again.
+ * thins) without breaking, and relaxes. One 22 s loop. The stages stay at
+ * their true sizes and spacing, but the whole assembly line slides so the
+ * stage being assembled sits in the middle of the view (the camera
+ * "follows" the lesson); each stage resets while the view pans to it.
  */
 
-const LOOP = 20;
+const LOOP = 22;
 const ROD = 46;
 const COIL_PITCH = 14;
 const SHADE_A = new THREE.Color('#e8dfa0');
@@ -40,8 +42,39 @@ const X_ULF = -36;
 const UNIT = 62; // one ULF length in the filament
 const X_FILAMENT = 38; // left end of the mature filament once the new ULF has docked
 const FILAMENT_UNITS = 4;
-/** Where the pull cue sits (world x). */
-const PULL_X = 226;
+const X_DOCK = X_FILAMENT + UNIT / 2; // where the newly arriving ULF joins
+const FILAMENT_LENGTH = UNIT * FILAMENT_UNITS;
+const PULL_FOCUS = X_FILAMENT + FILAMENT_LENGTH - 60; // the pulled end region, at rest
+
+/**
+ * Where the view is centred (assembly-line x) over the loop: it holds on each
+ * stage while it assembles and eases to the next one in between.
+ */
+const FOCUS: ReadonlyArray<readonly [number, number]> = [
+  [0, PULL_FOCUS],
+  [2.0, X_DIMER],
+  [5.4, X_DIMER],
+  [6.2, X_TETRAMER],
+  [8.8, X_TETRAMER],
+  [9.6, X_ULF],
+  [12.8, X_ULF],
+  [13.6, X_DOCK],
+  [16.4, X_DOCK],
+  [17.4, PULL_FOCUS],
+  [LOOP, PULL_FOCUS],
+];
+const focusAt = (t: number) => {
+  for (let i = 1; i < FOCUS.length; i++) {
+    if (t <= FOCUS[i][0]) {
+      const t0 = FOCUS[i - 1][0];
+      const x0 = FOCUS[i - 1][1];
+      return x0 + (FOCUS[i][1] - x0) * easeInOut((t - t0) / Math.max(1e-6, FOCUS[i][0] - t0));
+    }
+  }
+  return PULL_FOCUS;
+};
+/** Labels show while their stage is within this distance of the view centre. */
+const IN_VIEW = 75;
 
 /** Two strands' centre lines for a straight pair (apart or touching) with the kit coiled coil's sampling. */
 function strandTubes(length: number, offset: number, strandRadius: number, radial: number): THREE.BufferGeometry {
@@ -250,6 +283,29 @@ const create: CloseupFactory = (ctx) => {
   };
 
   /** Fade-out-then-in reset: 1 → 0 over the first half, 0 → 1 over the second. */
+  // Label anchors in the world (the assembly line moves under the camera).
+  const dimerAnchor = new THREE.Vector3();
+  const tetramerAnchor = new THREE.Vector3();
+  const ulfAnchor = new THREE.Vector3();
+  const filamentAnchor = new THREE.Vector3();
+  const pullAnchor = new THREE.Vector3();
+  let ulfInView = false;
+  const updateAnchors = (end: number) => {
+    const dx = -focus;
+    dimerAnchor.set(X_DIMER - 6 + dx, 0.8 + monomers.position.y, 1.2);
+    tetramerAnchor.set(X_TETRAMER + 4 + dx, 1.5, 1.6);
+    // The ULF label follows the new ULF while it docks, otherwise the one just assembled.
+    const docking = ulfScale > 0.5 && Math.abs(X_DOCK - focus) < IN_VIEW;
+    if (docking) ulfAnchor.set(dockCentre.x - 8 + dx, dockCentre.y + 2, 7);
+    else ulfAnchor.set(X_ULF - 8 + dx, 2, 7.4);
+    ulfInView = docking || (s3 > 0.5 && Math.abs(X_ULF - focus) < IN_VIEW);
+    // A point on the filament's surface a little left of the view centre (on the older part while a ULF docks).
+    const x = THREE.MathUtils.clamp(Math.max(focus - 35, X_FILAMENT + UNIT + 10), X_FILAMENT + 4, end - 6);
+    const thin = 1 / Math.sqrt(stretch);
+    filamentAnchor.set(x + dx, 0.8 * thin, 4.6 * thin);
+    pullAnchor.set(end - 28 + dx, 16.5, 0.5);
+  };
+
   const resetScale = (t: number, a: number, b: number) => {
     if (t < a || t >= b) return 1;
     const mid = (a + b) / 2;
@@ -266,12 +322,18 @@ const create: CloseupFactory = (ctx) => {
   const ringFrame = (k: number, target: THREE.Quaternion) => target.setFromAxisAngle(X, ulfAngle(k) - Math.PI / 2);
 
   let pulling = false;
+  let focus = PULL_FOCUS;
+  let stretch = 1;
+  let s1 = 1;
+  let s3 = 1;
+  let ulfScale = 0;
+  const dockCentre = new THREE.Vector3();
   const chevronColor = new THREE.Color();
   const stretchAt = (t: number) => {
-    if (t < 15 || t > 19.2) return 1;
-    // Out over 1.6 s, hold, back over 1.6 s.
-    const out = easeInOut(ramp(t, 15, 16.6));
-    const back = easeInOut(ramp(t, 17.6, 19.2));
+    if (t < 17.4 || t > 21.0) return 1;
+    // Out over 1.4 s, hold, back over 1.4 s.
+    const out = easeInOut(ramp(t, 17.4, 18.8));
+    const back = easeInOut(ramp(t, 19.6, 21.0));
     return 1 + 0.8 * out * (1 - back);
   };
 
@@ -279,10 +341,10 @@ const create: CloseupFactory = (ctx) => {
     const t = mod(time, LOOP);
     const amp = calm ? 0.3 : 1;
 
-    // Stage 1 — reset [0, 0.8]; approach [0.8, 2.4]; coil [2.4, 4.0].
-    const s1 = resetScale(t, 0, 0.8);
-    const approach = t < 0.4 ? 1 : easeInOut(ramp(t, 0.8, 2.4));
-    const coil = t < 0.4 ? 1 : easeInOut(ramp(t, 2.4, 4.0));
+    // Stage 1 — reset [0, 0.8] (off screen, while the view returns); approach [2.0, 3.4]; coil [3.4, 5.0].
+    s1 = resetScale(t, 0, 0.8);
+    const approach = t < 0.4 ? 1 : easeInOut(ramp(t, 2.0, 3.4));
+    const coil = t < 0.4 ? 1 : easeInOut(ramp(t, 3.4, 5.0));
     monomers.morphTargetInfluences![0] = approach * (1 - coil);
     monomers.morphTargetInfluences![1] = coil;
     monomers.scale.setScalar(Math.max(1e-3, s1));
@@ -296,17 +358,17 @@ const create: CloseupFactory = (ctx) => {
     }
     ends.instanceMatrix.needsUpdate = true;
 
-    // Stage 2 — reset [4.0, 4.8]; the two dimers approach antiparallel and slide into register [4.8, 7.2].
-    const s2 = resetScale(t, 4.0, 4.8);
-    const pairUp = t < 4.4 ? 1 : easeInOut(ramp(t, 4.8, 6.4));
-    const slideIn = t < 4.4 ? 1 : easeInOut(ramp(t, 5.8, 7.2));
+    // Stage 2 — reset [5.4, 6.2] during the pan; the two dimers approach antiparallel and slide into register [6.2, 8.4].
+    const s2 = resetScale(t, 5.4, 6.2);
+    const pairUp = t < 5.8 ? 1 : easeInOut(ramp(t, 6.2, 7.4));
+    const slideIn = t < 5.8 ? 1 : easeInOut(ramp(t, 7.0, 8.4));
     v2.set(X_TETRAMER, noise.noise(time * 0.3, 5, 0) * 0.6 * amp, 0);
     placeTetramer(0, v2, qFrame.identity(), 17 * (1 - pairUp), 14 * (1 - slideIn), s2);
 
-    // Stage 3 — reset [7.2, 8.0]; eight tetramers gather into a ULF one after another [8.0, 11.0].
-    const s3 = resetScale(t, 7.2, 8.0);
+    // Stage 3 — reset [8.8, 9.6] during the pan; eight tetramers gather into a ULF one after another [9.6, 12.4].
+    s3 = resetScale(t, 8.8, 9.6);
     for (let k = 0; k < 8; k++) {
-      const arrive = t < 7.6 ? 1 : easeInOut(ramp(t, 8.0 + k * 0.28, 9.0 + k * 0.28));
+      const arrive = t < 9.2 ? 1 : easeInOut(ramp(t, 9.6 + k * 0.25, 10.6 + k * 0.25));
       ringFrame(k, qb);
       v2.set(0, Math.cos(ulfAngle(k)), Math.sin(ulfAngle(k))).multiplyScalar(ULF_RADIUS);
       v2.lerp(ulfFrom[k], 1 - arrive);
@@ -316,81 +378,78 @@ const create: CloseupFactory = (ctx) => {
       placeTetramer(TETRAMER_DIMERS + k * 2, v2, qb, 0, 0, s3);
     }
 
-    // Stage 4 — reset [11.0, 11.8]: the unit that joined in the previous loop fades out while a
-    // new ULF appears; dock [11.8, 13.4]; compact [13.4, 14.6] as the joined rope unit fades in.
-    const joinedScale = t < 11.0 ? 1 : t < 11.4 ? 1 - ramp(t, 11.0, 11.4) : ramp(t, 14.0, 14.6);
+    // Stage 4 — reset [12.8, 13.6] during the pan: the unit that joined in the previous loop fades
+    // out while a new ULF appears; dock [13.6, 15.0]; compact [15.0, 16.0] as the joined rope unit fades in.
+    const joinedScale = t < 12.8 ? 1 : t < 13.2 ? 1 - ramp(t, 12.8, 13.2) : ramp(t, 15.6, 16.2);
     ropeJoined.scale.set(1, Math.max(1e-3, joinedScale), Math.max(1e-3, joinedScale));
     ropeJoined.visible = joinedScale > 0.01;
-    const appear = ramp(t, 11.4, 11.8);
-    const dock = easeInOut(ramp(t, 11.8, 13.4));
-    const compact = easeInOut(ramp(t, 13.4, 14.4));
-    const dissolve = 1 - ramp(t, 14.0, 14.6);
-    const ulfScale = t < 11.4 || t > 14.6 ? 0 : appear * dissolve;
+    const appear = ramp(t, 13.2, 13.6);
+    const dock = easeInOut(ramp(t, 13.6, 15.0));
+    const compact = easeInOut(ramp(t, 15.0, 16.0));
+    const dissolve = 1 - ramp(t, 15.6, 16.2);
+    ulfScale = t < 13.2 || t > 16.2 ? 0 : appear * dissolve;
     const radius = THREE.MathUtils.lerp(ULF_RADIUS, COMPACT_RADIUS, compact);
+    dockCentre.set(X_DOCK - 18 * (1 - dock), 34 * (1 - dock), 0);
     for (let k = 0; k < 8; k++) {
       ringFrame(k, qb);
-      v2.set(0, Math.cos(ulfAngle(k)), Math.sin(ulfAngle(k))).multiplyScalar(radius);
-      v2.x += X_FILAMENT + UNIT / 2 - 18 * (1 - dock);
-      v2.y += 34 * (1 - dock);
+      v2.set(0, Math.cos(ulfAngle(k)), Math.sin(ulfAngle(k))).multiplyScalar(radius).add(dockCentre);
       placeTetramer(TETRAMER_DIMERS + ULF_DIMERS + k * 2, v2, qb, 0, 0, ulfScale);
     }
     dimers.instanceMatrix.needsUpdate = true;
 
     // The arrow before the stage being assembled lights up.
-    const active = t >= 4 && t < 7.2 ? 0 : t >= 7.2 && t < 11 ? 1 : t >= 11 && t < 14.6 ? 2 : -1;
+    const active = t >= 5.4 && t < 8.8 ? 0 : t >= 8.8 && t < 12.8 ? 1 : t >= 12.8 && t < 16.4 ? 2 : -1;
     for (let i = 0; i < 3; i++) steps.setColorAt(i, stepColor.copy(STEP_BASE).lerp(STEP_LIT, i === active ? 1 : 0));
     if (steps.instanceColor) steps.instanceColor.needsUpdate = true;
 
     // The pull: stretch up to 1.8× (thinning to keep volume), hold, relax.
-    const stretch = stretchAt(t);
-    pulling = t >= 15 && t <= 19.2;
+    stretch = stretchAt(t);
+    pulling = t >= 17.4 && t <= 21.2;
     filament.scale.set(stretch, 1 / Math.sqrt(stretch), 1 / Math.sqrt(stretch));
-    // Chevrons above the filament's right part point the way it is pulled.
+    const end = X_FILAMENT + FILAMENT_LENGTH * stretch;
+    // Chevrons above the pulled end point the way it is pulled.
     for (let i = 0; i < 3; i++) {
-      const on = pulling ? ramp(t, 15, 15.4) * (1 - ramp(t, 18.8, 19.2)) : 0;
+      const on = pulling ? ramp(t, 17.4, 17.8) * (1 - ramp(t, 20.8, 21.2)) : 0;
       const pulse = calm ? 0.7 : 0.35 + 0.65 * Math.pow(Math.max(0, Math.cos(Math.PI * 2 * (time * 0.9 - i * 0.18))), 3);
-      v1.set(PULL_X + i * 12, 15, 0);
+      v1.set(end - 40 + i * 12, 15, 0);
       chevrons.setMatrixAt(i, on < 0.02 ? zero : m4.compose(v1, qa.identity(), sv.setScalar(on)));
       chevrons.setColorAt(i, chevronColor.copy(HEAD).multiplyScalar(pulse));
     }
     chevrons.instanceMatrix.needsUpdate = true;
     if (chevrons.instanceColor) chevrons.instanceColor.needsUpdate = true;
+
+    // Follow the lesson: slide the assembly line so the active stage (or, while pulling,
+    // the pulled end, which still visibly moves outward) sits in the middle of the view.
+    focus = focusAt(t) + 0.8 * FILAMENT_LENGTH * (stretch - 1);
+    root.position.x = -focus;
+    updateAnchors(end);
   };
 
+  const DEBUG = new URLSearchParams(window.location.search);
+  const DEBUG_R = Number(DEBUG.get('cur') ?? 'NaN');
+  const DEBUG_C = (DEBUG.get('cuc') ?? '').split(',').map(Number);
   update(0, false);
-
-  const dimerAnchor = new THREE.Vector3(X_DIMER - 6, 0.8, 1.2);
-  const tetramerAnchor = new THREE.Vector3(X_TETRAMER + 4, 1.5, 1.6);
-  const ulfAnchor = new THREE.Vector3(X_ULF - 8, 2, 7.4);
-  const filamentAnchor = new THREE.Vector3(UNIT * 1.6, 0.8, 4.6);
-  const filamentWorld = new THREE.Vector3();
-  const pullAnchor = new THREE.Vector3(PULL_X + 12, 16, 0.5);
 
   return {
     scene,
     views: [
       {
-        target: new THREE.Vector3(16, 0, 0),
-        radius: 280,
+        target: DEBUG_C.length === 3 ? new THREE.Vector3(DEBUG_C[0], DEBUG_C[1], DEBUG_C[2]) : new THREE.Vector3(0, 0, 0),
+        radius: Number.isFinite(DEBUG_R) ? DEBUG_R : 105,
         direction: new THREE.Vector3(0, 0.3, 1).normalize(),
         labels: [
           { textKey: 'closeupCaptions.pull', anchor: () => pullAnchor, visible: () => pulling },
-          { part: 'dimer', anchor: () => dimerAnchor },
-          { part: 'tetramer', anchor: () => tetramerAnchor },
-          { part: 'ulf', anchor: () => ulfAnchor },
-          {
-            part: 'filament',
-            anchor: () => {
-              filament.updateWorldMatrix(true, false);
-              return filament.localToWorld(filamentWorld.copy(filamentAnchor));
-            },
-          },
+          { part: 'dimer', anchor: () => dimerAnchor, visible: () => s1 > 0.5 && Math.abs(X_DIMER - focus) < IN_VIEW },
+          { part: 'tetramer', anchor: () => tetramerAnchor, visible: () => Math.abs(X_TETRAMER - focus) < IN_VIEW },
+          { part: 'ulf', anchor: () => ulfAnchor, visible: () => ulfInView },
+          { part: 'filament', anchor: () => filamentAnchor, visible: () => focus > X_FILAMENT - 20 },
         ],
       },
     ],
     setView() {},
     update(_dt, time, calm) {
-      update(time, calm);
+      const dbg = window as unknown as { __cut?: number };
+      update(dbg.__cut ?? time, calm);
     },
     dispose() {
       together.dispose();

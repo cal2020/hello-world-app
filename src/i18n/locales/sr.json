@@ -89,7 +89,7 @@
     "closeupLoading": "Učitavanje prikaza izbliza…",
     "closeupError": "Prikaz izbliza nije mogao da se učita.",
     "slowdown": "Animacija je usporena oko {factor} puta u odnosu na stvarno vreme.",
-    "noTimescale": "Kretanje je ilustrativno i znatno usporeno.",
+    "noTimescale": "Kretanje je ilustrativno: veoma brzi molekulski događaji su usporeni, a spori procesi ubrzani.",
     "toScale": "Molekuli su nacrtani u međusobno vernoj razmeri.",
     "moleculesEnlarged": "Neke komponente su nacrtane oko {factor} puta veće nego što odgovara razmeri ovog prikaza.",
     "frozen": "Biološka animacija je zamrznuta.",
@@ -542,7 +542,8 @@
       "simplifications": [
         "Prave membrane su mnogo gušće ispunjene proteinima nego što je prikazano.",
         "U prikazu cele ćelije membrana je nacrtana oko deset puta deblja nego u stvarnosti.",
-        "Kretanje lipida u prikazu izbliza usporeno je otprilike milion puta ili više."
+        "Kretanje lipida u prikazu izbliza usporeno je otprilike milion puta ili više.",
+        "U prikazu izbliza kanal na svakih nekoliko sekundi propusti kratak nalet jona; pravi otvoreni kanal propušta milione jona u sekundi."
       ],
       "sizeContext": "Debljina samog lipidnog dvosloja; proteini i lanci šećera štrče izvan njega. Okvirna vrednost (BioNumbers, prema knjizi Physical Biology of the Cell).",
       "quantityContext": "Molekuli lipida u plazma membrani male životinjske ćelije — udžbenička procena reda veličine. Veće ćelije ih imaju srazmerno više.",
@@ -699,7 +700,8 @@
       "simplifications": [
         "Nacrtano je samo nekoliko stotina kompleksa pora; ljudsko jedro ih ima na hiljade.",
         "Uvoz i izvoz prikazani su kao pojedinačne čestice koje se ravnomerno kreću; pravi transport koristi receptore koji kruže, energiju iz sistema Ran i vrlo brze događaje.",
-        "Jedro je nacrtano kao glatki elipsoid; prava jedra mogu imati nabore i udubljenja."
+        "Jedro je nacrtano kao glatki elipsoid; prava jedra mogu imati nabore i udubljenja.",
+        "U prikazu izbliza kompleks pore sastavljen je od jednostavnih oblika ponovljenih osam puta, a ne od svojih otprilike 30 različitih proteina."
       ],
       "sizeContext": "Udeo zapremine ćelije jetre koji zauzima jedro; {range} kod hepatocita u tkivu jetre. Veličina jedra razlikuje se među tipovima ćelija.",
       "quantityContext": "Parovi baza DNK u jednom ženskom (XX) diploidnom jedru, izračunato na osnovu referentnog genoma; {male} u muškoj ćeliji.",
@@ -792,7 +794,8 @@
       "simplifications": [
         "Teritorije su nacrtane kao zapetljana vlakna u zaobljenim oblastima; prave teritorije su nepravilne i na ivicama se prepliću.",
         "Vlakna hromatina nacrtana su nekoliko puta deblja nego u stvarnosti.",
-        "Kondenzovani hromozom u prikazu izbliza pripada ćeliji u deobi, a ne ovoj interfaznoj ćeliji."
+        "Kondenzovani hromozom u prikazu izbliza pripada ćeliji u deobi, a ne ovoj interfaznoj ćeliji.",
+        "U prikazu izbliza nacrtane su samo mikrotubule vezane za kinetohore, a pomeranja hromozoma na deobnom vretenu prikazana su manja i brža nego u pravim ćelijama."
       ],
       "sizeContext": "Ukupna dužina DNK iz svih hromozoma ženske diploidne ćelije kada bi se ispružila i nadovezala. U ovoj interfaznoj ćeliji ona je složena u jedro prečnika nekoliko mikrometara.",
       "quantityContext": "Normalna ljudska diploidna ćelija: {pairs} para — {autosomePairs} para autozoma i dva polna hromozoma (XX kod žena, XY kod muškaraca).",
@@ -866,7 +869,7 @@
       },
       "simplifications": [
         "U prikazu cele ćelije telomere su prikazane kao svetleće tačke; u stvarnosti su to delovi DNK određene dužine.",
-        "Prikaz izbliza pokazuje samo nekoliko ponavljanja; prava telomera ih sadrži od nekoliko stotina do nekoliko hiljada.",
+        "Prikaz izbliza pokazuje oko dvesta ponavljanja i petlju prečnika oko 90 nm; prava telomera ima oko hiljadu ponavljanja ili više, a prave T-petlje obično obuhvataju nekoliko hiljada parova baza.",
         "Šelterin je prikazan pojednostavljenim oblicima, a ne kao pojedinačni proteini."
       ],
       "sizeContext": "Dužina niza ponavljanja na svakom kraju hromozoma u ljudskim somatskim ćelijama; razlikuje se u zavisnosti od starosti, tkiva i osobe.",
@@ -944,7 +947,7 @@
       },
       "simplifications": [
         "Tri sloja nacrtana su kao uredni omotači; u pravim jedarcima oni su nepravilni i isprepletani.",
-        "Razgranati lanci RNK su uvećani da bi se videli.",
+        "Nacrtan je samo jedan gen za ribozomsku RNK, mnogo kraći od pravog gena i sa daleko manje polimeraza; lanci RNK i podjedinice ribozoma su uvećani, a stvaranje je prikazano mnogo brže nego u stvarnosti.",
         "U sklapanju podjedinica učestvuju stotine pomoćnih molekula koji nisu prikazani."
       ],
       "sizeContext": "Veličina jedaraca zavisi od toga koliko aktivno ćelija stvara ribozome: ćelije koje brzo rastu imaju veća jedarca. Ćelija može imati jedno ili više jedaraca.",
@@ -1020,7 +1023,8 @@
       "simplifications": [
         "Ribozomi u prikazu cele ćelije su uvećani i ima ih daleko manje nego u pravoj ćeliji.",
         "Prikaz izbliza pokazuje samo glavne korake; inicijacija i mnogi pomoćni proteini su izostavljeni.",
-        "tRNK su prikazane kao jednostavni oblici slova L."
+        "tRNK su prikazane kao jednostavni oblici slova L.",
+        "U prikazu izbliza prednji deo velike podjedinice je uklonjen, da bi se videle transportne RNK i izlazni tunel."
       ],
       "sizeContext": "Ukupna širina; ribozomi nisu kugle. Za ribozome sisara navodi se oko 25 nm.",
       "quantityContext": "HeLa ćelije (linija ljudskih ćelija raka) koje rastu u kulturi, procenjeno na osnovu sadržaja RNK. Brojevi se razlikuju među tipovima ćelija i u zavisnosti od faze rasta.",
@@ -1105,7 +1109,9 @@
       "simplifications": [
         "ER je nacrtan kao nekoliko urednih listova; u pravim ćelijama to je daleko veća mreža koja se stalno menja.",
         "Sekretorni put ilustruje jedna po jedna čestica tereta; prave ćelije istovremeno prenose ogroman broj proteina.",
-        "Mašinerija za usmeravanje (čestica za prepoznavanje signala i njen receptor) nije prikazana."
+        "Mašinerija za usmeravanje (čestica za prepoznavanje signala i njen receptor) nije prikazana.",
+        "Prikaz izbliza pokazuje signalnu sekvencu kako vodi lanac u lumen; u stvarnosti ona se nalazi u translokonu u obliku petlje i odseca se na luminalnoj strani membrane.",
+        "Obložena vezikula zadržava svoj omotač dok odlazi; prave vezikule gube omotač ubrzo nakon pupljenja."
       ],
       "sizeContext": "Rastojanje između dve membrane lista ER-a u ćelijama sisara ({yeast} kod kvasca).",
       "quantityContext": "Udeo zapremine ćelije jetre koji zauzimaju cisterne granuliranog ER-a; ćelije koje izlučuju mnogo proteina imaju ga mnogo više.",
@@ -1174,7 +1180,8 @@
       "simplifications": [
         "Mreža cevčica je mnogo ređa nego u pravim ćelijama.",
         "Oslobađanje kalcijuma prikazano je kao pravilni naleti; pravi signali razlikuju se po vremenu i jačini.",
-        "Enzimi za detoksikaciju, kojih ima mnogo u ćelijama jetre, nisu posebno prikazani."
+        "Enzimi za detoksikaciju, kojih ima mnogo u ćelijama jetre, nisu posebno prikazani.",
+        "Joni kalcijuma nacrtani su kao svetleće tačke, krupnije nego što zaista jesu."
       ],
       "sizeContext": "Prečnik cevčica ER-a u ćelijama sisara.",
       "quantityContext": "Udeo zapremine ćelije jetre koji zajedno zauzimaju cisterne glatkog ER-a i Goldžijevog aparata; udžbenička tabela ih ne razdvaja.",
@@ -1257,7 +1264,8 @@
       "simplifications": [
         "Način na koji se teret kreće kroz diktiozom još je predmet rasprave; prikaz izbliza prikazuje široko prihvaćen model sazrevanja cisterni.",
         "Prava Goldžijeva traka sadrži više diktiozoma i mnogo cevastih veza.",
-        "Glikozilacija je prikazana kao jednostavna promena boje lanaca šećera."
+        "Glikozilacija je prikazana kao jednostavna promena boje lanaca šećera.",
+        "U prikazu izbliza svaka cisterna se na svakih 20 sekundi pomeri za jedno mesto; pravo sazrevanje traje minutima, a trans-Goldžijeva mreža je zapravo mreža cevčica."
       ],
       "sizeContext": "Približna širina diktiozoma u životinjskim ćelijama; diktiozom obično ima svega nekoliko cisterni.",
       "quantityContext": "Udeo zapremine ćelije jetre koji zajedno zauzimaju cisterne Goldžijevog aparata i glatkog ER-a; udžbenička tabela ih ne razdvaja.",
@@ -1346,7 +1354,9 @@
       "simplifications": [
         "Vezikule se u prikazu cele ćelije kreću ravnomerno; pravi transport se zaustavlja, ponovo kreće i ponekad menja smer.",
         "Svaka vezikula prikazana je sa jednom vrstom motornog proteina; pravi teret često istovremeno nosi nekoliko vrsta.",
-        "Transport miozinom duž aktina je opisan, ali nije animiran."
+        "Transport miozinom duž aktina je opisan, ali nije animiran.",
+        "Prikaz izbliza prati kinezin, pa izgleda kao da mikrotubula klizi unazad ispod njega; vezikula se kreće glatko, umesto da napreduje skokovima od 8 nm.",
+        "Dinein je pojednostavljen na dve prstenaste glave sa drškama i korača pravilno; pravi dinein korača nepravilno."
       ],
       "sizeContext": "Vezikule obložene klatrinom koje nastaju na plazma membrani ćelija sisara; drugi transportni nosači su različiti — od manjih vezikula do dugačkih cevi.",
       "quantityContext": "Broj kopija proteina tereta u jednom nosaču koji napušta Goldžijev aparat, u ćelijama bubrega majmuna (COS) koje stvaraju fluorescentni virusni teret.",
@@ -1442,7 +1452,9 @@
       "simplifications": [
         "Mitohondrije su nacrtane kao odvojene cevi; u mnogim ćelijama one obrazuju razgranate mreže koje se neprestano stapaju i dele.",
         "Prikaz izbliza pokazuje jednu ATP sintazu i po jednu kopiju svake pumpe; prave kriste su njima gusto ispunjene.",
-        "Prenosioci elektrona (ubihinon, citohrom c) i hemija razgradnje goriva nisu prikazani."
+        "Prenosioci elektrona (ubihinon, citohrom c) i hemija razgradnje goriva nisu prikazani.",
+        "Kriste su nacrtane kao ravnomerno raspoređene, gotovo paralelne ploče; u pravim mitohondrijama njihov broj, oblik i razmak veoma se razlikuju.",
+        "Mitohondrijska DNK prikazana je kao goli prstenovi; u ćelijama je zajedno sa proteinima spakovana u nukleoide."
       ],
       "sizeContext": "Tipičan prečnik; po dužini se kreću od kratkih štapića do dugačkih, razgranatih mreža.",
       "quantityContext": "Ćelije jetre pacova (hepatociti), prebrojano na elektronskim mikrografijama; brojevi se znatno razlikuju u zavisnosti od tipa i veličine ćelije.",
@@ -1520,7 +1532,9 @@
       "simplifications": [
         "Lizozomi se veoma razlikuju po veličini i obliku; nacrtani su kao jednostavne kugle.",
         "Prikazuje se jedan po jedan događaj stapanja; autofagija je opisana, ali nije animirana.",
-        "Enzimi su prikazani pomoću nekoliko uopštenih oblika."
+        "Enzimi su prikazani pomoću nekoliko uopštenih oblika.",
+        "Teret se korak po korak deli na pola pre nego što se pretvori u aminokiseline; prave hidrolaze, kojih ima desetine vrsta, seku na mnogo mesta istovremeno.",
+        "Aminokiseline su nacrtane dva do tri puta veće nego što zaista jesu, da bi se videle."
       ],
       "sizeContext": "Raspon uočen elektronskom mikroskopijom u eukariotskim ćelijama; tipično {typical}. Veličina se menja u zavisnosti od tipa ćelije i dostupnosti hranljivih materija.",
       "quantityContext": "Širok raspon za ćelije sisara; obično ih ima nekoliko stotina, a broj pada ispod {low} kada ćelijama nedostaju hranljive materije.",
@@ -1604,7 +1618,9 @@
       "simplifications": [
         "Endozomi čine kontinuum odeljaka koji se menjaju; model prikazuje samo dva jasno odvojena tipa.",
         "Prikazano je samo unošenje posredovano klatrinom; ćelije koriste i nekoliko drugih puteva.",
-        "Tri događaja prikazana su redom; u pravoj ćeliji odvijaju se neprestano, svuda istovremeno."
+        "Tri događaja prikazana su redom; u pravoj ćeliji odvijaju se neprestano, svuda istovremeno.",
+        "Klatrinski omotač nacrtan je kao pravilan kavez; pravi omotači razlikuju se po veličini i obliku, a pomoćni proteini poput adaptora i dinamina nisu prikazani.",
+        "Cevčica za reciklažu raste pravo do plazma membrane; u ćelijama se cevčice otkidaju kao nosači koji putuju duž mikrotubula."
       ],
       "sizeContext": "Endozomi su različiti — od malih vezikula do velikih cevastih odeljaka; pristigle obložene vezikule imaju prečnik od {vesicle}.",
       "quantityContext": "Udeo zapremine ćelije jetre koji zauzimaju endozomi; broj po ćeliji nije proveren.",
@@ -1687,7 +1703,9 @@
       "simplifications": [
         "Prikazano je samo nekoliko reprezentativnih enzima; peroksizomi ih sadrže desetine.",
         "Skraćivanje masnih kiselina prikazano je kao otkidanje delova jednog po jednog, bez međukoraka hemijskih reakcija.",
-        "Broj i veličina peroksizoma veoma se razlikuju među tipovima ćelija."
+        "Broj i veličina peroksizoma veoma se razlikuju među tipovima ćelija.",
+        "Molekuli kiseonika, vodonik-peroksida i vode nacrtani su oko tri puta veći nego što zaista jesu.",
+        "Masna kiselina nacrtana je kao goli ugljenični lanac bez koenzima A, a prikazana su samo četiri kruga skraćivanja."
       ],
       "sizeContext": "Tipičan raspon prečnika; ćelije jetre su bogate peroksizomima.",
       "quantityContext": "Udeo zapremine ćelije jetre koji zauzimaju peroksizomi; broj po ćeliji nije proveren.",
@@ -1760,7 +1778,8 @@
       "simplifications": [
         "U prikazu cele ćelije mikrotubule su nacrtane kao glatke cevi.",
         "U modelu rast i skraćivanje prate pravilan ritam; u ćelijama su nasumični.",
-        "Proteini koji se vezuju za krajeve mikrotubula i regulišu ih nisu prikazani."
+        "Proteini koji se vezuju za krajeve mikrotubula i regulišu ih nisu prikazani.",
+        "U prikazu izbliza slobodni dimeri tubulina stižu iz neposredne blizine; pravi dimeri difunduju sa svih strana, a mnogi se vežu pa ponovo otpadnu."
       ],
       "sizeContext": "Spoljašnji prečnik šuplje cevi.",
       "quantityContext": "Protofilamenti u zidu većine mikrotubula u ćelijama. Broj mikrotubula u ćeliji veoma varira i retko se prebrojava.",
@@ -1836,7 +1855,9 @@
       "simplifications": [
         "Korteks je nacrtan kao kratki pravi segmenti; pravi filamenti su duži i međusobno umreženi.",
         "Stresna vlakna i izraštaji za puzanje opisani su, ali nisu nacrtani u zaobljenoj ćeliji modela.",
-        "Motorni proteini miozini nisu prikazani."
+        "Motorni proteini miozini nisu prikazani.",
+        "U prikazu izbliza membrana miruje, a mreža teče naniže; u ćeliji mreža ostaje na mestu, a membrana se pomera napred.",
+        "Obrazac grananja ponavlja se na svakih 20 sekundi; prave mreže su nasumične i gušće, a proteini koji zatvaraju krajeve filamenata i tako zaustavljaju rast nisu prikazani."
       ],
       "sizeContext": "Prečnik filamenta (udžbenički raspon).",
       "quantityContext": "Aktin je jedan od najzastupljenijih proteina u mnogim životinjskim ćelijama; broj filamenata po ćeliji nije standardno merilo.",
@@ -1908,7 +1929,8 @@
       "simplifications": [
         "Prave mreže intermedijarnih filamenata su gušće i više isprepletane.",
         "Predstavljen je samo jedan tip filamenta (vimentin); ćelije mogu sadržati nekoliko tipova.",
-        "Sklapanje je prikazano kao uredan niz koraka; u ćelijama se odvija paralelno, a filamenti i razmenjuju podjedinice."
+        "Sklapanje je prikazano kao uredan niz koraka; u ćelijama se odvija paralelno, a filamenti i razmenjuju podjedinice.",
+        "U prikazu izbliza filament jedinične dužine je uredan prsten od osam tetramera, a zreli filament uže od četiri niti; pravo pakovanje je manje pravilno, a pri istezanju se proteini zapravo lokalno razmotavaju."
       ],
       "sizeContext": "Prečnik filamenta — između prečnika aktinskih filamenata i mikrotubula.",
       "quantityContext": "Ljudski geni koji kodiraju proteine intermedijarnih filamenata; svaki tip ćelije koristi određen skup.",
@@ -1983,7 +2005,8 @@
       "simplifications": [
         "Pericentriolarni materijal nacrtan je kao mekani oblak; u stvarnosti je to uređena proteinska skela.",
         "Prikazano je samo nekoliko kompleksa koji započinju mikrotubule.",
-        "Udvajanje centrozoma tokom ćelijskog ciklusa je opisano, ali nije animirano."
+        "Udvajanje centrozoma tokom ćelijskog ciklusa je opisano, ali nije animirano.",
+        "Unutrašnja struktura centriola nalik točku sa paocima i povezni elementi su izostavljeni, a nastavci su nacrtani kao jednostavne lopatice i podupirači."
       ],
       "sizeContext": "Širina svake centriole; svaka je dugačka {length} (ćelije kičmenjaka).",
       "quantityContext": "Centriole u ćeliji pre udvajanja DNK: jedan par, koji čini jedan centrozom. Udvajaju se jednom u svakom ćelijskom ciklusu.",

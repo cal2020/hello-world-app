@@ -89,7 +89,7 @@
     "closeupLoading": "Caricamento del primo piano…",
     "closeupError": "Impossibile caricare il primo piano.",
     "slowdown": "Animazione rallentata circa ×{factor} rispetto al tempo reale.",
-    "noTimescale": "Il movimento è illustrativo e molto rallentato.",
+    "noTimescale": "Il movimento è illustrativo: gli eventi molecolari molto rapidi sono rallentati e i processi lenti sono accelerati.",
     "toScale": "Le molecole sono disegnate in scala tra loro.",
     "moleculesEnlarged": "Alcuni componenti sono disegnati circa ×{factor} più grandi rispetto alla scala di questa vista.",
     "frozen": "L’animazione biologica è bloccata.",
@@ -517,7 +517,8 @@
       "simplifications": [
         "Nelle membrane reali le proteine sono molto più fitte di quanto mostrato.",
         "Nella vista della cellula intera la membrana è disegnata circa dieci volte più spessa che nella realtà.",
-        "Nel primo piano il movimento dei lipidi è rallentato all’incirca di un milione di volte o più."
+        "Nel primo piano il movimento dei lipidi è rallentato all’incirca di un milione di volte o più.",
+        "Nel primo piano il canale lascia passare un breve fiotto di ioni a intervalli di pochi secondi; un vero canale aperto lascia passare milioni di ioni al secondo."
       ],
       "sizeContext": "Spessore del solo doppio strato lipidico; le proteine e le catene di zuccheri sporgono oltre. Valore indicativo (BioNumbers, da Physical Biology of the Cell).",
       "quantityContext": "Molecole lipidiche nella membrana plasmatica di una piccola cellula animale: una stima da manuale dell’ordine di grandezza. Le cellule più grandi ne hanno proporzionalmente di più.",
@@ -671,7 +672,8 @@
       "simplifications": [
         "Sono disegnati solo poche centinaia di complessi del poro; un nucleo umano ne ha migliaia.",
         "Importazione ed esportazione sono mostrate come singole particelle che si muovono in modo regolare; il trasporto reale si basa su recettori che compiono cicli continui, sull’energia fornita dal sistema Ran e su eventi molto rapidi.",
-        "Il nucleo è disegnato come un ellissoide liscio; i nuclei reali possono avere pieghe e solchi."
+        "Il nucleo è disegnato come un ellissoide liscio; i nuclei reali possono avere pieghe e solchi.",
+        "Nel primo piano il complesso del poro è costruito con forme semplici ripetute otto volte, anziché con le sue circa 30 proteine diverse."
       ],
       "sizeContext": "Quota del volume di una cellula del fegato occupata dal nucleo; negli epatociti all’interno del tessuto epatico: {range}. Le dimensioni del nucleo variano tra i diversi tipi cellulari.",
       "quantityContext": "Paia di basi di DNA in un nucleo diploide femminile (XX), calcolate dal genoma di riferimento; {male} in una cellula maschile.",
@@ -764,7 +766,8 @@
       "simplifications": [
         "I territori sono disegnati come fibre aggrovigliate in regioni arrotondate; i territori reali sono irregolari e si mescolano ai bordi.",
         "Le fibre di cromatina sono disegnate parecchie volte più spesse del reale.",
-        "Il cromosoma condensato del primo piano appartiene a una cellula in divisione, non a questa cellula in interfase."
+        "Il cromosoma condensato del primo piano appartiene a una cellula in divisione, non a questa cellula in interfase.",
+        "Nel primo piano sono disegnati solo i microtubuli agganciati ai cinetocori, e il movimento del cromosoma sul fuso è mostrato più ridotto e più veloce che nelle cellule reali."
       ],
       "sizeContext": "Lunghezza complessiva del DNA di tutti i cromosomi di una cellula diploide femminile, se fosse disteso da un capo all’altro. In questa cellula in interfase è ripiegato in un nucleo largo pochi micrometri.",
       "quantityContext": "Cellula umana diploide normale: {pairs} coppie, cioè {autosomePairs} coppie di autosomi più due cromosomi sessuali (XX nelle femmine, XY nei maschi).",
@@ -837,7 +840,7 @@
       },
       "simplifications": [
         "Nella vista della cellula intera i telomeri sono mostrati come punti luminosi; in realtà sono tratti di DNA.",
-        "Il primo piano mostra solo poche ripetizioni; un telomero reale ne contiene da centinaia a migliaia.",
+        "Il primo piano mostra circa duecento ripetizioni e un’ansa larga circa 90 nm; un telomero reale ha circa mille ripetizioni o più, e le anse T reali si estendono di solito su diverse migliaia di paia di basi.",
         "La shelterina è rappresentata con forme semplificate anziché come singole proteine."
       ],
       "sizeContext": "Lunghezza del tratto ripetuto a ciascuna estremità cromosomica nelle cellule somatiche umane; varia con l’età, il tessuto e l’individuo.",
@@ -913,7 +916,7 @@
       },
       "simplifications": [
         "I tre strati sono disegnati come gusci regolari; nei nucleoli reali sono irregolari e intrecciati.",
-        "Le catene ramificate di RNA sono ingrandite per renderle visibili.",
+        "È disegnato un solo gene dell’RNA ribosomiale, molto più corto del gene reale e con molte meno polimerasi; le catene di RNA e le subunità ribosomiali sono ingrandite, e la produzione è mostrata molto più rapida che nella realtà.",
         "L’assemblaggio delle subunità coinvolge centinaia di molecole ausiliarie che non sono mostrate."
       ],
       "sizeContext": "Le dimensioni dei nucleoli variano a seconda di quanto attivamente la cellula produce ribosomi: le cellule in rapida crescita li hanno più grandi. Una cellula può avere uno o più nucleoli.",
@@ -988,7 +991,8 @@
       "simplifications": [
         "Nella vista della cellula intera i ribosomi sono ingranditi e molto meno numerosi che in una cellula reale.",
         "Il primo piano mostra solo le fasi principali; la fase di inizio e molte proteine ausiliarie sono omesse.",
-        "I tRNA sono rappresentati come semplici forme a L."
+        "I tRNA sono rappresentati come semplici forme a L.",
+        "Nel primo piano la parte anteriore della subunità maggiore è tagliata via per mostrare gli RNA transfer e il tunnel di uscita."
       ],
       "sizeContext": "Larghezza complessiva; i ribosomi non sono sferici. Per i ribosomi dei mammiferi si indica un valore di circa 25 nm.",
       "quantityContext": "Cellule HeLa (una linea cellulare tumorale umana) in crescita in coltura; stima basata sul loro contenuto di RNA. I numeri variano tra i tipi cellulari e a seconda dello stato di crescita.",
@@ -1071,7 +1075,9 @@
       "simplifications": [
         "Il RE è disegnato come poche lamine ordinate; nelle cellule reali è una rete molto più grande e in continuo cambiamento.",
         "Una sola particella di carico alla volta illustra il percorso di secrezione; le cellule reali trasportano contemporaneamente enormi quantità di proteine.",
-        "Il macchinario di indirizzamento (la particella di riconoscimento del segnale e il suo recettore) non è mostrato."
+        "Il macchinario di indirizzamento (la particella di riconoscimento del segnale e il suo recettore) non è mostrato.",
+        "Il primo piano mostra la sequenza segnale che guida la catena nel lume; in realtà resta nel traslocone formando un’ansa e viene tagliata sulla faccia luminale della membrana.",
+        "La vescicola rivestita conserva il suo rivestimento mentre si allontana; le vescicole reali lo perdono poco dopo la gemmazione."
       ],
       "sizeContext": "Distanza tra le due membrane di una lamina del RE nelle cellule di mammifero ({yeast} nel lievito).",
       "quantityContext": "Quota del volume di una cellula del fegato occupata dalle cisterne del RE ruvido; le cellule che secernono molte proteine ne hanno molto di più.",
@@ -1140,7 +1146,8 @@
       "simplifications": [
         "La rete tubulare è molto più rada che nelle cellule reali.",
         "Il rilascio di calcio è mostrato come fiotti regolari; i segnali reali variano per tempi e intensità.",
-        "Gli enzimi detossificanti, abbondanti nelle cellule del fegato, non sono mostrati a parte."
+        "Gli enzimi detossificanti, abbondanti nelle cellule del fegato, non sono mostrati a parte.",
+        "Gli ioni calcio sono disegnati come punti luminosi, più grandi delle loro dimensioni reali."
       ],
       "sizeContext": "Diametro dei tubuli del RE nelle cellule di mammifero.",
       "quantityContext": "Quota del volume di una cellula del fegato occupata dalle cisterne del RE liscio e del Golgi insieme; la tabella del manuale non le distingue.",
@@ -1222,7 +1229,8 @@
       "simplifications": [
         "Il modo in cui il carico attraversa la pila è ancora dibattuto; il primo piano mostra il modello, molto diffuso, della maturazione delle cisterne.",
         "Il vero nastro del Golgi contiene più pile e molte connessioni tubulari.",
-        "La glicosilazione è mostrata come un semplice cambiamento di colore delle catene di zuccheri."
+        "La glicosilazione è mostrata come un semplice cambiamento di colore delle catene di zuccheri.",
+        "Nel primo piano ogni cisterna avanza di una posizione ogni 20 secondi; la maturazione reale richiede minuti, e la rete trans-Golgi è in realtà una rete di tubuli."
       ],
       "sizeContext": "Larghezza approssimativa di una pila del Golgi nelle cellule animali; una pila ha di solito una manciata di cisterne.",
       "quantityContext": "Quota del volume di una cellula del fegato occupata dalle cisterne del Golgi e del RE liscio insieme; la tabella del manuale non le distingue.",
@@ -1311,7 +1319,9 @@
       "simplifications": [
         "Nella vista della cellula intera le vescicole si muovono in modo regolare; il trasporto reale si ferma, riparte e a volte inverte la direzione.",
         "Ogni vescicola è mostrata con un solo tipo di motore; il carico reale spesso ne porta diversi tipi contemporaneamente.",
-        "Il trasporto da parte della miosina lungo l’actina è descritto ma non animato."
+        "Il trasporto da parte della miosina lungo l’actina è descritto ma non animato.",
+        "Il primo piano segue la chinesina, perciò il microtubulo sembra scivolare all’indietro sotto di essa; la vescicola scorre in modo continuo invece di avanzare a scatti di 8 nm.",
+        "La dineina è semplificata in due teste ad anello con i loro steli e procede a passi regolari; la dineina reale avanza a passi irregolari."
       ],
       "sizeContext": "Vescicole rivestite di clatrina che si formano alla membrana plasmatica delle cellule di mammifero; gli altri trasportatori vanno da vescicole più piccole a lunghi tubi.",
       "quantityContext": "Copie di una proteina di carico in un singolo trasportatore che lascia l’apparato di Golgi, in cellule di rene di scimmia (COS) che producono un carico virale fluorescente.",
@@ -1407,7 +1417,9 @@
       "simplifications": [
         "I mitocondri sono disegnati come tubi separati; in molte cellule formano reti ramificate che si fondono e si dividono di continuo.",
         "Il primo piano mostra una sola ATP sintasi e una copia di ciascuna pompa; le creste reali ne sono densamente gremite.",
-        "I trasportatori di elettroni (ubichinone, citocromo c) e la chimica della demolizione dei combustibili non sono mostrati."
+        "I trasportatori di elettroni (ubichinone, citocromo c) e la chimica della demolizione dei combustibili non sono mostrati.",
+        "Le creste sono disegnate come lamine quasi parallele e regolarmente distanziate; nei mitocondri reali il loro numero, la loro forma e la loro spaziatura variano molto.",
+        "Il DNA mitocondriale è mostrato come anelli nudi; nelle cellule è impacchettato insieme a proteine in nucleoidi."
       ],
       "sizeContext": "Diametro tipico; la lunghezza va da bastoncelli corti a lunghe reti ramificate.",
       "quantityContext": "Cellule del fegato di ratto (epatociti), conteggio su micrografie elettroniche; i numeri variano molto a seconda del tipo e delle dimensioni della cellula.",
@@ -1485,7 +1497,9 @@
       "simplifications": [
         "I lisosomi variano molto per dimensioni e forma; sono disegnati come semplici sfere.",
         "È mostrato un solo evento di fusione alla volta; l’autofagia è descritta ma non animata.",
-        "Gli enzimi sono rappresentati da poche forme generiche."
+        "Gli enzimi sono rappresentati da poche forme generiche.",
+        "Il carico viene tagliato a metà un passo alla volta prima di trasformarsi in amminoacidi; le idrolasi reali, di decine di tipi diversi, tagliano in molti punti contemporaneamente.",
+        "Gli amminoacidi sono disegnati due o tre volte più grandi delle loro dimensioni reali, per renderli visibili."
       ],
       "sizeContext": "Intervallo osservato al microscopio elettronico nelle cellule eucariotiche; tipicamente {typical}. Le dimensioni cambiano con il tipo cellulare e la disponibilità di nutrienti.",
       "quantityContext": "Ampio intervallo per le cellule di mammifero; di solito diverse centinaia, che scendono sotto {low} quando le cellule sono private di nutrienti.",
@@ -1569,7 +1583,9 @@
       "simplifications": [
         "Gli endosomi formano un continuum di compartimenti in trasformazione; il modello ne mostra solo due tipi ben distinti.",
         "È mostrata solo l’internalizzazione mediata da clatrina; le cellule usano diverse altre vie.",
-        "I tre eventi sono mostrati in sequenza; in una cellula reale avvengono di continuo, ovunque e contemporaneamente."
+        "I tre eventi sono mostrati in sequenza; in una cellula reale avvengono di continuo, ovunque e contemporaneamente.",
+        "Il rivestimento di clatrina è disegnato come una gabbia regolare; i rivestimenti reali variano per dimensioni e forma, e le proteine ausiliarie come gli adattatori e la dinamina non sono mostrate.",
+        "Il tubulo di riciclo cresce dritto fino alla membrana plasmatica; nelle cellule i tubuli si staccano formando trasportatori che viaggiano lungo i microtubuli."
       ],
       "sizeContext": "Gli endosomi vanno da piccole vescicole a grandi compartimenti tubulari; le vescicole rivestite in arrivo sono larghe {vesicle}.",
       "quantityContext": "Quota del volume di una cellula del fegato occupata dagli endosomi; non è stato possibile verificare un conteggio per cellula.",
@@ -1652,7 +1668,9 @@
       "simplifications": [
         "Sono mostrati solo pochi enzimi rappresentativi; i perossisomi ne contengono decine.",
         "L’accorciamento degli acidi grassi è mostrato come pezzi staccati uno alla volta, senza la chimica intermedia.",
-        "Il numero e le dimensioni dei perossisomi variano molto tra i tipi cellulari."
+        "Il numero e le dimensioni dei perossisomi variano molto tra i tipi cellulari.",
+        "Ossigeno, perossido di idrogeno e acqua sono disegnati circa tre volte più grandi delle loro dimensioni reali.",
+        "L’acido grasso è disegnato come una semplice catena di atomi di carbonio, senza il suo coenzima A, e sono mostrati solo quattro cicli di accorciamento."
       ],
       "sizeContext": "Intervallo tipico del diametro; le cellule del fegato sono ricche di perossisomi.",
       "quantityContext": "Quota del volume di una cellula del fegato occupata dai perossisomi; non è stato possibile verificare un conteggio per cellula.",
@@ -1726,7 +1744,8 @@
       "simplifications": [
         "Nella vista della cellula intera i microtubuli sono disegnati come tubi lisci.",
         "Nel modello crescita e accorciamento seguono un ritmo regolare; nelle cellule sono casuali.",
-        "Le proteine che si legano alle estremità dei microtubuli e le regolano non sono mostrate."
+        "Le proteine che si legano alle estremità dei microtubuli e le regolano non sono mostrate.",
+        "Nel primo piano i dimeri di tubulina liberi arrivano da vicino; i dimeri reali arrivano per diffusione da ogni direzione, e molti si attaccano e poi si staccano di nuovo."
       ],
       "sizeContext": "Diametro esterno del tubo cavo.",
       "quantityContext": "Protofilamenti nella parete della maggior parte dei microtubuli cellulari. Il numero di microtubuli di una cellula varia molto e viene contato di rado.",
@@ -1802,7 +1821,9 @@
       "simplifications": [
         "La corteccia è disegnata come brevi segmenti rettilinei; i filamenti reali sono più lunghi e uniti da legami trasversali.",
         "Le fibre da stress e le sporgenze usate per strisciare sono descritte ma non disegnate nella cellula modello arrotondata.",
-        "I motori di miosina non sono mostrati."
+        "I motori di miosina non sono mostrati.",
+        "Nel primo piano la membrana resta ferma e la rete scorre verso il basso; in una cellula è la rete a restare ferma, mentre la membrana avanza.",
+        "Lo schema delle ramificazioni si ripete ogni 20 secondi; le reti reali sono casuali e più fitte, e le proteine di incappucciamento che fermano la crescita non sono mostrate."
       ],
       "sizeContext": "Diametro del filamento (intervallo indicato dai manuali).",
       "quantityContext": "L’actina è una delle proteine più abbondanti in molte cellule animali; il numero di filamenti per cellula non è una misura standard.",
@@ -1874,7 +1895,8 @@
       "simplifications": [
         "Le reti reali di filamenti intermedi sono più fitte e intrecciate.",
         "È rappresentato un solo tipo di filamento (vimentina); le cellule possono contenerne diversi.",
-        "L’assemblaggio è mostrato come una sequenza ordinata; nelle cellule avviene in parallelo, e i filamenti si scambiano anche subunità."
+        "L’assemblaggio è mostrato come una sequenza ordinata; nelle cellule avviene in parallelo, e i filamenti si scambiano anche subunità.",
+        "Nel primo piano il filamento di lunghezza unitaria è un anello ordinato di otto tetrameri e il filamento maturo una corda a quattro capi; l’impacchettamento reale è meno regolare, e in realtà lo stiramento dispiega localmente le proteine."
       ],
       "sizeContext": "Diametro del filamento, intermedio tra quello dei filamenti di actina e quello dei microtubuli.",
       "quantityContext": "Geni umani che codificano proteine dei filamenti intermedi; ogni tipo cellulare ne usa un insieme particolare.",
@@ -1949,7 +1971,8 @@
       "simplifications": [
         "Il materiale pericentriolare è disegnato come una nube soffice; in realtà è un’impalcatura proteica ordinata.",
         "Sono mostrati solo pochi complessi che avviano i microtubuli.",
-        "La duplicazione del centrosoma durante il ciclo cellulare è descritta ma non animata."
+        "La duplicazione del centrosoma durante il ciclo cellulare è descritta ma non animata.",
+        "La «ruota di carro» interna dei centrioli e i loro elementi di collegamento sono omessi, e le appendici sono disegnate come semplici lamelle e montanti."
       ],
       "sizeContext": "Larghezza di ciascun centriolo; ognuno è lungo {length} (cellule di vertebrati).",
       "quantityContext": "Centrioli in una cellula prima che il suo DNA venga duplicato: una coppia, che forma un centrosoma. Si duplicano una volta per ciclo cellulare.",

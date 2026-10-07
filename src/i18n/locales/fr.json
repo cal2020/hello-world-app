@@ -89,7 +89,7 @@
     "closeupLoading": "Chargement du gros plan…",
     "closeupError": "Impossible de charger le gros plan.",
     "slowdown": "Animation ralentie environ ×{factor} par rapport au temps réel.",
-    "noTimescale": "Les mouvements sont illustratifs et fortement ralentis.",
+    "noTimescale": "Les mouvements sont illustratifs : les événements moléculaires très rapides sont ralentis et les processus lents sont accélérés.",
     "toScale": "Les molécules sont dessinées à la même échelle les unes que les autres.",
     "moleculesEnlarged": "Certains composants sont dessinés environ ×{factor} plus grands que ne le voudrait l’échelle de cette vue.",
     "frozen": "L’animation biologique est figée.",
@@ -541,7 +541,8 @@
       "simplifications": [
         "Les vraies membranes sont bien plus densément garnies de protéines que ne le montre le modèle.",
         "Dans la vue de la cellule entière, la membrane est dessinée environ dix fois plus épaisse qu’en réalité.",
-        "Dans le gros plan, le mouvement des lipides est ralenti d’un facteur d’environ un million, voire davantage."
+        "Dans le gros plan, le mouvement des lipides est ralenti d’un facteur d’environ un million, voire davantage.",
+        "Dans le gros plan, le canal laisse passer une brève bouffée d’ions toutes les quelques secondes ; un vrai canal ouvert laisse passer des millions d’ions par seconde."
       ],
       "sizeContext": "Épaisseur de la bicouche lipidique elle-même ; les protéines et les chaînes de sucres dépassent au-delà. Valeur indicative (BioNumbers, d’après Physical Biology of the Cell).",
       "quantityContext": "Molécules lipidiques de la membrane plasmique d’une petite cellule animale — un ordre de grandeur tiré des manuels. Les cellules plus grandes en comptent proportionnellement davantage.",
@@ -695,7 +696,8 @@
       "simplifications": [
         "Le modèle ne dessine que quelques centaines de complexes du pore ; un noyau humain en compte des milliers.",
         "L’importation et l’exportation sont représentées par des particules isolées qui avancent régulièrement ; le transport réel fait intervenir des récepteurs qui effectuent des cycles, l’énergie fournie par le système Ran et des événements très rapides.",
-        "Le noyau est dessiné comme un ellipsoïde lisse ; les vrais noyaux peuvent présenter des replis et des sillons."
+        "Le noyau est dessiné comme un ellipsoïde lisse ; les vrais noyaux peuvent présenter des replis et des sillons.",
+        "Dans le gros plan, le complexe du pore est construit à partir de formes simples répétées huit fois, et non des quelque 30 protéines différentes qui le composent."
       ],
       "sizeContext": "Part du volume d’une cellule du foie occupée par le noyau ; {range} dans les hépatocytes au sein du tissu hépatique. La taille du noyau varie selon les types cellulaires.",
       "quantityContext": "Paires de bases d’ADN dans un noyau diploïde féminin (XX), calculées à partir du génome de référence ; {male} dans une cellule masculine.",
@@ -788,7 +790,8 @@
       "simplifications": [
         "Les territoires sont dessinés comme des fibres emmêlées dans des régions arrondies ; les vrais territoires sont irréguliers et s’entremêlent sur leurs bords.",
         "Les fibres de chromatine sont dessinées plusieurs fois plus épaisses qu’en réalité.",
-        "Le chromosome condensé du gros plan appartient à une cellule en division, et non à cette cellule en interphase."
+        "Le chromosome condensé du gros plan appartient à une cellule en division, et non à cette cellule en interphase.",
+        "Dans le gros plan, seuls les microtubules attachés aux kinétochores sont dessinés, et le chromosome se déplace sur le fuseau moins loin et plus vite que dans les vraies cellules."
       ],
       "sizeContext": "Longueur cumulée de l’ADN de tous les chromosomes d’une cellule diploïde féminine, une fois déroulé et mis bout à bout. Dans cette cellule en interphase, il est replié dans un noyau de quelques micromètres de diamètre.",
       "quantityContext": "Cellule humaine diploïde normale : {pairs} paires — {autosomePairs} paires d’autosomes plus deux chromosomes sexuels (XX chez la femme, XY chez l’homme).",
@@ -862,7 +865,7 @@
       },
       "simplifications": [
         "Dans la vue de la cellule entière, les télomères sont représentés par des points lumineux ; ce sont en réalité des segments d’ADN.",
-        "Le gros plan ne montre que quelques répétitions ; un vrai télomère en contient de plusieurs centaines à plusieurs milliers.",
+        "Le gros plan montre environ deux cents répétitions et une boucle d’environ 90 nm de diamètre ; un vrai télomère compte environ mille répétitions, voire davantage, et les vraies boucles T s’étendent généralement sur plusieurs milliers de paires de bases.",
         "La shelterine est représentée par des formes simplifiées plutôt que par des protéines individuelles."
       ],
       "sizeContext": "Longueur de la région répétée à chaque extrémité de chromosome dans les cellules somatiques humaines ; elle varie selon l’âge, le tissu et l’individu.",
@@ -938,7 +941,7 @@
       },
       "simplifications": [
         "Les trois couches sont dessinées comme des enveloppes bien nettes ; dans les vrais nucléoles, elles sont irrégulières et entremêlées.",
-        "Les chaînes d’ARN ramifiées sont agrandies pour être visibles.",
+        "Un seul gène d’ARN ribosomique est dessiné, bien plus court que le vrai gène et avec beaucoup moins de polymérases ; les chaînes d’ARN et les sous-unités ribosomiques sont agrandies, et la production paraît bien plus rapide qu’en réalité.",
         "L’assemblage des sous-unités fait intervenir des centaines de molécules auxiliaires qui ne sont pas représentées."
       ],
       "sizeContext": "La taille des nucléoles varie selon l’intensité avec laquelle une cellule fabrique des ribosomes : les cellules à croissance rapide en ont de plus gros. Une cellule peut posséder un seul nucléole ou plusieurs.",
@@ -1015,7 +1018,8 @@
       "simplifications": [
         "Dans la vue de la cellule entière, les ribosomes sont agrandis et bien moins nombreux que dans une vraie cellule.",
         "Le gros plan ne montre que les étapes principales ; l’initiation et de nombreuses protéines auxiliaires sont omises.",
-        "Les ARNt sont représentés par de simples formes en L."
+        "Les ARNt sont représentés par de simples formes en L.",
+        "Dans le gros plan, l’avant de la grande sous-unité est retiré pour laisser voir les ARN de transfert et le tunnel de sortie."
       ],
       "sizeContext": "Largeur hors tout ; les ribosomes ne sont pas sphériques. On cite une valeur d’environ 25 nm pour les ribosomes de mammifères.",
       "quantityContext": "Cellules HeLa (une lignée de cellules cancéreuses humaines) en croissance en culture ; estimation fondée sur leur teneur en ARN. Les nombres varient selon les types cellulaires et les états de croissance.",
@@ -1099,7 +1103,9 @@
       "simplifications": [
         "Le RE est dessiné sous forme de quelques feuillets bien ordonnés ; dans les vraies cellules, c’est un réseau bien plus vaste, en remaniement constant.",
         "Une seule particule de cargaison à la fois illustre le voyage de sécrétion ; les vraies cellules déplacent d’énormes quantités de protéines simultanément.",
-        "La machinerie d’adressage (la particule de reconnaissance du signal et son récepteur) n’est pas représentée."
+        "La machinerie d’adressage (la particule de reconnaissance du signal et son récepteur) n’est pas représentée.",
+        "Le gros plan montre la séquence signal qui mène la chaîne dans la lumière ; en réalité, elle se loge en boucle dans le translocon et est coupée du côté luminal de la membrane.",
+        "La vésicule recouverte garde son manteau en partant ; les vraies vésicules perdent leur manteau peu après leur bourgeonnement."
       ],
       "sizeContext": "Distance entre les deux membranes d’un feuillet du RE dans les cellules de mammifères ({yeast} chez la levure).",
       "quantityContext": "Part du volume d’une cellule du foie occupée par les citernes du RE rugueux ; les cellules qui sécrètent beaucoup de protéines en ont bien davantage.",
@@ -1169,7 +1175,8 @@
       "simplifications": [
         "Le réseau tubulaire est bien moins dense que dans les vraies cellules.",
         "La libération du calcium est représentée par des bouffées régulières ; les vrais signaux varient dans leur rythme et leur ampleur.",
-        "Les enzymes de détoxification, abondantes dans les cellules du foie, ne sont pas représentées séparément."
+        "Les enzymes de détoxification, abondantes dans les cellules du foie, ne sont pas représentées séparément.",
+        "Les ions calcium sont dessinés sous forme de points lumineux, plus gros que leur taille réelle."
       ],
       "sizeContext": "Diamètre des tubules du RE dans les cellules de mammifères.",
       "quantityContext": "Part du volume d’une cellule du foie occupée par les citernes du RE lisse et les saccules de l’appareil de Golgi réunis ; le tableau du manuel ne les distingue pas.",
@@ -1253,7 +1260,8 @@
       "simplifications": [
         "La façon dont la cargaison traverse la pile est encore débattue ; le gros plan montre le modèle, très répandu, de la maturation des saccules.",
         "Le vrai ruban golgien compte davantage de piles et de nombreuses connexions tubulaires.",
-        "La glycosylation est représentée par un simple changement de couleur des chaînes de sucres."
+        "La glycosylation est représentée par un simple changement de couleur des chaînes de sucres.",
+        "Dans le gros plan, chaque saccule avance d’une position toutes les 20 secondes ; la maturation réelle prend plusieurs minutes, et le réseau trans-golgien est en réalité un réseau tubulaire."
       ],
       "sizeContext": "Largeur approximative d’une pile golgienne dans les cellules animales ; une pile compte généralement quelques saccules.",
       "quantityContext": "Part du volume d’une cellule du foie occupée par les saccules de l’appareil de Golgi et les citernes du RE lisse réunis ; le tableau du manuel ne les distingue pas.",
@@ -1342,7 +1350,9 @@
       "simplifications": [
         "Dans la vue de la cellule entière, les vésicules avancent régulièrement ; le transport réel s’arrête, repart et change parfois de sens.",
         "Chaque vésicule est représentée avec un seul type de moteur ; les vraies cargaisons en portent souvent plusieurs types à la fois.",
-        "Le transport par la myosine le long de l’actine est décrit, mais pas animé."
+        "Le transport par la myosine le long de l’actine est décrit, mais pas animé.",
+        "Le gros plan suit la kinésine : le microtubule semble donc glisser vers l’arrière sous elle ; la vésicule glisse de façon continue au lieu d’avancer par bonds de 8 nm.",
+        "La dynéine est simplifiée en deux têtes annulaires munies de tiges, et elle avance à pas réguliers ; la vraie dynéine avance par pas irréguliers."
       ],
       "sizeContext": "Vésicules recouvertes de clathrine formées à la membrane plasmique des cellules de mammifères ; les autres véhicules de transport vont de vésicules plus petites à de longs tubes.",
       "quantityContext": "Exemplaires d’une protéine de cargaison dans un véhicule de transport quittant l’appareil de Golgi, dans des cellules de rein de singe (COS) produisant une cargaison virale fluorescente.",
@@ -1438,7 +1448,9 @@
       "simplifications": [
         "Les mitochondries sont dessinées comme des tubes séparés ; dans de nombreuses cellules, elles forment des réseaux ramifiés qui fusionnent et se divisent sans cesse.",
         "Le gros plan montre une seule ATP synthase et un seul exemplaire de chaque pompe ; les vraies crêtes en sont densément garnies.",
-        "Les transporteurs d’électrons (ubiquinone, cytochrome c) et la chimie de la dégradation des carburants ne sont pas représentés."
+        "Les transporteurs d’électrons (ubiquinone, cytochrome c) et la chimie de la dégradation des carburants ne sont pas représentés.",
+        "Les crêtes sont dessinées comme des lames régulièrement espacées et presque parallèles ; dans les vraies mitochondries, leur nombre, leur forme et leur espacement varient beaucoup.",
+        "L’ADN mitochondrial est représenté par des anneaux nus ; dans les cellules, il est empaqueté avec des protéines en nucléoïdes."
       ],
       "sizeContext": "Diamètre typique ; en longueur, elles vont de courts bâtonnets à de longs réseaux ramifiés.",
       "quantityContext": "Cellules du foie de rat (hépatocytes), dénombrement sur des micrographies électroniques ; les nombres varient fortement selon le type et la taille des cellules.",
@@ -1516,7 +1528,9 @@
       "simplifications": [
         "Les lysosomes varient beaucoup en taille et en forme ; ils sont dessinés comme de simples sphères.",
         "Un seul événement de fusion est montré à la fois ; l’autophagie est décrite, mais pas animée.",
-        "Les enzymes sont représentées par quelques formes génériques."
+        "Les enzymes sont représentées par quelques formes génériques.",
+        "La cargaison est coupée en deux, étape par étape, avant de se transformer en acides aminés ; les vraies hydrolases, de dizaines de types différents, coupent à de nombreux endroits à la fois.",
+        "Les acides aminés sont dessinés deux à trois fois plus gros qu’en réalité, pour être visibles."
       ],
       "sizeContext": "Fourchette observée au microscope électronique dans les cellules eucaryotes ; typiquement {typical}. La taille varie selon le type cellulaire et l’apport en nutriments.",
       "quantityContext": "Large fourchette pour les cellules de mammifères ; généralement plusieurs centaines, et moins de {low} lorsque les cellules sont privées de nutriments.",
@@ -1600,7 +1614,9 @@
       "simplifications": [
         "Les endosomes forment un continuum de compartiments en constante évolution ; le modèle n’en montre que deux types bien distincts.",
         "Seule l’internalisation dépendante de la clathrine est représentée ; les cellules utilisent plusieurs autres voies.",
-        "Les trois événements sont montrés successivement ; dans une vraie cellule, ils se produisent en permanence, partout à la fois."
+        "Les trois événements sont montrés successivement ; dans une vraie cellule, ils se produisent en permanence, partout à la fois.",
+        "Le manteau de clathrine est dessiné comme une cage régulière ; les vrais manteaux varient en taille et en forme, et les protéines auxiliaires comme les adaptateurs et la dynamine ne sont pas représentées.",
+        "Le tube de recyclage pousse en ligne droite jusqu’à la membrane plasmique ; dans les cellules, les tubules se détachent pour former des véhicules de transport qui circulent le long des microtubules."
       ],
       "sizeContext": "Les endosomes vont de petites vésicules à de grands compartiments tubulaires ; les vésicules recouvertes entrantes mesurent {vesicle} de diamètre.",
       "quantityContext": "Part du volume d’une cellule du foie occupée par les endosomes ; le nombre par cellule n’a pas pu être vérifié.",
@@ -1683,7 +1699,9 @@
       "simplifications": [
         "Seules quelques enzymes représentatives sont montrées ; les peroxysomes en contiennent des dizaines.",
         "Le raccourcissement des acides gras est représenté par des morceaux détachés un à un, sans les réactions chimiques intermédiaires.",
-        "Le nombre et la taille des peroxysomes varient beaucoup selon les types cellulaires."
+        "Le nombre et la taille des peroxysomes varient beaucoup selon les types cellulaires.",
+        "L’oxygène, le peroxyde d’hydrogène et l’eau sont dessinés environ trois fois plus gros qu’en réalité.",
+        "L’acide gras est dessiné comme une simple chaîne carbonée, dépourvue de coenzyme A, et seuls quatre cycles de raccourcissement sont montrés."
       ],
       "sizeContext": "Fourchette de diamètre typique ; les cellules du foie sont riches en peroxysomes.",
       "quantityContext": "Part du volume d’une cellule du foie occupée par les peroxysomes ; le nombre par cellule n’a pas pu être vérifié.",
@@ -1757,7 +1775,8 @@
       "simplifications": [
         "Dans la vue de la cellule entière, les microtubules sont dessinés comme des tubes lisses.",
         "Dans le modèle, croissance et raccourcissement suivent un rythme régulier ; dans les cellules, ils sont aléatoires.",
-        "Les protéines qui se fixent aux extrémités des microtubules et les régulent ne sont pas représentées."
+        "Les protéines qui se fixent aux extrémités des microtubules et les régulent ne sont pas représentées.",
+        "Dans le gros plan, des dimères de tubuline libres arrivent depuis le voisinage immédiat ; les vrais dimères diffusent depuis toutes les directions, et beaucoup se fixent puis se détachent de nouveau."
       ],
       "sizeContext": "Diamètre externe du tube creux.",
       "quantityContext": "Protofilaments dans la paroi de la plupart des microtubules cellulaires. Le nombre de microtubules d’une cellule varie énormément et il est rarement compté.",
@@ -1833,7 +1852,9 @@
       "simplifications": [
         "Le cortex est dessiné sous forme de courts segments droits ; les vrais filaments sont plus longs et reliés entre eux par des pontages.",
         "Les fibres de stress et les protrusions qui permettent de ramper sont décrites, mais pas dessinées dans la cellule arrondie du modèle.",
-        "Les moteurs de type myosine ne sont pas représentés."
+        "Les moteurs de type myosine ne sont pas représentés.",
+        "Dans le gros plan, la membrane reste immobile et le réseau s’écoule vers le bas ; dans une cellule, le réseau reste en place et c’est la membrane qui avance.",
+        "Le motif de ramification se répète toutes les 20 secondes ; les vrais réseaux sont aléatoires et plus denses, et les protéines de coiffe qui stoppent la croissance ne sont pas représentées."
       ],
       "sizeContext": "Diamètre du filament (fourchette des manuels).",
       "quantityContext": "L’actine est l’une des protéines les plus abondantes dans de nombreuses cellules animales ; le nombre de filaments par cellule n’est pas une mesure courante.",
@@ -1905,7 +1926,8 @@
       "simplifications": [
         "Les vrais réseaux de filaments intermédiaires sont plus denses et plus entrelacés.",
         "Un seul type de filament (la vimentine) est représenté ; les cellules peuvent en contenir plusieurs.",
-        "L’assemblage est présenté comme une séquence bien ordonnée ; dans les cellules, les étapes se déroulent en parallèle, et les filaments échangent aussi des sous-unités."
+        "L’assemblage est présenté comme une séquence bien ordonnée ; dans les cellules, les étapes se déroulent en parallèle, et les filaments échangent aussi des sous-unités.",
+        "Dans le gros plan, le filament de longueur unitaire est un anneau bien ordonné de huit tétramères et le filament mature une corde à quatre brins ; l’empilement réel est moins régulier et, en réalité, l’étirement déplie localement les protéines."
       ],
       "sizeContext": "Diamètre du filament — entre celui des filaments d’actine et celui des microtubules.",
       "quantityContext": "Gènes humains codant des protéines de filaments intermédiaires ; chaque type cellulaire en utilise un ensemble particulier.",
@@ -1981,7 +2003,8 @@
       "simplifications": [
         "Le matériel péricentriolaire est dessiné comme un nuage diffus ; c’est en réalité un échafaudage protéique ordonné.",
         "Seuls quelques complexes d’amorçage des microtubules sont représentés.",
-        "La duplication du centrosome au cours du cycle cellulaire est décrite, mais pas animée."
+        "La duplication du centrosome au cours du cycle cellulaire est décrite, mais pas animée.",
+        "La structure interne en roue de charrette des centrioles et leurs fibres de liaison sont omises, et les appendices sont dessinés sous forme de simples lames et entretoises."
       ],
       "sizeContext": "Largeur de chaque centriole ; chacun mesure {length} de long (cellules de vertébrés).",
       "quantityContext": "Centrioles d’une cellule avant la copie de son ADN : une paire, qui forme un centrosome. Ils sont dupliqués une fois par cycle cellulaire.",
