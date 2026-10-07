@@ -3,3 +3,4 @@ dist/hexis-lab.local.html
 dist-*/
 dist/*.png
 dist/*.tmp
+.wf/
