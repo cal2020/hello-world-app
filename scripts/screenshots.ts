@@ -25,6 +25,8 @@ interface Shot {
   mobile?: boolean;
   /** Extra steps after the page is ready. */
   steps?: (page: Page) => Promise<void>;
+  /** Start biological animation (reduced motion starts it frozen). */
+  play?: boolean;
   waitMs?: number;
 }
 
@@ -58,18 +60,21 @@ const SHOTS: Shot[] = [
     },
   },
   { name: 'desktop-mitochondria', path: '/en/mitochondria/', viewport: desktop },
-  { name: 'desktop-mitochondria-closeup', path: '/en/mitochondria/?view=closeup', viewport: desktop },
-  { name: 'desktop-atp-synthase', path: '/en/mitochondria/?view=closeup&detail=atp-synthase', viewport: desktop, waitMs: 6000 },
-  { name: 'desktop-ribosome-translation', path: '/en/ribosomes/?view=closeup', viewport: desktop, waitMs: 6000 },
-  { name: 'desktop-kinesin', path: '/en/vesicles-and-motor-proteins/?view=closeup', viewport: desktop, waitMs: 4000 },
+  { name: 'desktop-mitochondria-closeup', play: true, path: '/en/mitochondria/?view=closeup', viewport: desktop },
+  { name: 'desktop-atp-synthase', play: true, path: '/en/mitochondria/?view=closeup&detail=atp-synthase', viewport: desktop, waitMs: 6000 },
+  { name: 'desktop-ribosome-translation', play: true, path: '/en/ribosomes/?view=closeup', viewport: desktop, waitMs: 6000 },
+  { name: 'desktop-kinesin', play: true, path: '/en/vesicles-and-motor-proteins/?view=closeup', viewport: desktop, waitMs: 4000 },
+  { name: 'desktop-plasma-membrane-closeup', play: true, path: '/en/plasma-membrane/?view=closeup', viewport: desktop, waitMs: 4000 },
   { name: 'desktop-french-nucleus', path: '/fr/nucleus/', viewport: desktop },
+  { name: 'desktop-french-nuclear-pore', play: true, path: '/fr/nucleus/?view=closeup', viewport: desktop, waitMs: 5000 },
   { name: 'desktop-chinese-golgi', path: '/zh/golgi-apparatus/', viewport: desktop },
   { name: 'desktop-text-atlas', path: '/en/?renderer=fail', viewport: desktop },
   { name: 'tablet-overview', path: '/en/', viewport: tablet, mobile: true, steps: async (page) => page.getByTestId('enter-cell').click() },
   { name: 'tablet-endosomes', path: '/es/endosomes/', viewport: tablet, mobile: true },
+  { name: 'tablet-golgi-closeup', play: true, path: '/sr/golgi-apparatus/?view=closeup', viewport: tablet, mobile: true, waitMs: 4000 },
   { name: 'phone-overview', path: '/en/', viewport: phone, mobile: true, steps: async (page) => page.getByTestId('enter-cell').click() },
   { name: 'phone-nucleolus', path: '/ru/nucleolus/', viewport: phone, mobile: true },
-  { name: 'phone-closeup', path: '/it/telomeres/?view=closeup', viewport: phone, mobile: true, waitMs: 3000 },
+  { name: 'phone-closeup', play: true, path: '/it/telomeres/?view=closeup', viewport: phone, mobile: true, waitMs: 3000 },
 ];
 
 async function main(): Promise<void> {
@@ -91,6 +96,10 @@ async function main(): Promise<void> {
     if (shot.steps) {
       await shot.steps(page);
       await ready(page);
+    }
+    if (shot.play) {
+      const freeze = page.getByTestId('freeze-toggle');
+      if ((await freeze.count()) && (await freeze.getAttribute('aria-pressed')) === 'true') await freeze.click();
     }
     // Let labels settle and a few frames render.
     await page.waitForTimeout(shot.waitMs ?? 3000);

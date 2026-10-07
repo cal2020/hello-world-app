@@ -25,7 +25,7 @@ manipulation never waits for an animation).
 | App shell + English text (`index-*.js`) | ≈ 455 KB | ≈ 138 KB | immediately |
 | Styles (`index-*.css`) | ≈ 38 KB | ≈ 8 KB | immediately |
 | 3D engine (`Viewer-*.js`) | ≈ 1.09 MB | ≈ 294 KB | after the interface |
-| Each close-up scene | BUNDLE_CLOSEUPS | | when opened |
+| Each close-up scene (+ shared toolkit) | 4–18 KB (+ 14 KB) | 2–8 KB (+ 6 KB) | when opened |
 | Each other language | 92–175 KB | 34–43 KB | when chosen |
 | Fonts | WOFF2 subsets | | by Unicode range |
 
