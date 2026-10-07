@@ -78,6 +78,30 @@ the nucleus.
 | Text atlas | The complete content as text (all 19 structures, numbers, sources); shown automatically when 3D cannot start. |
 | Static pages | Every route is prerendered as a real HTML page with its own title, description, canonical and hreflang links, readable without JavaScript. |
 
+**Close-ups and what they teach** (scale per view; slow-down where a single factor applies):
+
+| Structure | Close-up (scale) | Teaching animation |
+| --- | --- | --- |
+| Plasma membrane | Lipid bilayer, 40 nm patch (1 nm/unit) | Individual phospholipids and cholesterol jiggle and drift; an ion channel lets bursts of ions in; receptor, glycocalyx, actin cortex. |
+| Cytoplasm | Crowded cytosol, 100 nm cube (1 nm/unit) | Proteins, ribosomes on an mRNA, tRNAs and an actin filament jostling. |
+| Nucleus | Nuclear pore complex, cut in half (1 nm/unit) | Import (cargo + importin, in) and export (mRNA package, out) through the pore; lamina. |
+| Chromosomes | Metaphase chromosome (10 nm/unit) · DNA packaging (1 nm/unit) | Sister chromatids, centromere, kinetochores with spindle microtubules, telomeres · nucleosomes as beads on a string. |
+| Telomeres | T-loop (1 nm/unit) | TTAGGG repeats, the 3′ overhang tucked into the duplex, shelterin. |
+| Nucleolus | Subunit assembly (10 nm/unit) | rDNA “Christmas tree” transcription, processing, 40S and 60S subunits leaving. |
+| Ribosomes | Translation (1 nm/unit, ×10 slower) | Codon-by-codon elongation: tRNA arrival, peptide bond, translocation, growing chain in the exit tunnel. |
+| Rough ER | Translocation (1 nm/unit) | Chain through the translocon, signal cleavage, glycosylation, folding with BiP, COPII budding. |
+| Smooth ER | Calcium store (1 nm/unit) | SERCA pumps load calcium (two ions per ATP); release channels open in bursts. |
+| Golgi apparatus | Through the stack (10 nm/unit) | Cisternal maturation cis → trans, COPII in, COPI back, secretory and lysosomal vesicles out. |
+| Vesicles and motors | Kinesin walking (1 nm/unit, ×50 slower) | Hand-over-hand 8 nm steps toward the plus end, one ATP per step; dynein the other way. |
+| Mitochondria | Inside a mitochondrion (10 nm/unit) · ATP synthase (1 nm/unit, ×100 slower) | Membranes, cristae, matrix, mtDNA · proton pumping and the rotary synthase releasing 3 ATP per turn. |
+| Lysosomes | Digestion (1 nm/unit) | V-ATPases acidify; a late endosome fuses; hydrolases cut cargo down to amino acids, which leave via transporters. |
+| Endosomes | Sort, recycle or degrade (1 nm/unit) | 1 uptake through a clathrin-coated pit, 2 receptor recycling, 3 maturation and fusion with a lysosome. |
+| Peroxisomes | Oxidation and detoxification (1 nm/unit) | Oxidase makes H₂O₂, catalase splits it; a fatty acid is shortened; PEX5 imports an enzyme. |
+| Microtubules | Dynamic instability (1 nm/unit) | GTP cap growth, catastrophe with curling protofilaments, fast shrinkage, rescue. |
+| Actin filaments | Treadmilling and branching (1 nm/unit) | ATP-actin added at barbed ends, ADP-actin lost at pointed ends, Arp2/3 branches at ~70°. |
+| Intermediate filaments | Rope-like assembly (1 nm/unit) | Dimer → tetramer → unit-length filament → mature filament, then stretching without breaking. |
+| Centrosome | Centrioles (10 nm/unit) | Nine-triplet centrioles at right angles, appendages, γ-tubulin rings nucleating microtubules. |
+
 **Implementation improvements** (required additions beyond the reference experience,
 also labelled in the About panel): structure **search** with synonyms, a visible
 **rendering-quality** control, and an explicit **reduced-motion** setting.
