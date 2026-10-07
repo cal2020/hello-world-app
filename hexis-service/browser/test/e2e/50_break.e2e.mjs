@@ -23,7 +23,20 @@ export default async function (t) {
   await page.evaluate(() => HXUI.go("break"));
   if (missing.length) {
     const st = await page.evaluate(() => document.querySelector('.hx-section[data-section="break"]').dataset.state);
-    assert.ok(["unavailable", "ready"].includes(st), "Break it renders without the full engine");
+    if (missing.some((n) => /guards$/.test(n))) {
+      assert.equal(st, "unavailable", "without HX.guards the whole section is unavailable");
+      return;
+    }
+    /* the guard playground works on its own; the mutation lab shows what it is missing */
+    assert.equal(st, "ready");
+    const lab = await page.evaluate(() => ({
+      missing: document.querySelector(".br-lab .hx-unavailable")?.dataset.missing || "",
+      text: document.querySelector(".br-lab .hx-unavailable")?.textContent || "",
+    }));
+    for (const n of missing) assert.ok(lab.missing.split(" ").includes(n) && lab.text.includes(n), "the mutation lab names the missing " + n);
+    await page.waitForFunction(() => !!document.getElementById("br-g-out")?.dataset.status);
+    await page.fill("#br-guards", "validation_status == 'pass'\nvalidation_status == 'repairable' and repair_count < 2");
+    await page.waitForFunction(() => document.getElementById("br-g-out")?.dataset.status === "PROVEN");
     return;
   }
 
@@ -52,6 +65,8 @@ export default async function (t) {
       state: document.getElementById("br-detail").dataset.state,
       codes: [...document.querySelectorAll("#br-codes .hx-chip")].map((c) => c.textContent),
       findings: [...document.querySelectorAll("#br-findings > .cp-finding")].map((f) => f.dataset.code),
+      located: [...document.querySelectorAll("#br-findings > .cp-finding")].map((f) => [f.dataset.code, f.dataset.state || null, f.dataset.edge === "" || f.dataset.edge === undefined ? null : Number(f.dataset.edge), f.dataset.variable || null]),
+      digest: document.getElementById("br-findings")?.dataset.digest || "",
       asserts: [...document.querySelectorAll("#br-asserts .br-assert")].map((a) => a.classList.contains("is-ok")),
       hash: document.getElementById("br-hash")?.getAttribute("title") || document.getElementById("br-hash")?.textContent,
       diffs: document.querySelectorAll(".br-diff .br-line.is-add, .br-diff .br-line.is-del").length,
@@ -60,6 +75,9 @@ export default async function (t) {
     assert.equal(got.state, "caught", `${id}: caught`);
     assert.deepEqual(got.codes, want.codes, `${id}: the page's codes equal Python's`);
     assert.deepEqual([...new Set(got.findings)].sort(), want.codes, `${id}: the findings list shows those codes`);
+    const nul = (v) => (v === undefined ? null : v);
+    assert.deepEqual(got.located, want.findings.map((f) => [f.code, nul(f.state), nul(f.edge), nul(f.variable)]), `${id}: each finding's code, state, edge and variable equal Python's, in order`);
+    assert.equal(got.digest, want.digest, `${id}: the report digest equals Python's`);
     assert.ok(got.asserts.length && got.asserts.every(Boolean), `${id}: the Python test's assertions hold`);
     assert.equal(got.hash || "none", gc.hash || "none", `${id}: mutated artifact hash equals Python's`);
     assert.ok(got.diffs > 0, `${id}: the before/after view shows the change`);
@@ -103,17 +121,50 @@ export default async function (t) {
   assert.equal(mal.bad, mal.n, "every malicious guard is rejected");
   assert.ok(mal.errors.every((e) => e.length > 5), "each rejection says why");
   assert.equal(mal.pwned, "undefined", "nothing in a guard ran");
+  assert.equal(await page.evaluate(() => document.getElementById("br-g-out").dataset.status), "GUARDS_REJECTED", "rejected guards are not analysed further");
+  assert.equal(await page.evaluate(() => !!document.getElementById("br-allowed")), true, "a rejection says what a guard may contain");
   /* typed by hand, live */
   await page.fill("#br-guards", "__import__('os').system('rm -rf /') == 0\nconstructor.constructor('globalThis.__hx_pwned=2')() == 1");
   await page.waitForFunction(() => document.querySelectorAll("#br-guard-results .br-guard.is-bad").length === 2);
   assert.equal(await page.evaluate(() => typeof globalThis.__hx_pwned), "undefined");
 
   /* errors in the editors say what to fix */
+  await page.selectOption("#br-guard-source", "VALIDATE_DRAFT");
+  await page.waitForFunction(() => document.getElementById("br-g-out")?.dataset.status === "PROVEN");
   await page.fill("#br-types", "{\"repair_count\": \"int\"}");
   await page.waitForFunction(() => !document.getElementById("br-types-error")?.hidden);
   assert.match(await page.evaluate(() => document.getElementById("br-types-error").textContent), /Use one of string, integer/);
+  const gated = await page.evaluate(() => ({ status: document.getElementById("br-g-out").dataset.status, results: !!document.getElementById("br-guard-results"),
+    text: document.getElementById("br-g-out").textContent, hint: document.getElementById("br-types-hint").textContent }));
+  assert.equal(gated.status, "TYPES_INVALID", "invalid types stop the check");
+  assert.ok(!gated.results && !/undeclared variable/.test(gated.text), "no cascade of guard rejections from the empty type map");
+  assert.match(gated.text, /Fix the variable types above/);
+  assert.match(gated.hint, /^Edited\./, "the hint says the types were edited");
   await page.fill("#br-env", "{\"a\": 1,");
   await page.waitForFunction(() => !document.getElementById("br-env-error")?.hidden);
-  assert.equal(await page.evaluate(() => document.getElementById("br-types").getAttribute("aria-invalid")), "true");
+  const env = await page.evaluate(() => ({ env: document.getElementById("br-env").getAttribute("aria-invalid"), types: document.getElementById("br-types").getAttribute("aria-invalid"), text: document.getElementById("br-env-error").textContent }));
+  assert.deepEqual([env.env, env.types], ["true", "true"], "both editors are marked invalid");
+  assert.ok(!/invalid JSON/i.test(env.text), "the environment error does not repeat itself: " + env.text);
+  /* loading guards again restores the machine's types */
+  await page.selectOption("#br-guard-source", "READ_BACK");
+  await page.waitForFunction(() => document.getElementById("br-g-out")?.dataset.status === "PROVEN");
+  assert.equal(await page.evaluate(() => document.getElementById("br-types").getAttribute("aria-invalid")), null);
   await frames(page);
+
+  /* the mutation picker is one Tab stop; the arrow keys move inside it (wide layout) */
+  if (wide) {
+    await page.focus("#br-mut-a17-shortcut");
+    await page.keyboard.press("ArrowDown");
+    const next = await page.evaluate(() => document.activeElement.id);
+    assert.notEqual(next, "br-mut-a17-shortcut", "ArrowDown moves to the next mutation");
+    await page.keyboard.press("End");
+    assert.equal(await page.evaluate(() => document.activeElement.id), await page.evaluate(() => [...document.querySelectorAll(".br-mut")].pop().id));
+    assert.equal(await page.evaluate(() => document.querySelectorAll('.br-mut[tabindex="0"]').length), 1, "one Tab stop in the list");
+  }
+
+  /* Reset lab on Break it: everything is checked again and caught again */
+  await page.evaluate(() => HXUI.lab_reset());
+  await page.waitForFunction(() => document.getElementById("br-score")?.dataset.done === "yes", null, { timeout: 30000 });
+  assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll(".br-mut")].filter((b) => b.dataset.state !== "caught").map((b) => b.id)), [], "after a reset every mutation is caught again");
+  assert.equal(await page.evaluate(() => document.getElementById("br-detail")?.dataset.mutation), "a17-shortcut", "the reset lab opens on its default mutation");
 }

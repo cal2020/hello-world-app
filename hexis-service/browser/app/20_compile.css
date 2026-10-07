@@ -20,14 +20,17 @@
   .cp-stat:last-child { grid-column: 1 / -1; }
 }
 
-/* ------------------------------------------------------------------ two columns: skill text | work */
+/* ------------------------------------------------------------------ two columns: skill text | work
+   The DOM puts the work (results) first; wide screens place the skill text on the left. */
 .cp-grid {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  grid-template-areas: "skill work";
   gap: var(--sp-6);
   align-items: start;
 }
-.cp-skill-col { min-width: 0; align-self: stretch; padding-right: var(--sp-6); border-right: 1px solid var(--rule); }
+.cp-work { grid-area: work; }
+.cp-skill-col { grid-area: skill; min-width: 0; align-self: stretch; padding-right: var(--sp-6); border-right: 1px solid var(--rule); }
 .cp-skill {
   position: sticky;
   top: calc(env(safe-area-inset-top, 0px) + var(--sp-4));
@@ -36,7 +39,7 @@
 }
 .cp-work { display: flex; flex-direction: column; gap: var(--sp-6); min-width: 0; }
 @container cp (max-width: 52rem) {
-  .cp-grid { grid-template-columns: minmax(0, 1fr); }
+  .cp-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "work" "skill"; }
   .cp-skill-col { padding-right: 0; border-right: 0; }
   .cp-skill { position: static; max-height: none; grid-template-rows: none; }
   .cp-source { max-height: 26rem; }
@@ -90,6 +93,11 @@
   box-shadow: 0 0 0 2px var(--accent-tint);
 }
 .cp-clause.is-lit .cp-cid { border-color: var(--accent); color: var(--accent); background: var(--surface); }
+.cp-clause:focus { outline: none; }
+.cp-clause:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.cp-back { justify-self: start; }
+.cp-back[hidden] { display: none; }
+.cp-empty { font-size: var(--fs-2); color: var(--ink-3); text-wrap: pretty; }
 
 /* ------------------------------------------------------------------ actions */
 .cp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-4); }
@@ -179,15 +187,19 @@
 }
 
 /* ------------------------------------------------------------------ admission */
-.cp-admission { display: grid; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border: 1px solid var(--rule); border-radius: var(--r-2); background: var(--surface); }
+.cp-admissions { display: grid; gap: var(--sp-3); padding: 0; list-style: none; }
+.cp-admission { display: grid; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border: 1px solid var(--rule); border-radius: var(--r-2); background: var(--surface); min-width: 0; }
+.cp-admission-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); }
+.cp-admission-title { font-weight: 600; font-size: var(--fs-3); color: var(--ink); }
+.cp-admission-note { font-size: var(--fs-2); color: var(--ink-2); text-wrap: pretty; }
+.cp-reasons-wrap { display: grid; gap: 0.3rem; }
 .cp-admission[data-status="ADMITTED"] { border-left: 3px solid var(--ok); }
 .cp-admission[data-status="CONFLICT"] { border-left: 3px solid var(--warn); }
 .cp-admission[data-status="REJECTED"] { border-left: 3px solid var(--crit); }
 .cp-reasons { display: grid; gap: 0.25rem; padding-left: 1.1rem; font-size: var(--fs-2); color: var(--ink-2); overflow-wrap: anywhere; }
 
-/* ------------------------------------------------------------------ coverage */
-.cp-cov-id { display: inline-flex; align-items: center; gap: 0.4rem; }
-.cp-cov-id .cp-must { font-size: var(--fs-1); }
+/* ------------------------------------------------------------------ coverage (full width, below the grid) */
+.cp-coverage .cp-must { font-size: var(--fs-1); }
 .cp-states { display: inline-flex; flex-wrap: wrap; gap: 0.25rem; }
 .cp-state { font-size: var(--fs-1); padding: 0 0.3rem; border: 1px solid var(--rule); border-radius: var(--r-1); background: var(--surface-2); color: var(--ink); white-space: nowrap; }
 .cp-just { color: var(--ink-2); text-wrap: pretty; }

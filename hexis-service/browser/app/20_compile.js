@@ -38,7 +38,7 @@
     root: null, parts: null,
     result: null, ms: 0, error: null, runs: 0,
     clauses: [], clause_error: null,
-    registry_store: null, admission: null, admit_error: null, admits: 0,
+    registry_store: null, admission: null, admissions: [], admit_error: null,
     stale: false, scheduled: false,
   };
 
@@ -99,13 +99,14 @@
       const directory = new HX.policy.PolicyService(HX.data.policy);
       const approver = directory.authenticate(ADMIN);
       const catalog = HX.catalog.load_catalog(HX.data.tool_catalog);
-      S.admits += 1;
-      S.admission = HX.registry.admit(S.registry_store, r.package, catalog, {
+      const res = HX.registry.admit(S.registry_store, r.package, catalog, {
         expected_parent_hash: null, approver, environment: ADMIT_ENV, now: LAB_EPOCH,
         deployment_policy: HX.fixture.deployment_policy(), skill_text: HX.data.skill_md,
       });
+      /* only a returned result counts as an admission; the history keeps every one, newest first */
+      S.admission = res;
+      S.admissions.unshift({ n: S.admissions.length + 1, res });
     } catch (e) {
-      S.admission = null;
       S.admit_error = e;
     }
     if (HXUI.lab.compile) { HXUI.lab.compile.admission = S.admission; HXUI.lab_changed("compile"); }
@@ -113,11 +114,13 @@
 
   /* ---------------------------------------------------------------- clause highlighting */
   let lit = [];
+  let pinned = null; /* the clause a clause-id button went to: stays lit until focus leaves it or Back */
   function light(ids, opts) {
     const o = opts || {};
     for (const el of lit) el.classList.remove("is-lit");
     lit = [];
     if (!S.parts) return;
+    if ((!ids || !ids.length) && pinned) ids = [pinned];
     for (const id of ids || []) {
       for (const el of S.root.querySelectorAll('[data-clause="' + CSS.escape(id) + '"]')) {
         el.classList.add("is-lit");
@@ -131,7 +134,7 @@
   }
 
   /* Scroll the skill pane (only the pane, never the page) so the clause is visible with some margin. */
-  function scroll_into_pane(pane, el) {
+  function scroll_into_pane(pane, el, instant) {
     const pr = pane.getBoundingClientRect();
     const er = el.getBoundingClientRect();
     const margin = 24;
@@ -139,16 +142,76 @@
     if (er.top < pr.top + margin) delta = er.top - pr.top - margin;
     else if (er.bottom > pr.bottom - margin) delta = Math.min(er.bottom - pr.bottom + margin, er.top - pr.top - margin);
     if (!delta) return;
-    try { pane.scrollBy({ top: delta, behavior: reduced_motion() ? "auto" : "smooth" }); } catch (e) { pane.scrollTop += delta; }
+    try { pane.scrollBy({ top: delta, behavior: instant || reduced_motion() ? "auto" : "smooth" }); } catch (e) { pane.scrollTop += delta; }
   }
 
+  /* Selecting a clause id lights the clause and scrolls the skill pane to it. When the pane is not on screen
+     (one column, or the coverage table below the two columns) the page goes to the clause too, focus moves to
+     it, and a "Back to ..." button above the pane returns to where the reader was. */
+  let back_to = null;
+  function in_view(el) {
+    const r = el.getBoundingClientRect();
+    return r.top >= 0 && r.bottom <= (globalThis.innerHeight || document.documentElement.clientHeight);
+  }
+  /** Height of a sticky or fixed bar along the top of the viewport (the narrow section tabs), if any. */
+  function top_inset() {
+    let inset = 0;
+    try {
+      for (const el of document.elementsFromPoint(globalThis.innerWidth / 2, 1)) {
+        for (let e = el; e && e !== document.body; e = e.parentElement) {
+          const pos = getComputedStyle(e).position;
+          if (pos === "sticky" || pos === "fixed") { inset = Math.max(inset, e.getBoundingClientRect().bottom); break; }
+        }
+      }
+    } catch (e) { inset = 0; }
+    return Math.min(inset, globalThis.innerHeight / 3);
+  }
+  function go_to_clause(id, origin, back_label) {
+    light([id]);
+    if (!S.parts) return;
+    const span = S.parts.source.querySelector('.cp-clause[data-clause="' + CSS.escape(id) + '"]');
+    if (!span) return;
+    scroll_into_pane(S.parts.source, span, true);
+    if (in_view(span)) return;
+    /* a third of the way down the pane: pane-relative, so it holds wherever the page scrolls */
+    const pane = S.parts.source;
+    pane.scrollTop = Math.max(0, span.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop - pane.clientHeight / 3);
+    /* bring the whole panel (its head holds the Back button) to the top of the viewport */
+    const behavior = reduced_motion() ? "auto" : "smooth";
+    const panel = S.parts.source.closest(".cp-skill") || S.parts.source;
+    const top = globalThis.scrollY + panel.getBoundingClientRect().top - top_inset() - 16;
+    try { globalThis.scrollTo({ top, behavior }); } catch (e) { globalThis.scrollTo(0, top); }
+    pinned = id;
+    span.focus({ preventScroll: true });
+    span.addEventListener("blur", () => { if (pinned === id) { pinned = null; light([]); } }, { once: true });
+    light([id]);
+    back_to = origin;
+    const back = S.parts.back;
+    if (back) {
+      back.querySelector(".hx-btn-label").textContent = back_label || "Back";
+      back.hidden = false;
+    }
+  }
+  function go_back() {
+    const origin = back_to && back_to.isConnected ? back_to : null;
+    back_to = null;
+    pinned = null;
+    if (S.parts && S.parts.back) S.parts.back.hidden = true;
+    light([]);
+    if (!origin) return;
+    const behavior = reduced_motion() ? "auto" : "smooth";
+    try { origin.scrollIntoView({ block: "center", behavior }); } catch (e) { origin.scrollIntoView(); }
+    origin.focus({ preventScroll: true });
+  }
+
+  /** clause_button(id, critical, {id, back}): a stable id is required; back names where "Back" returns to. */
   function clause_button(id, critical, opts) {
     const o = opts || {};
     const btn = h("button", {
-      type: "button", class: ["cp-cid-btn", critical ? "is-critical" : null], id: o.id || null,
+      type: "button", class: ["cp-cid-btn", critical ? "is-critical" : null], id: o.id,
       dataset: { clauseRef: id }, title: "Show " + id + " in SKILL.md", "aria-label": "Show clause " + id + " in SKILL.md",
     }, id);
-    btn.addEventListener("click", () => light([id], { scroll: true }));
+    btn.addEventListener("click", () => go_to_clause(id, btn, o.back));
     return btn;
   }
 
@@ -200,7 +263,7 @@
       if (a > pos) nodes.push(...plain_segment(text.slice(pos, a)));
       const critical = HX.clauses.is_critical(c);
       nodes.push(h("span", {
-        class: ["cp-clause", critical ? "is-critical" : null], id: "cp-clause-" + c.id, dataset: { clause: c.id },
+        class: ["cp-clause", critical ? "is-critical" : null], id: "cp-clause-" + c.id, dataset: { clause: c.id }, tabindex: "-1",
       },
       h("span", { class: "cp-cid", "aria-hidden": "true" }, c.id),
       h("span", { class: "hx-visually-hidden" }, "Clause " + c.id + (critical ? ", critical: " : ": ")),
@@ -229,7 +292,9 @@
     const critical = S.clauses.filter((c) => HX.clauses.is_critical(c)).length;
     const pb = python_build();
     const count_ok = pb && typeof pb.clause_count === "number" ? pb.clause_count === S.clauses.length : null;
-    const meta = h("div", { class: "hx-panel-meta" },
+    const back = HXUI.button("Back", { id: "cp-skill-back", variant: "secondary", size: "sm", class: "cp-back", on_click: go_back });
+    back.hidden = true;
+    const meta = h("div", { class: "hx-panel-meta" }, back,
       HXUI.chip(plural(S.clauses.length, "clause"), count_ok === false ? "crit" : "neutral",
         { title: count_ok === null ? null : "The Python build indexes " + pb.clause_count + " clauses" }),
       HXUI.chip(critical + " MUST", "neutral", { class: "cp-must-chip" }));
@@ -284,26 +349,27 @@
           h("code", { class: "cp-path-state" }, sid)))));
   }
 
-  function where_bits(f) {
+  function where_bits(f, attempt, i) {
     const bits = [];
     if (f.state) bits.push(h("span", { class: "cp-where-item" }, h("span", { class: "cp-where-k" }, "state "), h("code", null, f.state)));
     if (f.edge !== null && f.edge !== undefined) bits.push(h("span", { class: "cp-where-item" }, h("span", { class: "cp-where-k" }, "edge "), h("code", null, String(f.edge))));
     if (f.variable) bits.push(h("span", { class: "cp-where-item" }, h("span", { class: "cp-where-k" }, "variable "), h("code", null, f.variable)));
-    if (f.clause) bits.push(h("span", { class: "cp-where-item" }, h("span", { class: "cp-where-k" }, "clause "), clause_button(f.clause, false)));
+    if (f.clause) bits.push(h("span", { class: "cp-where-item" }, h("span", { class: "cp-where-k" }, "clause "), clause_button(f.clause, false,
+      { id: "cp-a" + attempt + "-f" + i + "-clause", back: "Back to attempt " + attempt })));
     return bits;
   }
 
-  function finding_item(f) {
+  function finding_item(f, attempt, i) {
     const detail = f.detail || {};
     return h("li", { class: "cp-finding", dataset: { code: f.code } },
       h("div", { class: "cp-finding-head" },
         HXUI.chip(f.code, f.severity === "error" ? "crit" : "warn", { mono: true }),
-        h("span", { class: "cp-where" }, where_bits(f))),
+        h("span", { class: "cp-where" }, where_bits(f, attempt, i))),
       h("p", { class: "cp-finding-msg" }, f.message),
       Array.isArray(detail.path) && detail.path.length ? path_chain(detail.path) : null);
   }
 
-  function diff_note(diff) {
+  function diff_note(diff, attempt) {
     if (!diff) return null;
     const rows = [];
     for (const ec of diff.edges_changed || []) {
@@ -327,7 +393,7 @@
       rows,
       other.length ? h("p", { class: "cp-chg-other" }, other.join("; ") + ".") : null,
       clauses.length ? h("p", { class: "cp-chg-clauses" }, "Affected ", clauses.length === 1 ? "clause " : "clauses ",
-        clauses.map((c) => clause_button(c, false))) : null);
+        clauses.map((c) => clause_button(c, false, { id: "cp-a" + attempt + "-diff-" + c.replace(/\./g, "-"), back: "Back to attempt " + attempt }))) : null);
   }
 
   function attempt_card(a, i, list) {
@@ -345,15 +411,15 @@
         HXUI.chip(valid ? "Valid" : "Invalid", valid ? "ok" : "crit", { icon: valid ? "check" : "cross" }),
         errors.length ? HXUI.chip(plural(errors.length, "finding"), "neutral") : null,
         h("span", { class: "cp-attempt-hash" }, h("span", { class: "cp-attempt-hash-k" }, "draft"),
-          HXUI.digest(a.draft_hash, { short: 15, label: "draft hash of attempt " + a.attempt }))),
+          HXUI.digest(a.draft_hash, { short: 15, label: "draft hash of attempt " + a.attempt, id: "cp-attempt-" + a.attempt + "-hash" }))),
       h("p", { class: "cp-attempt-lead" }, lead),
-      findings.length ? h("ul", { class: "cp-findings", "aria-label": "Findings of attempt " + a.attempt }, findings.map(finding_item)) : null,
-      a.diff_from_previous ? diff_note(a.diff_from_previous) : null);
+      findings.length ? h("ul", { class: "cp-findings", "aria-label": "Findings of attempt " + a.attempt }, findings.map((f, k) => finding_item(f, a.attempt, k))) : null,
+      a.diff_from_previous ? diff_note(a.diff_from_previous, a.attempt) : null);
   }
 
   function attempts_panel() {
     const r = S.result;
-    const btn = HXUI.button(S.runs ? "Compile again" : "Compile skill", {
+    const btn = HXUI.button(S.error ? "Try compiling again" : S.runs ? "Compile again" : "Compile skill", {
       id: "cp-compile", variant: "primary", icon: "play", on_click: () => {
         btn.setAttribute("aria-busy", "true");
         setTimeout(() => { compile_now(); render(); focus_after_compile(); }, 0);
@@ -362,16 +428,17 @@
     let body;
     if (S.error) {
       body = HXUI.notice("crit", "The compiler stopped with an error", h("div", { class: "hx-stack-tight" },
-        h("p", null, "No package was produced. Compile again; if it fails again, open Self-test to see which engine modules loaded."),
+        h("p", null, "No package was produced, so there is no artifact, coverage or admission below. Try compiling again; if it fails again, open Self-test to see which engine modules loaded."),
         HXUI.code(err_text(S.error), { label: "Compiler error" })));
     } else if (!r) {
       body = h("p", { class: "cp-wait" }, "Compiling ", code("SKILL.md"), " in this page…");
     } else {
       body = h("ol", { class: "cp-attempts", "aria-label": "Compile attempts" }, r.attempts.map(attempt_card));
     }
-    const timing = r || S.error
-      ? h("p", { class: "cp-timing", id: "cp-timing" }, "Compiled in this page in " + ms_text(S.ms) + (S.runs > 1 ? " (run " + S.runs + ")" : "") + ".")
-      : null;
+    const timing = S.error
+      ? h("p", { class: "cp-timing", id: "cp-timing" }, "The compiler stopped after " + ms_text(S.ms) + ".")
+      : r ? h("p", { class: "cp-timing", id: "cp-timing" }, "Compiled in this page in " + ms_text(S.ms) + (S.runs > 1 ? " (run " + S.runs + ")" : "") + ".")
+        : null;
     return h("section", { class: "hx-panel cp-attempts-panel", "aria-labelledby": "cp-attempts-title" },
       h("div", { class: "hx-panel-head" },
         h("h3", { class: "hx-panel-title", id: "cp-attempts-title" }, "Compile attempts"),
@@ -397,7 +464,12 @@
   /* ---------------------------------------------------------------- artifact */
   function artifact_panel() {
     const r = S.result;
-    if (!r) return null;
+    if (!r) {
+      if (!S.error) return null;
+      return h("section", { class: "hx-panel cp-artifact", "aria-labelledby": "cp-artifact-title", dataset: { parity: "none" } },
+        h("div", { class: "hx-panel-head" }, h("h3", { class: "hx-panel-title", id: "cp-artifact-title" }, "Artifact and admission")),
+        h("p", { class: "cp-empty" }, "No package, so there is no hash to compare with the Python build and nothing to admit. Both appear after a successful compile."));
+    }
     const pb = python_build();
     const pkg = r.package;
     const rows = [];
@@ -429,7 +501,7 @@
     }
     return h("section", { class: "hx-panel cp-artifact", "aria-labelledby": "cp-artifact-title", dataset: { parity: "none" } },
       h("div", { class: "hx-panel-head" }, h("h3", { class: "hx-panel-title", id: "cp-artifact-title" }, "Artifact")),
-      HXUI.notice("crit", "No package: compilation was rejected", "Every attempt failed validation. The findings of the last attempt say what the machine still violates."));
+      HXUI.notice("crit", "No package: compilation was rejected", "Every attempt failed validation. The findings of the last attempt say what the machine still violates. Without a package there is nothing to admit."));
   }
 
   /* ---------------------------------------------------------------- admission */
@@ -439,24 +511,26 @@
     const missing = HXUI.engine_missing(ADMIT_NEEDS);
     const label = "Admit as " + ADMIN + " (artifact_admin)";
     const reason = missing.length ? "Admission needs engine modules that are not in this build: " + missing.join(", ") + "." : "";
-    const btn = HXUI.button(S.admits ? "Admit again" : label, {
-      id: "cp-admit", variant: S.admits ? "secondary" : "primary", disabled: !!reason, disabled_reason: reason,
+    const again = S.admissions.length > 0;
+    const btn = HXUI.button(again ? "Admit again" : label, {
+      id: "cp-admit", variant: again ? "secondary" : "primary", disabled: !!reason, disabled_reason: reason,
       on_click: () => { admit_now(); render(); const b = document.getElementById("cp-admit"); if (b) b.focus(); announce_admission(); },
     });
     const parts = [h("div", { class: "cp-actions" }, btn,
       reason ? h("p", { class: "hx-reason", id: "cp-admit-reason" }, HXUI.icon("info"),
         h("span", null, "Admission needs engine modules that are not in this build: ", missing.map((n, i) => [i ? ", " : "", code(n)]), "."))
-        : S.admits ? h("p", { class: "hx-reason" }, HXUI.icon("info"), h("span", null, "Admitting the same package again tests the compare-and-swap on the active version.")) : null)];
+        : again ? h("p", { class: "hx-reason" }, HXUI.icon("info"), h("span", null, "Admitting the same package again tests the compare-and-swap on the active version.")) : null)];
     if (S.admit_error) {
       parts.push(HXUI.notice("crit", "Admission stopped with an error", h("div", { class: "hx-stack-tight" },
-        h("p", null, "The registry raised an error instead of returning a result. Reset the lab and admit again; if it repeats, Self-test lists the modules in this build."),
+        h("p", null, "The registry raised an error instead of returning a result, so nothing was admitted. Reset the lab and admit again; if it repeats, Self-test lists the modules in this build."),
         HXUI.code(err_text(S.admit_error), { label: "Admission error" }))));
-    } else if (S.admission) {
-      parts.push(admission_result(S.admission));
+    }
+    if (S.admissions.length) {
+      parts.push(h("ol", { class: "cp-admissions", id: "cp-admissions", "aria-label": "Admissions, newest first", dataset: { latest: S.admissions[0].res.status } },
+        S.admissions.map((a) => h("li", null, admission_result(a)))));
     }
     return h("section", { class: "hx-panel cp-admit", "aria-labelledby": "cp-admit-title" },
-      h("div", { class: "hx-panel-head" }, h("h3", { class: "hx-panel-title", id: "cp-admit-title" }, "Admission"),
-        S.admission ? h("div", { class: "hx-panel-meta" }, status_chip(S.admission.status)) : null),
+      h("div", { class: "hx-panel-head" }, h("h3", { class: "hx-panel-title", id: "cp-admit-title" }, "Admission")),
       h("p", { class: "hx-panel-lead" }, "Admission validates the package again against the operator's deployment policy, checks the approver's role and signs a record. It publishes into an in-memory registry owned by this section, in the ",
         code(ADMIT_ENV), " environment. The run workbench admits the same package into its own lab environment."),
       parts);
@@ -467,50 +541,87 @@
     return HXUI.chip(status, tone, { mono: true, icon: status === "ADMITTED" ? "check" : status === "CONFLICT" ? "alert" : "stop" });
   }
 
-  function admission_result(res) {
+  /** admitted_at is an ISO string from the registry (or epoch seconds from older stand-ins): shown as UTC. */
+  function time_view(v) {
+    let d = null;
+    if (typeof v === "number" && isFinite(v)) d = new Date(v * 1000);
+    else if (typeof v === "string" && v) d = new Date(v.replace(/(\.\d{3})\d+/, "$1"));
+    if (!d || isNaN(d.getTime())) return h("code", null, String(v));
+    const iso = d.toISOString();
+    return h("time", { datetime: iso, title: "Lab clock, epoch seconds: " + (d.getTime() / 1000) },
+      iso.slice(0, 10) + " " + iso.slice(11, 23) + " UTC");
+  }
+
+  function admission_note(res, n) {
+    if (res.status === "ADMITTED") return "Version " + res.archive_version + " is now the active version in " + ADMIT_ENV + ".";
+    if (res.status === "CONFLICT") {
+      const prev = S.admissions.find((a) => a.n < n && a.res.status === "ADMITTED");
+      const active = prev ? "version " + prev.res.archive_version : "a version";
+      return "Expected outcome. The registry already has " + active + " active; this admission expected no active version (parent none), so the compare-and-swap refused it. Two admins can never overwrite each other's version.";
+    }
+    return "The registry refused the package. The reasons below say which gate failed.";
+  }
+
+  function admission_result(a) {
+    const res = a.res, n = a.n;
     const rec = res.record || null;
+    const pre = "cp-admit-" + n;
     const kv = (k, v) => h("div", { class: "cp-kv" }, h("dt", null, k), h("dd", null, v));
-    const rows = [kv("Status", status_chip(res.status))];
-    if (res.archive_version !== null && res.archive_version !== undefined) rows.push(kv("Archive version", h("span", { class: "hx-num", id: "cp-admit-version" }, String(res.archive_version))));
+    const rows = [];
+    if (res.archive_version !== null && res.archive_version !== undefined) rows.push(kv("Archive version", h("span", { class: "hx-num", id: pre + "-version" }, String(res.archive_version))));
     if (rec) {
-      rows.push(kv("Signature key", h("code", { id: "cp-admit-key" }, rec.key_id)));
-      if (rec.key_id === "insecure-demo-key") rows.push(kv("", h("span", { class: "cp-note" }, "A fixed demo key, labelled as such in the record. Production deployments supply their own.")));
+      rows.push(kv("Signature key", [h("code", { id: pre + "-key" }, rec.key_id),
+        rec.key_id === "insecure-demo-key" ? h("span", { class: "cp-note" }, "A fixed demo key, labelled as such in the record. Production deployments supply their own.") : null]));
       rows.push(kv("Approver", h("code", null, rec.approver)));
       rows.push(kv("Environment", h("code", null, rec.environment)));
-      rows.push(kv("Admitted at", h("code", null, rec.admitted_at)));
-      rows.push(kv("Signature", HXUI.digest(rec.signature, { short: 24, label: "signature" })));
-      rows.push(kv("Report digest", HXUI.digest(rec.validation_report_digest, { short: 19, label: "validation report digest" })));
+      rows.push(kv("Admitted at", time_view(rec.admitted_at)));
+      rows.push(kv("Signature", HXUI.digest(rec.signature, { short: 24, label: "signature of admission " + n, id: pre + "-sig" })));
+      rows.push(kv("Report digest", HXUI.digest(rec.validation_report_digest, { short: 19, label: "validation report digest of admission " + n, id: pre + "-digest" })));
     }
     const reasons = res.reasons || [];
-    return h("div", { class: "cp-admission", id: "cp-admission", dataset: { status: res.status } },
-      h("dl", { class: "cp-kvs" }, rows),
-      reasons.length ? h("ul", { class: "cp-reasons", "aria-label": "Reasons" }, reasons.map((t) => h("li", null, t))) : null);
+    return h("article", { class: "cp-admission", id: "cp-admission-" + n, dataset: { status: res.status }, "aria-labelledby": pre + "-title" },
+      h("div", { class: "cp-admission-head" },
+        h("h4", { class: "cp-admission-title", id: pre + "-title" }, "Admission " + n),
+        status_chip(res.status)),
+      h("p", { class: "cp-admission-note" }, admission_note(res, n)),
+      rows.length ? h("dl", { class: "cp-kvs" }, rows) : null,
+      reasons.length ? h("div", { class: "cp-reasons-wrap" }, h("p", { class: "cp-sub" }, "Registry reason"),
+        h("ul", { class: "cp-reasons", "aria-label": "Registry reasons" }, reasons.map((t) => h("li", null, t)))) : null);
   }
 
   function announce_admission() {
-    if (S.admit_error) HXUI.announce("Admission stopped with an error.");
-    else if (S.admission) HXUI.announce("Admission result: " + S.admission.status + ".");
+    if (S.admit_error) HXUI.announce("Admission stopped with an error. Nothing was admitted.");
+    else if (S.admission) HXUI.announce("Admission " + S.admissions.length + ": " + S.admission.status + ".");
   }
 
   /* ---------------------------------------------------------------- coverage */
   function coverage_panel() {
     const r = S.result;
-    if (!r) return h("section", { class: "hx-panel cp-coverage", "aria-labelledby": "cp-cov-title" },
-      h("div", { class: "hx-panel-head" }, h("h3", { class: "hx-panel-title", id: "cp-cov-title" }, "Clause coverage")));
+    const head = (meta) => h("div", { class: "hx-panel-head" }, h("h3", { class: "hx-panel-title", id: "cp-cov-title" }, "Clause coverage"), meta || null);
+    if (!r) {
+      return h("section", { class: "hx-panel cp-coverage", "aria-labelledby": "cp-cov-title" }, head(),
+        h("p", { class: "cp-empty" }, S.error
+          ? "No coverage: the compiler stopped before it produced a package. Coverage appears after a successful compile."
+          : "Coverage appears once the skill has compiled."));
+    }
     const rows = r.coverage || [];
     const counts = {};
     for (const c of rows) counts[c.classification] = (counts[c.classification] || 0) + 1;
     const meta = h("div", { class: "hx-panel-meta" }, Object.keys(CLASS_INFO).filter((k) => counts[k]).map((k) =>
       HXUI.chip(counts[k] + " " + CLASS_INFO[k].label.toLowerCase(), CLASS_INFO[k].tone)));
+    const class_chip = (c) => {
+      const ci = CLASS_INFO[c.classification] || { label: c.classification, tone: "neutral", note: "" };
+      return HXUI.chip(ci.label, ci.tone, { title: ci.note });
+    };
+    const must = () => h("strong", { class: "cp-must", title: "Critical clause" }, "MUST");
     const table = HXUI.table({
       caption: "How each clause is enforced", caption_hidden: true, class: "cp-cov-table",
       columns: [
-        { key: "clause", label: "Clause", nowrap: true, render: (c) => h("span", { class: "cp-cov-id" }, clause_button(c.clause, c.critical, { id: "cp-cov-" + c.clause.replace(/\./g, "-") }),
-          c.critical ? h("strong", { class: "cp-must", title: "Critical clause" }, "MUST") : null) },
-        { key: "classification", label: "Classification", nowrap: true, render: (c) => {
-          const ci = CLASS_INFO[c.classification] || { label: c.classification, tone: "neutral", note: "" };
-          return HXUI.chip(ci.label, ci.tone, { title: ci.note });
-        } },
+        { key: "clause", label: "Clause", nowrap: true, render: (c) => clause_button(c.clause, c.critical,
+          { id: "cp-cov-" + c.clause.replace(/\./g, "-"), back: "Back to coverage of " + c.clause }) },
+        { key: "critical", label: "Critical", nowrap: true, render: (c) => (c.critical ? must() : h("span", { class: "hx-faint" }, "no")),
+          fold: (c) => (c.critical ? must() : null) },
+        { key: "classification", label: "Classification", nowrap: true, render: class_chip, fold: true },
         { key: "states", label: "States", render: (c) => c.states.length
           ? h("span", { class: "cp-states" }, c.states.map((s) => h("code", { class: "cp-state" }, s)))
           : h("span", { class: "hx-faint" }, "none"), fold: true, fold_label: "States" },
@@ -518,7 +629,7 @@
       ],
       rows,
       row_attrs: (c) => ({
-        dataset: { rowClause: c.clause },
+        dataset: { rowClause: c.clause, classification: c.classification, critical: c.critical ? "yes" : "no" },
         class: c.critical ? "is-critical" : null,
         on: {
           mouseenter: () => light([c.clause], { scroll: true }),
@@ -528,23 +639,26 @@
         },
       }),
     });
-    return h("section", { class: "hx-panel cp-coverage", "aria-labelledby": "cp-cov-title" },
-      h("div", { class: "hx-panel-head" }, h("h3", { class: "hx-panel-title", id: "cp-cov-title" }, "Clause coverage"), meta),
-      h("p", { class: "hx-panel-lead" }, "Every clause is classified. Critical clauses must be executable control: states and guards the kernel enforces. Point at a row, or focus its clause id, to find the clause in the skill text."),
+    return h("section", { class: "hx-panel cp-coverage", "aria-labelledby": "cp-cov-title" }, head(meta),
+      h("p", { class: "hx-panel-lead" }, "Every clause is classified. Critical clauses must be executable control: states and guards the kernel enforces. Pointing at a row marks its clause in the skill text; select a clause id to go to the clause."),
       table);
   }
 
   /* ---------------------------------------------------------------- section */
+  /* DOM order is summary, results, skill text, coverage (summary before detail, also for screen readers); on
+     wide screens the grid places the skill text in the left column beside the results. */
   function render() {
     if (!S.root) return;
     const scroll_pane = S.parts && S.parts.source ? S.parts.source.scrollTop : 0;
     lit = [];
+    back_to = null;
+    pinned = null;
     const skill = skill_panel();
     const coverage = coverage_panel();
-    const work = h("div", { class: "cp-work hx-ruled" }, attempts_panel(), artifact_panel(), admit_panel(), coverage);
-    const grid = h("div", { class: "cp-grid" }, h("div", { class: "cp-skill-col" }, skill), work);
-    S.root.replaceChildren(summary_strip(), grid);
-    S.parts = { source: skill.querySelector(".cp-source") || h("div"), coverage };
+    const work = h("div", { class: "cp-work hx-ruled" }, attempts_panel(), artifact_panel(), admit_panel());
+    const grid = h("div", { class: "cp-grid" }, work, h("div", { class: "cp-skill-col" }, skill));
+    S.root.replaceChildren(summary_strip(), grid, coverage);
+    S.parts = { source: skill.querySelector(".cp-source") || h("div"), coverage, back: skill.querySelector("#cp-skill-back") };
     if (S.parts.source) S.parts.source.scrollTop = scroll_pane;
   }
 
@@ -560,7 +674,7 @@
 
   function on_reset() {
     S.result = null; S.error = null; S.runs = 0; S.ms = 0;
-    S.registry_store = null; S.admission = null; S.admit_error = null; S.admits = 0;
+    S.registry_store = null; S.admission = null; S.admissions = []; S.admit_error = null;
     if (!S.root) return;
     render();
     if (HXUI.current() === "compile") schedule_compile();

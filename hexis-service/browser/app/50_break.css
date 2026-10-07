@@ -43,7 +43,17 @@
 .br-mut:hover { background: var(--surface-3); }
 .br-mut[aria-pressed="true"] { background: var(--accent-tint); border-color: color-mix(in srgb, var(--accent) 40%, transparent); color: var(--ink); font-weight: 500; }
 .br-mut-title { min-width: 0; text-wrap: pretty; }
+.br-mut-status { display: inline-flex; align-items: center; }
 .br-mut-status .hx-chip { min-height: 1.25rem; padding: 0 0.35rem; }
+.br-mut-ok { display: inline-flex; color: var(--ok); }
+.br-mut-wait { color: var(--ink-3); font-size: var(--fs-2); }
+/* a fade on the edge of the list that has more mutations behind it */
+.br-picker-list[data-more-below="yes"] { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 3rem), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 3rem), transparent); }
+.br-picker-list[data-more-above="yes"] { -webkit-mask-image: linear-gradient(to top, #000 calc(100% - 3rem), transparent); mask-image: linear-gradient(to top, #000 calc(100% - 3rem), transparent); }
+.br-picker-list[data-more-above="yes"][data-more-below="yes"] {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
+}
 
 @container br (max-width: 50rem) {
   .br-lab-grid { grid-template-columns: minmax(0, 1fr); }
@@ -82,6 +92,11 @@
 .br-line.is-del .br-mark { color: var(--crit); font-weight: 600; }
 .br-line.is-fold { color: var(--ink-3); font-family: var(--font-sans); font-size: var(--fs-1); }
 .br-text { padding-right: 0.75rem; }
+/* the characters that changed inside an edited line */
+.br-intra { padding: 0 0.1em; border-radius: 2px; color: var(--ink); }
+.br-line.is-add .br-intra { background: color-mix(in srgb, var(--ok) 32%, transparent); }
+.br-line.is-del .br-intra { background: color-mix(in srgb, var(--crit) 30%, transparent); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--crit) 70%, transparent); }
+.br-elide { color: var(--ink-3); font-family: var(--font-sans); font-size: var(--fs-1); font-style: italic; }
 
 /* assertions */
 .br-asserts { display: grid; gap: 0.35rem; padding: 0; list-style: none; }
@@ -100,7 +115,7 @@
 
 /* comparison */
 .br-kvs { display: grid; gap: var(--sp-2); }
-.br-kv { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: var(--sp-3); align-items: baseline; }
+.br-kv { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: var(--sp-3); align-items: baseline; }
 .br-kv dt { font-size: var(--fs-2); color: var(--ink-3); }
 .br-kv dd { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; min-width: 0; }
 .br-vs { font-size: var(--fs-1); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; }
@@ -133,7 +148,8 @@
 .br-guard-idx { font: 500 var(--fs-2) / 1.6 var(--font-mono); color: var(--ink-3); }
 .br-guard-text { font: var(--fs-2) / 1.6 var(--font-mono); color: var(--ink); overflow-wrap: anywhere; min-width: 0; }
 .br-guard-errors { grid-column: 2 / -1; display: grid; gap: 0.15rem; padding-left: 1rem; font-size: var(--fs-2); color: var(--crit); overflow-wrap: anywhere; }
-.br-skip { font-size: var(--fs-2); }
+.br-blocked { display: flex; align-items: flex-start; gap: 0.5rem; font-size: var(--fs-2); color: var(--ink-2); text-wrap: pretty; }
+.br-blocked .hx-icon { flex: none; margin-top: 0.15rem; color: var(--ink-3); }
 .br-detail-text { font-size: var(--fs-2); color: var(--ink-2); overflow-wrap: anywhere; }
 .br-cx-box { display: grid; gap: var(--sp-2); font-size: var(--fs-2); color: var(--ink-2); max-width: 32rem; }
 .br-verdict { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.6rem 0.75rem; border-radius: var(--r-1); background: var(--accent-tint); color: var(--ink); font-size: var(--fs-3); }
@@ -141,5 +157,5 @@
 .br-verdict code { font-size: var(--fs-2); }
 @container br (max-width: 30rem) {
   .br-guard { grid-template-columns: 1.6rem minmax(0, 1fr); }
-  .br-guard > .hx-chip, .br-guard > .br-skip { grid-column: 2; justify-self: start; }
+  .br-guard > .hx-chip { grid-column: 2; justify-self: start; }
 }

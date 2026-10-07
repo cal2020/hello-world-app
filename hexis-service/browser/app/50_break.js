@@ -99,8 +99,45 @@
     return out;
   }
 
+  /** A run of n removed lines followed by n added lines is a set of edited lines: pair them, so each pair can
+      mark the characters that changed (common prefix and suffix stay plain). */
+  function pair_edits(ops) {
+    for (let i = 0; i < ops.length;) {
+      if (ops[i].t !== "-") { i++; continue; }
+      let j = i;
+      while (j < ops.length && ops[j].t === "-") j++;
+      let k = j;
+      while (k < ops.length && ops[k].t === "+") k++;
+      if (k - j === j - i) {
+        for (let n = 0; n < j - i; n++) { ops[i + n].pair = ops[j + n].s; ops[j + n].pair = ops[i + n].s; }
+      }
+      i = k > i ? k : i + 1;
+    }
+    return ops;
+  }
+
+  const ELIDE = 48; /* unchanged characters kept on each side of an in-line change */
+  function elided(text, keep_end) {
+    if (text.length <= ELIDE * 2) return [text];
+    const n = text.length - ELIDE;
+    const note = h("span", { class: "br-elide" }, "… " + n + " unchanged characters …");
+    return keep_end ? [note, text.slice(-ELIDE)] : [text.slice(0, ELIDE), note];
+  }
+
+  /** The text of an edited line: unchanged start, the changed middle in a mark, unchanged end. */
+  function line_text(o) {
+    if (o.pair === undefined || !o.s) return o.s || " ";
+    const a = o.s, b = o.pair;
+    let p = 0;
+    while (p < a.length && p < b.length && a[p] === b[p]) p++;
+    let q = 0;
+    while (q < a.length - p && q < b.length - p && a[a.length - 1 - q] === b[b.length - 1 - q]) q++;
+    const mid = a.slice(p, a.length - q);
+    return [elided(a.slice(0, p), true), mid ? h("mark", { class: "br-intra" }, mid) : null, elided(a.slice(a.length - q), false)];
+  }
+
   function diff_block(label, before, after) {
-    const ops = collapse(line_diff(before, after), 3);
+    const ops = pair_edits(collapse(line_diff(before, after), 3));
     const adds = ops.filter((o) => o.t === "+").length, dels = ops.filter((o) => o.t === "-").length;
     const lines = ops.map((o) => {
       if (o.t === "~") return h("span", { class: "br-line is-fold" }, h("span", { class: "br-mark", "aria-hidden": "true" }, "⋯"), h("span", { class: "br-text" }, o.s));
@@ -109,7 +146,7 @@
       return h("span", { class: ["br-line", cls] },
         h("span", { class: "br-mark", "aria-hidden": "true" }, o.t === "-" ? "−" : o.t),
         sr ? h("span", { class: "hx-visually-hidden" }, sr) : null,
-        h("span", { class: "br-text" }, o.s || " "));
+        h("span", { class: "br-text" }, line_text(o)));
     });
     return h("figure", { class: "br-diff" },
       h("figcaption", { class: "br-diff-head" }, h("code", { class: "br-diff-path" }, label),
@@ -118,12 +155,20 @@
   }
 
   /* ================================================================ base package (compiled once) */
+  /* A failure is kept until the lab is reset, so 42 mutations and the playground do not each compile again. */
   let BASE = null;
+  let BASE_ERROR = null;
   function base() {
     if (BASE) return BASE;
-    const c = HXUI.lab && HXUI.lab.compile && HXUI.lab.compile.package ? HXUI.lab.compile.package : HX.compile.compile_procurement().package;
-    if (!c) throw new Error("The compiler returned no package, so there is nothing to mutate.");
-    BASE = JSON.parse(JSON.stringify(c));
+    if (BASE_ERROR) throw BASE_ERROR;
+    try {
+      const c = HXUI.lab && HXUI.lab.compile && HXUI.lab.compile.package ? HXUI.lab.compile.package : HX.compile.compile_procurement().package;
+      if (!c) throw new Error("The compiler returned no package, so there is nothing to mutate.");
+      BASE = JSON.parse(JSON.stringify(c));
+    } catch (e) {
+      BASE_ERROR = e;
+      throw e;
+    }
     return BASE;
   }
   let CATALOG = null;
@@ -161,16 +206,25 @@
     return out;
   }
 
+  /* [list label, detail label, tone, icon]. Caught is the expected state: in the list it is a quiet check mark,
+     so the ones that differ, are missed or failed stand out. */
   const STATE_CHIP = {
-    caught: ["Caught", "ok", "check"],
-    differs: ["Caught, differs from Python", "warn", "alert"],
-    missed: ["Not caught", "crit", "cross"],
-    error: ["Error", "crit", "stop"],
-    pending: ["Checking", "neutral", null],
+    caught: ["Caught", "Caught: rejected as in Python", "ok", "check"],
+    differs: ["Differs", "Caught, but differs from Python", "warn", "alert"],
+    missed: ["Not caught", "Not caught: passes validation", "crit", "cross"],
+    error: ["Error", "Could not be checked", "crit", "stop"],
+    pending: ["Checking", "Checking", "neutral", null],
   };
-  function state_chip(st, short) {
+  function state_label(st) { return (STATE_CHIP[st] || STATE_CHIP.pending)[0]; }
+  function state_chip(st) {
     const s = STATE_CHIP[st] || STATE_CHIP.pending;
-    return HXUI.chip(short && st === "differs" ? "Differs" : s[0], s[1], { icon: s[2] || undefined });
+    return HXUI.chip(s[1], s[2], { icon: s[3] || undefined });
+  }
+  function state_mark(st) {
+    const s = STATE_CHIP[st] || STATE_CHIP.pending;
+    if (st === "caught") return h("span", { class: "br-mut-ok" }, HXUI.icon("check"), h("span", { class: "hx-visually-hidden" }, s[0]));
+    if (st === "pending" || !STATE_CHIP[st]) return h("span", { class: "br-mut-wait" }, h("span", { "aria-hidden": "true" }, "…"), h("span", { class: "hx-visually-hidden" }, s[0]));
+    return HXUI.chip(s[0], s[2], { icon: s[3] || undefined });
   }
 
   const L = { root: null, list: null, select: null, detail: null, meta: null, selected: DEFAULT_MUTATION, sweep: 0 };
@@ -181,6 +235,7 @@
     const counts = {};
     for (const m of done) counts[results[m.id].state] = (counts[results[m.id].state] || 0) + 1;
     const chips = [];
+    if (done.length === list.length && L.meta.dataset.done !== "yes") HXUI.announce("Mutation lab: " + (counts.caught || 0) + " of " + list.length + " mutations caught as in Python.");
     if (done.length < list.length) chips.push(HXUI.chip("Checking " + done.length + " of " + list.length, "neutral"));
     else chips.push(HXUI.chip((counts.caught || 0) + " of " + list.length + " caught as in Python", counts.caught === list.length ? "ok" : "warn", { icon: counts.caught === list.length ? "check" : "alert" }));
     if (counts.differs) chips.push(HXUI.chip(counts.differs + " differ from Python", "warn"));
@@ -195,9 +250,9 @@
     if (!btn) return;
     const r = results[id];
     btn.dataset.state = r ? r.state : "pending";
-    btn.querySelector(".br-mut-status").replaceChildren(state_chip(r ? r.state : "pending", true));
+    btn.querySelector(".br-mut-status").replaceChildren(state_mark(r ? r.state : "pending"));
     const opt = L.select && L.select.querySelector('option[value="' + id + '"]');
-    if (opt) opt.textContent = HXUI.mutations.find(id).title + (r ? " · " + (STATE_CHIP[r.state] || STATE_CHIP.pending)[0] : "");
+    if (opt) opt.textContent = HXUI.mutations.find(id).title + (r ? " · " + state_label(r.state) : "");
   }
 
   function sweep() {
@@ -222,7 +277,10 @@
     const m = HXUI.mutations.find(id);
     if (!m) return;
     L.selected = id;
-    for (const b of L.list.querySelectorAll(".br-mut")) b.setAttribute("aria-pressed", b.dataset.mutation === id ? "true" : "false");
+    for (const b of L.list.querySelectorAll(".br-mut")) {
+      b.setAttribute("aria-pressed", b.dataset.mutation === id ? "true" : "false");
+      b.tabIndex = b.dataset.mutation === id ? 0 : -1;
+    }
     if (L.select.value !== id) L.select.value = id;
     const r = results[id] || evaluate_mutation(m);
     paint_item(id);
@@ -230,24 +288,55 @@
     L.detail.replaceChildren(detail_view(m, r));
     L.detail.dataset.mutation = id;
     L.detail.dataset.state = r.state;
-    if (o.announce) HXUI.announce(m.title + ": " + (STATE_CHIP[r.state] || STATE_CHIP.pending)[0] + (r.codes ? ", " + plural(r.codes.length, "code") : "") + ".");
+    if (o.announce) HXUI.announce(m.title + ": " + (STATE_CHIP[r.state] || STATE_CHIP.pending)[1] + (r.codes ? ", " + plural(r.codes.length, "code") : "") + ".");
   }
 
   function picker() {
     const groups = HXUI.mutations.groups;
-    const list = h("div", { class: "br-picker-list", role: "group", "aria-label": "Mutations" }, groups.map((g) => {
+    const list = h("div", { class: "br-picker-list", id: "br-picker-list", role: "group", "aria-label": "Mutations", "aria-describedby": "br-picker-keys" },
+      h("p", { class: "hx-visually-hidden", id: "br-picker-keys" }, "Tab reaches the selected mutation. Arrow keys, Home and End move between mutations; Enter or Space selects one."),
+      groups.map((g) => {
       const items = HXUI.mutations.list.filter((m) => m.group === g.id);
       if (!items.length) return null;
       const gid = "br-group-" + g.id;
       return h("div", { class: "br-group" },
         h("h4", { class: "hx-label br-group-title", id: gid }, g.title),
         h("ul", { class: "br-mut-list", "aria-labelledby": gid }, items.map((m) => {
-          const b = h("button", { type: "button", class: "br-mut", id: "br-mut-" + m.id, "aria-pressed": "false", dataset: { mutation: m.id, state: "pending" } },
-            h("span", { class: "br-mut-title" }, m.title), h("span", { class: "br-mut-status" }, state_chip("pending", true)));
+          const b = h("button", { type: "button", class: "br-mut", id: "br-mut-" + m.id, "aria-pressed": "false", tabindex: "-1", dataset: { mutation: m.id, state: "pending" } },
+            h("span", { class: "br-mut-title" }, m.title), h("span", { class: "br-mut-status" }, state_mark("pending")));
           b.addEventListener("click", () => select_mutation(m.id, { announce: true }));
           return h("li", null, b);
         })));
-    }));
+      }));
+    /* roving tabindex: one Tab stop for the whole list; the arrow keys move focus, Enter or Space selects */
+    list.addEventListener("keydown", (e) => {
+      const items = [...list.querySelectorAll(".br-mut")];
+      const i = items.indexOf(document.activeElement);
+      if (i < 0) return;
+      let j = -1;
+      if (e.key === "ArrowDown") j = Math.min(items.length - 1, i + 1);
+      else if (e.key === "ArrowUp") j = Math.max(0, i - 1);
+      else if (e.key === "Home") j = 0;
+      else if (e.key === "End") j = items.length - 1;
+      else return;
+      e.preventDefault();
+      for (const b of items) b.tabIndex = -1;
+      items[j].tabIndex = 0;
+      items[j].focus();
+    });
+    list.addEventListener("focusout", (e) => {
+      if (e.relatedTarget && list.contains(e.relatedTarget)) return;
+      for (const b of list.querySelectorAll(".br-mut")) b.tabIndex = b.dataset.mutation === L.selected ? 0 : -1;
+    });
+    /* a fade at the edge that has more items behind it */
+    const sync_more = () => {
+      const max = list.scrollHeight - list.clientHeight;
+      list.dataset.moreAbove = max > 1 && list.scrollTop > 2 ? "yes" : "no";
+      list.dataset.moreBelow = max > 1 && list.scrollTop < max - 2 ? "yes" : "no";
+    };
+    list.addEventListener("scroll", sync_more, { passive: true });
+    if (typeof ResizeObserver === "function") new ResizeObserver(sync_more).observe(list);
+    setTimeout(sync_more, 0);
     const sel = h("select", { id: "br-mut-select", class: "hx-select" }, groups.map((g) => h("optgroup", { label: g.title },
       HXUI.mutations.list.filter((m) => m.group === g.id).map((m) => h("option", { value: m.id }, m.title)))));
     sel.addEventListener("change", () => select_mutation(sel.value, { announce: true }));
@@ -290,9 +379,7 @@
     const sub = (t) => h("h5", { class: "br-sub" }, t);
     const head = h("div", { class: "br-detail-head" },
       h("h4", { class: "br-detail-title", id: "br-detail-title" }, m.title),
-      h("div", { class: "br-detail-chips" },
-        r.error ? null : r.passed ? HXUI.chip("Passes validation", "crit", { icon: "cross" }) : HXUI.chip("Rejected by validation", "ok", { icon: "check" }),
-        state_chip(r.state)));
+      h("div", { class: "br-detail-chips" }, state_chip(r.state)));
     const intro = [h("p", { class: "br-why" }, m.why),
       h("p", { class: "br-test" }, "Python test ", h("code", { class: "br-test-name" }, m.test))];
     if (r.error) {
@@ -318,17 +405,20 @@
       h("span", null, HXUI.rich(a.text)))));
     /* findings */
     const findings = r.findings.length
-      ? h("ul", { class: "cp-findings br-findings", id: "br-findings", "aria-label": "Findings of validate_package" }, r.findings.map((f) =>
-        h("li", { class: "cp-finding", dataset: { code: f.code } },
+      ? h("ul", { class: "cp-findings br-findings", id: "br-findings", "aria-label": "Findings of validate_package", dataset: { digest: r.report.report_digest || "" } }, r.findings.map((f) =>
+        h("li", { class: "cp-finding", dataset: { code: f.code, state: f.state || "", edge: f.edge === null || f.edge === undefined ? "" : f.edge, variable: f.variable || "" } },
           h("div", { class: "cp-finding-head" }, HXUI.chip(f.code, f.severity === "error" ? "crit" : "warn", { mono: true }), finding_where(f)),
           h("p", { class: "cp-finding-msg" }, f.message),
           finding_extra(f))))
       : h("p", { class: "br-note", id: "br-findings" }, "No findings: the mutated package passes validation.");
     const py = m.python;
-    const hash_row = h("div", { class: "br-kv" }, h("dt", null, "Artifact hash"),
-      h("dd", null, HXUI.digest(r.pkg.artifact_hash, { short: 19, label: "mutated artifact hash", id: "br-hash" }),
-        h("span", { class: "br-vs" }, "Python"), HXUI.digest(py.hash, { short: 19, label: "Python artifact hash", id: "br-hash-ref" }),
-        r.hash_equal ? HXUI.chip("Equal", "ok", { icon: "check" }) : HXUI.chip("Differs", "crit", { icon: "cross" })));
+    const hash_rows = [
+      h("div", { class: "br-kv" }, h("dt", null, "Hash, this page"),
+        h("dd", null, HXUI.digest(r.pkg.artifact_hash, { short: 19, label: "mutated artifact hash", id: "br-hash" }),
+          r.hash_equal ? HXUI.chip("Equal to Python", "ok", { icon: "check" }) : HXUI.chip("Differs from Python", "crit", { icon: "cross" }))),
+      h("div", { class: "br-kv" }, h("dt", null, "Hash, Python build"),
+        h("dd", null, HXUI.digest(py.hash, { short: 19, label: "Python artifact hash", id: "br-hash-ref" }))),
+    ];
     const keep_note = m.mode === "keep"
       ? h("p", { class: "br-note" }, "Not resealed: the package keeps the hash it had before the change, as a tampered package would.")
       : h("p", { class: "br-note" }, "Resealed after the change, as the Python test's ", code("mutate()"), " does, so only the change itself is judged.");
@@ -340,15 +430,15 @@
         findings),
       h("section", { class: "br-block" }, sub("Compared with the Python build"),
         h("dl", { class: "br-kvs" },
-          codes_row("This page", r.codes, py.codes, "br-codes"),
-          codes_row("Python build", py.codes.slice().sort(), r.codes, "br-codes-ref"),
-          hash_row)));
+          codes_row("Codes, this page", r.codes, py.codes, "br-codes"),
+          codes_row("Codes, Python build", py.codes.slice().sort(), r.codes, "br-codes-ref"),
+          hash_rows)));
   }
 
   function lab_panel() {
     const missing = HXUI.engine_missing(LAB_NEEDS);
     if (!HXUI.mutations) missing.push("HXUI.mutations");
-    L.meta = h("div", { class: "hx-panel-meta", id: "br-score", "aria-live": "polite" });
+    L.meta = h("div", { class: "hx-panel-meta", id: "br-score" });
     const panel = h("section", { class: "hx-panel br-lab", "aria-labelledby": "br-lab-title" },
       h("div", { class: "hx-panel-head" }, h("h3", { class: "hx-panel-title", id: "br-lab-title" }, "Mutation lab"), L.meta),
       h("p", { class: "hx-panel-lead" }, "Each mutation is one change from the Python conformance tests, applied to the package compiled in this page. ",
@@ -359,6 +449,15 @@
       L.meta.appendChild(HXUI.chip("Not in this build", "neutral"));
       return panel;
     }
+    try { base(); } catch (e) {
+      L.detail = null;
+      panel.appendChild(HXUI.notice("crit", "The base package could not be compiled", h("div", { class: "hx-stack-tight" },
+        h("p", null, "Every mutation starts from the package compiled in this page, so there is nothing to mutate. Reset the lab to compile again; if it fails again, Compile shows the compiler's error."),
+        HXUI.code(err_text(e), { label: "Compiler error" }))));
+      L.meta.dataset.done = "error";
+      L.meta.appendChild(HXUI.chip("No base package", "crit", { icon: "stop" }));
+      return panel;
+    }
     L.detail = h("div", { class: "br-detail", id: "br-detail" });
     panel.appendChild(h("div", { class: "br-lab-grid" }, picker(), L.detail));
     lab_meta();
@@ -366,7 +465,8 @@
   }
 
   /* ================================================================ guard playground */
-  const G = { types: null, guards: null, env: null, unknown: null, source: null, out: null, timer: 0, loaded: null };
+  const G = { types: null, guards: null, env: null, unknown: null, source: null, out: null, timer: 0, loaded: null, types0: null, types_edited: false };
+  const ALLOWED = "Guards may use declared variables, string, number, boolean and list literals, comparisons, and / or / not, in, empty(x) and nonempty(x).";
 
   function machine_or_null() {
     if (HXUI.engine_missing(MACHINE_NEEDS).length) return null;
@@ -378,8 +478,14 @@
     return Object.keys(m.states).filter((sid) => (m.states[sid].transitions || []).some((t) => t.if));
   }
 
-  function load_source(id) {
-    const m = machine_or_null();
+  function types_hint() {
+    if (G.types_edited) return "Edited. Load guards again to restore the " + (G.machine ? "machine's" : "example") + " types. Types: " + TYPES.join(", ") + ".";
+    return G.machine ? "Pre-filled from the compiled machine. Types: " + TYPES.join(", ") + "."
+      : "The compiled machine is not in this build, so these are the types of the example guards. Declare any others your guards use.";
+  }
+
+  function load_source(id, opts) {
+    const m = G.machine;
     const ex = EXAMPLES.find((e) => e.id === id);
     if (ex) {
       G.loaded = { id, guards: ex.guards.slice(), targets: null };
@@ -393,7 +499,11 @@
       G.guards.value = G.loaded.guards.join("\n");
       G.env.value = JSON.stringify(ENV_PRESETS[id] || {}, null, 2);
     }
-    analyze();
+    /* loading restores the types too: every source is checked against the machine's variables */
+    G.types.value = JSON.stringify(G.types0, null, 2);
+    G.types_edited = false;
+    G.types_field.hx.set_hint(types_hint());
+    analyze(opts);
   }
 
   function parse_types() {
@@ -414,7 +524,8 @@
       if (!v || typeof v !== "object" || Array.isArray(v)) return { error: "The environment must be a JSON object such as {\"repair_count\": 1}." };
       return { value: v };
     } catch (e) {
-      return { error: "The environment is not valid JSON: " + (e.message || e) + ". Fix it to evaluate the guards." };
+      const why = String((e && e.message) || e).replace(/^invalid JSON:\s*/i, "");
+      return { error: "The environment is not valid JSON: " + why + ". Fix it to evaluate the guards." };
     }
   }
 
@@ -426,21 +537,16 @@
     return HXUI.chip("unknown", "warn", { mono: true });
   }
 
-  function analyze() {
-    clearTimeout(G.timer);
-    const types = parse_types();
-    G.types_field.hx.set_error(types.error || "");
-    const guards = guard_lines();
-    const vt = types.value || {};
-    const out = [];
-    /* 1. parse and typecheck each guard */
-    const checks = guards.map((g) => {
-      let errors;
-      try { errors = HX.guards.typecheck(g, vt); } catch (e) { errors = [err_text(e)]; }
-      return { g, errors };
-    });
+  /** One line in place of the blocks that cannot run yet. */
+  function blocked(id, title, text) {
+    return h("section", { class: "br-block", id, "aria-labelledby": id + "-title" },
+      h("h4", { class: "br-sub", id: id + "-title" }, title),
+      h("p", { class: "br-blocked" }, HXUI.icon("info"), h("span", null, text)));
+  }
+
+  function check_block(guards, checks) {
     const bad = checks.filter((c) => c.errors.length).length;
-    out.push(h("section", { class: "br-block", "aria-labelledby": "br-g-check-title" },
+    return h("section", { class: "br-block", "aria-labelledby": "br-g-check-title" },
       h("div", { class: "br-block-head" }, h("h4", { class: "br-sub", id: "br-g-check-title" }, "Parse and type check"),
         guards.length ? bad ? HXUI.chip(bad + " of " + guards.length + " rejected", "crit", { icon: "cross" }) : HXUI.chip("All " + guards.length + " well-typed", "ok", { icon: "check" }) : null),
       guards.length ? h("ol", { class: "br-guards", id: "br-guard-results" }, checks.map((c, i) => h("li", { class: ["br-guard", c.errors.length ? "is-bad" : "is-ok"], dataset: { index: i } },
@@ -448,87 +554,139 @@
         h("code", { class: "br-guard-text" }, c.g),
         c.errors.length ? HXUI.chip("Rejected", "crit", { icon: "cross" }) : HXUI.chip("OK", "ok", { icon: "check" }),
         c.errors.length ? h("ul", { class: "br-guard-errors" }, c.errors.map((e) => h("li", null, e))) : null)))
-        : h("p", { class: "hx-faint" }, "Write one guard per line above.")));
-    /* 2. disjointness */
+        : h("p", { class: "hx-faint" }, "Write one guard per line above."),
+      bad ? h("p", { class: "br-note", id: "br-allowed" }, ALLOWED) : null);
+  }
+
+  function disjoint_block(guards, vt) {
     let an = null;
     try { an = HX.guards.analyze_disjoint(guards, vt); } catch (e) { an = { status: "ERROR", detail: err_text(e), counterexample: {}, edges: [] }; }
     const tone = { PROVEN: "ok", COUNTEREXAMPLE: "crit", UNKNOWN: "warn", ERROR: "crit" }[an.status] || "neutral";
     const label = { PROVEN: "Disjoint (proven)", COUNTEREXAMPLE: "Overlap found", UNKNOWN: "Undecided", ERROR: "Error" }[an.status] || an.status;
     const cx = an.counterexample || {};
     const cx_keys = Object.keys(cx);
-    out.push(h("section", { class: "br-block br-disjoint", id: "br-disjoint", dataset: { status: an.status }, "aria-labelledby": "br-g-dis-title" },
+    const el = h("section", { class: "br-block br-disjoint", id: "br-disjoint", dataset: { status: an.status }, "aria-labelledby": "br-g-dis-title" },
       h("div", { class: "br-block-head" }, h("h4", { class: "br-sub", id: "br-g-dis-title" }, "Disjointness"), HXUI.chip(label, tone)),
       h("p", { class: "br-detail-text" }, h("code", null, "analyze_disjoint"), ": " + an.detail + "."),
       an.status === "UNKNOWN" ? h("p", { class: "br-note" }, "Admission treats an undecided pair like an overlap: it fails closed (", code("GUARDS_DISJOINTNESS_UNKNOWN"), ").") : null,
       an.status === "COUNTEREXAMPLE" ? h("div", { class: "br-cx-box" },
-        h("p", null, "Under this assignment guards ", (an.edges || []).map((e, i) => [i ? " and " : "", h("code", null, "#" + e)]), " are all true:"),
+        h("p", null, "Under this assignment guards ", (an.edges || []).map((e, i) => [i ? " and " : "", h("code", null, "#" + e)]), (an.edges || []).length === 2 ? " are both true:" : " are all true:"),
         HXUI.table({ caption: "Counterexample assignment", caption_hidden: true, class: "br-cx-table", columns: [
           { key: "k", label: "Variable", mono: true },
           { key: "v", label: "Value", mono: true },
-        ], rows: cx_keys.map((k) => ({ k, v: py_value(cx[k]) })) })) : null));
-    /* 3. evaluate */
-    const env = parse_env();
-    G.env_field.hx.set_error(env.error || "");
-    if (!env.error) {
-      const unknown = G.unknown.checked;
-      const evals = checks.map((c) => {
-        if (c.errors.length) return { skip: true };
-        try {
-          if (unknown) {
-            const e = Object.assign({}, env.value);
-            for (const name of HX.guards.vars_of(c.g)) if (!Object.prototype.hasOwnProperty.call(e, name)) e[name] = HX.guards.UNKNOWN;
-            return { v: HX.guards.evaluate3(c.g, e) };
-          }
-          return { v: HX.guards.evaluate(c.g, env.value) };
-        } catch (e) { return { error: err_text(e) }; }
-      });
-      const same = G.loaded && G.loaded.targets && G.loaded.guards.join("\n") === guards.join("\n");
-      let verdict = null;
-      if (same && evals.every((e) => !e.skip)) {
-        let taken = null, undecided = null;
-        for (let i = 0; i < evals.length; i++) {
-          const e = evals[i];
-          if (e.error || e.v === null || e.v === undefined) { undecided = i; break; }
-          if (e.v === true) { taken = i; break; }
-        }
-        if (undecided !== null) verdict = ["Undecided: guard #" + undecided + " cannot be evaluated with these values, so the kernel's choice depends on what is missing."];
-        else if (taken !== null) verdict = ["The kernel takes edge #" + taken + " to ", h("code", null, G.loaded.targets[taken]), ": the first guard that holds."];
-        else verdict = ["No guard holds, so the kernel takes the default edge to ", h("code", null, G.loaded.fallback || "(none)"), "."];
-      }
-      out.push(h("section", { class: "br-block", "aria-labelledby": "br-g-eval-title" },
-        h("div", { class: "br-block-head" }, h("h4", { class: "br-sub", id: "br-g-eval-title" }, "Evaluated with your environment")),
-        guards.length ? h("ol", { class: "br-guards", id: "br-eval-results" }, checks.map((c, i) => {
-          const e = evals[i];
-          return h("li", { class: "br-guard", dataset: { index: i, value: e.skip ? "skipped" : e.error ? "error" : String(e.v) } },
-            h("span", { class: "br-guard-idx" }, "#" + i), h("code", { class: "br-guard-text" }, c.g),
-            e.skip ? h("span", { class: "hx-faint br-skip" }, "not evaluated: rejected above") : e.error ? HXUI.chip("Error", "crit") : truth_chip(e.v),
-            e.error ? h("ul", { class: "br-guard-errors" }, h("li", null, e.error)) : null);
-        })) : null,
-        verdict ? h("p", { class: "br-verdict", id: "br-verdict" }, HXUI.icon("arrow"), h("span", null, verdict)) : null));
-    }
-    G.out.replaceChildren(...out);
-    G.out.dataset.status = an.status;
+        ], rows: cx_keys.map((k) => ({ k, v: py_value(cx[k]) })) })) : null);
+    return { el, an, label };
   }
 
-  function schedule() { clearTimeout(G.timer); G.timer = setTimeout(analyze, 150); }
+  function eval_block(guards, checks, env) {
+    const unknown = G.unknown.checked;
+    const evals = checks.map((c) => {
+      try {
+        if (unknown) {
+          const e = Object.assign({}, env);
+          for (const name of HX.guards.vars_of(c.g)) if (!Object.prototype.hasOwnProperty.call(e, name)) e[name] = HX.guards.UNKNOWN;
+          return { v: HX.guards.evaluate3(c.g, e) };
+        }
+        return { v: HX.guards.evaluate(c.g, env) };
+      } catch (e) { return { error: err_text(e) }; }
+    });
+    const same = G.loaded && G.loaded.targets && G.loaded.guards.join("\n") === guards.join("\n");
+    let verdict = null;
+    if (same) {
+      let taken = null, undecided = null;
+      for (let i = 0; i < evals.length; i++) {
+        const e = evals[i];
+        if (e.error || e.v === null || e.v === undefined) { undecided = i; break; }
+        if (e.v === true) { taken = i; break; }
+      }
+      if (undecided !== null) verdict = ["Undecided: guard #" + undecided + " cannot be evaluated with these values, so the kernel's choice depends on what is missing."];
+      else if (taken !== null) verdict = ["The kernel takes edge #" + taken + " to ", h("code", null, G.loaded.targets[taken]), ": the first guard that holds."];
+      else verdict = ["No guard holds, so the kernel takes the default edge to ", h("code", null, G.loaded.fallback || "(none)"), "."];
+    }
+    return h("section", { class: "br-block", "aria-labelledby": "br-g-eval-title" },
+      h("div", { class: "br-block-head" }, h("h4", { class: "br-sub", id: "br-g-eval-title" }, "Evaluated with your environment")),
+      guards.length ? h("ol", { class: "br-guards", id: "br-eval-results" }, checks.map((c, i) => {
+        const e = evals[i];
+        return h("li", { class: "br-guard", dataset: { index: i, value: e.error ? "error" : String(e.v) } },
+          h("span", { class: "br-guard-idx" }, "#" + i), h("code", { class: "br-guard-text" }, c.g),
+          e.error ? HXUI.chip("Error", "crit") : truth_chip(e.v),
+          e.error ? h("ul", { class: "br-guard-errors" }, h("li", null, e.error)) : null);
+      })) : null,
+      verdict ? h("p", { class: "br-verdict", id: "br-verdict" }, HXUI.icon("arrow"), h("span", null, verdict)) : null);
+  }
+
+  /** analyze({announce}): the type editor gates everything; rejected guards gate the analysis and evaluation. */
+  function analyze(opts) {
+    const o = opts || {};
+    clearTimeout(G.timer);
+    const types = parse_types();
+    G.types_field.hx.set_error(types.error || "");
+    const env = parse_env();
+    G.env_field.hx.set_error(env.error || "");
+    const guards = guard_lines();
+    const out = [];
+    let status, summary;
+    if (types.error) {
+      status = "TYPES_INVALID";
+      summary = "The variable types are not valid. Fix them to check the guards.";
+      out.push(blocked("br-g-blocked", "Guards not checked", "Fix the variable types above to check the guards. Every guard is checked against those types, so nothing below can run until they are valid."));
+    } else {
+      const vt = types.value;
+      const checks = guards.map((g) => {
+        let errors;
+        try { errors = HX.guards.typecheck(g, vt); } catch (e) { errors = [err_text(e)]; }
+        return { g, errors };
+      });
+      const bad = checks.filter((c) => c.errors.length).length;
+      out.push(check_block(guards, checks));
+      if (!guards.length) {
+        status = "EMPTY";
+        summary = "No guards to check.";
+      } else if (bad) {
+        status = "GUARDS_REJECTED";
+        summary = bad + " of " + guards.length + " guards rejected.";
+        out.push(blocked("br-g-blocked", "Disjointness and evaluation", "Not analysed: fix or remove the rejected guards first. Admission rejects a package with an invalid guard before it looks at overlaps."));
+      } else {
+        const d = disjoint_block(guards, vt);
+        status = d.an.status;
+        out.push(d.el);
+        if (env.error) out.push(blocked("br-g-eval-blocked", "Evaluated with your environment", "Fix the environment above to evaluate the guards."));
+        else out.push(eval_block(guards, checks, env.value));
+        summary = d.label + ", " + plural(guards.length, "guard") + " well-typed.";
+      }
+    }
+    G.out.replaceChildren(...out);
+    G.out.dataset.status = status;
+    if (o.announce) HXUI.announce("Guard playground: " + summary);
+  }
+
+  function schedule() { clearTimeout(G.timer); G.timer = setTimeout(() => analyze({ announce: true }), 250); }
 
   function playground_panel() {
     const m = machine_or_null();
+    G.machine = m;
     const states = guarded_states(m);
-    const types0 = m ? Object.assign({}, HX.efsm.var_types(m)) : {};
+    /* without the compiled machine, the types of the variables the example guards use */
+    G.types0 = m ? Object.assign({}, HX.efsm.var_types(m))
+      : { draft: "object", readback_count: "integer", repair_count: "integer", validation_status: "string" };
+    G.types_edited = false;
     const opts = states.map((sid) => ({ value: sid, label: sid + " (" + plural(m.states[sid].transitions.filter((t) => t.if).length, "guarded edge") + ")" }))
       .concat(EXAMPLES.map((e) => ({ value: e.id, label: e.label })));
-    G.source = HXUI.select("br-guard-source", opts, { value: states.indexOf(DEFAULT_STATE) >= 0 ? DEFAULT_STATE : opts[0] && opts[0].value, on_change: (v) => load_source(v) });
+    G.source = HXUI.select("br-guard-source", opts, { value: states.indexOf(DEFAULT_STATE) >= 0 ? DEFAULT_STATE : opts[0] && opts[0].value, on_change: (v) => load_source(v, { announce: true }) });
     G.guards = h("textarea", { id: "br-guards", class: "hx-textarea", rows: 5, spellcheck: "false", autocomplete: "off", "autocapitalize": "off" });
-    G.types = h("textarea", { id: "br-types", class: "hx-textarea", rows: 9, spellcheck: "false", autocomplete: "off", "autocapitalize": "off" }, JSON.stringify(types0, null, 2));
+    G.types = h("textarea", { id: "br-types", class: "hx-textarea", rows: 9, spellcheck: "false", autocomplete: "off", "autocapitalize": "off" }, JSON.stringify(G.types0, null, 2));
     G.env = h("textarea", { id: "br-env", class: "hx-textarea", rows: 4, spellcheck: "false", autocomplete: "off", "autocapitalize": "off" });
     G.unknown = h("input", { type: "checkbox", id: "br-unknown", checked: true });
-    for (const el of [G.guards, G.types, G.env]) el.addEventListener("input", schedule);
-    G.unknown.addEventListener("change", analyze);
-    G.types_field = HXUI.field("Variable types (JSON)", G.types, { hint: m ? "Pre-filled from the compiled machine. Types: " + TYPES.join(", ") + "." : "The machine is not in this build; declare the types your guards use." });
+    for (const el of [G.guards, G.env]) el.addEventListener("input", schedule);
+    G.types.addEventListener("input", () => {
+      if (!G.types_edited) { G.types_edited = true; G.types_field.hx.set_hint(types_hint()); }
+      schedule();
+    });
+    G.unknown.addEventListener("change", () => analyze({ announce: true }));
+    G.types_field = HXUI.field("Variable types (JSON)", G.types, { hint: types_hint() });
     G.env_field = HXUI.field("Environment (JSON)", G.env, { hint: "Values to evaluate the guards with." });
     const guards_field = HXUI.field("Guards, one per line", G.guards, { hint: "Edges are numbered from #0 in the order the kernel tries them." });
-    G.out = h("div", { class: "br-g-out", id: "br-g-out", "aria-live": "polite" });
+    G.out = h("div", { class: "br-g-out", id: "br-g-out" });
     const form = h("form", { class: "br-g-form", id: "br-g-form", "aria-label": "Guard playground inputs" },
       h("div", { class: "br-g-source" }, HXUI.field("Load guards from", G.source)),
       h("div", { class: "br-g-inputs" },
@@ -536,7 +694,7 @@
           G.env_field,
           h("div", { class: "br-check" }, G.unknown, h("label", { for: "br-unknown" }, "Treat variables missing from the environment as unknown (three-valued, as structural replay does)"))),
         h("div", { class: "br-g-col" }, G.types_field)));
-    form.addEventListener("submit", (e) => { e.preventDefault(); analyze(); });
+    form.addEventListener("submit", (e) => { e.preventDefault(); analyze({ announce: true }); });
     const panel = h("section", { class: "hx-panel br-play", "aria-labelledby": "br-play-title" },
       h("div", { class: "hx-panel-head" }, h("h3", { class: "hx-panel-title", id: "br-play-title" }, "Guard playground"),
         h("div", { class: "hx-panel-meta" }, HXUI.chip("Parsed, never executed", "neutral"))),
@@ -561,6 +719,7 @@
 
   HXUI.bus.on("lab:reset", () => {
     BASE = null;
+    BASE_ERROR = null;
     for (const k of Object.keys(results)) delete results[k];
     L.selected = DEFAULT_MUTATION;
     if (root) render();

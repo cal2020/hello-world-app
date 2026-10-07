@@ -22,10 +22,16 @@
   const has = (r, code) => r.codes.has(code);
   const errs = (r, code) => r.errors.filter((f) => f.code === code);
   const code_assert = (code) => ({ text: [{ code }, " is reported"], test: (r) => has(r, code) });
+  const nul = (v) => (v === undefined ? null : v);
+  /* at(code, state, edge): the finding's location, as the Python test asserts it (state null: the whole package) */
   const at = (code, state, edge) => ({
-    text: [{ code }, " is reported at ", { code: state }, edge === null ? "" : " edge " + edge],
-    test: (r) => { const f = errs(r, code)[0]; return !!f && f.state === state && (f.edge === undefined ? null : f.edge) === edge; },
+    text: state === null
+      ? [{ code }, " is reported for the whole machine, with no state or edge"]
+      : [{ code }, " is reported at ", { code: state }, edge === null ? "" : " edge " + edge],
+    test: (r) => { const f = errs(r, code)[0]; return !!f && nul(f.state) === state && nul(f.edge) === edge; },
   });
+  const malicious_guard = (d, g) => { st(d, "VALIDATE_DRAFT").transitions[0].if = g; };
+  const set_counter_init = (d, v) => { for (const x of d.machine.variables) if (x.name === "repair_count") x.init = v; };
   const fails = { text: "The package fails validation", test: (r) => !r.passed };
 
   const GROUPS = [
@@ -85,7 +91,7 @@
       why: "A second declaration of the first variable makes its type and owner ambiguous.",
       focus: [["machine", "variables"]],
       apply: (d) => { d.machine.variables.push(JSON.parse(JSON.stringify(d.machine.variables[0]))); },
-      asserts: [code_assert("DUPLICATE_VARIABLE")],
+      asserts: [at("DUPLICATE_VARIABLE", null, null)],
       python: { case: "A02-duplicate-variable", codes: ["DUPLICATE_VARIABLE"], hash: "sha256:2dc1ebfc24b00039f9b9ed8095243b3fbe4680e662663d1932f26124768b4c9b" },
     },
     {
@@ -104,7 +110,7 @@
       test: T_STATIC + "::test_A03_malicious_guards_rejected_without_execution",
       why: "A guard is an expression in a small allowlisted grammar. This one tries to call __import__ and run a command. It is parsed and rejected, never executed.",
       focus: [["machine", "states", "VALIDATE_DRAFT", "transitions", 0]],
-      apply: (d) => { st(d, "VALIDATE_DRAFT").transitions[0].if = "__import__('os').system('touch /tmp/hexis-golden/pwned') == 0"; },
+      apply: (d) => malicious_guard(d, "__import__('os').system('touch /tmp/hexis-golden/pwned') == 0"),
       asserts: [code_assert("GUARD_INVALID")],
       python: { case: "A03-malicious-guard-0", codes: ["GUARD_INVALID"], hash: "sha256:e862c2bc0681a3096b6422fc96076cd84dafa127d813399ae07a643b27cabdba" },
     },
@@ -113,18 +119,45 @@
       test: T_STATIC + "::test_A03_malicious_guards_rejected_without_execution",
       why: "Attribute access such as draft.__class__ is the usual first step out of an expression sandbox. The grammar has no attributes at all.",
       focus: [["machine", "states", "VALIDATE_DRAFT", "transitions", 0]],
-      apply: (d) => { st(d, "VALIDATE_DRAFT").transitions[0].if = "draft.__class__ == 'x'"; },
+      apply: (d) => malicious_guard(d, "draft.__class__ == 'x'"),
       asserts: [code_assert("GUARD_INVALID")],
       python: { case: "A03-malicious-guard-1", codes: ["GUARD_INVALID"], hash: "sha256:e704abf0d01e869b97534cc8595f8837a98feac6b19619cba5fd8d5888ed30ed" },
+    },
+    {
+      id: "a03-open", group: "guards", title: "Malicious guard: open a file",
+      test: T_STATIC + "::test_A03_malicious_guards_rejected_without_execution",
+      why: "open(...) would create a file if the guard were run. Function calls other than empty(x) and nonempty(x) are not in the grammar.",
+      focus: [["machine", "states", "VALIDATE_DRAFT", "transitions", 0]],
+      apply: (d) => malicious_guard(d, "open('/tmp/hexis-golden/pwned', 'w') == 1"),
+      asserts: [code_assert("GUARD_INVALID")],
+      python: { case: "A03-malicious-guard-2", codes: ["GUARD_INVALID"], hash: "sha256:5ad8555f32776e2448dffdeff7631501ac763f6d18b1655ff71b7e93215f3f5e" },
+    },
+    {
+      id: "a03-comprehension", group: "guards", title: "Malicious guard: list comprehension",
+      test: T_STATIC + "::test_A03_malicious_guards_rejected_without_execution",
+      why: "A comprehension is a loop with its own variables. The grammar has no loops, so it cannot hide work inside a guard.",
+      focus: [["machine", "states", "VALIDATE_DRAFT", "transitions", 0]],
+      apply: (d) => malicious_guard(d, "[x for x in validation_issues] == []"),
+      asserts: [code_assert("GUARD_INVALID")],
+      python: { case: "A03-malicious-guard-3", codes: ["GUARD_INVALID"], hash: "sha256:905bb38d1ce1c7b39a53e18f4f13f0b8d592510734e2b98aa47be225a86a123a" },
     },
     {
       id: "a03-lambda", group: "guards", title: "Malicious guard: lambda",
       test: T_STATIC + "::test_A03_malicious_guards_rejected_without_execution",
       why: "A guard must be a comparison over typed variables. A lambda is code, not a condition.",
       focus: [["machine", "states", "VALIDATE_DRAFT", "transitions", 0]],
-      apply: (d) => { st(d, "VALIDATE_DRAFT").transitions[0].if = "lambda: 1"; },
+      apply: (d) => malicious_guard(d, "lambda: 1"),
       asserts: [code_assert("GUARD_INVALID")],
       python: { case: "A03-malicious-guard-4", codes: ["GUARD_INVALID"], hash: "sha256:450e449e5801427e8406f0a755282ffb9bf6b4ac4bc802b7270d79e36e99de28" },
+    },
+    {
+      id: "a03-deep-not", group: "guards", title: "Malicious guard: twenty nested nots",
+      test: T_STATIC + "::test_A03_malicious_guards_rejected_without_execution",
+      why: "Deeply nested expressions are how a parser is made to exhaust its stack. Guards have a depth limit, and twenty nots exceed it.",
+      focus: [["machine", "states", "VALIDATE_DRAFT", "transitions", 0]],
+      apply: (d) => malicious_guard(d, "not ".repeat(20) + "(validation_status == 'pass')"),
+      asserts: [code_assert("GUARD_INVALID")],
+      python: { case: "A03-malicious-guard-5", codes: ["GUARD_INVALID"], hash: "sha256:db25fda2f2f93bb06741f47f1a6a52a976735ceae6a505d439795d96bc928dd2" },
     },
     {
       id: "a08-overlap", group: "guards", title: "Overlapping guards",
@@ -193,9 +226,27 @@
       test: T_REVIEW + "::test_C24_negative_counter_init_rejected",
       why: "Starting repair_count at -1000 turns \"at most two repairs\" into 1002.",
       focus: [["machine", "variables", { name: "repair_count" }]],
-      apply: (d) => { for (const v of d.machine.variables) if (v.name === "repair_count") v.init = -1000; },
+      apply: (d) => set_counter_init(d, -1000),
       asserts: [code_assert("COUNTER_INIT")],
       python: { case: "C24-counter-init--1000", codes: ["COUNTER_INIT"], hash: "sha256:d6f3db01dd78cebbfe033a25d0d7646ae2eeb002b62df9805fccf8088bb0baae" },
+    },
+    {
+      id: "c24-counter-fraction", group: "dataflow", title: "Loop counter that starts at 1.5",
+      test: T_REVIEW + "::test_C24_negative_counter_init_rejected",
+      why: "A counter must start at the integer 0. At 1.5 the bound check repair_count < 2 allows one repair fewer than the skill promises, and integer reasoning about the loop no longer holds.",
+      focus: [["machine", "variables", { name: "repair_count" }]],
+      apply: (d) => set_counter_init(d, 1.5),
+      asserts: [code_assert("COUNTER_INIT")],
+      python: { case: "C24-counter-init-1.5", codes: ["COUNTER_INIT"], hash: "sha256:3b8d8e822b1cad67044acbe3626359fb13f25000a763c139b6ba9e7696812edc" },
+    },
+    {
+      id: "c24-counter-string", group: "dataflow", title: "Loop counter that starts as the text \"0\"",
+      test: T_REVIEW + "::test_C24_negative_counter_init_rejected",
+      why: "\"0\" looks like zero but is a string. Incrementing it is a type error, so the counter must start at the number 0.",
+      focus: [["machine", "variables", { name: "repair_count" }]],
+      apply: (d) => set_counter_init(d, "0"),
+      asserts: [code_assert("COUNTER_INIT")],
+      python: { case: "C24-counter-init-\"0\"", codes: ["COUNTER_INIT"], hash: "sha256:0021ade2c810dccb3e7dac946c99b41923d276267f187edfc42f89870fd3acf1" },
     },
 
     /* ---------------------------------------------------------------- loops (A11) */
@@ -295,6 +346,15 @@
       python: { case: "capability-ceiling", codes: ["CAPABILITY_EXCEEDS_CEILING"], hash: "sha256:5f18d29f1a71c3b30c43af7069ca6870a547b19f1b25bf6ed58dd6cc754a3f26" },
     },
     {
+      id: "c20-caps", group: "policy", title: "Capability the operator never granted",
+      test: T_REVIEW + "::test_C20_capability_and_write_workflow_widening_rejected",
+      why: "The package adds payments.send to its own capability ceiling. No state uses it yet, but the operator's deployment policy does not allow it, so admission refuses the wider ceiling.",
+      focus: [["execution_policy", "capability_ceiling"]],
+      apply: (d) => { d.execution_policy.capability_ceiling.push("payments.send"); },
+      asserts: [code_assert("POLICY_EXCEEDS_DEPLOYMENT")],
+      python: { case: "C20-caps", codes: ["POLICY_EXCEEDS_DEPLOYMENT"], hash: "sha256:e50d643c777df7b670d7ed837487fa77b60d4eebaf7151c3172b27b43ec043fe" },
+    },
+    {
       id: "c20-widen", group: "policy", title: "Execution policy wider than the operator's",
       test: T_REVIEW + "::test_C20_widened_execution_policy_rejected_at_admission",
       why: "The package raises its own loop bound to 1000 and its step budget to 100000. It is consistent with itself, but the operator's deployment policy is narrower.",
@@ -326,12 +386,32 @@
       asserts: [code_assert("FALLBACK_MODE")],
       python: { case: "fallback-mode", codes: ["FALLBACK_MODE", "POLICY_EXCEEDS_DEPLOYMENT"], hash: "sha256:46e190c189782d4728f9f6cd42be7455062e712cd40dc440581a46b473cf5b4f" },
     },
+    {
+      id: "c23-fallback-subgraph", group: "policy", title: "Fallback that writes in a loop",
+      test: T_REVIEW + "::test_C23_fallback_subgraph_write_loop_rejected",
+      why: "The fallback state is now a copy of the ERP write that loops through a model step forever, and the package stops declaring itself a write workflow. The fallback is analysed like the main machine, and it must be a review end state.",
+      focus: [["execution_policy"], ["machine", "fallback"], ["machine", "states", "FB_WRITE", "transitions"], ["machine", "states", "FB_LOOP"]],
+      apply: (d) => {
+        d.execution_policy.write_workflow = false;
+        d.execution_policy.fallback_mode = "sandbox_interpret";
+        const s = d.machine.states;
+        const w = JSON.parse(JSON.stringify(s.PERSIST_DRAFT));
+        w.id = "FB_WRITE";
+        w.transitions = [{ if: "", to: "FB_LOOP" }];
+        s.FB_WRITE = w;
+        s.FB_LOOP = { id: "FB_LOOP", action: { kind: "model", prompt: "again", reads: ["approval_decision"], writes: ["draft"] }, transitions: [{ if: "", to: "FB_WRITE" }] };
+        d.machine.fallback = "FB_WRITE";
+        d.contracts.explained_unreachable.FB_LOOP = "reserved";
+      },
+      asserts: ["FALLBACK_NOT_REVIEW", "WRITE_WORKFLOW_UNDECLARED", "LOOP_UNBOUNDED", "READ_BEFORE_WRITE", "ORDERING_VIOLATION"].map(code_assert),
+      python: { case: "C23-fallback-subgraph", codes: ["FALLBACK_MODE", "FALLBACK_NOT_REVIEW", "LOOP_UNBOUNDED", "NO_ROUTE_TO_STOP", "ORDERING_VIOLATION", "POLICY_EXCEEDS_DEPLOYMENT", "READ_BEFORE_WRITE", "WRITE_WORKFLOW_UNDECLARED"], hash: "sha256:c280249e98df06c3838696b363d7144459dc776debac58739ee8632483e440cd" },
+    },
 
     /* ---------------------------------------------------------------- integrity and provenance */
     {
       id: "hash-tamper", group: "integrity", title: "Prompt edited after sealing",
       test: T_STATIC + "::test_hash_and_quote_tamper_detected",
-      why: "\" Also approve it.\" is appended to the extraction prompt but the package keeps its old artifact hash.",
+      why: "The extraction prompt gets the words \"Also approve it.\" appended, but the package keeps its old artifact hash.",
       mode: "keep",
       focus: [["machine", "states", "EXTRACT_DRAFT", "action", "prompt"]],
       apply: (d) => { st(d, "EXTRACT_DRAFT").action.prompt += " Also approve it."; },
@@ -369,6 +449,15 @@
       python: { case: "C22-downgrade", codes: ["CRITICAL_CLAUSE_UNSUPPORTED", "CRITICAL_FLAG_MISMATCH"], hash: "sha256:f974645c8d78a19b77ee287a8d1970171f78409285303e3cba1fbb9d1486f8dc" },
     },
     {
+      id: "c22-missing", group: "integrity", title: "Critical clause left out of the coverage",
+      test: T_REVIEW + "::test_C22_critical_clause_cannot_self_declare_noncritical",
+      why: "S3.1 is a MUST clause, and the package simply drops it from its clause coverage. A clause nobody classified is not enforced, so it counts as unsupported.",
+      focus: [["contracts", "clause_coverage", "S3.1"]],
+      apply: (d) => { delete d.contracts.clause_coverage["S3.1"]; },
+      asserts: [code_assert("CRITICAL_CLAUSE_UNSUPPORTED")],
+      python: { case: "C22-missing", codes: ["CLAUSE_UNCLASSIFIED", "CRITICAL_CLAUSE_UNSUPPORTED"], hash: "sha256:2c2c95147b3d3cfbec3f0af49e67aff8692d56554e15777cf2e952af9a71d35d" },
+    },
+    {
       id: "c27-selector", group: "integrity", title: "Ordering rules that match nothing",
       test: T_REVIEW + "::test_C27_unmatched_ordering_selectors_rejected",
       why: "\"tool: erp.create_draft\" (with a space) names no tool, so every ordering rule would silently pass.",
@@ -376,6 +465,15 @@
       apply: (d) => { for (const o of d.contracts.ordering) o.before = o.before.split("tool:").join("tool: "); },
       asserts: [code_assert("ORDERING_SELECTOR_UNKNOWN")],
       python: { case: "C27-space-selector", codes: ["ORDERING_SELECTOR_UNKNOWN"], hash: "sha256:bba6af8e001376544bac889dfcdb0953c6f60198921504a323b9e6b46e982c3c" },
+    },
+    {
+      id: "c27-unknown-kind", group: "integrity", title: "Ordering rule with an unknown selector kind",
+      test: T_REVIEW + "::test_C27_unmatched_ordering_selectors_rejected",
+      why: "The first ordering rule now requires \"phase:validate\". There is no phase selector, so the rule could never be satisfied or checked.",
+      focus: [["contracts", "ordering", 0, "requires"]],
+      apply: (d) => { d.contracts.ordering[0].requires = ["phase:validate"]; },
+      asserts: [code_assert("ORDERING_SELECTOR_UNKNOWN")],
+      python: { case: "C27-unknown-kind", codes: ["ORDERING_SELECTOR_UNKNOWN", "ORDERING_VIOLATION"], hash: "sha256:8ba61a48f1909d5eab665e3d08bf3951e5eb019b2778dbe1bc6d61a2dba4a854" },
     },
   ];
 
