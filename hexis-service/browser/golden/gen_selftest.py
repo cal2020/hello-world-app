@@ -3,7 +3,7 @@
 The page (app/60_selftest.js + app/62_checks.js) replays these vectors against the JS engine in the viewer's
 browser. Every vector comes from a golden file that another generator wrote by running the real Python reference
 (gen_canonical.py, gen_guards.py, gen_kernel.py, gen_runtime.py, gen_demo.py), so this script only samples:
-it picks a deterministic, evenly spread subset of each file, small enough to keep the page under 3 MB.
+it picks a deterministic, evenly spread subset of each file, small enough to keep the page under 1.5 MB (LIMIT below).
 
 Contents (keys of selftest.json):
   sources          {key: golden file it was sampled from, with the total count there}

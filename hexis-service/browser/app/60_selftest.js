@@ -124,10 +124,16 @@
       const done = n.pass + n.fail + n.skip;
       return { tone: "accent", icon: null, text: "Running check " + Math.min(done + 1, n.total) + " of " + n.total + "…" };
     }
-    if (n.fail) return { tone: "crit", icon: "stop", text: plural(n.fail, "check failed", "checks failed") + ". Each failure below shows its assertion." };
-    if (n.skip && !n.pass) return { tone: "neutral", icon: "info", text: "No check could run in this build." };
-    return { tone: "ok", icon: "check", text: n.skip ? "Every check that could run passed." : "All " + n.total + " checks passed.",
-      sub: n.skip ? plural(n.skip, "check needs", "checks need") + " parts of the engine that are not in this build." : null };
+    if (n.fail) return { tone: "crit", icon: "stop", text: plural(n.fail, "check failed", "checks failed") + ". Each failure below shows its assertion.", show_failures: true };
+    if (n.skip && !n.pass) return { tone: "neutral", icon: "info", text: "No check could run in this build.",
+      sub: "Every check needs engine modules or golden vectors that are not in this build." };
+    /* most checks skipped: a partial result, not a green one */
+    if (n.skip > n.pass) {
+      return { tone: "neutral", icon: "info", text: "Ran " + plural(n.pass, "check", "checks") + ", " + (n.pass === 1 ? "it passed" : "all passed") + "; " +
+        plural(n.skip, "other needs", "others need") + " engine modules or golden vectors that are not in this build." };
+    }
+    return { tone: "ok", icon: "check", text: n.skip ? "All " + n.pass + " checks that could run passed." : "All " + n.total + " checks passed.",
+      sub: n.skip ? plural(n.skip, "other check needs", "other checks need") + " engine modules or golden vectors that are not in this build." : null };
   }
 
   function summary_block() {
@@ -148,9 +154,11 @@
     const timing = S.state === "idle" ? null
       : h("p", { class: "st-timing" }, S.state === "running"
         ? [String(done), " of ", String(n.total), " finished in ", ms_text(total_ms), "."]
-        : ["Ran ", plural(n.total, "check", "checks"), " in this page in ", ms_text(total_ms), " (", ms_text(S.engine_ms), " of engine time; the rest is yielding to the page between checks)."]);
+        : ["Ran ", plural(n.pass + n.fail, "check", "checks"), n.skip ? " (" + n.skip + " skipped)" : "", " in this page in ", ms_text(total_ms), " (", ms_text(S.engine_ms), " of engine time; the rest is yielding to the page between checks)."]);
     return h("div", { class: "st-summary" },
       h("p", { class: ["st-headline", "hx-tone-" + hl.tone] }, hl.icon ? HXUI.icon(hl.icon) : h("span", { class: "st-spinner", "aria-hidden": "true" }), h("span", null, hl.text)),
+      hl.show_failures ? h("p", { class: "st-jump" }, h("a", { class: "hx-link", href: "#selftest", id: "st-show-failures",
+        on: { click: (e) => { e.preventDefault(); show_failures(); } } }, "Show the " + plural(n.fail, "failure", "failures"))) : null,
       hl.sub ? h("p", { class: "st-headline-sub" }, hl.sub) : null,
       meter,
       h("div", { class: "st-chips" }, chips),
@@ -169,6 +177,7 @@
     HXUI.set_disabled(P.run, running || !checks(), running ? "The checks are running. Results appear below as each one finishes."
       : "The check catalog (app/62_checks.js) is not in this build.");
     for (const g of P.groups) paint_group_meta(g);
+    paint_filter_state();
   }
 
   /* ---------------------------------------------------------------- group tables */
@@ -190,7 +199,8 @@
   }
   function detail_cell(c) {
     const r = S.results.get(c.key);
-    const note = r && r.status === "pass" && r.note ? h("span", { class: "st-note" }, r.note) : null;
+    const note = r && r.status === "pass" && (r.note || r.digest)
+      ? h("span", { class: "st-note" }, r.digest ? HXUI.digest(r.digest, { short: 19, label: c.id + " digest" }) : null, r.note || null) : null;
     const py = c.python ? h("span", { class: "st-py", title: "The Python test or value this check mirrors" }, wrap_id(c.python)) : null;
     if (!note && !py) return null;
     return h("div", { class: "st-cell-detail" }, note, py);
@@ -205,15 +215,15 @@
     return HXUI.table({
       caption: g.title, caption_hidden: true, class: "st-checks",
       columns: [
-        { key: "name", label: "Check", render: name_cell },
-        { key: "result", label: "Result", nowrap: true, render: (c) => result_chip(S.results.get(c.key)) },
-        { key: "ms", label: "Time", align: "right", nowrap: true, render: (c) => { const r = S.results.get(c.key); return r && r.ms !== undefined && r.status !== "skip" ? ms_text(r.ms) : ""; },
+        { key: "name", label: "Check", class: "st-col-name", render: name_cell },
+        { key: "result", label: "Result", nowrap: true, class: "st-col-result", render: (c) => result_chip(S.results.get(c.key)) },
+        { key: "ms", label: "Time", align: "right", nowrap: true, class: "st-col-time", render: (c) => { const r = S.results.get(c.key); return r && r.ms !== undefined && r.status !== "skip" ? ms_text(r.ms) : ""; },
           fold: (c) => { const r = S.results.get(c.key); return r && r.ms !== undefined && r.status !== "skip" ? ms_text(r.ms) : null; } },
         { key: "detail", label: "Detail", render: (c) => detail_cell(c) || "", fold: (c) => detail_cell(c) },
       ],
       rows,
-      empty: S.problems_only ? "No failed or skipped checks in this group." : "No checks in this group.",
-      row_attrs: (c) => { const r = S.results.get(c.key); return { dataset: { check: c.key, status: r ? r.status : "pending" } }; },
+      empty: "No checks in this group.",
+      row_attrs: (c) => { const r = S.results.get(c.key); return { tabindex: r && r.status === "fail" ? "-1" : null, dataset: { check: c.key, status: r ? r.status : "pending" } }; },
     });
   }
 
@@ -228,6 +238,37 @@
     if (fail) chips.push(HXUI.chip(fail + " failed", "crit", { icon: "stop" }));
     if (skip) chips.push(HXUI.chip(skip + " skipped", "neutral"));
     g.meta.replaceChildren(...chips);
+    g.problems = fail + skip;
+    /* a group opens by itself the first time it has a failure or a skip; otherwise the viewer decides */
+    if (g.problems && !g.auto_opened) { g.auto_opened = true; g.el.open = true; }
+    /* with the filter on, a group without problems shows only its heading and counts */
+    const clean = S.problems_only && !g.problems;
+    g.body.hidden = clean;
+    g.el.classList.toggle("is-clean", clean);
+  }
+
+  function paint_filter_state() {
+    if (!P) return;
+    const n = counts();
+    const none = S.problems_only && S.state === "done" && !(n.fail + n.skip);
+    P.filter_note.hidden = !none;
+    P.filter_note.replaceChildren(...(none ? [HXUI.notice("ok", "No failed or skipped checks: all " + n.total + " passed.",
+      "Turn the filter off to see every check.")] : []));
+    for (const g of P.groups) g.el.hidden = none;
+  }
+
+  /** turn the filter on, open every group with a failure and focus the first failed row */
+  function show_failures() {
+    if (!P) return;
+    S.problems_only = true;
+    P.only.checked = true;
+    paint_all();
+    for (const g of P.groups) if (g.problems) g.el.open = true;
+    const row = P.root.querySelector('tr[data-status="fail"]');
+    if (row) {
+      try { row.focus({ preventScroll: true }); } catch (e) { row.focus(); }
+      try { row.scrollIntoView({ block: "center" }); } catch (e) { /* nothing to scroll */ }
+    }
   }
 
   function paint_check(c) {
@@ -240,6 +281,7 @@
     if (!P) return;
     for (const g of P.groups) g.body.replaceChildren(group_table(g));
     paint_summary();
+    paint_filter_state();
   }
 
   /* ---------------------------------------------------------------- golden sample panel */
@@ -270,7 +312,7 @@
     const e = C ? C.embed() : null;
     const head = h("div", { class: "hx-panel-head" },
       h("h3", { class: "hx-panel-title", id: "st-sample-title" }, "Golden sample"),
-      h("div", { class: "hx-panel-meta" }, e ? HXUI.chip(Math.round(embed_size() / 1024) + " KB embedded", "info") : HXUI.chip("Not embedded", "neutral")));
+      h("div", { class: "hx-panel-meta" }, e ? HXUI.chip(Math.round(embed_size() / 1024) + " KB embedded", "neutral") : HXUI.chip("Not embedded", "neutral")));
     const panel = h("section", { class: "hx-panel st-sample", "aria-labelledby": "st-sample-title" }, head);
     if (!e) {
       panel.appendChild(HXUI.notice("warn", "This build has no golden sample",
@@ -348,6 +390,7 @@
     only.addEventListener("change", () => { S.problems_only = only.checked; paint_all(); });
     const filter = h("div", { class: "st-filter" }, only, h("label", { for: "st-problems-only" }, "Show only failed and skipped checks"));
     const summary = h("div", { class: "st-summary-wrap", "aria-live": "off" });
+    const filter_note = h("div", { class: "st-filter-note", id: "st-filter-note", hidden: true });
     const groups = [];
     const group_els = [];
     if (C) {
@@ -358,26 +401,30 @@
         const meta = h("div", { class: "hx-panel-meta" });
         const body = h("div", { class: "st-group-body" });
         const title_id = "st-group-" + g.id + "-title";
-        group_els.push(h("section", { class: "st-group", id: "st-group-" + g.id, "aria-labelledby": title_id },
-          h("div", { class: "st-group-head" },
-            h("div", { class: "st-group-titles" },
-              h("h4", { class: "st-group-title", id: title_id }, g.title),
-              h("p", { class: "st-group-lead" }, g.lead)),
+        /* closed while every check passes, so the section at rest is its summary; a failure or a skip opens it */
+        const el = h("details", { class: "st-group", id: "st-group-" + g.id },
+          h("summary", { class: "st-group-head", id: "st-group-" + g.id + "-toggle", "aria-describedby": title_id + "-lead" },
+            h("span", { class: "st-group-chevron", "aria-hidden": "true" }, HXUI.icon("arrow")),
+            h("span", { class: "st-group-titles" },
+              h("span", { class: "st-group-title", id: title_id }, g.title),
+              h("span", { class: "st-group-lead", id: title_id + "-lead" }, g.lead + " " + plural(gi.length, "check", "checks") + ".")),
             meta),
-          body));
-        groups.push({ id: g.id, title: g.title, items: gi, meta, body });
+          body);
+        group_els.push(el);
+        groups.push({ id: g.id, title: g.title, items: gi, meta, body, el, problems: 0, auto_opened: false });
       }
     }
     const checks_panel = h("section", { class: "hx-panel st-checks-panel", "aria-labelledby": "st-checks-title" },
       h("div", { class: "hx-panel-head" }, h("h3", { class: "hx-panel-title", id: "st-checks-title" }, "Checks")),
       summary,
       h("div", { class: "hx-action-row st-actions" }, run, filter),
-      C ? group_els : HXUI.unavailable(["HXUI.checks"], { compact: true, title: "The check catalog is not in this build",
-        lead: "The checks live in app/62_checks.js, which this build does not include:", hint: false }),
-      HXUI.about_list(ABOUT, { title: "What the runner does", level: 4 }));
+      HXUI.about_list(ABOUT, { title: "What the runner does", level: 4 }),
+      filter_note,
+      C ? h("div", { class: "st-groups" }, group_els) : HXUI.unavailable(["HXUI.checks"], { compact: true, title: "The check catalog is not in this build",
+        lead: "The checks live in app/62_checks.js, which this build does not include:", hint: false }));
     const root = h("div", { class: "st hx-ruled", id: "st-root", dataset: { runState: S.state } }, checks_panel, sample_panel(), engine_panel());
     el.replaceChildren(root);
-    P = { root, run, summary, groups };
+    P = { root, run, summary, groups, only, filter_note };
     paint_all();
   }
 

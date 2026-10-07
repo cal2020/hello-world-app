@@ -237,19 +237,19 @@
   def("parity", "p-initial", "P1", "Initial artifact hash equals the Python build", N_COMPILE, (ctx) => {
     const h = compiled(ctx).package.artifact_hash;
     A.eq(h, HX.data.python_build.initial_artifact_hash, "artifact hash");
-    return h.slice(0, 19) + "…";
+    return { digest: h };
   }, { python: "python_build.initial_artifact_hash" });
   def("parity", "p-refined", "P2", "Refined artifact hash equals the Python build", ["update", "reference", "traces", "normalize", "replay"].concat(N_COMPILE), (ctx) => {
     const R = HX.reference;
     const prop = HX.update.propose_update(pkg_of(ctx), R.missing_docs_trace(), [], [], catalog_of(), new R.FixtureAligner(), skill_text());
     A.eq(prop.status, "CANDIDATE", "proposal status");
     A.eq(prop.candidate.artifact_hash, HX.data.python_build.refined_artifact_hash, "refined artifact hash");
-    return prop.candidate.artifact_hash.slice(0, 19) + "…";
+    return { digest: prop.candidate.artifact_hash };
   }, { python: "python_build.refined_artifact_hash" });
   def("parity", "p-catalog", "P3", "Tool catalog digest equals the Python build", ["catalog", "data", "canonical", "jsonschema"], () => {
     const d = HX.catalog.digest(HX.catalog.load_catalog(HX.data.tool_catalog));
     A.eq(d, HX.data.python_build.catalog_digest, "catalog digest");
-    return d.slice(0, 19) + "…";
+    return { digest: d };
   }, { python: "python_build.catalog_digest" });
 
   /* ---- golden vectors -------------------------------------------------------------------------------------- */
@@ -664,8 +664,10 @@
     const p = judge_pkg(ctx);
     same_as_python(p, "judge");
     const cp = K.initial_checkpoint(p, "t", "r", {});
-    A.eq(A.code(() => K.advance(cp, obs(cp, "judge", { label: "definitely" }), p)), "INVALID_JUDGE_LABEL", "invalid label");
-    A.eq(A.code(() => K.advance(cp, obs(cp, "judge", { label: "ok", approved: true }), p)), "UNEXPECTED_OUTPUT_KEYS", "privileged field");
+    /* Python: pytest.raises(KernelError) with the code checked, so the class matters, not only .code */
+    const kernel_error = (want) => (e) => e instanceof K.KernelError && e.code === want;
+    A.throws(() => K.advance(cp, obs(cp, "judge", { label: "definitely" }), p), kernel_error("INVALID_JUDGE_LABEL"), "invalid label (KernelError INVALID_JUDGE_LABEL)");
+    A.throws(() => K.advance(cp, obs(cp, "judge", { label: "ok", approved: true }), p), kernel_error("UNEXPECTED_OUTPUT_KEYS"), "privileged field (KernelError UNEXPECTED_OUTPUT_KEYS)");
     const r = K.advance(cp, obs(cp, "judge", { label: "abstain" }), p);
     A.eq(r.checkpoint.state_id, "FALLBACK", "abstention takes the explicit branch");
     A.ok(!hasOwn(r.checkpoint.variables, "approved"), "no approved variable");
@@ -763,9 +765,16 @@
     const { env } = make_env(ctx, pkg);
     const arc = archive(env, pkg);
     const before = writes(env);
-    /* the rogue step tries the network; recorded replay must have replaced every network entry point */
-    const rogue = () => { globalThis.fetch("https://example.com/"); };
+    /* the rogue step tries the network; recorded replay must have replaced every network entry point. The real fetch
+       must never run (no outbound request even if the guard regressed), so the step first checks it was replaced. */
+    const real_fetch = globalThis.fetch;
+    let unguarded = false;
+    const rogue = () => {
+      if (globalThis.fetch === real_fetch) { unguarded = true; throw new CheckFailure("recorded replay did not replace fetch"); }
+      globalThis.fetch("https://example.invalid/");
+    };
     const rep = HX.replay.replay(pkg, arc[0], "recorded", { on_step: rogue });
+    A.ok(!unguarded, "recorded replay replaced fetch before the step ran");
     A.eq(rep.status, "ERROR", "replay status");
     A.ok(String(rep.detail).indexOf("EXTERNAL_CALL_ATTEMPTED") >= 0, "detail names EXTERNAL_CALL_ATTEMPTED: " + short(rep.detail));
     A.eq(writes(env), before, "ERP drafts");
@@ -1174,8 +1183,13 @@
     if (c.embed && !embed()) return { status: "skip", ms: 0, message: "Needs the embedded golden sample, which this build does not include (app/embed.json)." };
     const t0 = now();
     try {
-      const note = c.fn(ctx);
-      return { status: "pass", ms: now() - t0, note: typeof note === "string" ? note : "" };
+      const out = c.fn(ctx);
+      /* a check returns a note (string) or {note, digest}: a digest is shown in full through HXUI.digest */
+      const obj = out !== null && typeof out === "object";
+      const note = obj ? out.note : out;
+      const r = { status: "pass", ms: now() - t0, note: typeof note === "string" ? note : "" };
+      if (obj && typeof out.digest === "string") r.digest = out.digest;
+      return r;
     } catch (err) {
       const assertion = err instanceof CheckFailure;
       return { status: "fail", ms: now() - t0, message: assertion ? err.message : "The engine raised " + describe(err),

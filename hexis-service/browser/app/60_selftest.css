@@ -38,14 +38,40 @@
 .st-filter input { width: 1rem; height: 1rem; margin: 0; flex: none; accent-color: var(--accent); }
 .st-filter label { cursor: pointer; }
 
-/* one block per group of checks */
-.st-group { display: grid; gap: var(--sp-3); min-width: 0; }
-.st-group + .st-group { padding-top: var(--sp-3); }
-.st-group-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--sp-2) var(--sp-4); }
+/* one disclosure per group of checks: summary line = chevron, title and lead, counts */
+.st-groups { display: grid; gap: var(--sp-2); min-width: 0; }
+.st-group { min-width: 0; border-top: 1px solid var(--rule); }
+.st-group:last-child { border-bottom: 1px solid var(--rule); }
+.st-group-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-3) var(--sp-1);
+  cursor: pointer;
+  list-style: none;
+  border-radius: var(--r-1);
+}
+.st-group-head::-webkit-details-marker { display: none; }
+.st-group-head:hover .st-group-title { color: var(--accent); }
+.st-group-head:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.st-group-chevron { display: inline-grid; place-items: center; color: var(--ink-3); transition: transform 0.15s ease; }
+.st-group-chevron .hx-icon { width: 0.875rem; height: 0.875rem; }
+.st-group[open] > .st-group-head .st-group-chevron { transform: rotate(90deg); }
 .st-group-titles { display: grid; gap: 0.15rem; min-width: 0; }
 .st-group-title { font: 600 var(--fs-4) / 1.3 var(--font-sans); color: var(--ink); }
 .st-group-lead { font-size: var(--fs-2); color: var(--ink-2); text-wrap: pretty; }
-.st-group-body { min-width: 0; }
+.st-group .hx-panel-meta { justify-content: flex-end; }
+.st-group-body { min-width: 0; padding-bottom: var(--sp-4); }
+.st-group.is-clean .st-group-chevron { visibility: hidden; }
+.st-filter-note { min-width: 0; }
+.st-jump { font-size: var(--fs-2); }
+.st-checks tr[data-status="fail"]:focus { outline: 2px solid var(--focus); outline-offset: -2px; }
+@media (prefers-reduced-motion: reduce) { .st-group-chevron { transition: none; } }
+@media (max-width: 30rem) {
+  .st-group-head { grid-template-columns: auto minmax(0, 1fr); }
+  .st-group .hx-panel-meta { grid-column: 2; justify-content: flex-start; }
+}
 
 .st-checks td { vertical-align: top; }
 .st-cell-name { display: grid; gap: 0.3rem; min-width: 0; }
@@ -69,8 +95,16 @@
 .st-py { font: var(--fs-1) / 1.4 var(--font-mono); color: var(--ink-3); overflow-wrap: break-word; }
 .st-checks tr[data-status="fail"] td { background: color-mix(in srgb, var(--crit-tint) 55%, transparent); }
 .st-checks tr[data-status="running"] td { background: color-mix(in srgb, var(--accent-tint) 55%, transparent); }
-/* the detail column takes the room the name does not need; long Python names wrap anywhere */
-.st-checks th:first-child, .st-checks td:first-child { width: 46%; min-width: 14rem; }
+/* every group table shares one column grid when there is room (fixed layout); narrower, the table folds */
+.st-checks th:first-child, .st-checks td:first-child { min-width: 14rem; }
+@media (min-width: 900px) {
+  .st-checks { table-layout: fixed; }
+  .st-checks .st-col-name { width: 44%; }
+  .st-checks .st-col-result { width: 8rem; }
+  .st-checks .st-col-time { width: 5.5rem; }
+  .st-checks td { overflow-wrap: anywhere; }
+}
+.st-note .hx-digest { margin-right: 0.35rem; }
 
 .st-file { overflow-wrap: anywhere; }
 .st-sample-table td:first-child { min-width: 12rem; }
