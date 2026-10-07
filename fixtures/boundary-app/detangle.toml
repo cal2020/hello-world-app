@@ -1,0 +1,18 @@
+# Architecture rules for boundary-app.
+# Features are isolated: they may use shared/ but not each other.
+
+[options]
+exclude = ["**/dist/**"]
+
+[[forbidden]]
+name = "no-circular"
+severity = "warn"
+to = { circular = true }
+
+# features may not import each other
+[[forbidden]]
+name = "no-cross-feature"
+severity = "error"
+comment = "Features talk through shared/ contracts, never directly."
+from = { path = '^src/features/([^/]+)/' }
+to = { path = '^src/features/', path_not = '^src/features/$1/' }

@@ -1,0 +1,6 @@
+{
+  "name": "unresolved-app",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic fixture — An import left behind after a file was deleted"
+}

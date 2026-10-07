@@ -1,14 +1,47 @@
 {
-  "name": "hello-world-app",
+  "name": "lattice-architecture-inspector",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "tsx scripts/dev.ts",
     "build": "vite build",
-    "preview": "vite preview"
+    "start": "NODE_ENV=production tsx server/index.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "fixtures:large": "tsx scripts/generate-large-fixture.ts",
+    "bench": "tsx scripts/bench.ts",
+    "demo:toggle": "tsx scripts/toggle-demo-import.ts",
+    "reset": "tsx scripts/reset.ts"
+  },
+  "dependencies": {
+    "@fastify/static": "10.1.5",
+    "detangle": "0.2.6",
+    "diff": "9.0.0",
+    "fastify": "5.12.5",
+    "smol-toml": "1.9.0"
   },
   "devDependencies": {
-    "vite": "^7.1.7"
-  }
+    "@dagrejs/dagre": "3.1.1",
+    "@fontsource-variable/inter": "5.3.0",
+    "@fontsource-variable/jetbrains-mono": "5.3.0",
+    "@playwright/test": "1.63.0",
+    "@tailwindcss/vite": "4.3.3",
+    "@types/node": "26.6.4",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "@xyflow/react": "12.12.0",
+    "lucide-react": "1.52.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "tailwindcss": "4.3.3",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.3",
+    "vitest": "5.0.3"
+  },
+  "description": "Visual architecture inspector for JavaScript/TypeScript repositories, powered by Detangle",
+  "license": "MIT"
 }

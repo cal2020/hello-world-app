@@ -1,0 +1,6 @@
+{
+  "name": "clean-app",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic fixture — Clean layered app: no violations"
+}

@@ -1,0 +1,6 @@
+{
+  "name": "cycle-app",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic fixture — A real 3-module runtime cycle plus a type-only back edge"
+}

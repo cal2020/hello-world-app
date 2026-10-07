@@ -1,0 +1,6 @@
+{
+  "name": "storefront",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic fixture — a small storefront with features, shared UI and a few realistic architecture problems"
+}

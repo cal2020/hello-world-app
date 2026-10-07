@@ -1,0 +1,34 @@
+# Architecture rules for the storefront demo.
+# Paths are regexes on root-relative paths.
+
+[options]
+exclude = ["**/dist/**", "**/*.stories.tsx"]
+cycles_ignore_type_only = true
+
+[[forbidden]]
+name = "no-circular"
+severity = "warn"
+comment = "Circular dependencies make code hard to reason about, test and tree-shake."
+to = { circular = true }
+
+[[forbidden]]
+name = "not-to-unresolvable"
+severity = "error"
+comment = "This import can't be resolved to a file or an installed package."
+to = { could_not_resolve = true }
+
+# Features are vertical slices: they may use shared code, never each other.
+[[forbidden]]
+name = "no-cross-feature"
+severity = "error"
+comment = "Features talk through src/shared contracts or the app shell, never directly."
+from = { path = '^src/features/([^/]+)/' }
+to = { path = '^src/features/', path_not = '^src/features/$1/' }
+
+# The design system must stay app-agnostic.
+[[forbidden]]
+name = "ui-is-leaf"
+severity = "error"
+comment = "src/ui is a design system: it can't know about features or the API."
+from = { path = '^src/ui/' }
+to = { path = '^src/(features|api)/' }

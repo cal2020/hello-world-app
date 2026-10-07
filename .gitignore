@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Lattice local data and generated fixtures
+.lattice-data
+fixtures/generated-*
+test-results
+playwright-report
+.e2e-screens

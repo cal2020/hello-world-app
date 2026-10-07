@@ -1,0 +1,6 @@
+{
+  "name": "boundary-app",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic fixture — Two features with one forbidden cross-feature import"
+}
