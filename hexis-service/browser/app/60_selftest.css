@@ -36,7 +36,8 @@
 .st-actions { justify-content: space-between; }
 .st-filter { display: flex; align-items: center; gap: 0.5rem; font-size: var(--fs-2); color: var(--ink-2); }
 .st-filter input { width: 1rem; height: 1rem; margin: 0; flex: none; accent-color: var(--accent); }
-.st-filter label { cursor: pointer; }
+/* the whole label row, checkbox included, is the target: at least 2.75rem tall */
+.st-filter label { display: flex; align-items: center; gap: 0.5rem; min-height: 2.75rem; cursor: pointer; }
 
 /* one disclosure per group of checks: summary line = chevron, title and lead, counts */
 .st-groups { display: grid; gap: var(--sp-2); min-width: 0; }

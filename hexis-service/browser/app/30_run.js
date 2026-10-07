@@ -386,13 +386,14 @@
     const cp = res.checkpoint || {};
     const out = cp.outcome || null;
     let tone = res.status === "FAILED" ? "crit" : res.status === "COMPLETED" ? run_tone("COMPLETED", out) : res.status === "CANCELLED" ? "neutral" : "neutral";
-    let title = [code(fn_name), " returned ", res.status === "COMPLETED" && out ? "COMPLETED · " + out.category + " (" + out.terminal + ")" : res.status];
+    /* the status chip in the body carries the status and outcome; the heading names the call only, so it is said once */
+    let title = [code(fn_name), " result"];
     const body = [h("p", { class: "rn-res-line" }, step_text(res, before))];
     if (res.status === "FAILED") {
       let ev = null;
       try { ev = stop_event(sel.env.service.inspect_run(sel.run.run_id, sel.principal).events); } catch (e) { ev = null; }
       if (ev && ev.code === "TERMINAL_ADMISSION_DENIED") {
-        title = [code(fn_name), " returned FAILED · verified outcome refused"];
+        title = [code(fn_name), " result: the verified outcome was refused"];
         body.push(h("p", null, "The run reached ", code(cp.state_id), " but the terminal was refused: its evidence was invalidated after it was issued. See the outcome card."));
       } else if (ev) body.push(h("p", null, "Stopped with ", code(ev.code), ev.message ? ": " + ev.message : "", "."));
     }

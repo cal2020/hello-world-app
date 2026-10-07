@@ -762,7 +762,7 @@
       }
       p.meta.replaceChildren(HXUI.chip("in " + ms_text(r.ms), "neutral"));
       const tl = !r.by_user ? tour_learn(HXUI.lab.env) : null;
-      p.body.replaceChildren(...[tl ? h("p", { class: "ln-origin", id: "ln-tour-note" }, "The guided demo proposed the refined machine from this trace (",
+      p.body.replaceChildren(...[tl ? h("p", { class: "ln-tour-note", id: "ln-tour-note" }, "The guided demo proposed the refined machine from this trace (",
         status_chip(tl.proposal), ") and admitted it (", status_chip(tl.admission), "). The proposal below runs again against that now-active refined machine, so it reports its own result.") : null,
       proposal_view(r)].filter(Boolean));
     };

@@ -492,6 +492,11 @@
     P.expand.hidden = !collapsed;
     P.restart.classList.toggle("hx-btn--primary", stopped);
     P.restart.classList.toggle("hx-btn--secondary", !stopped);
+    /* finished: Show summary and Back to overview lead, and Run the demo again sits beside End demo, so a phone
+       shows two rows; stopped: Run the demo again is the primary action and leads. DOM order is the visual order. */
+    const actions = P.restart.parentNode;
+    const before = T.status === "done" ? P.end_btn : P.expand;
+    if (actions && P.restart.nextSibling !== before && document.activeElement !== P.restart) actions.insertBefore(P.restart, before);
     P.next.querySelector(".hx-btn-label").textContent = busy ? "Working…" : nxt ? "Next: " + title_of(nxt.id, nxt.title) : "Next";
     HXUI.set_disabled(P.next, busy, "The engine is running this step.");
     /* Back to overview does nothing on the Overview itself */

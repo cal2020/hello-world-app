@@ -195,11 +195,11 @@
   /** Status chips follow one rule everywhere: an engine status value (WAITING_FOR_APPROVAL, CANDIDATE, ADMITTED,
       NO_CHANGE) reads as words in sentence case ("Waiting for approval", "No change"), with the engine's own value in
       the tooltip and in data-value. Codes and identifiers (NOT_AUTHORIZED, state ids) stay mono. */
-  /** wrap_id(text, {tag, class}) -> a mono identifier that may wrap only after "_", ".", "/", "-", "[" or "::" (a
-      <wbr> there), never mid-word: test names, paths, claims. */
+  /** wrap_id(text, {tag, class}) -> a mono identifier that may wrap only after "_", ".", "/", "-" or "::" (a <wbr>
+      there), never mid-word: test names, paths, claims. An index such as "transitions[0]" stays in one piece. */
   HXUI.wrap_id = function (text, opts) {
     const o = opts || {};
-    const parts = String(text === null || text === undefined ? "" : text).split(/(?<=::|[_./\-[])/);
+    const parts = String(text === null || text === undefined ? "" : text).split(/(?<=::|[_./\-])/);
     const kids = [];
     parts.forEach((p, i) => { if (i) kids.push(h("wbr")); kids.push(p); });
     return h(o.tag || "code", { class: ["hx-wrap-id", o.class] }, kids);

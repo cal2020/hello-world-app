@@ -90,6 +90,9 @@
 .ln-origin-runs { display: grid; gap: 0.3rem; margin: 0; padding: 0; list-style: none; }
 .ln-origin-runs li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
 .ln-enroll-result { display: grid; gap: var(--sp-2); }
+/* a sentence with inline status chips: the chips flow in the text, the block stays a paragraph */
+.ln-tour-note { max-width: 72ch; color: var(--ink-2); text-wrap: pretty; }
+.ln-tour-note .hx-chip { vertical-align: baseline; }
 
 /* ------------------------------------------------------------------ propose */
 .ln-form { display: grid; gap: var(--sp-2); }

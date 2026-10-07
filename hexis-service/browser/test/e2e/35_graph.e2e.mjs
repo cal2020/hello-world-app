@@ -782,6 +782,8 @@ export default async function (t) {
       assert.ok(r.text.startsWith("READ_INTAKE: tool"), `short window: the caption reads the focused state (${r.text})`);
       assert.ok(r.box_bottom <= r.cap_top, "short window: the caption never covers the focused state");
       assert.equal(r.bg, css["graph-bg"], "short window: the caption bar is opaque (the canvas color)");
+      // on a phone the reading bar holds two lines and scrolls for the rest, so it covers little of the drawing
+      if (narrow) assert.ok(r.cap_bottom - r.cap_top <= 64, `short window at 400px: the caption bar is at most two lines (${r.cap_bottom - r.cap_top}px)`);
     }
     // the full drawing, not selectable: no stop at all while it fits; one stop (the canvas region) while it overflows
     const n = await page.evaluate((m) => __hxgt.mount(m, { compact: false }), machines.initial);

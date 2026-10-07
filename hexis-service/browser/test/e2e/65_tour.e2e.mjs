@@ -99,6 +99,15 @@ export default async function (t) {
         error: ["error", "changed"].includes(tour.dataset.status) ? tour.innerText : "" };
     });
     assert.equal(s.error, "", "step " + s.step + " runs");
+    /* the guide never widens the page: the long "Next: <step>" labels wrap inside the panel (the review measured
+       34 to 83px of sideways scroll at 400px when they did not) */
+    const fit = await page.evaluate(() => {
+      const n = document.getElementById("tour-next"), r = n.getBoundingClientRect(), p = document.getElementById("tour").getBoundingClientRect();
+      return { page: document.documentElement.scrollWidth - innerWidth, next_right: r.right, panel_right: p.right, vw: document.documentElement.clientWidth, hidden: n.hidden };
+    });
+    assert.ok(fit.page <= 0, "step " + s.step + ": no sideways page scroll (" + fit.page + "px)");
+    assert.ok(fit.panel_right <= fit.vw + 0.5, "step " + s.step + ": the guide fits the screen (" + fit.panel_right + " of " + fit.vw + ")");
+    if (!fit.hidden) assert.ok(fit.next_right <= fit.panel_right + 0.5, "step " + s.step + ": Next stays inside the guide (" + fit.next_right + " of " + fit.panel_right + ")");
     seen.push(s.step);
     assert.equal(s.section, SECTIONS[s.step], "step " + s.step + " opens its section");
     assert.equal(s.lines, s.want_lines, "step " + s.step + " shows its narration lines");
@@ -175,6 +184,17 @@ export default async function (t) {
     assert.equal(ln.status, sum.proposal, "Learn's last proposal is the demo's (" + ln.note + ")");
     assert.match(ln.note, /guided demo/, "and it says it comes from the guided demo");
     assert.equal(ln.junk, false, "no null or undefined text in Learn");
+    /* the note that names the demo's proposal is one sentence: its status chips flow inline, not one per row */
+    const note = await page.evaluate(() => {
+      const n = document.getElementById("ln-tour-note");
+      if (!n) return null;
+      const chips = [...n.querySelectorAll(".hx-chip")].map((c) => c.getBoundingClientRect());
+      return { display: getComputedStyle(n).display, widest: Math.max(0, ...chips.map((c) => c.width)), width: n.getBoundingClientRect().width };
+    });
+    if (note) {
+      assert.equal(note.display, "block", "the demo note is a paragraph, not a grid");
+      assert.ok(note.widest < note.width / 2, "its chips are as wide as their text (" + note.widest + " of " + note.width + ")");
+    }
   }
   /* the Run workbench lists the demo's runs, with the selected one shown */
   await page.evaluate(() => HXUI.go("run"));
@@ -184,6 +204,16 @@ export default async function (t) {
   assert.ok(run.text.includes(run.sel), "the Run workbench shows the selected demo run");
   assert.ok(/Guided demo/.test(run.text), "the Run workbench names the demo's runs");
   assert.equal(run.collapsed, "true", "away from Learn, the finished guide is one line");
+  /* the finished bar's buttons take at most two rows at 400px: Show summary and Back to overview, then Run the demo
+     again beside End demo (DOM order is the visual order) */
+  const bar = await page.evaluate(() => {
+    const btns = [...document.querySelectorAll("#tour .tour-actions > .hx-btn")].filter((b) => !b.hidden);
+    return { ids: btns.map((b) => b.id), rows: new Set(btns.map((b) => Math.round(b.getBoundingClientRect().top))).size,
+      page: document.documentElement.scrollWidth - innerWidth };
+  });
+  assert.deepEqual(bar.ids, ["tour-expand", "tour-back", "tour-restart", "tour-end"], "the finished bar's order");
+  assert.ok(bar.rows <= 2, "the finished bar takes at most two rows (" + bar.rows + ")");
+  assert.ok(bar.page <= 0, "the finished bar does not widen the page");
   await page.click("#tour-expand");
   assert.ok(await page.evaluate(() => !!document.getElementById("tour-summary")), "Show summary expands it");
   /* Reset lab ends the tour */

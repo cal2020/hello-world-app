@@ -286,6 +286,17 @@
   border-radius: 0 0 calc(var(--r-2) - 1px) calc(var(--r-2) - 1px);
 }
 .hxg.is-reading .hxg-caption { position: sticky; bottom: 0; z-index: 1; }
+/* on a phone the sticky bar holds two lines (the state and its first transition) and scrolls for the rest, so it
+   covers little of the drawing; the focused state's name carries every guard for assistive technology */
+@media (max-width: 899.98px) {
+  .hxg.is-reading .hxg-caption {
+    max-height: calc(2lh + 2 * var(--sp-2) + 1px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* the bottom padding fades, so a third line peeking in reads as "scroll for more", not as cut text */
+    mask-image: linear-gradient(to bottom, var(--ink) calc(100% - var(--sp-2)), transparent);
+  }
+}
 .hxg-caption[hidden] { display: none; }
 .hxg-code { font-family: var(--font-mono); font-size: var(--fs-1); color: var(--ink); }
 

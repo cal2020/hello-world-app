@@ -825,7 +825,7 @@
   /* Port-only marks on decoded str values: the exact value is unknown to the port (deviations/guards.md). */
   const N_ESCAPE = 1; /* \N{name}: the port has no Unicode name database; one placeholder code point */
   const SURROGATE = 2; /* an escape that produces a surrogate code point; one placeholder code point */
-  const PLACEHOLDER = "�";
+  const PLACEHOLDER = "\uFFFD";
   const isalnum = (c) => isdigit(c) || (c >= 0x41 && c <= 0x5a) || (c >= 0x61 && c <= 0x7a);
 
   /** decode_unicode_with_escapes for a str body (code points) -> {s, flags}. Like CPython, it first rewrites the

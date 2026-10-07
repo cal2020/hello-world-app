@@ -404,7 +404,7 @@
     const only = h("input", { type: "checkbox", id: "st-problems-only", class: "hx-check" });
     only.checked = S.problems_only;
     only.addEventListener("change", () => { S.problems_only = only.checked; paint_all(); });
-    const filter = h("div", { class: "st-filter" }, only, h("label", { for: "st-problems-only" }, "Show only failed and skipped checks"));
+    const filter = h("div", { class: "st-filter" }, h("label", { for: "st-problems-only" }, only, h("span", null, "Show only failed and skipped checks")));
     const summary = h("div", { class: "st-summary-wrap", "aria-live": "off" });
     const filter_note = h("div", { class: "st-filter-note", id: "st-filter-note", hidden: true });
     const groups = [];
