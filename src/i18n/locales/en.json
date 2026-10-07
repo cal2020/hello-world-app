@@ -1,0 +1,1916 @@
+{
+  "meta": {
+    "languageName": "English",
+    "translationStatus": "Original text."
+  },
+  "app": {
+    "title": "Human Cell Atlas",
+    "tagline": "An illustrated journey through a human cell",
+    "metaDescription": "Explore an illustrative 3D model of a human cell: 19 structures, molecular close-ups, a guided tour and sourced explanations in seven languages.",
+    "structureMetaDescription": "{name}: {short} Explore it in an illustrative 3D model of a human cell.",
+    "aboutMetaDescription": "How the Human Cell Atlas model was built: assumptions, simplifications, sources, credits and licences.",
+    "titleSeparator": " — "
+  },
+  "loading": {
+    "title": "Preparing the cell",
+    "progress": "{percent}% ready",
+    "opening": "Opening: {name}",
+    "steps": {
+      "locale": "Loading text",
+      "engine": "Loading the 3D engine",
+      "structure": "Building: {name}",
+      "materials": "Preparing materials",
+      "done": "Ready"
+    },
+    "enter": "Enter the cell",
+    "enterHint": "Drag to turn the cell, scroll or pinch to zoom, and select any structure to learn about it.",
+    "readText": "Read the text atlas instead",
+    "previewAlt": "Illustration of a human cell cut open to show the nucleus and organelles"
+  },
+  "nav": {
+    "skipToExplanation": "Skip to the explanation",
+    "skipToStructures": "Skip to the structure list",
+    "wholeCell": "Whole cell",
+    "wholeCellHint": "Return to the whole cell",
+    "structures": "Structures",
+    "showList": "Show structure list",
+    "hideList": "Hide structure list",
+    "previous": "Previous structure",
+    "next": "Next structure",
+    "previousNamed": "Previous: {name}",
+    "nextNamed": "Next: {name}",
+    "wrapNote": "Previous and next wrap around: after the last structure comes the first.",
+    "breadcrumb": "Location",
+    "selected": "selected",
+    "groupCount": {
+      "one": "{count} structure",
+      "other": "{count} structures"
+    }
+  },
+  "search": {
+    "label": "Search structures",
+    "placeholder": "Search, e.g. “cell membrane”",
+    "clear": "Clear search",
+    "results": {
+      "one": "{count} result",
+      "other": "{count} results"
+    },
+    "matched": "matches “{term}”",
+    "empty": "No structure matches “{query}”.",
+    "emptyHint": "Try a name such as “nucleus”, “mitochondrion” or “ER”, or browse the groups below.",
+    "suggestions": "Suggestions"
+  },
+  "panel": {
+    "region": "Explanation",
+    "inTheCell": "In the cell",
+    "closeup": "Close-up",
+    "viewSwitch": "Choose a view",
+    "subviews": "Close-up views",
+    "whatYouSee": "What you are seeing",
+    "whatItDoes": "What it does",
+    "numbers": "By the numbers",
+    "typicalSize": "Typical size",
+    "typicalQuantity": "Typical quantity in the cited cell type",
+    "drawnInModel": "Objects drawn in this model",
+    "drawnCount": {
+      "one": "{count} drawn (current quality: {quality})",
+      "other": "{count} drawn (current quality: {quality})"
+    },
+    "drawnContinuous": "Drawn as one continuous structure.",
+    "drawnSymbolic": "Shown as faint particles that suggest the crowding; they are not individual molecules.",
+    "enlarged": "Drawn about ×{factor} larger than true scale so it stays visible.",
+    "trueScale": "Drawn at about true scale.",
+    "symbolic": "Drawn as symbolic markers, not to scale.",
+    "renderedSize": "Drawn {dimension}: {size}",
+    "facts": "Key facts",
+    "interesting": "Did you know?",
+    "parts": "Parts",
+    "related": "Connections",
+    "simplifications": "Model simplifications",
+    "sources": "Sources",
+    "sourceRef": "Source {n}",
+    "sourcesLabel": "Sources:",
+    "openCloseup": "Open the close-up",
+    "backToCell": "Back to the cell view",
+    "closeupLoading": "Loading the close-up…",
+    "closeupError": "The close-up could not be loaded.",
+    "slowdown": "Animation slowed about ×{factor} compared with real time.",
+    "noTimescale": "Motion is illustrative and greatly slowed.",
+    "toScale": "Molecules are drawn to scale with each other.",
+    "moleculesEnlarged": "Some components are drawn about ×{factor} larger than this view’s scale.",
+    "frozen": "Biological animation is frozen.",
+    "expand": "Expand explanation",
+    "collapse": "Collapse explanation",
+    "dragHandle": "Resize explanation",
+    "groupLabel": "Group",
+    "pending": "Verification pending",
+    "pendingHint": "The source for this statement could not be checked when this version was built.",
+    "sourcePending": "not yet verified",
+    "noValue": "Not a single number; see the note.",
+    "drawnFixed": {
+      "one": "{count} drawn at every quality level",
+      "other": "{count} drawn at every quality level"
+    },
+    "drawnRange": "{low}–{high} drawn, depending on the quality setting",
+    "locationInset": "Where this close-up sits in the whole cell"
+  },
+  "overview": {
+    "title": "A representative human cell",
+    "lead": "This is an illustrative model of a single human cell, about {cellWidth} across, cut open so you can look inside.",
+    "model": "It shows a generalized human cell between divisions (interphase). It is not a portrait of one specific cell type: real human cells range from red blood cells a few micrometres wide to nerve cells whose fibres can be longer than an arm. The model assumes a rounded, diploid cell — one with two sets of 23 chromosomes — and, so that X-chromosome inactivation can be shown, a female (XX) cell.",
+    "how": "Drag to turn the cell, scroll or pinch to zoom, and select any structure — in the scene, in the list, on a label or by searching — to travel to it. Each structure has an “In the cell” view and a close-up.",
+    "colors": "Colours are illustrative: most cell structures are colourless. Far fewer copies of repeated objects are drawn than a real cell contains, and the smallest ones are enlarged, so that everything stays visible. Every number states the kind of cell it was measured in.",
+    "units": "1 µm (micrometre) is one millionth of a metre; 1 nm (nanometre) is one thousandth of a micrometre.",
+    "groupsTitle": "19 structures in five groups",
+    "startTour": "Start the guided tour"
+  },
+  "controls": {
+    "toolbar": "Viewer controls",
+    "tour": "Tour",
+    "startTour": "Start guided tour",
+    "labels": "Labels",
+    "labelsHint": "Show or hide labels",
+    "bio": "Biological animation",
+    "freeze": "Freeze",
+    "play": "Play",
+    "freezeHint": "Freeze biological animation (the camera, reading and selection keep working)",
+    "playHint": "Play biological animation",
+    "bioPlaying": "Playing",
+    "bioFrozen": "Frozen",
+    "quality": "Quality",
+    "qualityAuto": "Auto",
+    "qualityAutoCurrent": "Auto ({level})",
+    "qualityLow": "Low",
+    "qualityMedium": "Medium",
+    "qualityHigh": "High",
+    "qualityHint": "Rendering quality: changes sharpness, effects and how many repeated objects are drawn. All 19 structures stay visible.",
+    "motion": "Motion",
+    "motionSystem": "Follow system",
+    "motionReduce": "Reduce motion",
+    "motionAllow": "Allow motion",
+    "motionHint": "Reduce motion makes camera moves instant, stops decorative movement and starts biological animation frozen.",
+    "language": "Language",
+    "export": "Save image",
+    "help": "Help",
+    "about": "About",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "resetView": "Reset view",
+    "settings": "Settings",
+    "more": "More",
+    "textAtlas": "Text atlas",
+    "view3d": "3D view",
+    "close": "Close",
+    "on": "On",
+    "off": "Off",
+    "freezeLabel": "Freeze biological animation",
+    "zoomGroup": "Zoom"
+  },
+  "tour": {
+    "title": "Guided tour",
+    "start": "Start tour",
+    "pause": "Pause tour",
+    "resume": "Resume tour",
+    "next": "Next stop",
+    "previous": "Previous stop",
+    "exit": "Exit tour",
+    "progress": "Stop {current} of {total}",
+    "traveling": "Travelling…",
+    "reading": "Next stop in {seconds} s",
+    "paused": "Paused",
+    "noWrap": "The tour goes from the first stop to the last without wrapping.",
+    "finished": "Tour complete — you visited all 19 structures.",
+    "endedByManual": "The tour ended because you chose a structure yourself."
+  },
+  "export": {
+    "title": "Save an image",
+    "intro": "Saves a PNG of the current view exactly as the camera sees it now.",
+    "clean": "Clean image",
+    "cleanDescription": "The 3D view only, without labels or overlays.",
+    "annotated": "Annotated image",
+    "annotatedDescription": "Adds labels, the physical scale bar and a caption.",
+    "saving": "Preparing the image…",
+    "saved": "Saved {file}.",
+    "failed": "The image could not be saved: {reason}",
+    "unavailable": "Image export needs the 3D view.",
+    "caption": "{title} · illustrative model · {app}",
+    "scaleNote": "Scale bar valid at the focus point."
+  },
+  "scale": {
+    "label": "Scale",
+    "bar": "Scale bar: {length}",
+    "wholeCell": "Whole-cell view",
+    "closeup": "Close-up · ×{factor} vs. whole-cell view",
+    "focusNote": "Measured at the focus point.",
+    "enlargedNote": "{name} drawn ×{factor} larger than scale"
+  },
+  "help": {
+    "title": "Help",
+    "intro": "Explore an illustrative 3D model of a human cell. Everything shown in the 3D view is also available as text.",
+    "exploreTitle": "Exploring",
+    "explore": "Drag to turn the cell. Scroll, pinch or use the + and − buttons to zoom. “Reset view” frames the current subject again.",
+    "selectTitle": "Selecting a structure",
+    "select": "Select a structure by clicking or tapping it in the 3D view, choosing it in the list, clicking its label or searching for it. All four do the same thing: the camera travels to the structure, the explanation opens and the address bar updates, so you can share the link.",
+    "viewsTitle": "In the cell and close-up",
+    "views": "“In the cell” shows the structure in place while everything else fades. “Close-up” opens a separate, enlarged scene with molecular detail; its scale bar and notes say how much it is magnified and slowed. A small inset shows where the close-up sits in the whole cell.",
+    "tourTitle": "Guided tour",
+    "tour": "The tour visits all 19 structures in order. Each stop waits until the camera arrives, then gives you about {seconds} seconds to read. You can pause, resume, skip forward or back, or exit. Choosing a structure yourself ends the tour.",
+    "freezeTitle": "Freezing biological animation",
+    "freeze": "“Freeze” stops the biological motion (filaments, transport, molecular machines). You can still move the camera, read and select structures. Freezing is separate from pausing the tour.",
+    "qualityTitle": "Quality and motion",
+    "quality": "Quality changes sharpness, effects and how many repeated objects (such as ribosomes) are drawn; it never removes a structure. “Auto” adjusts gradually to keep motion smooth. “Reduce motion” makes camera moves instant and starts biological animation frozen.",
+    "exportTitle": "Saving images",
+    "export": "“Save image” downloads a PNG of the current view, either clean or annotated with labels, a scale bar and a caption.",
+    "shortcutsTitle": "Keyboard shortcuts",
+    "shortcutsNote": "Shortcuts are ignored while you type in the search box or use a form control.",
+    "shortcuts": {
+      "search": "Search structures",
+      "tour": "Start, pause or resume the tour",
+      "labels": "Show or hide labels",
+      "freeze": "Freeze or play biological animation",
+      "overview": "Whole cell (overview)",
+      "closeup": "Switch between “In the cell” and “Close-up”",
+      "prevNext": "Previous or next structure (wraps around); during the tour, previous or next stop",
+      "zoom": "Zoom in or out",
+      "reset": "Reset the view",
+      "help": "Open this help",
+      "escape": "Close a dialog; otherwise go up one level (close-up → in the cell → whole cell)"
+    },
+    "keys": {
+      "slash": "/",
+      "t": "T",
+      "l": "L",
+      "f": "F",
+      "o": "O",
+      "c": "C",
+      "arrows": "← / →",
+      "plusMinus": "+ / −",
+      "zero": "0",
+      "question": "?",
+      "escape": "Esc"
+    },
+    "sourcesTitle": "All sources",
+    "sourcesFilter": "Filter sources",
+    "sourcesEmpty": "No source matches “{query}”.",
+    "sourcesGeneral": "Cell model and general",
+    "sourcesCount": {
+      "one": "{count} source",
+      "other": "{count} sources"
+    },
+    "aboutLink": "About the model, credits and licences",
+    "sourcePendingNote": "Sources marked “not yet verified” are well-known publications that could not be checked automatically when this version was built."
+  },
+  "about": {
+    "title": "About this atlas",
+    "modelTitle": "The model",
+    "model": "The Human Cell Atlas is an illustrative, not photographic, model of one representative human cell. It is drawn in micrometres: the cell is about {cellWidth} across and its nucleus about {nucleusWidth}. Structures were placed by a seeded procedural generator, so every visit shows the same arrangement.",
+    "assumptionsTitle": "Assumptions",
+    "assumptions": [
+      "A generalized human cell, not a specific cell type; numbers in the explanations name the cell type, species or experimental setting in which they were measured.",
+      "Interphase (G1 phase): the cell is between divisions, so chromosomes are loose chromatin and there is one centrosome with two centrioles.",
+      "Diploid (two sets of 23 chromosomes) and female (XX), so one X chromosome is shown as an inactive X (Barr body).",
+      "An intermediate-filament network of vimentin, typical of fibroblast-like cells; epithelial cells would use keratins instead.",
+      "A rounded shape with a cutaway opening that always faces the viewer."
+    ],
+    "simplificationsTitle": "Simplifications",
+    "simplifications": [
+      "Colours are illustrative.",
+      "Repeated objects (ribosomes, mitochondria, vesicles, filaments) are drawn in much smaller numbers than in real cells, and very small objects are enlarged; each explanation states the drawn count and enlargement.",
+      "Animations are educational illustrations: they are slowed down, simplified and usually show one event at a time. Close-ups state how much they are slowed.",
+      "Close-ups are separate scenes at a different scale; they are not literally inside the whole-cell scene."
+    ],
+    "improvementsTitle": "Implementation improvements",
+    "improvements": "Compared with the reference experience described in the project brief, this implementation adds search with synonyms, a visible rendering-quality control and an explicit reduced-motion setting.",
+    "sourcesTitle": "Sources",
+    "sources": "Every key fact links to its source. Sources were checked against search-engine records of the publisher or library pages; numbers keep the measurement context given there.",
+    "translationTitle": "Translations",
+    "translation": "{status}",
+    "creditsTitle": "Credits",
+    "credits": "Concept inspired by the Cellula Humana experience. Code, geometry, illustrations and text in this project are original. Built with React, Three.js, React Three Fiber and camera-controls.",
+    "licensesTitle": "Licences",
+    "licenses": "Fonts: Alegreya and Alegreya Sans (Huerta Tipográfica) and Noto Sans SC (Google, Adobe), all under the SIL Open Font License 1.1. Software libraries are MIT-licensed. No external images or 3D models are used; see ASSET_LICENSES.md in the source repository.",
+    "close": "Close"
+  },
+  "errors": {
+    "title": "The 3D view is unavailable",
+    "webgl": "Your browser or device could not start 3D graphics (WebGL 2).",
+    "webglHelp": "Try turning on hardware acceleration in your browser settings, updating the browser or using another device. The complete atlas is available as text below.",
+    "engineLoad": "The 3D view could not be loaded.",
+    "engineLoadHelp": "Check your connection and try again. The complete atlas is available as text below.",
+    "contextLost": "The graphics system stopped the 3D view.",
+    "contextLostHelp": "This can happen when a device runs low on graphics memory or its graphics driver restarts. Restart the 3D view, or keep reading the text atlas.",
+    "runtime": "The 3D view stopped because of an unexpected error.",
+    "runtimeHelp": "Restart the 3D view or continue with the text atlas below.",
+    "simulated": "The 3D view was turned off for testing.",
+    "simulatedHelp": "Remove “renderer=fail” from the address to use the 3D view.",
+    "retry": "Try again",
+    "restart3d": "Restart 3D view",
+    "localeFailed": "{language} could not be loaded.",
+    "localeStandIn": "{language} could not be loaded, so this page is shown in English.",
+    "notFound": "That page does not exist, so the whole cell is shown instead.",
+    "dismiss": "Dismiss"
+  },
+  "atlas": {
+    "title": "Text atlas",
+    "intro": "The complete atlas as text: every structure with its explanation, numbers and sources.",
+    "contents": "Contents",
+    "backToTop": "Back to top",
+    "noJs": "The interactive 3D view needs JavaScript. All explanations are below.",
+    "openIn3d": "Open in the 3D view",
+    "illustration": "Illustration of the {name} close-up from the 3D model"
+  },
+  "dimensions": {
+    "diameter": "diameter",
+    "thickness": "thickness",
+    "width": "width",
+    "length": "length"
+  },
+  "quantity": {
+    "approx": "about {q}",
+    "over": "more than {q}",
+    "upTo": "up to {q}",
+    "under": "less than {q}"
+  },
+  "units": {
+    "nm": "{n} nm",
+    "um": "{n} µm",
+    "mm": "{n} mm",
+    "m": "{n} m",
+    "pg": "{n} pg",
+    "bp": "{n} base pairs",
+    "kb": "{n} kb",
+    "Gb": "{n} billion base pairs",
+    "MDa": "{n} MDa",
+    "pH": "pH {n}",
+    "percent": "{n}%",
+    "percentVolume": "{n}% of cell volume",
+    "percentMembrane": "{n}% of all cell membrane",
+    "percentMass": "{n}% of membrane mass",
+    "percentIncrease": "+{n}%",
+    "percentPerMinute": "{n}% per minute",
+    "perCell": "{n} per cell",
+    "perUm2": "{n} per µm²",
+    "perSecond": "{n} per second",
+    "perMinute": "{n} per minute",
+    "timesPerSecond": "{n} times a second",
+    "aaPerSecond": "{n} amino acids per second",
+    "bpPerDivision": "{n} base pairs per division",
+    "rateConstant": "{n} µM⁻¹ s⁻¹",
+    "minutes": "{n} min",
+    "hours": "{n} h",
+    "seconds": "{n} s",
+    "days": "{n} days",
+    "degrees": "{n}°",
+    "uM": "{n} µM",
+    "nMolar": "{n} nM",
+    "gPerL": "{n} g/L",
+    "molecules": "{n} molecules",
+    "proteins": "{n} proteins",
+    "genes": "{n} genes",
+    "chromosomes": "{n} chromosomes",
+    "enzymes": "{n} enzymes",
+    "diseases": "{n} diseases",
+    "protofilaments": "{n} protofilaments",
+    "ratio": "{n} : 1",
+    "times": "×{n}",
+    "protonsPerAtp": "{n} protons per ATP",
+    "atpPerTurn": "{n} ATP per turn",
+    "count": "{n}"
+  },
+  "groups": {
+    "boundary": "Cell boundary and interior",
+    "genetic": "Genetic material and nuclear structures",
+    "protein": "Protein production and transport",
+    "energy": "Energy, digestion, and chemical processing",
+    "support": "Structural support and movement"
+  },
+  "relations": {
+    "partOf": "Part of",
+    "contains": "Contains",
+    "enclosedBy": "Enclosed by",
+    "continuousWith": "Continuous with",
+    "attachesTo": "Attaches to",
+    "receivesFrom": "Receives material from",
+    "sendsTo": "Sends material to",
+    "travelsAlong": "Travels along",
+    "organizes": "Organizes",
+    "organizedBy": "Organized by",
+    "fusesWith": "Fuses with",
+    "supports": "Supports",
+    "supportedBy": "Supported by",
+    "suppliesEnergyTo": "Supplies energy to",
+    "madeIn": "Made in",
+    "makes": "Makes",
+    "protects": "Protects",
+    "anchors": "Anchors",
+    "worksWith": "Works with"
+  },
+  "structures": {
+    "plasma-membrane": {
+      "name": "Plasma membrane",
+      "synonyms": [
+        "cell membrane",
+        "cytoplasmic membrane",
+        "plasmalemma",
+        "cell surface",
+        "lipid bilayer",
+        "membrane",
+        "bilayer"
+      ],
+      "short": "The thin, flexible boundary that encloses the cell and controls what enters and leaves.",
+      "function": "The plasma membrane is a double layer of lipid molecules — a lipid bilayer — studded with proteins. Each lipid has a water-attracting (hydrophilic) head and two water-avoiding (hydrophobic) tails, so the lipids line up tails-inward and form a barrier that most water-soluble molecules cannot cross on their own. Proteins embedded in the bilayer act as channels, pumps, carriers and receptors: they let particular ions and nutrients through, sense signals such as hormones, and attach the cell to its neighbours and surroundings. Sugar chains on the outer surface form a coat called the glycocalyx, which helps cells recognize one another.",
+      "seeingCell": "The translucent blue outer surface is the plasma membrane. A cutaway opening always faces you so you can see inside; the glowing rim marks where the membrane is cut. The membrane is drawn many times thicker than it really is so that its edge stays visible.",
+      "sampling": "Drawn as one continuous surface.",
+      "views": {
+        "bilayer": {
+          "title": "Lipid bilayer",
+          "seeing": "A patch of membrane about {patch} across, drawn to scale. Pale heads with paired tails form the two layers of phospholipids; small yellow bodies tucked between them are cholesterol. A channel protein (teal) spans the membrane and lets ions (small sparks) through, a receptor (violet) reaches outward, and branched sugar chains on top form the glycocalyx. Underneath, an actin filament of the cortex supports the membrane. The lipids jiggle and drift sideways because the bilayer behaves like a two-dimensional fluid."
+        }
+      },
+      "parts": {
+        "bilayer": {
+          "name": "Lipid bilayer",
+          "def": "Two layers of lipids with their tails facing inward; the basic barrier of every cell membrane."
+        },
+        "phospholipid": {
+          "name": "Phospholipid",
+          "def": "The most common membrane lipid: a phosphate-containing head with two fatty-acid tails."
+        },
+        "cholesterol": {
+          "name": "Cholesterol",
+          "def": "A rigid lipid that slips between phospholipids and adjusts how fluid the membrane is."
+        },
+        "channel": {
+          "name": "Ion channel",
+          "def": "A protein with a pore that lets particular ions cross the membrane quickly when it is open."
+        },
+        "receptor": {
+          "name": "Receptor",
+          "def": "A protein that binds a signal molecule outside the cell and passes the message inside."
+        },
+        "glycocalyx": {
+          "name": "Glycocalyx",
+          "def": "The sugar-rich coat formed by carbohydrate chains attached to membrane proteins and lipids."
+        }
+      },
+      "simplifications": [
+        "Real membranes are packed far more densely with proteins than shown.",
+        "In the whole-cell view the membrane is drawn about ten times thicker than reality.",
+        "Lipid motion in the close-up is slowed by roughly a million times or more."
+      ],
+      "sizeContext": "Thickness of the lipid bilayer itself; proteins and sugar chains stick out beyond it. Rule-of-thumb value (BioNumbers, from Physical Biology of the Cell).",
+      "quantityContext": "Lipid molecules in the plasma membrane of a small animal cell — an order-of-magnitude textbook estimate. Larger cells have proportionally more.",
+      "facts": {
+        "lipid-density": {
+          "label": "Lipid molecules per square micrometre of bilayer",
+          "context": "Both layers counted; textbook estimate."
+        },
+        "protein-share": {
+          "label": "Protein share of a typical plasma membrane’s mass",
+          "context": "For comparison: {myelin} in myelin, the insulating sheath around nerve fibres, and {inner} in the inner mitochondrial membrane."
+        },
+        "lipids-per-protein": {
+          "label": "Lipid molecules for every protein molecule",
+          "context": "In a membrane that is half protein by mass; lipids are much smaller than proteins."
+        },
+        "cholesterol": {
+          "label": "Cholesterol to phospholipid ratio",
+          "context": "Animal plasma membranes contain cholesterol in roughly the same molar amount as phospholipids."
+        },
+        "small-share": {
+          "label": "Endoplasmic reticulum membrane area compared with the plasma membrane",
+          "context": "Liver cell (hepatocyte); {pancreas} in a pancreatic exocrine cell. The plasma membrane is only a small part of a cell’s total membrane."
+        }
+      },
+      "interesting": "Membrane lipids never sit still. In artificial lipid bilayers a lipid swaps places with a neighbour {swaps}, so it can drift {distance} — the length of a large bacterium — in {time}."
+    },
+    "cytoplasm": {
+      "name": "Cytoplasm",
+      "synonyms": [
+        "cytosol",
+        "cytoplasmic matrix",
+        "cell interior",
+        "cell fluid",
+        "intracellular fluid",
+        "protoplasm"
+      ],
+      "short": "Everything inside the plasma membrane apart from the nucleus: a crowded, watery gel in which the organelles sit and much of the cell’s chemistry happens.",
+      "function": "The cytoplasm consists of the cytosol — the fluid part — together with the organelles and cytoskeleton suspended in it. The cytosol is not a dilute soup: it is crowded with proteins, RNA, sugars, salts and many other molecules. Many chemical reactions happen there, such as the first steps in breaking down glucose (glycolysis), and free ribosomes in the cytosol make proteins that stay inside the cell. Molecules move through the cytoplasm by diffusion — random jostling — and are also carried actively along cytoskeletal tracks.",
+      "seeingCell": "Faint drifting specks fill the space between the organelles and stand for the crowded cytosol; they are a visual cue, not individual molecules. Click or tap open space inside the cell to select the cytoplasm.",
+      "sampling": "Faint particles suggest the crowding; they are not individual molecules.",
+      "views": {
+        "crowding": {
+          "title": "Crowded cytosol",
+          "seeing": "A cube of cytosol about {cube} wide, drawn to scale. Proteins and enzymes of many sizes (blue and green), ribosomes (gold), small L-shaped transfer RNAs and a strand of messenger RNA crowd the space, and an actin filament crosses it. Everything jostles randomly. Water, ions and small molecules are left out so the larger molecules can be seen."
+        }
+      },
+      "parts": {
+        "cytosol": {
+          "name": "Cytosol",
+          "def": "The fluid part of the cytoplasm, outside the organelles."
+        },
+        "enzyme": {
+          "name": "Enzymes and other proteins",
+          "def": "Proteins that speed up chemical reactions; thousands of kinds float in the cytosol."
+        },
+        "free-ribosome": {
+          "name": "Free ribosome",
+          "def": "A ribosome in the cytosol making a protein that will stay in the cell."
+        },
+        "mrna": {
+          "name": "Messenger RNA (mRNA)",
+          "def": "An RNA copy of a gene that carries the instructions for building a protein."
+        },
+        "filament": {
+          "name": "Cytoskeletal filament",
+          "def": "A protein fibre crossing the cytosol; here an actin filament."
+        }
+      },
+      "simplifications": [
+        "Water, ions and small molecules are omitted.",
+        "The specks in the whole-cell view only hint at the crowding.",
+        "Molecular motion is slowed enormously."
+      ],
+      "sizeContext": "Share of a liver cell’s (hepatocyte’s) volume taken up by the cytosol, the fluid part of the cytoplasm. Proportions differ between cell types.",
+      "quantityContext": "Protein per litre of cell: a working value assumed in BioNumbers estimates for a liver cell and a thymus cell, not a direct measurement of the cytosol.",
+      "facts": {
+        "mito-share": {
+          "label": "Mitochondria",
+          "context": "Share of a liver cell’s volume — the largest organelle compartment in that cell."
+        },
+        "er-share": {
+          "label": "Rough-ER cisternae",
+          "context": "Share of a liver cell’s volume; smooth-ER and Golgi cisternae together add {smooth}."
+        },
+        "small-share": {
+          "label": "Peroxisomes, lysosomes and endosomes, each",
+          "context": "Share of a liver cell’s volume."
+        },
+        "ph": {
+          "label": "pH of the cytosol",
+          "context": "Close to neutral (textbook value); compare the acidic interior of lysosomes."
+        }
+      },
+      "interesting": "Organelles take up a lot of room: in a typical cell, membrane-enclosed compartments fill nearly half of the volume, and the cytosol fills the space between them."
+    },
+    "nucleus": {
+      "name": "Nucleus",
+      "synonyms": [
+        "cell nucleus",
+        "nuclei",
+        "nuclear envelope",
+        "nuclear membrane",
+        "nuclear pore",
+        "nuclear pores",
+        "nuclear pore complex",
+        "control centre",
+        "control center"
+      ],
+      "short": "The cell’s largest compartment, which stores the DNA and controls which genes are used.",
+      "function": "The nucleus holds almost all of the cell’s DNA, packaged with proteins into chromosomes. It is enclosed by the nuclear envelope: two membranes separated by a narrow space, with the outer membrane continuous with the endoplasmic reticulum. The envelope is perforated by thousands of nuclear pore complexes — large protein gateways. Small molecules pass through them freely, but larger ones are checked: proteins needed in the nucleus are carried in, while messenger RNAs and ribosome subunits made in the nucleus are carried out. A mesh of lamin proteins, the nuclear lamina, lines the inner membrane and helps the nucleus keep its shape.",
+      "seeingCell": "The large violet body near the centre is the nucleus. Its envelope is cut open toward you to reveal the chromatin and nucleoli inside. Small rings dotting the surface are nuclear pore complexes, drawn at their true size of about {poreSize}. Teal particles moving inward stand for imported proteins; amber particles moving outward stand for exported RNA and ribosome subunits.",
+      "sampling": "One nucleus, drawn at about true size; only a sample of its pore complexes is shown.",
+      "views": {
+        "pore": {
+          "title": "Nuclear pore complex",
+          "seeing": "A slice through the nuclear envelope showing the outer and inner membranes, the space between them, and a nuclear pore complex about {poreSize} across. Rings with eight-fold symmetry anchor the pore; fibres reach into the cytoplasm above, and a basket hangs on the nuclear side below. Teal cargo bound to an import receptor moves down into the nucleus, while an amber messenger-RNA package moves up and out. The lamina mesh supports the inner membrane."
+        }
+      },
+      "parts": {
+        "outer-membrane": {
+          "name": "Outer nuclear membrane",
+          "def": "The envelope’s outer membrane; it is continuous with the endoplasmic reticulum and can carry ribosomes."
+        },
+        "inner-membrane": {
+          "name": "Inner nuclear membrane",
+          "def": "The envelope’s inner membrane, which faces the chromatin and anchors the lamina."
+        },
+        "perinuclear-space": {
+          "name": "Perinuclear space",
+          "def": "The narrow gap between the two membranes, continuous with the interior of the endoplasmic reticulum."
+        },
+        "pore-complex": {
+          "name": "Nuclear pore complex",
+          "def": "A large ring-shaped assembly of proteins (nucleoporins) forming a gated channel through both membranes."
+        },
+        "lamina": {
+          "name": "Nuclear lamina",
+          "def": "A meshwork of lamin filaments that supports the envelope and helps organize chromatin."
+        },
+        "import": {
+          "name": "Import",
+          "def": "Proteins carrying a nuclear localization signal are brought in by import receptors."
+        },
+        "export": {
+          "name": "Export",
+          "def": "Messenger RNAs and ribosome subunits are carried out to the cytoplasm by export receptors."
+        }
+      },
+      "simplifications": [
+        "Only a few hundred pore complexes are drawn; a human nucleus has thousands.",
+        "Import and export are shown as single particles moving steadily; real transport uses cycling receptors, energy from the Ran system, and very fast events.",
+        "The nucleus is drawn as a smooth ellipsoid; real nuclei can have folds and grooves."
+      ],
+      "sizeContext": "Share of a liver cell’s volume taken up by the nucleus; {range} in hepatocytes within liver tissue. Nuclear size varies between cell types.",
+      "quantityContext": "Base pairs of DNA in one female (XX) diploid nucleus, calculated from the reference genome; {male} in a male cell.",
+      "facts": {
+        "dna-length": {
+          "label": "Length of the DNA in one nucleus, if stretched out",
+          "context": "Female diploid cell ({male} in a male cell), calculated from the genome sequence."
+        },
+        "dna-mass": {
+          "label": "Mass of the DNA in one nucleus",
+          "context": "Female diploid cell, calculated from the genome sequence."
+        },
+        "pore-size": {
+          "label": "Width of a nuclear pore complex",
+          "context": "Vertebrate pore complexes, among the largest protein assemblies in the cell."
+        },
+        "pore-traffic": {
+          "label": "Transport events one pore complex can handle each second",
+          "context": "Estimated from transport measurements on permeabilized cells and isolated nuclei."
+        },
+        "territories": {
+          "label": "Each chromosome has its own territory",
+          "context": "In the interphase nucleus, chromosomes occupy separate regions that are arranged non-randomly (review)."
+        }
+      },
+      "interesting": "A nucleus that takes up only {share} of a liver cell’s volume holds {length} of DNA."
+    },
+    "chromosomes": {
+      "name": "Chromosomes",
+      "synonyms": [
+        "chromosome",
+        "chromatin",
+        "DNA",
+        "genome",
+        "chromatid",
+        "centromere",
+        "Barr body",
+        "inactive X",
+        "X chromosome",
+        "nucleosome",
+        "histone"
+      ],
+      "short": "Long DNA molecules packaged with proteins. In this cell, which is between divisions, they are loosened into chromatin that fills the nucleus.",
+      "function": "A chromosome is one very long DNA molecule together with the proteins that package it. Human cells normally have {chromosomeCount} chromosomes in {pairCount} pairs — one set from each parent. DNA wraps around groups of histone proteins to form nucleosomes, like thread around spools, and these are folded further. During interphase — the period between cell divisions, when the cell grows and does its work — chromosomes are relatively loose (chromatin) so that genes can be read, and each chromosome occupies its own region of the nucleus, called a chromosome territory. Only when a cell prepares to divide do chromosomes condense into the compact, X-shaped forms seen in textbooks: each then consists of two identical copies (sister chromatids) joined at a narrow region called the centromere.",
+      "seeingCell": "Inside the opened nucleus, {chromosomeCount} coloured tangles show the chromosome territories of an interphase cell; both copies of each chromosome pair share a colour. Because this model cell is assumed to be female (XX), one X chromosome is shown as the inactive X — a compact, dense body called the Barr body, drawn here against the nuclear envelope.",
+      "sampling": "All {chromosomeCount} chromosomes are drawn, as fibres several times thicker than real chromatin.",
+      "views": {
+        "metaphase": {
+          "title": "Condensed chromosome (mitosis)",
+          "seeing": "This shape does not exist in the interphase cell: it shows one chromosome during metaphase of mitosis, after the DNA has been copied and condensed. The two sister chromatids are joined at the centromere, where the kinetochore — a protein platform that attaches to spindle microtubules — sits. The glowing tips are telomeres."
+        },
+        "nucleosomes": {
+          "title": "DNA packaging",
+          "seeing": "A short stretch of chromatin drawn to scale. The DNA double helix, about {dnaWidth} wide, wraps nearly twice around each nucleosome core — a spool of eight histone proteins about {nucleosomeWidth} across — with short linker DNA between spools, like beads on a string."
+        }
+      },
+      "parts": {
+        "territory": {
+          "name": "Chromosome territory",
+          "def": "The region of the interphase nucleus occupied by one chromosome."
+        },
+        "inactive-x": {
+          "name": "Inactive X (Barr body)",
+          "def": "In female (XX) cells one X chromosome is silenced and packed into a dense body called the Barr body."
+        },
+        "chromatid": {
+          "name": "Sister chromatid",
+          "def": "One of the two identical copies of a chromosome after the DNA is copied; they separate during division."
+        },
+        "centromere": {
+          "name": "Centromere",
+          "def": "The narrow region where the sister chromatids are held together."
+        },
+        "kinetochore": {
+          "name": "Kinetochore",
+          "def": "A protein complex on the centromere that attaches to spindle microtubules during division."
+        },
+        "chromosome-end": {
+          "name": "Telomere",
+          "def": "The protective cap of repeated DNA at each end of a chromosome."
+        },
+        "nucleosome": {
+          "name": "Nucleosome",
+          "def": "DNA wrapped around a core of eight histone proteins; the basic unit of chromatin."
+        },
+        "dna": {
+          "name": "DNA double helix",
+          "def": "Two complementary strands of DNA wound around each other."
+        }
+      },
+      "simplifications": [
+        "Territories are drawn as tangled fibres in rounded regions; real territories are irregular and intermingle at their edges.",
+        "Chromatin fibres are drawn several times thicker than real.",
+        "The condensed chromosome in the close-up belongs to a dividing cell, not to this interphase cell."
+      ],
+      "sizeContext": "Combined length of the DNA in all the chromosomes of a female diploid cell, if stretched out end to end. In this interphase cell it is folded into a nucleus a few micrometres across.",
+      "quantityContext": "Normal human diploid cell: {pairs} pairs — {autosomePairs} pairs of autosomes plus two sex chromosomes (XX in females, XY in males).",
+      "facts": {
+        "genome-size": {
+          "label": "One complete copy of the human genome",
+          "context": "First gap-free (telomere-to-telomere) assembly, published in 2022; older textbook estimates are {older}."
+        },
+        "diploid-content": {
+          "label": "DNA in one female diploid nucleus",
+          "context": "{male} in a male cell (calculated from the genome sequence)."
+        },
+        "kinds": {
+          "label": "Different kinds of human chromosome",
+          "context": "Chromosomes 1 to 22 plus X and Y."
+        },
+        "x-inactivation": {
+          "label": "One X chromosome is switched off in female cells",
+          "context": "Proposed by Mary Lyon in 1961 from studies of mice."
+        },
+        "nucleosome": {
+          "label": "DNA wrapped around one nucleosome core",
+          "context": "About {turns} turns around eight histone proteins, in the 1997 crystal structure."
+        }
+      },
+      "interesting": "The inactive X was seen long before it was understood. In 1949 Murray Barr and Ewart Bertram noticed an extra dark body in the nuclei of nerve cells from female — but not male — cats. In 1961 Mary Lyon proposed that one X chromosome in every female cell is switched off."
+    },
+    "telomeres": {
+      "name": "Telomeres",
+      "synonyms": [
+        "telomere",
+        "chromosome ends",
+        "chromosome caps",
+        "TTAGGG",
+        "shelterin",
+        "telomerase",
+        "T-loop"
+      ],
+      "short": "Protective caps of repeated DNA at the ends of every chromosome.",
+      "function": "Each chromosome end carries many copies of the short DNA sequence TTAGGG, bound by a protective protein complex called shelterin. The very end folds back on itself into a loop (the T-loop), tucking its single-stranded tip into the double helix. This hides the natural ends from the cell’s DNA-repair machinery, which would otherwise mistake them for broken DNA and join chromosomes together. Because the DNA-copying machinery cannot completely copy the very ends of a linear DNA molecule, telomeres get a little shorter with each division in most body cells; very short telomeres signal the cell to stop dividing. An enzyme called telomerase can add repeats back; it is active in stem cells, in cells that make eggs and sperm, and in most cancer cells.",
+      "seeingCell": "Bright yellow points at the ends of the chromatin fibres mark the telomeres: {telomereCount} of them, two for each chromosome. They are symbolic markers: a real telomere is a stretch of DNA too small to see at this scale.",
+      "sampling": "All {telomereCount} telomeres of a diploid cell are marked.",
+      "views": {
+        "t-loop": {
+          "title": "The telomere loop",
+          "seeing": "The end of a chromosome’s DNA, drawn to scale. Each coloured segment along the double helix is one TTAGGG repeat. The single-stranded overhang at the tip loops back and tucks into the double helix, forming the T-loop. Shelterin proteins (violet and teal) coat the repeats and hold the loop in place."
+        }
+      },
+      "parts": {
+        "repeats": {
+          "name": "TTAGGG repeats",
+          "def": "Many copies of a six-letter DNA sequence that make up human telomeres."
+        },
+        "overhang": {
+          "name": "3′ overhang",
+          "def": "A single-stranded stretch of the G-rich strand that sticks out at the very end."
+        },
+        "t-loop": {
+          "name": "T-loop",
+          "def": "A loop formed when the overhang tucks back into the double-stranded repeats, hiding the end."
+        },
+        "shelterin": {
+          "name": "Shelterin",
+          "def": "A six-protein complex that binds telomeric DNA and protects chromosome ends."
+        },
+        "chromosome-end": {
+          "name": "Chromosome end",
+          "def": "The tip of a chromosome arm, where the telomere sits."
+        }
+      },
+      "simplifications": [
+        "Telomeres are shown as glowing points in the whole-cell view; they are really lengths of DNA.",
+        "The close-up shows only a few repeats; a real telomere contains hundreds to thousands.",
+        "Shelterin is shown as simplified shapes rather than individual proteins."
+      ],
+      "sizeContext": "Length of the repeat stretch at each chromosome end in human somatic cells; it varies with age, tissue and individual.",
+      "quantityContext": "Telomeres in a diploid cell before its DNA is copied: one at each end of all {chromosomes} chromosomes.",
+      "facts": {
+        "repeat": {
+          "label": "Length of the repeated unit, TTAGGG",
+          "context": "The same six-letter sequence caps every human chromosome."
+        },
+        "shelterin": {
+          "label": "Proteins in the shelterin complex",
+          "context": "TRF1, TRF2, POT1, TIN2, TPP1 and RAP1."
+        },
+        "shortening": {
+          "label": "Telomere loss per cell division",
+          "context": "Cultured human fibroblasts, measured per population doubling."
+        },
+        "t-loop": {
+          "label": "Telomeres end in a loop",
+          "context": "The T-loop was seen by electron microscopy of telomeric DNA from human and mouse cells."
+        },
+        "telomerase": {
+          "label": "Telomerase, the enzyme that lengthens telomeres, was discovered in 1985",
+          "context": "First found in extracts of the single-celled organism Tetrahymena."
+        }
+      },
+      "interesting": "The first complete, gap-free sequence of a human genome was published only in 2022, by the Telomere-to-Telomere (T2T) Consortium: every chromosome except Y was read from one telomere to the other."
+    },
+    "nucleolus": {
+      "name": "Nucleolus",
+      "synonyms": [
+        "nucleoli",
+        "ribosome factory",
+        "nucleolar organizer",
+        "nucleolar organizer region",
+        "NOR"
+      ],
+      "short": "A dense region inside the nucleus where ribosome subunits are built.",
+      "function": "The nucleolus forms around the genes for ribosomal RNA (rRNA), which lie in clusters on {norPairs} pairs of chromosomes. It has no membrane: its molecules gather into a distinct droplet-like compartment. An enzyme called RNA polymerase I copies the rRNA genes; the long RNA it makes is then cut, chemically modified and folded while ribosomal proteins — imported from the cytoplasm — join it. The finished small and large ribosomal subunits are exported separately through nuclear pores and only come together as working ribosomes in the cytoplasm. Nucleoli are larger in cells that make a lot of protein.",
+      "seeingCell": "The orange bodies inside the nucleus are nucleoli; this cell has a large one and a small one. Cut open, they show three layers: pale fibrillar centres, a dense fibrillar shell around each, and a granular outer region. Small particles leaving the nucleolus are new ribosomal subunits on their way to the nuclear pores.",
+      "sampling": "Two nucleoli are drawn at about true size.",
+      "views": {
+        "assembly": {
+          "title": "Building ribosome subunits",
+          "seeing": "A slice through a nucleolus. At the border between a fibrillar centre and the dense fibrillar component, ribosomal RNA genes are being copied: growing RNA chains branch from the DNA like a Christmas tree. The RNA is processed and joined by proteins as it moves outward, and in the granular component small (40S) and large (60S) subunits take shape and drift toward the nucleoplasm."
+        }
+      },
+      "parts": {
+        "fibrillar-center": {
+          "name": "Fibrillar centre",
+          "def": "Pale core regions holding ribosomal DNA."
+        },
+        "dense-fibrillar": {
+          "name": "Dense fibrillar component",
+          "def": "The shell around each fibrillar centre, where rRNA is made and first processed."
+        },
+        "granular": {
+          "name": "Granular component",
+          "def": "The outer region where ribosomal subunits are assembled."
+        },
+        "rdna": {
+          "name": "Ribosomal DNA",
+          "def": "Genes for ribosomal RNA, repeated many times."
+        },
+        "small-subunit": {
+          "name": "Small subunit (40S)",
+          "def": "The smaller part of the ribosome, which reads messenger RNA."
+        },
+        "large-subunit": {
+          "name": "Large subunit (60S)",
+          "def": "The larger part of the ribosome, which joins amino acids together."
+        }
+      },
+      "simplifications": [
+        "The three layers are drawn as neat shells; in real nucleoli they are irregular and interwoven.",
+        "The branching RNA chains are enlarged so they can be seen.",
+        "Subunit assembly involves hundreds of helper molecules that are not shown."
+      ],
+      "sizeContext": "Nucleoli vary in size with how actively a cell makes ribosomes: fast-growing cells have larger ones. A cell can have one nucleolus or several.",
+      "quantityContext": "Chromosomes that carry clusters of ribosomal-RNA genes in a diploid cell: the short arms of chromosomes 13, 14, 15, 21 and 22, two copies each.",
+      "facts": {
+        "production": {
+          "label": "Ribosomal subunits made per minute",
+          "context": "A growing HeLa cell (a human cancer cell line)."
+        },
+        "layers": {
+          "label": "Distinct layers inside a nucleolus",
+          "context": "Fibrillar centres, the dense fibrillar component and the granular component."
+        },
+        "liquid": {
+          "label": "The layers behave like separate liquid droplets",
+          "context": "Shown in nucleoli of frog (Xenopus) egg cells and with purified proteins."
+        },
+        "firre": {
+          "label": "An RNA holds the inactive X beside the nucleolus",
+          "context": "In mouse cells, the non-coding RNA Firre helps anchor it there."
+        }
+      },
+      "interesting": "The inactive X chromosome was discovered next to the nucleolus: in 1949 it was first described as a small “nucleolar satellite” in nerve cells of female cats."
+    },
+    "ribosomes": {
+      "name": "Ribosomes",
+      "synonyms": [
+        "ribosome",
+        "polysome",
+        "polysomes",
+        "polyribosome",
+        "80S",
+        "translation",
+        "protein synthesis",
+        "rRNA"
+      ],
+      "short": "Molecular machines that read messenger RNA and build proteins one amino acid at a time.",
+      "function": "A ribosome has two subunits, each built from ribosomal RNA and dozens of proteins. Translation — making a protein from a messenger RNA (mRNA) — begins when the small subunit finds the start of an mRNA and the large subunit joins it. Transfer RNAs (tRNAs) bring amino acids; each tRNA pairs with a three-letter code word (a codon) on the mRNA. The ribosome holds tRNAs side by side, joins the growing chain to the newest amino acid, then moves one codon along. The new protein chain threads out through a tunnel in the large subunit. Free ribosomes in the cytosol make proteins that stay in the cytosol, nucleus or mitochondria; ribosomes on the rough endoplasmic reticulum make proteins for membranes or for export. Several ribosomes often read the same mRNA at once, forming a polysome.",
+      "seeingCell": "The many tiny golden particles are ribosomes. Some float freely, often in spirals and chains (polysomes); others stud the rough endoplasmic reticulum.",
+      "sampling": "Only a tiny fraction of a real cell’s ribosomes is drawn.",
+      "views": {
+        "translation": {
+          "title": "Translation",
+          "seeing": "A ribosome drawn to scale, about {size} across. The small subunit (pale gold) grips the messenger RNA, whose codons are shown as coloured segments. Transfer RNAs (L-shaped) arrive one after another, hand over their amino acids and leave. The growing protein chain (beads) emerges from the exit tunnel of the large subunit (deep gold)."
+        }
+      },
+      "parts": {
+        "large-subunit": {
+          "name": "Large subunit (60S)",
+          "def": "Joins amino acids together; contains the exit tunnel."
+        },
+        "small-subunit": {
+          "name": "Small subunit (40S)",
+          "def": "Binds the mRNA and checks that each codon matches its tRNA."
+        },
+        "mrna": {
+          "name": "Messenger RNA",
+          "def": "The coded instructions, read three letters (one codon) at a time."
+        },
+        "trna": {
+          "name": "Transfer RNA",
+          "def": "An adaptor molecule that carries a specific amino acid and pairs with a codon."
+        },
+        "polypeptide": {
+          "name": "Growing protein chain",
+          "def": "The new chain of amino acids, which starts folding as it emerges."
+        },
+        "exit-tunnel": {
+          "name": "Exit tunnel",
+          "def": "A channel through the large subunit through which the new chain leaves."
+        }
+      },
+      "simplifications": [
+        "Ribosomes in the whole-cell view are enlarged and far fewer than in a real cell.",
+        "The close-up shows only the main steps; initiation and many helper proteins are left out.",
+        "tRNAs are shown as simple L-shapes."
+      ],
+      "sizeContext": "Overall width; ribosomes are not spheres. About 25 nm is quoted for mammalian ribosomes.",
+      "quantityContext": "HeLa cells (a human cancer cell line) growing in culture, estimated from their RNA content. Numbers differ between cell types and growth states.",
+      "facts": {
+        "mass": {
+          "label": "Mass of a human 80S ribosome",
+          "context": "From the near-atomic structure of the human ribosome."
+        },
+        "parts": {
+          "label": "Proteins in a human ribosome",
+          "context": "Plus {rnas} ribosomal RNAs: the large subunit has {large} proteins and three rRNAs, the small subunit {small} proteins and one rRNA."
+        },
+        "speed": {
+          "label": "Translation speed",
+          "context": "Average rate measured by ribosome profiling in mouse embryonic stem cells, not human cells."
+        },
+        "modifications": {
+          "label": "Chemically modified rRNA building blocks visible in the structure",
+          "context": "High-resolution structure of the human ribosome."
+        },
+        "polysomes": {
+          "label": "Several ribosomes usually read one mRNA at the same time",
+          "context": "Such clusters are called polyribosomes or polysomes."
+        }
+      },
+      "interesting": "The ribosome is a ribozyme — an enzyme made of RNA. The site that links amino acids together is formed by ribosomal RNA, and no protein comes closer than {distance} to the bond being made (measured in the large subunit of the archaeon Haloarcula marismortui)."
+    },
+    "rough-er": {
+      "name": "Rough endoplasmic reticulum",
+      "synonyms": [
+        "rough ER",
+        "RER",
+        "endoplasmic reticulum",
+        "ER",
+        "granular endoplasmic reticulum",
+        "ER sheets",
+        "reticulum"
+      ],
+      "short": "Stacked, flattened membrane sacs studded with ribosomes, where proteins for membranes and for export are made and folded.",
+      "function": "The endoplasmic reticulum (ER) is one continuous network of membranes that starts at the nuclear envelope. Its rough part forms broad, flattened sheets covered with ribosomes. When a ribosome starts making a protein that begins with a signal sequence — a short “address tag” — it is guided to the ER membrane and feeds the growing chain through a protein channel, the translocon, into the ER’s interior (the lumen) or into the membrane itself. In the lumen, chaperone proteins help the new protein fold, sugar chains are attached (glycosylation), and quality-control systems hold back misfolded proteins. Correctly folded proteins leave from ER exit sites in small vesicles bound for the Golgi apparatus.",
+      "seeingCell": "Teal sheets layered around the nucleus are the rough ER; the outer membrane of the nucleus continues into them. Golden dots on the sheets are bound ribosomes — the “rough” texture. At their edges the sheets turn into the ribosome-free tubes of the smooth ER. Every so often a bright cargo particle leaves an exit site and travels to the Golgi apparatus: the first leg of the secretory journey.",
+      "sampling": "A few stacked sheets represent the rough ER; secreting cells can have far more.",
+      "views": {
+        "translocation": {
+          "title": "Making a secreted protein",
+          "seeing": "A cross-section of the ER membrane, with the cytosol above and the lumen below. A ribosome sits on a translocon channel and threads a new protein chain (beads) through the membrane. The signal sequence (the red bead in front) is cut off, a sugar chain (green branches) is attached, and a chaperone helps the chain fold. On the right, an exit site buds a coated vesicle that will carry finished proteins to the Golgi apparatus."
+        }
+      },
+      "parts": {
+        "er-sheet": {
+          "name": "ER sheet (cisterna)",
+          "def": "A flattened membrane sac; the rough ER consists mostly of stacked sheets."
+        },
+        "lumen": {
+          "name": "Lumen",
+          "def": "The space enclosed by the ER membrane, continuous with the perinuclear space."
+        },
+        "bound-ribosome": {
+          "name": "Membrane-bound ribosome",
+          "def": "A ribosome attached to the ER while making a protein that enters it."
+        },
+        "translocon": {
+          "name": "Translocon",
+          "def": "A protein channel (Sec61) through which new proteins enter the ER."
+        },
+        "signal-peptide": {
+          "name": "Signal sequence",
+          "def": "A short stretch at the start of a protein that directs it to the ER; usually cut off."
+        },
+        "glycan": {
+          "name": "Sugar chain (glycan)",
+          "def": "A branched carbohydrate attached to many proteins in the ER."
+        },
+        "exit-site": {
+          "name": "ER exit site",
+          "def": "A place where coated (COPII) vesicles bud off, carrying cargo to the Golgi apparatus."
+        }
+      },
+      "simplifications": [
+        "The ER is drawn as a few tidy sheets; in real cells it is a far larger, constantly changing network.",
+        "One cargo particle at a time illustrates the secretory journey; real cells move huge numbers of proteins at once.",
+        "The targeting machinery (signal recognition particle and its receptor) is not shown."
+      ],
+      "sizeContext": "Distance between the two membranes of an ER sheet in mammalian cells ({yeast} in yeast).",
+      "quantityContext": "Share of a liver cell’s volume taken up by rough-ER cisternae; cells that secrete a lot of protein have much more.",
+      "facts": {
+        "membrane-share": {
+          "label": "ER share of all the membrane in an animal cell",
+          "context": "Textbooks give “about half” to “more than half”, depending on the cell."
+        },
+        "lumen-volume": {
+          "label": "ER interior as a share of cell volume",
+          "context": "Generic eukaryotic cell (textbook estimate)."
+        },
+        "rough-membrane": {
+          "label": "Rough-ER share of all membrane in a liver cell",
+          "context": "{pancreas} in a pancreatic exocrine cell, which secretes large amounts of digestive enzymes."
+        },
+        "spacer": {
+          "label": "A spacer protein keeps sheets evenly thick",
+          "context": "Climp63 bridges the lumen while curvature-shaping proteins line the sheet edges (mammalian cultured cells)."
+        }
+      },
+      "interesting": "Stacked rough-ER sheets are joined by spiral ramps, so the whole stack is one continuous membrane — built like a multi-storey car park. These “Terasaki ramps” were seen in mouse secretory cells and neurons."
+    },
+    "smooth-er": {
+      "name": "Smooth endoplasmic reticulum",
+      "synonyms": [
+        "smooth ER",
+        "SER",
+        "agranular endoplasmic reticulum",
+        "ER tubules",
+        "tubular ER"
+      ],
+      "short": "A network of ribosome-free membrane tubes that makes lipids, stores calcium and helps detoxify substances.",
+      "function": "The smooth ER is the part of the endoplasmic reticulum without ribosomes, usually a web of narrow tubes joined at three-way junctions. It makes most of the cell’s membrane lipids and, in specialized cells, steroid hormones. It stores calcium ions and releases them when the cell receives certain signals — for example to trigger muscle contraction or secretion. In liver cells, smooth-ER enzymes modify drugs and toxins so that they can be removed, and an enzyme there helps release glucose into the blood. The smooth ER also touches mitochondria, peroxisomes and the plasma membrane at contact sites, where lipids and calcium are exchanged.",
+      "seeingCell": "Mint-green tubes branching through the outer cytoplasm form the smooth ER network. They connect to the edges of the teal rough-ER sheets: the two are one continuous membrane system, told apart here by whether ribosomes are attached.",
+      "sampling": "A simplified network of tubes represents the smooth ER.",
+      "views": {
+        "calcium": {
+          "title": "Calcium store",
+          "seeing": "A junction of ER tubes, each about {tubeWidth} wide, drawn to scale. Calcium pumps (green) use energy from ATP to move calcium ions (bright dots) from the cytosol into the tubes. Every few seconds a calcium-release channel (orange) opens and a burst of ions flows out — the kind of signal that triggers muscle contraction or secretion. Lipid-making enzymes (pale blue) sit in the membrane."
+        }
+      },
+      "parts": {
+        "tubule": {
+          "name": "ER tubule",
+          "def": "A narrow membrane tube; tubules make up the smooth-ER network."
+        },
+        "junction": {
+          "name": "Three-way junction",
+          "def": "A point where three tubules meet, giving the network its polygon pattern."
+        },
+        "calcium-pump": {
+          "name": "Calcium pump (SERCA)",
+          "def": "A pump that uses ATP to move calcium ions into the ER."
+        },
+        "calcium-channel": {
+          "name": "Calcium-release channel",
+          "def": "A channel that releases stored calcium when the cell is signalled."
+        },
+        "lipid-enzyme": {
+          "name": "Lipid-making enzyme",
+          "def": "Enzymes that build phospholipids and other lipids for the cell’s membranes."
+        }
+      },
+      "simplifications": [
+        "The tubular network is much sparser than in real cells.",
+        "Calcium release is shown as regular bursts; real signals vary in timing and size.",
+        "Detoxifying enzymes, abundant in liver cells, are not shown separately."
+      ],
+      "sizeContext": "Diameter of ER tubules in mammalian cells.",
+      "quantityContext": "Share of a liver cell’s volume taken up by smooth-ER and Golgi cisternae together; the textbook table does not separate them.",
+      "facts": {
+        "calcium": {
+          "label": "Free calcium inside the ER",
+          "context": "Versus {cytosol} in the resting cytosol — a store hundreds to thousands of times more concentrated. Values vary with cell type and method."
+        },
+        "scarce": {
+          "label": "Most cells have little smooth ER",
+          "context": "It often occurs as regions that are partly smooth and partly rough."
+        },
+        "steroids": {
+          "label": "Hormone-making cells have abundant smooth ER",
+          "context": "It holds the enzymes that make cholesterol and turn it into steroid hormones."
+        },
+        "phenobarbital": {
+          "label": "Smooth-ER volume after a drug treatment",
+          "context": "Rat liver cells after {days} of phenobarbital; the membrane area rose by {area}."
+        },
+        "exit-sites": {
+          "label": "ER exit sites",
+          "context": "Partly smooth “transitional” regions where vesicles bud off toward the Golgi apparatus."
+        }
+      },
+      "interesting": "Cells clear away smooth ER they no longer need: after rats stopped receiving the drug phenobarbital, their liver cells removed the extra smooth ER by autophagy within {days}."
+    },
+    "golgi": {
+      "name": "Golgi apparatus",
+      "synonyms": [
+        "Golgi",
+        "Golgi body",
+        "Golgi complex",
+        "dictyosome",
+        "trans-Golgi network",
+        "TGN",
+        "Golgi stack"
+      ],
+      "short": "Stacks of flattened membrane sacs that modify, sort and ship proteins and lipids made in the ER.",
+      "function": "Proteins arriving from the ER enter the Golgi apparatus at its cis face, the side nearest the ER. As they pass through the stack — the cis, medial and trans compartments — enzymes trim and extend their sugar chains and make other chemical changes. At the far side, the trans-Golgi network sorts the finished products into different carriers: some go to the plasma membrane to be secreted or to become membrane proteins, others go to endosomes and lysosomes. In many human cells the Golgi stacks are linked side by side into a ribbon next to the nucleus, close to the centrosome.",
+      "seeingCell": "The amber, cup-shaped stacks next to the centrosome form the Golgi ribbon. Each stack has five curved cisternae (flattened sacs), shaded from cis, facing the nucleus and ER, to trans, facing outward. Small vesicles gather at their rims, and the highlighted cargo particle from the ER passes through the stack before leaving in a secretory vesicle.",
+      "sampling": "Three linked stacks represent the Golgi ribbon.",
+      "views": {
+        "stack": {
+          "title": "Through the stack",
+          "seeing": "A cross-section of one Golgi stack. Vesicles arriving from the ER fuse with the cis face (left). Cargo proteins (beads) move toward the trans face as each cisterna gradually matures, and their sugar chains (green) grow and change along the way. Small COPI vesicles carry enzymes backward, and at the trans-Golgi network (right) cargo is packed into secretory vesicles and vesicles bound for lysosomes."
+        }
+      },
+      "parts": {
+        "cis": {
+          "name": "Cis face",
+          "def": "The receiving side, closest to the endoplasmic reticulum."
+        },
+        "medial": {
+          "name": "Medial cisternae",
+          "def": "Middle compartments where sugar chains are processed further."
+        },
+        "trans": {
+          "name": "Trans face",
+          "def": "The exit side of the stack."
+        },
+        "tgn": {
+          "name": "Trans-Golgi network",
+          "def": "A tubular network that sorts cargo into different carriers."
+        },
+        "copii": {
+          "name": "COPII vesicle",
+          "def": "A coated vesicle carrying cargo from the ER toward the Golgi apparatus."
+        },
+        "copi": {
+          "name": "COPI vesicle",
+          "def": "A coated vesicle carrying material backward within the Golgi or to the ER."
+        },
+        "secretory-vesicle": {
+          "name": "Secretory vesicle",
+          "def": "A carrier that takes products to the plasma membrane to be released."
+        }
+      },
+      "simplifications": [
+        "How cargo moves through the stack is still debated; the close-up shows the widely used cisternal-maturation picture.",
+        "The real Golgi ribbon contains more stacks and many tubular connections.",
+        "Glycosylation is shown as a simple colour change of the sugar chains."
+      ],
+      "sizeContext": "Approximate width of a Golgi stack in animal cells; a stack usually has a handful of cisternae.",
+      "quantityContext": "Share of a liver cell’s volume taken up by Golgi and smooth-ER cisternae together; the textbook table does not separate them.",
+      "facts": {
+        "ergic": {
+          "label": "Cargo first enters an intermediate compartment",
+          "context": "Vesicles from the ER fuse into the ER–Golgi intermediate compartment before cargo reaches the cis Golgi network."
+        },
+        "sorting": {
+          "label": "The trans-Golgi network sorts the products",
+          "context": "To the plasma membrane, to secretion or to lysosomes."
+        },
+        "glycans": {
+          "label": "A major site of sugar-chain building",
+          "context": "Sugar chains first added in the ER are trimmed and extended here."
+        },
+        "residence": {
+          "label": "Average time a model cargo spent in the Golgi",
+          "context": "Monkey kidney (COS-7) cells making a fluorescent viral glycoprotein; {rate} of the Golgi pool left each minute."
+        },
+        "tac": {
+          "label": "Golgi time of the reporter protein Tac",
+          "context": "Human HeLa cells; it rose to {long} when the protein’s luminal part was shortened — the cargo itself matters."
+        }
+      },
+      "interesting": "Camillo Golgi described this organelle in 1898 using his silver-staining method, yet many scientists doubted it was real for about half a century — until electron microscopes revealed its stacked membranes."
+    },
+    "vesicles-motors": {
+      "name": "Vesicles and motor proteins",
+      "synonyms": [
+        "vesicle",
+        "vesicles",
+        "motor protein",
+        "motor proteins",
+        "kinesin",
+        "dynein",
+        "myosin",
+        "transport vesicle",
+        "secretory vesicle",
+        "cargo transport",
+        "intracellular transport"
+      ],
+      "short": "Small membrane bubbles that carry cargo, pulled along cytoskeletal tracks by motor proteins.",
+      "function": "Vesicles are tiny membrane-bound packages that bud from one compartment and fuse with another, carrying proteins and lipids between the ER, the Golgi apparatus, endosomes, lysosomes and the plasma membrane. Over short distances they can drift, but long journeys depend on motor proteins: molecular machines that turn the chemical energy of ATP into movement. Kinesins walk along microtubules, mostly toward their plus ends, which in a typical cell point outward to the cell edge; dynein walks toward the minus ends, near the centrosome at the centre of the cell. Myosins carry cargo along actin filaments near the cell surface.",
+      "seeingCell": "Pink vesicles glide along the pale-blue microtubules. Those moving outward, toward the cell edge, stand for cargo carried by kinesin; those moving inward, toward the centrosome, for cargo carried by dynein. The motor proteins themselves are too small to show here and appear in the close-up.",
+      "sampling": "A sample of moving vesicles is drawn; motors appear only in the close-up.",
+      "views": {
+        "kinesin": {
+          "title": "Kinesin walking",
+          "seeing": "A kinesin-1 motor carrying a vesicle along a microtubule, drawn to scale and moving toward the microtubule’s plus end — outward, toward the cell edge. Its two heads take turns: the rear head swings forward past the front one, so each head moves {headStep} while the cargo advances {step} per step, using one ATP molecule per step. A dynein motor in the background travels the other way, toward the minus end."
+        }
+      },
+      "parts": {
+        "vesicle": {
+          "name": "Transport vesicle",
+          "def": "A small membrane bubble carrying cargo between compartments."
+        },
+        "kinesin": {
+          "name": "Kinesin",
+          "def": "A motor protein that walks toward microtubule plus ends."
+        },
+        "motor-heads": {
+          "name": "Motor heads",
+          "def": "The two ATP-powered parts that bind the microtubule in turn."
+        },
+        "neck-linker": {
+          "name": "Neck linker",
+          "def": "A short segment that swings forward to carry the rear head ahead."
+        },
+        "stalk": {
+          "name": "Stalk",
+          "def": "A long coiled tail linking the heads to the cargo."
+        },
+        "dynein": {
+          "name": "Dynein",
+          "def": "A large motor protein that walks toward microtubule minus ends."
+        },
+        "track": {
+          "name": "Microtubule track",
+          "def": "The hollow tube the motors walk along."
+        },
+        "plus-end": {
+          "name": "Plus end",
+          "def": "The fast-growing end of a microtubule, usually toward the cell edge."
+        }
+      },
+      "simplifications": [
+        "Vesicles in the whole-cell view move steadily; real transport stops, starts and sometimes reverses.",
+        "Each vesicle is shown with one kind of motor; real cargo often carries several kinds at once.",
+        "Myosin transport along actin is described but not animated."
+      ],
+      "sizeContext": "Clathrin-coated vesicles formed at the plasma membrane of mammalian cells; other carriers range from smaller vesicles to long tubes.",
+      "quantityContext": "Copies of a cargo protein in one carrier leaving the Golgi apparatus, in monkey kidney (COS) cells making a fluorescent viral cargo.",
+      "facts": {
+        "step": {
+          "label": "Kinesin step size",
+          "context": "Single kinesin molecules moving beads in an optical trap (in vitro)."
+        },
+        "atp": {
+          "label": "ATP molecules used per {step} step",
+          "context": "Kinesin-1, single-molecule measurements (in vitro)."
+        },
+        "head-step": {
+          "label": "Distance each kinesin head moves per step",
+          "context": "The heads swap places “hand-over-hand” (single-molecule fluorescence, in vitro)."
+        },
+        "rates": {
+          "label": "Share of waiting cargo moving on each minute",
+          "context": "From the ER to the Golgi and from the Golgi to the cell surface, in monkey kidney (COS) cells."
+        },
+        "lifetime": {
+          "label": "Lifetime of a carrier travelling from the Golgi to the surface",
+          "context": "Average time before it fuses with the plasma membrane, in COS-7 cells."
+        }
+      },
+      "interesting": "Cargo leaving the Golgi for the cell surface often travels not in small round vesicles but in large, irregular tubes carried along microtubules to the cell edge, as live imaging of monkey kidney cells revealed."
+    },
+    "mitochondria": {
+      "name": "Mitochondria",
+      "synonyms": [
+        "mitochondrion",
+        "mitochondrial",
+        "powerhouse",
+        "cristae",
+        "ATP synthase",
+        "mtDNA",
+        "cellular respiration",
+        "respiration"
+      ],
+      "short": "Double-membraned organelles that release energy from food molecules and store it in ATP.",
+      "function": "Mitochondria break down fuel molecules derived from sugars, fats and amino acids, using oxygen. Electrons removed from these fuels pass along a chain of protein complexes in the inner membrane, the electron transport chain. As the electrons move, the complexes pump protons (hydrogen ions) out of the interior, building up a difference in proton concentration and electric charge across the inner membrane. The protons flow back through ATP synthase, a rotary motor that uses the flow to make ATP — the molecule cells use as an energy currency. Mitochondria also produce heat, help make some molecules, store calcium and help decide whether a cell should self-destruct. They carry their own small circular DNA, a remnant of their bacterial ancestry.",
+      "seeingCell": "Coral-red elongated bodies scattered through the cytoplasm are mitochondria, drawn at about true size. In the selected mitochondrion the outer membrane is cut open lengthwise to show the inner membrane folding inward into plate-like cristae, with the matrix in between.",
+      "sampling": "Far fewer mitochondria are drawn than a real cell contains, so that the interior stays visible.",
+      "views": {
+        "organelle": {
+          "title": "Inside a mitochondrion",
+          "seeing": "A mitochondrion cut open. The smooth outer membrane surrounds the inner membrane, which folds inward into cristae. The narrow gap between the two membranes is the intermembrane space; the interior is the matrix, which holds mitochondrial DNA (small rings) and mitochondrial ribosomes (granules)."
+        },
+        "atp-synthase": {
+          "title": "Proton gradient and ATP synthase",
+          "seeing": "A small patch of crista membrane drawn to scale. Complexes I, III and IV of the electron transport chain (purple) pump protons (red sparks) from the matrix (below) into the space inside the crista (above). Protons flow back through ATP synthase (gold) and turn its rotor; each full turn releases {atp} ATP molecules (green) into the matrix."
+        }
+      },
+      "parts": {
+        "outer-membrane": {
+          "name": "Outer membrane",
+          "def": "The smooth outer boundary, permeable to small molecules."
+        },
+        "inner-membrane": {
+          "name": "Inner membrane",
+          "def": "A tightly sealed membrane carrying the energy-converting machinery."
+        },
+        "intermembrane-space": {
+          "name": "Intermembrane space",
+          "def": "The gap between the outer and inner membranes."
+        },
+        "cristae": {
+          "name": "Cristae",
+          "def": "Folds of the inner membrane that greatly increase its area."
+        },
+        "matrix": {
+          "name": "Matrix",
+          "def": "The interior, where fuel molecules are broken down and mitochondrial DNA is kept."
+        },
+        "mtdna": {
+          "name": "Mitochondrial DNA",
+          "def": "A small circular genome, inherited from the mother."
+        },
+        "etc": {
+          "name": "Electron transport chain",
+          "def": "Protein complexes that pass electrons along and pump protons."
+        },
+        "atp-synthase": {
+          "name": "ATP synthase",
+          "def": "A rotary enzyme that uses the flow of protons to make ATP."
+        },
+        "protons": {
+          "name": "Protons (H⁺)",
+          "def": "Hydrogen ions whose concentration difference drives ATP synthase."
+        }
+      },
+      "simplifications": [
+        "Mitochondria are drawn as separate tubes; in many cells they form branching, constantly fusing and dividing networks.",
+        "The close-up shows one ATP synthase and one copy of each pump; real cristae are densely packed with them.",
+        "Electron carriers (ubiquinone, cytochrome c) and the chemistry of fuel breakdown are not shown."
+      ],
+      "sizeContext": "Typical diameter; lengths range from short rods to long, branching networks.",
+      "quantityContext": "Rat liver cells (hepatocytes), counted in electron micrographs; numbers vary widely with cell type and size.",
+      "facts": {
+        "volume": {
+          "label": "Share of a liver cell’s volume",
+          "context": "The largest organelle compartment in that cell."
+        },
+        "inner-membrane": {
+          "label": "Inner mitochondrial membrane’s share of all cell membrane",
+          "context": "Liver cell; almost as much as the rough ER ({rough})."
+        },
+        "mtdna": {
+          "label": "Length of human mitochondrial DNA",
+          "context": "It encodes {proteins} proteins, {trnas} transfer RNAs and {rrnas} ribosomal RNAs."
+        },
+        "atp-per-turn": {
+          "label": "ATP made per full turn of ATP synthase",
+          "context": "One at each of its three catalytic sites; the rotation was first observed directly in 1997."
+        },
+        "protons": {
+          "label": "Protons used per ATP",
+          "context": "Bovine heart mitochondria: the rotor ring has {csub} subunits, so {csub} protons drive one turn that makes three ATP."
+        }
+      },
+      "interesting": "In a liver cell, mitochondria take up {mito} of the volume — more than the nucleus ({nucleus}) and the rough ER ({rough}) together."
+    },
+    "lysosomes": {
+      "name": "Lysosomes",
+      "synonyms": [
+        "lysosome",
+        "lysosomal",
+        "digestive vesicle",
+        "recycling centre",
+        "recycling center",
+        "autophagy",
+        "autolysosome"
+      ],
+      "short": "Acidic, membrane-bound sacs of enzymes that break down worn-out cell parts and material taken into the cell.",
+      "function": "Lysosomes are the cell’s main digestion and recycling compartments. Proton pumps in their membrane keep the interior acidic, and it contains dozens of kinds of hydrolases — enzymes that use water to break proteins, nucleic acids, sugars and fats into their building blocks. These enzymes work best in acid, which helps protect the rest of the cell if a lysosome leaks. Material arrives from endosomes (cargo taken in from outside the cell), from autophagy (worn-out cell parts wrapped in membrane) and, in specialized cells, from engulfed particles. Transporters in the lysosome membrane return the building blocks — amino acids, sugars and nucleotides — to the cytosol for reuse. Lysosomes also act as signalling hubs that report on the cell’s supply of nutrients.",
+      "seeingCell": "Small violet spheres scattered through the cytoplasm are lysosomes, drawn at about true size. Their dense, grainy interiors hint at the material being digested.",
+      "sampling": "A sample of lysosomes is drawn.",
+      "views": {
+        "digestion": {
+          "title": "Digestion and recycling",
+          "seeing": "A lysosome cut open, drawn to scale. Proton pumps (V-ATPases, orange) in the membrane push protons inward and keep the interior acidic. Hydrolase enzymes (purple) chop up cargo that arrives when a late endosome fuses with the lysosome (left); the pieces get smaller and smaller, and transporters return amino acids to the cytosol. A sugar coat lines the inner face of the membrane and protects it from the enzymes."
+        }
+      },
+      "parts": {
+        "membrane": {
+          "name": "Lysosomal membrane",
+          "def": "A single membrane that keeps the digestive enzymes contained."
+        },
+        "lumen": {
+          "name": "Acidic lumen",
+          "def": "The interior, kept much more acidic than the cytosol."
+        },
+        "v-atpase": {
+          "name": "V-ATPase proton pump",
+          "def": "A pump that uses ATP to move protons into the lysosome, acidifying it."
+        },
+        "hydrolase": {
+          "name": "Hydrolases",
+          "def": "Enzymes that break large molecules apart using water."
+        },
+        "membrane-glycans": {
+          "name": "Protective sugar coat",
+          "def": "Heavily glycosylated membrane proteins lining the inside, shielding the membrane from digestion."
+        },
+        "transporter": {
+          "name": "Nutrient transporter",
+          "def": "A membrane protein that exports amino acids and other products to the cytosol."
+        }
+      },
+      "simplifications": [
+        "Lysosomes vary widely in size and shape; they are drawn as simple spheres.",
+        "One fusion event at a time is shown; autophagy is described but not animated.",
+        "The enzymes are shown as a few generic shapes."
+      ],
+      "sizeContext": "Range seen by electron microscopy in eukaryotic cells; typically {typical}. Size changes with cell type and nutrient supply.",
+      "quantityContext": "Broad range for mammalian cells; usually several hundred, dropping below {low} when cells are starved of nutrients.",
+      "facts": {
+        "ph": {
+          "label": "pH inside a lysosome",
+          "context": "Mammalian lysosomes; kept acidic by V-ATPase proton pumps."
+        },
+        "enzymes": {
+          "label": "Different digestive enzymes",
+          "context": "Count from a 2015 review (an older textbook gives {older}); together they break down proteins, nucleic acids, sugars and fats."
+        },
+        "membrane-proteins": {
+          "label": "Different proteins in the lysosome membrane",
+          "context": "Including transporters that export digested products to the cytosol."
+        },
+        "volume": {
+          "label": "Share of a liver cell’s volume",
+          "context": "Hepatocyte (textbook table)."
+        },
+        "diseases": {
+          "label": "Inherited lysosomal storage diseases",
+          "context": "Each is rare, but together they affect about 1 in {births} live births."
+        }
+      },
+      "interesting": "Christian de Duve discovered lysosomes in 1955; he shared the 1974 Nobel Prize in Physiology or Medicine with Albert Claude and George Palade for discoveries about how the cell is organized."
+    },
+    "endosomes": {
+      "name": "Endosomes",
+      "synonyms": [
+        "endosome",
+        "early endosome",
+        "late endosome",
+        "recycling endosome",
+        "sorting endosome",
+        "multivesicular body",
+        "MVB",
+        "endocytosis",
+        "clathrin"
+      ],
+      "short": "Membrane compartments that receive material taken into the cell and sort it, either for recycling or for destruction.",
+      "function": "Cells constantly take in pieces of their plasma membrane together with fluid and particular molecules — a process called endocytosis. In the best-studied route, receptors carrying their cargo gather in pits coated with the protein clathrin; the pits pinch off as vesicles, shed their coats and fuse with early endosomes near the cell surface. Early endosomes are mildly acidic, which makes many cargo molecules let go of their receptors. Sorting follows: membrane proteins such as receptors are sent back to the plasma membrane in narrow tubes (recycling), while material meant for destruction stays behind. As an early endosome matures into a late endosome, it moves toward the cell centre, becomes more acidic and buds small vesicles into its own interior, becoming a multivesicular body. Late endosomes finally fuse with lysosomes, which digest their contents.",
+      "seeingCell": "Sky-blue compartments near the cell edge are early endosomes, some with tubular arms. Larger, darker ones deeper inside are late endosomes, with small vesicles visible within them. When endosomes are selected, three events repeat in turn: uptake at the membrane, recycling back to the surface, and delivery to a lysosome.",
+      "sampling": "A sample of early and late endosomes is drawn.",
+      "views": {
+        "sorting": {
+          "title": "Sort, recycle or degrade",
+          "seeing": "Three numbered events, shown one after another. 1 Uptake: receptors (blue) carrying cargo (yellow) gather in a clathrin-coated pit, which pinches off as a vesicle and fuses with an early endosome. 2 Recycling: in the endosome’s acidic interior the cargo lets go, and empty receptors return to the plasma membrane through a recycling tube. 3 Degradation: the endosome matures, fills with internal vesicles and fuses with a lysosome (violet), where the cargo is broken down."
+        }
+      },
+      "parts": {
+        "coated-pit": {
+          "name": "Clathrin-coated pit",
+          "def": "A patch of membrane coated with clathrin that curves inward to form a vesicle."
+        },
+        "early-endosome": {
+          "name": "Early (sorting) endosome",
+          "def": "The first stop for incoming vesicles, near the cell surface."
+        },
+        "recycling-tubule": {
+          "name": "Recycling tube",
+          "def": "A narrow extension that carries receptors back to the plasma membrane."
+        },
+        "late-endosome": {
+          "name": "Late endosome",
+          "def": "A more acidic, mature endosome that will fuse with a lysosome."
+        },
+        "intraluminal-vesicle": {
+          "name": "Intraluminal vesicles",
+          "def": "Small vesicles budded into the endosome’s interior, carrying membrane proteins to be destroyed."
+        },
+        "receptor": {
+          "name": "Receptor",
+          "def": "A membrane protein that binds specific cargo at the cell surface."
+        },
+        "cargo": {
+          "name": "Cargo",
+          "def": "Molecules taken into the cell, such as nutrients bound to their carriers."
+        }
+      },
+      "simplifications": [
+        "Endosomes form a continuum of changing compartments; the model shows only two clear types.",
+        "Only clathrin-mediated uptake is shown; cells use several other routes.",
+        "The three events are shown in sequence; in a real cell they happen all the time, everywhere at once."
+      ],
+      "sizeContext": "Endosomes range from small vesicles to large tubular compartments; incoming coated vesicles are {vesicle} across.",
+      "quantityContext": "Share of a liver cell’s volume taken up by endosomes; a count per cell was not verified.",
+      "facts": {
+        "early-ph": {
+          "label": "pH in early endosomes",
+          "context": "Mammalian cells (review)."
+        },
+        "late-ph": {
+          "label": "pH in late endosomes",
+          "context": "On the way to lysosomes, at {lysosome} (mammalian cells, review)."
+        },
+        "ldl-receptor": {
+          "label": "Round trip of an LDL receptor into the cell and back",
+          "context": "Each receptor is reused many times over a lifetime of {life} (cultured cells)."
+        },
+        "mvb": {
+          "label": "Late endosomes fill with internal vesicles",
+          "context": "The ESCRT machinery buds membrane proteins into the endosome’s interior for destruction."
+        },
+        "maturation": {
+          "label": "Endosomes mature as they move inward",
+          "context": "They migrate toward the nucleus, become more acidic and gain lysosomal components before fusing with lysosomes."
+        }
+      },
+      "interesting": "Cells recycle their surface at astonishing speed: a cultured macrophage takes in {macrophage} of its plasma membrane every minute by pinocytosis — the equivalent of its whole surface in {whole}. Fibroblast-like L cells are slower, at {lcell} per minute (their whole surface in {lwhole}).",
+      "events": {
+        "uptake": "1 Uptake",
+        "recycling": "2 Recycling",
+        "degradation": "3 Degradation"
+      }
+    },
+    "peroxisomes": {
+      "name": "Peroxisomes",
+      "synonyms": [
+        "peroxisome",
+        "microbody",
+        "microbodies",
+        "catalase",
+        "fatty acid oxidation",
+        "beta-oxidation"
+      ],
+      "short": "Small single-membrane organelles that carry out oxidation reactions, break down certain fats and destroy hydrogen peroxide.",
+      "function": "Peroxisomes contain enzymes that use oxygen to oxidize various molecules. Some of these reactions produce hydrogen peroxide (H₂O₂), a reactive chemical that could damage the cell; another peroxisomal enzyme, catalase, rapidly turns it into water and oxygen. Peroxisomes shorten very-long-chain fatty acids that mitochondria cannot handle directly, and they make special lipids called plasmalogens, which are abundant in the insulating sheaths (myelin) around nerve fibres. Peroxisomal proteins are made on free ribosomes in the cytosol and imported after they are finished, guided by short targeting signals. Peroxisomes can grow and divide, and new ones can also form from the ER.",
+      "seeingCell": "Small lime-green spheres throughout the cytoplasm are peroxisomes, drawn at about true size. Their interiors are evenly granular: unlike rat or mouse liver peroxisomes, human peroxisomes lack a crystal-like core.",
+      "sampling": "A sample of peroxisomes is drawn.",
+      "views": {
+        "reactions": {
+          "title": "Oxidation and detoxification",
+          "seeing": "Part of a peroxisome, cut open and drawn to scale. An oxidase (blue) uses oxygen to break down a molecule and releases hydrogen peroxide (pale pairs). Catalase (large, green) immediately converts the hydrogen peroxide into water and oxygen. A long fatty-acid chain enters through a membrane transporter and is shortened step by step. At the edge, an import receptor (yellow) delivers a newly made enzyme through the membrane."
+        }
+      },
+      "parts": {
+        "membrane": {
+          "name": "Peroxisomal membrane",
+          "def": "A single membrane bounding the organelle."
+        },
+        "matrix": {
+          "name": "Matrix",
+          "def": "The protein-rich interior containing oxidative enzymes."
+        },
+        "catalase": {
+          "name": "Catalase",
+          "def": "An enzyme that splits hydrogen peroxide into water and oxygen."
+        },
+        "oxidase": {
+          "name": "Oxidase",
+          "def": "An enzyme that oxidizes molecules with oxygen, releasing hydrogen peroxide."
+        },
+        "import-receptor": {
+          "name": "Import receptor (PEX5)",
+          "def": "A receptor that recognizes the targeting signal of peroxisomal enzymes and brings them inside."
+        },
+        "fatty-acid": {
+          "name": "Very-long-chain fatty acid",
+          "def": "A fat molecule shortened in peroxisomes before mitochondria finish breaking it down."
+        }
+      },
+      "simplifications": [
+        "Only a few representative enzymes are shown; peroxisomes contain dozens.",
+        "Fatty-acid shortening is shown as pieces being clipped off one by one, without the intermediate chemistry.",
+        "Peroxisome numbers and sizes vary greatly between cell types."
+      ],
+      "sizeContext": "Typical diameter range; liver cells are rich in peroxisomes.",
+      "quantityContext": "Share of a liver cell’s volume taken up by peroxisomes; a count per cell was not verified.",
+      "facts": {
+        "catalase-role": {
+          "label": "Oxidases make hydrogen peroxide; catalase destroys it",
+          "context": "Catalase turns it into water and oxygen, or uses it to oxidize other molecules."
+        },
+        "fatty-acids": {
+          "label": "Very-long-chain fatty acids are shortened here",
+          "context": "By β-oxidation, before mitochondria finish breaking them down."
+        },
+        "plasmalogens": {
+          "label": "First steps in making plasmalogens",
+          "context": "The most abundant phospholipids in myelin, which insulates nerve fibres."
+        },
+        "pts1": {
+          "label": "Amino acids in the peroxisome “address label” (SKL)",
+          "context": "Adding this tag to the end of a cytosolic protein sends it into peroxisomes (reporter-protein experiments)."
+        },
+        "urate-oxidase": {
+          "label": "Humans lack working urate oxidase",
+          "context": "It was disabled by mutations during ape evolution; in rats, mice and some other mammals it forms a crystal-like core in liver peroxisomes."
+        }
+      },
+      "interesting": "Catalase is one of the fastest enzymes known: a single catalase molecule can break down millions of hydrogen peroxide molecules every second."
+    },
+    "microtubules": {
+      "name": "Microtubules",
+      "synonyms": [
+        "microtubule",
+        "tubulin",
+        "MT",
+        "MTs",
+        "dynamic instability",
+        "spindle",
+        "cytoskeleton"
+      ],
+      "short": "Hollow protein tubes that radiate from the centre of the cell, serve as tracks for transport and constantly grow and shrink.",
+      "function": "Microtubules are hollow tubes built from tubulin — pairs of α- and β-tubulin proteins that line up end to end into strands called protofilaments; usually {protofilaments} strands form the tube wall. Their minus ends are anchored at the centrosome near the nucleus; their plus ends grow outward. Microtubules are dynamic: a growing end can suddenly switch to rapid shrinking (a catastrophe) and later start growing again (a rescue). This dynamic instability lets the network explore the cell and rearrange quickly. Microtubules are tracks for motor proteins, position organelles, help give the cell its shape, form the spindle that separates chromosomes during division, and make up the core of cilia.",
+      "seeingCell": "Pale-blue lines radiating from the centrosome near the nucleus are microtubules. Watch their tips: each grows outward with a bright cap, now and then shrinks back rapidly, and then grows again.",
+      "sampling": "Only about a hundred microtubules are drawn.",
+      "views": {
+        "dynamics": {
+          "title": "Dynamic instability",
+          "seeing": "The growing end of a microtubule, drawn to scale. Tubulin dimers (α pale, β darker blue) add to the tips of the {protofilaments} protofilaments. Newly added dimers still carry GTP (bright) and form a stabilizing cap. When the cap is lost, the protofilaments curl outward and peel apart (a catastrophe), and the microtubule shrinks quickly until it is rescued and grows again."
+        }
+      },
+      "parts": {
+        "protofilament": {
+          "name": "Protofilament",
+          "def": "A strand of tubulin dimers; several side by side form the tube wall."
+        },
+        "tubulin-dimer": {
+          "name": "Tubulin dimer",
+          "def": "One α-tubulin and one β-tubulin, the building block, about {dimerLength} long."
+        },
+        "plus-end": {
+          "name": "Plus end",
+          "def": "The dynamic end that grows and shrinks, usually toward the cell edge."
+        },
+        "minus-end": {
+          "name": "Minus end",
+          "def": "The end anchored at the centrosome."
+        },
+        "gtp-cap": {
+          "name": "GTP cap",
+          "def": "Freshly added GTP-bound tubulin that stabilizes the growing end."
+        }
+      },
+      "simplifications": [
+        "Microtubules are drawn as smooth tubes in the whole-cell view.",
+        "Growth and shrinkage follow a regular rhythm in the model; in cells they are random.",
+        "Proteins that bind microtubule ends and regulate them are not shown."
+      ],
+      "sizeContext": "Outer diameter of the hollow tube.",
+      "quantityContext": "Protofilaments in the wall of most microtubules in cells. How many microtubules a cell has varies widely and is rarely counted.",
+      "facts": {
+        "dimer": {
+          "label": "Length of one tubulin dimer",
+          "context": "One α-tubulin plus one β-tubulin; each protofilament is a chain of dimers."
+        },
+        "instability": {
+          "label": "Microtubules switch between growing and shrinking",
+          "context": "“Dynamic instability”, discovered in 1984 with purified tubulin."
+        },
+        "gtp-cap": {
+          "label": "A cap of GTP-tubulin stabilizes growing ends",
+          "context": "When the cap is lost, the end starts to shrink rapidly."
+        },
+        "anchoring": {
+          "label": "Minus ends are anchored at the centrosome",
+          "context": "Plus ends point toward the cell edge in a typical interphase cell."
+        }
+      },
+      "interesting": "When dynamic instability was discovered, it came as a surprise that growing and shrinking microtubules coexist side by side, each switching unpredictably between the two states."
+    },
+    "actin": {
+      "name": "Actin filaments",
+      "synonyms": [
+        "actin",
+        "microfilament",
+        "microfilaments",
+        "F-actin",
+        "actin cortex",
+        "cell cortex",
+        "stress fibres",
+        "stress fibers",
+        "lamellipodium"
+      ],
+      "short": "Thin, flexible protein filaments that form a supporting mesh under the membrane and drive changes in cell shape and movement.",
+      "function": "Actin filaments, also called microfilaments, are the thinnest fibres of the cytoskeleton. Each is a twisted double strand of actin proteins. Its two ends differ: subunits add much faster at the “barbed” (plus) end than at the “pointed” (minus) end. Actin carrying ATP joins at the barbed end, gradually converts the ATP to ADP, and is more likely to fall off at the pointed end, so a filament can treadmill — growing at one end while shrinking at the other. Just beneath the plasma membrane, a dense mesh of actin called the cortex gives the cell surface strength and shape. Branched networks push the membrane forward when cells crawl, bundles form finger-like protrusions, and actin working with myosin motors produces contraction.",
+      "seeingCell": "A fine rose-coloured mesh lining the inside of the plasma membrane is the actin cortex. The filaments flicker as they grow and shrink.",
+      "sampling": "A sample of short cortical filament segments is drawn.",
+      "views": {
+        "treadmilling": {
+          "title": "Treadmilling and branching",
+          "seeing": "Actin filaments pushing against the membrane at the leading edge of a cell, drawn to scale. Bright ATP-actin subunits add to the barbed ends near the membrane (top), while older, duller ADP-actin falls off the pointed ends. The Arp2/3 complex (orange) starts new branches at about {branchAngle} from existing filaments, building a network that pushes the membrane forward."
+        }
+      },
+      "parts": {
+        "filament": {
+          "name": "Actin filament",
+          "def": "A twisted double strand of actin subunits, about {width} wide."
+        },
+        "barbed-end": {
+          "name": "Barbed (plus) end",
+          "def": "The fast-growing end."
+        },
+        "pointed-end": {
+          "name": "Pointed (minus) end",
+          "def": "The slow-growing end, where subunits tend to fall off."
+        },
+        "arp23": {
+          "name": "Arp2/3 complex",
+          "def": "A protein complex that starts a new filament as a branch on an existing one."
+        },
+        "cortex": {
+          "name": "Actin cortex",
+          "def": "The mesh of actin lining the inner face of the plasma membrane."
+        },
+        "subunit": {
+          "name": "Actin subunit",
+          "def": "A single actin protein (G-actin) that carries ATP or ADP."
+        }
+      },
+      "simplifications": [
+        "The cortex is drawn as short straight segments; real filaments are longer and cross-linked.",
+        "Stress fibres and crawling protrusions are described but not drawn in the rounded model cell.",
+        "Myosin motors are not shown."
+      ],
+      "sizeContext": "Filament diameter (textbook range).",
+      "quantityContext": "Actin is one of the most abundant proteins in many animal cells; the number of filaments per cell is not a standard measurement.",
+      "facts": {
+        "barbed-rate": {
+          "label": "Rate constant for ATP-actin joining the barbed end",
+          "context": "Versus {pointed} at the pointed end, so barbed ends grow about ten times faster (purified actin, in vitro)."
+        },
+        "branch-angle": {
+          "label": "Angle of Arp2/3 branches",
+          "context": "Purified proteins observed by electron microscopy."
+        },
+        "treadmilling": {
+          "label": "Filaments can treadmill",
+          "context": "Subunits add at the barbed end and leave from the pointed end, so a filament can move while keeping its length."
+        },
+        "cortex": {
+          "label": "A mesh of actin lines the plasma membrane",
+          "context": "The cortex gives the cell surface strength and shape."
+        }
+      },
+      "interesting": "Almost every movement an animal cell makes — crawling, dividing, changing shape, swallowing particles — depends on actin filaments assembling and disassembling in the right place at the right time."
+    },
+    "intermediate-filaments": {
+      "name": "Intermediate filaments",
+      "synonyms": [
+        "intermediate filament",
+        "IF",
+        "IFs",
+        "vimentin",
+        "keratin",
+        "keratins",
+        "lamin",
+        "lamins",
+        "neurofilament",
+        "desmin"
+      ],
+      "short": "Strong, rope-like protein filaments that help cells withstand stretching and hold the nucleus in place.",
+      "function": "Intermediate filaments are named for their width, between that of actin filaments and microtubules. Unlike those two, they are built from long, rope-like proteins that twist together in pairs, then join in staggered groups, then pack into filaments — like fibres twisted into rope. This makes them flexible but very hard to break, so they spread mechanical stress across the cell. Different cells use different family members: keratins in skin and other epithelial cells, vimentin in connective-tissue cells such as fibroblasts, desmin in muscle and neurofilaments in neurons. The nuclear lamins that line the inside of the nucleus belong to the same family. Intermediate filaments have no fixed direction, and no motor proteins walk along them.",
+      "seeingCell": "Pale gold, gently wavy filaments form a cage around the nucleus and stretch out toward the cell edge; the model assumes a vimentin network typical of fibroblast-like cells. They sway slightly but stay in place, reflecting their supporting rather than transporting role.",
+      "sampling": "A sample of filaments is drawn.",
+      "views": {
+        "assembly": {
+          "title": "Rope-like assembly",
+          "seeing": "How an intermediate filament is built, drawn to scale from left to right. Two proteins coil around each other into a dimer; two dimers pair side by side, offset and pointing in opposite directions (a tetramer); eight tetramers line up into a short unit-length filament; and unit-length filaments join end to end and compact into the mature filament. A gentle pull at the end shows how the filament stretches without breaking."
+        }
+      },
+      "parts": {
+        "filament": {
+          "name": "Mature filament",
+          "def": "A rope-like fibre about {width} wide."
+        },
+        "dimer": {
+          "name": "Coiled-coil dimer",
+          "def": "Two filament proteins wound around each other."
+        },
+        "tetramer": {
+          "name": "Tetramer",
+          "def": "Two dimers side by side, staggered and pointing in opposite directions."
+        },
+        "ulf": {
+          "name": "Unit-length filament",
+          "def": "A short segment of about eight tetramers; the building block for growth."
+        },
+        "perinuclear-cage": {
+          "name": "Perinuclear cage",
+          "def": "The dense basket of filaments around the nucleus."
+        }
+      },
+      "simplifications": [
+        "Real intermediate-filament networks are denser and more interwoven.",
+        "Only one filament type (vimentin) is represented; cells may contain several.",
+        "Assembly is shown as a tidy sequence; in cells it happens in parallel, and filaments also exchange subunits."
+      ],
+      "sizeContext": "Filament diameter — between that of actin filaments and microtubules.",
+      "quantityContext": "Human genes encoding intermediate-filament proteins; each cell type uses a particular set.",
+      "facts": {
+        "ulf": {
+          "label": "Length of a unit-length filament",
+          "context": "The building block of a filament, made of about {tetramers} tetramers (vimentin, purified protein)."
+        },
+        "no-polarity": {
+          "label": "No fixed direction and no motors",
+          "context": "Unlike actin filaments and microtubules, intermediate filaments are not polar, and no motor proteins walk along them."
+        },
+        "lamins": {
+          "label": "Nuclear lamins belong to this family",
+          "context": "They form the lamina that lines the inside of the nuclear envelope."
+        },
+        "types": {
+          "label": "Different cells use different family members",
+          "context": "Keratins in epithelial cells, vimentin in fibroblasts and other connective-tissue cells, desmin in muscle, neurofilaments in neurons."
+        }
+      },
+      "interesting": "Single intermediate filaments can be stretched to more than twice their original length without breaking (measured on isolated filaments in the laboratory)."
+    },
+    "centrosome": {
+      "name": "Centrosome",
+      "synonyms": [
+        "centrosomes",
+        "centriole",
+        "centrioles",
+        "microtubule organizing center",
+        "microtubule-organizing centre",
+        "MTOC",
+        "basal body",
+        "pericentriolar material",
+        "PCM"
+      ],
+      "short": "The main microtubule-organizing centre of animal cells: a pair of centrioles surrounded by a cloud of protein.",
+      "function": "The centrosome sits next to the nucleus and anchors the minus ends of microtubules, so the microtubule network radiates from it. At its core are two centrioles — short cylinders set at right angles, each built from nine triplets of microtubules. Around them lies the pericentriolar material, a protein matrix containing γ-tubulin ring complexes that start (nucleate) new microtubules. The centrosome is duplicated once in each cell cycle, and during division the two centrosomes organize the poles of the spindle. In many non-dividing cells the older (mother) centriole moves to the cell surface and forms the base of a primary cilium, a sensory antenna.",
+      "seeingCell": "The pale lilac cloud next to the nucleus, where all the microtubules converge, is the centrosome. Inside it, two small cylinders at right angles — the centrioles — are drawn at about true size. The Golgi ribbon curves around it.",
+      "sampling": "One centrosome with two centrioles, as in a cell before DNA replication.",
+      "views": {
+        "centrioles": {
+          "title": "A pair of centrioles",
+          "seeing": "The two centrioles drawn to scale. Each is a cylinder of nine microtubule triplets arranged like a pinwheel. The mother centriole carries appendages at one end; the daughter lies at right angles to it. The surrounding pericentriolar material contains γ-tubulin ring complexes (orange), from which new microtubules grow outward."
+        }
+      },
+      "parts": {
+        "mother-centriole": {
+          "name": "Mother centriole",
+          "def": "The older centriole, with appendages; it can form the base of a cilium."
+        },
+        "daughter-centriole": {
+          "name": "Daughter centriole",
+          "def": "The younger centriole, set at right angles to the mother."
+        },
+        "triplets": {
+          "name": "Microtubule triplets",
+          "def": "Nine sets of three fused microtubules that form the centriole wall."
+        },
+        "pcm": {
+          "name": "Pericentriolar material",
+          "def": "A protein matrix around the centrioles that starts and anchors microtubules."
+        },
+        "gamma-turc": {
+          "name": "γ-tubulin ring complex",
+          "def": "A ring-shaped template from which a new microtubule grows."
+        },
+        "appendages": {
+          "name": "Appendages",
+          "def": "Projections on the mother centriole that anchor microtubules and help it dock at the membrane."
+        }
+      },
+      "simplifications": [
+        "The pericentriolar material is drawn as a soft cloud; it is really an ordered protein scaffold.",
+        "Only a few microtubule-starting complexes are shown.",
+        "The centrosome’s duplication during the cell cycle is described but not animated."
+      ],
+      "sizeContext": "Width of each centriole; each is {length} long (vertebrate cells).",
+      "quantityContext": "Centrioles in a cell before its DNA is copied: one pair, forming one centrosome. They are duplicated once per cell cycle.",
+      "facts": {
+        "triplets": {
+          "label": "Microtubule triplets in each centriole",
+          "context": "Arranged in a ring with nine-fold symmetry."
+        },
+        "duplication": {
+          "label": "The centrosome is copied once per cell cycle",
+          "context": "During division, the two centrosomes organize the two poles of the spindle."
+        },
+        "nucleation": {
+          "label": "γ-Tubulin ring complexes start new microtubules",
+          "context": "They sit in the pericentriolar material around the centrioles."
+        },
+        "cilium": {
+          "label": "The mother centriole can form the base of a cilium",
+          "context": "In many non-dividing cells it docks at the cell surface and grows a primary cilium."
+        }
+      },
+      "interesting": "New centrioles grow at right angles to existing ones, which is why the two centrioles of a centrosome are drawn perpendicular to each other."
+    }
+  }
+}
