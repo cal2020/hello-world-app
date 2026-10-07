@@ -65,7 +65,77 @@ diameter of 120–145 nm).
 Environment: Linux container, Node.js 22.22.0, npm 10, Chromium 141
 (Playwright 1.56.1 build 1194) with **SwiftShader software WebGL** (no GPU).
 
-RESULTS_PLACEHOLDER
+All results below are from the final commit on this branch, run in that
+environment on 7 October 2026.
+
+| Check | Command | Result |
+| --- | --- | --- |
+| Type check | `npm run typecheck` | Passed (no errors). |
+| Lint | `npm run lint` | Passed (no errors or warnings). |
+| Unit tests | `npm test` | **61 passed** in 8 files: content integrity 9, locale completeness 13, quality controller 6, routing 6, scale bar 5, search 6, selection and Escape 9, tour timing and playback 7. |
+| Translations | `npm run i18n -- check <lang>` | **0 issues** for each of sr, fr, it, es, ru and zh (same keys and placeholders as English, valid plural categories, no leftover English). |
+| Production build | `npm run build` | Passed; **147 pages prerendered** (21 pages × 7 languages) plus the root redirect and the 404 page. Bundle sizes are in [PERFORMANCE.md](PERFORMANCE.md). |
+| Browser tests | `npm run test:e2e` | **17 passed** in 9.9 min (list below). |
+| Close-up check | `npm run check:closeups` | **21 of 21 views opened**, no console errors, every view showed labels, resources released (table below). |
+
+### Browser tests (Playwright, Chromium + SwiftShader, reduced motion)
+
+| Test | What it does |
+| --- | --- |
+| no detectable WCAG A/AA violations in the main views | axe-core (WCAG 2.0/2.1 A and AA rules) on the whole cell, a selected structure (nucleus) and the Help dialog; the canvas is excluded |
+| keyboard: skip link and search shortcut | the first Tab focuses the skip link; `/` focuses the search field |
+| zoom, reset, quality, motion, text atlas and About | zoom in/out and reset; Low vs High quality changes the reported object counts; the reduced-motion setting applies; the text atlas opens and closes; About opens at `/en/about/` and closes back to the structure; no console errors |
+| labels, related links, citations, close-up views and the location inset | a label click selects; a related-structure link (nucleus → chromosomes); citations link to https sources; the second close-up view (`detail=nucleosomes`) with an nm scale; “Back to the cell view” |
+| tour controls and annotated export | start the tour, next, previous, exit; download an annotated PNG |
+| rapid selection, resizing and rotation leave a consistent state | five quick selections end on the last one (centrosome, focused); resizing through phone portrait and landscape, tablet and desktop keeps it, ending in the wide layout; no page errors |
+| 3D start-up failure shows the complete text atlas | `?renderer=fail`: failure notice plus the text atlas with all 19 structures |
+| a failed language load keeps the page usable and says so | `/fr/?simulate=locale-failure`: English stand-in with a visible notice and `lang="en"` |
+| losing the WebGL context offers a restart | `?simulate=context-loss`: notice, then “Restart 3D” brings the scene back |
+| without JavaScript › every page is readable as prerendered text | JavaScript disabled: French mitochondria page with `lang`, heading, canonical and `hreflang` links, working next link; English About page |
+| main demonstration journey | enter → mitochondria → its close-up, then the ATP-synthase view (internal membranes) → whole cell → search “ribosomes” → translation close-up → start and pause the tour → switch to French → export a clean PNG; no console errors |
+| deep links, Back/Forward and Escape | direct load of the nucleus close-up; Escape goes up to the structure; after selecting the Golgi, Back twice returns to the nucleus and then its close-up, Forward twice to the Golgi; Escape goes to the whole cell |
+| previous and next wrap around | from the 19th structure, next goes to the first and previous comes back |
+| search: synonyms and an empty state | “cell membrane” and “mitochondrion” find their structures; “zzzz” shows the empty state |
+| labels toggle and biological freeze | turning labels off hides every label; the freeze control toggles its pressed state (its independence from the tour pause is a unit test) |
+| unknown pages fall back to the whole cell with a notice | `/en/not-a-structure/` → whole cell and a notice |
+| phone layout: list drawer, bottom sheet and settings | Pixel 7 emulation: compact layout, list drawer selects ribosomes, the bottom sheet expands, quality and motion settings in the “More” menu |
+
+### Close-up views
+
+Quality: low. GPU resources after entering: 58 geometries, 8 textures; after the first pass over all close-ups: 66 geometries, 26 textures (first-visit caches); after the second pass: 66 geometries, 26 textures.
+
+| Close-up view | Opened | Load | Draw calls | Triangles | Labels shown | Resources after leaving | Console errors |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| plasma-membrane | ok | 9.2 s | 11 | 110,114 | 9 | released | – |
+| cytoplasm | ok | 3.7 s | 25 | 53,818 | 6 | released | – |
+| nucleus | ok | 6.2 s | 14 | 27,262 | 8 | released | – |
+| chromosomes / metaphase | ok | 5.4 s | 10 | 72,530 | 4 | released | – |
+| chromosomes / nucleosomes | ok | 6.3 s | 8 | 84,146 | 3 | released | – |
+| telomeres | ok | 6.4 s | 14 | 50,158 | 5 | released | – |
+| nucleolus | ok | 4.9 s | 19 | 56,590 | 8 | released | – |
+| ribosomes | ok | 4.9 s | 15 | 19,574 | 6 | released | – |
+| rough-er | ok | 4.6 s | 29 | 26,028 | 7 | released | – |
+| smooth-er | ok | 13.9 s | 13 | 25,602 | 8 | released | – |
+| golgi | ok | 4.9 s | 18 | 94,050 | 8 | released | – |
+| vesicles-motors | ok | 5.3 s | 18 | 85,870 | 9 | released | – |
+| mitochondria / organelle | ok | 5.1 s | 7 | 59,424 | 7 | released | – |
+| mitochondria / atp-synthase | ok | 4.5 s | 19 | 34,494 | 7 | released | – |
+| lysosomes | ok | 5.4 s | 22 | 84,146 | 6 | released | – |
+| endosomes | ok | 4.7 s | 20 | 24,136 | 7 | released | – |
+| peroxisomes | ok | 3.8 s | 19 | 31,546 | 8 | released | – |
+| microtubules | ok | 5.4 s | 2 | 99,042 | 6 | released | – |
+| actin | ok | 5.9 s | 29 | 91,734 | 6 | released | – |
+| intermediate-filaments | ok | 5.4 s | 6 | 87,890 | 2 | released | – |
+| centrosome | ok | 5.7 s | 10 | 11,210 | 7 | released | – |
+
+Load times include fetching and building the close-up in software rendering
+on a shared 4-core container; the first close-up opened also compiles shared
+shaders. "Released" means a second visit to every view left no more geometries
+or textures behind than there were before it (the first pass fills small
+bounded caches: one background texture per close-up colour and a few shared
+shapes).
+
+SCREENSHOTS_RESULTS
 
 ## 3. Browser inspection
 
