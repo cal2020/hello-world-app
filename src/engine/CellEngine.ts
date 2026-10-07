@@ -154,6 +154,12 @@ export class CellEngine implements EngineController {
   private contextLossTimer = 0;
   private autoRotate = true;
   private disposed = false;
+  private readonly envMap: THREE.Texture;
+  private skipNextFrame = false;
+  private readonly onVisibility = () => {
+    if (document.visibilityState === 'visible') this.skipNextFrame = true;
+  };
+  private readonly hemi = new THREE.HemisphereLight('#a8bfff', '#1a0f24', 1.05);
 
   constructor(gl: THREE.WebGLRenderer, hooks: EngineHooks) {
     this.gl = gl;
@@ -168,18 +174,20 @@ export class CellEngine implements EngineController {
     this.scene.background = backgroundTexture('#0a1024');
     this.scene.fog = new THREE.FogExp2('#05070f', 0.006);
     const pmrem = new THREE.PMREMGenerator(gl);
-    this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    this.envMap = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    this.scene.environment = this.envMap;
     this.scene.environmentIntensity = 0.28;
     pmrem.dispose();
-    this.scene.add(new THREE.HemisphereLight('#a8bfff', '#1a0f24', 1.05));
+    this.scene.add(this.hemi);
     const key = new THREE.DirectionalLight('#ffffff', 1.5);
     key.position.set(6, 9, 8);
     this.scene.add(key);
     const rim = new THREE.DirectionalLight('#7d8cff', 1.1);
     rim.position.set(-8, -3, -6);
     this.scene.add(rim);
-    const inner = new THREE.PointLight('#ffe2c4', 22, 15, 1.4);
-    inner.position.set(1.5, 1.2, 3.2);
+    // A soft warm fill inside the cell; decay keeps it from blowing out nearby membranes.
+    const inner = new THREE.PointLight('#ffe2c4', 8, 14, 1.6);
+    inner.position.set(1.2, 1.6, 2.4);
     this.scene.add(inner);
 
     this.rig = new CameraRig(this.camera, this.canvas);
@@ -206,6 +214,7 @@ export class CellEngine implements EngineController {
     const coarse = window.matchMedia('(pointer: coarse)').matches;
     this.perf = new PerfMonitor(debugParams.perf, coarse);
     this.canvas.addEventListener('webglcontextlost', this.onContextLost);
+    document.addEventListener('visibilitychange', this.onVisibility);
   }
 
   // ── Build ────────────────────────────────────────────────────────────────
@@ -269,6 +278,7 @@ export class CellEngine implements EngineController {
       coarsePointer: window.matchMedia('(pointer: coarse)').matches,
       deviceMemoryGb: nav.deviceMemory,
       hardwareConcurrency: navigator.hardwareConcurrency,
+      softwareRenderer: isSoftwareRenderer(this.gl),
     });
   }
 
@@ -679,6 +689,12 @@ export class CellEngine implements EngineController {
       if (count !== null) drawn[sid] = count;
     }
     const preset = QUALITY_PRESETS[level];
+    // Image-based lighting costs several texture reads per pixel; low quality uses the lights alone.
+    const useEnv = level !== 'low';
+    if ((this.scene.environment !== null) !== useEnv) {
+      this.scene.environment = useEnv ? this.envMap : null;
+      this.hemi.intensity = useEnv ? 1.05 : 1.35;
+    }
     this.configureComposer(preset.bloom, preset.msaa);
     const dpr = Math.min(window.devicePixelRatio || 1, preset.maxPixelRatio);
     this.hooks.setDpr(dpr);
@@ -738,9 +754,16 @@ export class CellEngine implements EngineController {
     }
   }
 
-  frame(rawDt: number): void {
+  frame(frameDt: number): void {
     if (this.phase === 'building' || this.phase === 'disposed') return;
-    const dt = Math.min(rawDt, 0.1); // clamp large gaps (tab switches, breakpoints)
+    // The first frame after the tab becomes visible again carries the whole
+    // hidden period: treat it as no time passing (and do not measure it).
+    const resumed = this.skipNextFrame;
+    this.skipNextFrame = false;
+    const rawDt = resumed ? 0 : frameDt;
+    // Real time drives motion so slow devices still finish transitions on
+    // time; the cap only smooths over single hitches.
+    const dt = Math.min(rawDt, 0.25);
     const state = appStore.getState();
     const reduce = reducedMotion(state);
     const bioDt = state.bioFrozen ? 0 : dt;
@@ -775,7 +798,7 @@ export class CellEngine implements EngineController {
     this.render();
 
     if (this.phase === 'exploring') {
-      const next = this.perf.sample(rawDt * 1000, this.gl, this.quality);
+      const next = resumed ? null : this.perf.sample(rawDt * 1000, this.gl, this.quality);
       if (next && next !== this.quality && state.settings.quality === 'auto') this.applyQuality(next, true);
     }
   }
@@ -846,7 +869,7 @@ export class CellEngine implements EngineController {
           key: `${mode}:${i}`,
           text: label.textKey ? t.t(label.textKey) : t.t(`structures.${id}.parts.${label.part}.name`),
           kind: 'part',
-          anchors: () => [label.anchor()],
+          anchors: () => (label.visible && !label.visible() ? [] : [label.anchor()]),
           priority: 100 - i,
         })),
       };
@@ -974,6 +997,7 @@ export class CellEngine implements EngineController {
     setEngineController(null);
     this.unsubscribe();
     this.canvas.removeEventListener('webglcontextlost', this.onContextLost);
+    document.removeEventListener('visibilitychange', this.onVisibility);
     this.picker.dispose();
     this.labels?.dispose();
     this.perf.dispose();
@@ -982,7 +1006,19 @@ export class CellEngine implements EngineController {
     for (const instance of this.structures.values()) instance.dispose();
     this.structures.clear();
     this.composer?.dispose();
-    this.scene.environment?.dispose();
+    this.envMap.dispose();
     if (overlays.hoverTip) overlays.hoverTip.classList.remove('is-visible');
+  }
+}
+
+/** True when WebGL is rasterized on the CPU, where every pixel is expensive. */
+function isSoftwareRenderer(gl: THREE.WebGLRenderer): boolean {
+  try {
+    const context = gl.getContext();
+    const info = context.getExtension('WEBGL_debug_renderer_info');
+    const name = String(context.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : context.RENDERER));
+    return /swiftshader|llvmpipe|softpipe|software|basic render/i.test(name);
+  } catch {
+    return false;
   }
 }

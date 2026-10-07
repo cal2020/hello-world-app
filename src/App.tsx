@@ -103,6 +103,8 @@ export function App() {
   const sheet = useApp((s) => s.sheet);
   const textAtlas = useApp((s) => s.textAtlas);
   const phase = useApp((s) => s.phase);
+  const closeupStatus = useApp((s) => s.closeupStatus);
+  const viewState = useApp((s) => s.viewState);
   const [viewportHeight, setViewportHeight] = useState(() => window.innerHeight);
 
   useEffect(() => {
@@ -127,6 +129,8 @@ export function App() {
       data-list-open={listOpen}
       data-text-atlas={textAtlas}
       data-phase={phase}
+      data-closeup={closeupStatus}
+      data-view-state={viewState}
       style={style}
       lang={t.tag}
     >

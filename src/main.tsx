@@ -36,6 +36,7 @@ async function boot() {
     // Preserve debug/test switches (not the view parameter, which buildPath owns).
     const params = new URLSearchParams(window.location.search);
     params.delete('view');
+    params.delete('detail');
     const rest = params.toString();
     if (!rest) return path;
     return path.includes('?') ? `${path}&${rest}` : `${path}?${rest}`;
@@ -74,6 +75,7 @@ async function boot() {
     bioFrozen: reducedMotion({ settings, systemReducedMotion }),
     layout,
     sheet: route.structure && layout === 'compact' ? 'half' : 'collapsed',
+    closeupViewIndex: route.view === 'closeup' ? (route.detail ?? 0) : 0,
   });
 
   const root = document.getElementById('root')!;

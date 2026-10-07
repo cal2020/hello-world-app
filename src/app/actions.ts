@@ -116,7 +116,7 @@ export function selectStructure(id: StructureId | null, options: SelectOptions):
   set({
     route,
     focusNonce: state.focusNonce + 1,
-    closeupViewIndex: changed && route.structure !== state.route.structure ? 0 : state.closeupViewIndex,
+    closeupViewIndex: 0,
     listOpen: compact || state.layout === 'medium' ? false : state.listOpen,
     sheet,
   });
@@ -131,13 +131,22 @@ export function setInspectView(view: InspectView, history: HistoryMode = 'push')
   const state = get();
   if (!state.route.structure || state.route.view === view) return;
   if (state.tour.status !== 'idle' && view === 'closeup') dispatchTour({ type: 'exit' });
-  const route: Route = { ...state.route, view };
+  const route: Route = { ...state.route, view, detail: undefined };
   set({ route, closeupViewIndex: 0 });
   commitHistory(route, history);
 }
 
-export function setCloseupViewIndex(index: number): void {
-  set({ closeupViewIndex: index });
+/** Switch between a structure's close-up views (each has its own address). */
+export function setCloseupViewIndex(index: number, history: HistoryMode = 'push'): void {
+  const state = get();
+  if (state.closeupViewIndex === index && (state.route.detail ?? 0) === index) return;
+  if (!state.route.structure || state.route.view !== 'closeup') {
+    set({ closeupViewIndex: index });
+    return;
+  }
+  const route: Route = { ...state.route, detail: index > 0 ? index : undefined };
+  set({ route, closeupViewIndex: index });
+  commitHistory(route, history);
 }
 
 export function neighbor(id: StructureId | null, direction: 1 | -1): StructureId {
@@ -168,7 +177,11 @@ export async function applyRoute(route: Route): Promise<void> {
     dispatchTour({ type: 'exit' });
   }
   // If the locale failed to load, the previous language stays active (a toast offers a retry).
-  set({ route: { ...route, lang: get().route.lang }, focusNonce: current.focusNonce + 1 });
+  set({
+    route: { ...route, lang: get().route.lang },
+    focusNonce: current.focusNonce + 1,
+    closeupViewIndex: route.view === 'closeup' ? (route.detail ?? 0) : 0,
+  });
 }
 
 // ── About page / modals ─────────────────────────────────────────────────────

@@ -7,6 +7,8 @@ export interface CloseupLabel {
   /** … or an explicit locale key (event captions). */
   textKey?: string;
   anchor: () => THREE.Vector3;
+  /** Show the label only while this returns true (e.g. a caption for one animation phase). */
+  visible?: () => boolean;
 }
 
 export interface CloseupViewSpec {

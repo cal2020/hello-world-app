@@ -77,8 +77,10 @@ export class AutoQualityController {
       this.settleRemaining -= frameMs;
       return null;
     }
-    // Ignore pathological gaps (tab switches, breakpoints).
-    if (frameMs > 500) return null;
+    // Ignore pathological gaps (a paused debugger). Tab switches never reach
+    // here: the engine skips the first frame after the page becomes visible.
+    // Very slow frames (software rendering) must count, or quality could never drop.
+    if (frameMs > 10_000) return null;
     this.windowFrames += 1;
     this.windowTime += frameMs;
     if (this.windowTime < c.windowMs) return null;
@@ -117,8 +119,14 @@ export class AutoQualityController {
 }
 
 /** A conservative first guess before any measurement. */
-export function initialAutoLevel(env: { coarsePointer: boolean; deviceMemoryGb?: number; hardwareConcurrency?: number }): QualityLevel {
-  if (env.coarsePointer) return 'low';
+export function initialAutoLevel(env: {
+  coarsePointer: boolean;
+  deviceMemoryGb?: number;
+  hardwareConcurrency?: number;
+  /** WebGL runs on the CPU (SwiftShader, llvmpipe…): every pixel is expensive. */
+  softwareRenderer?: boolean;
+}): QualityLevel {
+  if (env.softwareRenderer || env.coarsePointer) return 'low';
   if ((env.deviceMemoryGb ?? 8) <= 4 || (env.hardwareConcurrency ?? 8) <= 4) return 'medium';
   return 'high';
 }

@@ -32,7 +32,7 @@ export function buildMicrotubules(ctx: BuildContext, params: MtParams): Structur
   });
   const merged = mergeGeometries(geometries);
   geometries.forEach((g) => g.dispose());
-  const material = new THREE.MeshStandardMaterial({ color: color.clone().multiplyScalar(0.8), emissive: color, roughness: 0.4 });
+  const material = new THREE.MeshStandardMaterial({ color: color.clone().multiplyScalar(0.7), emissive: color, roughness: 0.5 });
   const dynamics = { value: 1 };
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = ctx.time;
@@ -61,7 +61,7 @@ export function buildMicrotubules(ctx: BuildContext, params: MtParams): Structur
       .replace(
         '#include <emissivemap_fragment>',
         /* glsl */ `#include <emissivemap_fragment>
-        totalEmissiveRadiance += vec3(0.85, 0.95, 1.0) * vGrowing * smoothstep(0.35, 0.0, tipDistance) * 1.6;`,
+        totalEmissiveRadiance += vec3(0.85, 0.95, 1.0) * vGrowing * smoothstep(0.35, 0.0, tipDistance) * 1.1;`,
       );
   };
   material.customProgramCacheKey = () => 'microtubules';
@@ -77,7 +77,7 @@ export function buildMicrotubules(ctx: BuildContext, params: MtParams): Structur
   const p = new THREE.Vector3();
 
   return makeInstance('microtubules', root, {
-    focus: [standardFocus(material, { emissiveBase: 0.12, emissiveBoost: 0.5 })],
+    focus: [standardFocus(material, { emissiveBase: 0.07, emissiveBoost: 0.45 })],
     raycast(ray) {
       let best: number | null = null;
       for (let k = 0; k < samples.owner.length; k++) {

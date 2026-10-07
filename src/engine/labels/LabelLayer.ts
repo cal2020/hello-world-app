@@ -19,7 +19,7 @@ interface LabelState {
   line: SVGLineElement;
   width: number;
   height: number;
-  anchor: THREE.Vector3 | null;
+  anchorIndex: number | null;
   visibleCheckFrame: number;
   shown: boolean;
 }
@@ -123,7 +123,7 @@ export class LabelLayer {
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       line.style.display = 'none';
       this.svg.appendChild(line);
-      this.states.set(spec.key, { spec, el, dot: anchorDot, line, width: 0, height: 0, anchor: null, visibleCheckFrame: -1, shown: false });
+      this.states.set(spec.key, { spec, el, dot: anchorDot, line, width: 0, height: 0, anchorIndex: null, visibleCheckFrame: -1, shown: false });
     }
   }
 
@@ -157,31 +157,35 @@ export class LabelLayer {
 
     for (const state of states) {
       let show = visible;
+      let ax = 0;
+      let ay = 0;
       if (show) {
-        // Re-evaluate which anchor to use (and occlusion) a few times per second.
-        if (this.frame - state.visibleCheckFrame > 8 || !state.anchor) {
+        // Anchors move (animated objects), so positions are read every frame;
+        // which anchor to use (and occlusion) is re-evaluated a few times per second.
+        const anchors = state.spec.anchors();
+        if (this.frame - state.visibleCheckFrame > 8 || state.anchorIndex === null || state.anchorIndex >= anchors.length) {
           state.visibleCheckFrame = this.frame + Math.floor(Math.random() * 3);
-          state.anchor = null;
-          for (const anchor of state.spec.anchors()) {
+          state.anchorIndex = null;
+          for (let i = 0; i < anchors.length; i++) {
+            const anchor = anchors[i];
             projected.copy(anchor).project(camera);
             if (projected.z > 1 || projected.z < -1) continue;
             const sx = (projected.x * 0.5 + 0.5) * width;
             const sy = (-projected.y * 0.5 + 0.5) * height;
             if (sx < minX || sx > maxX || sy < minY || sy > maxY) continue;
             if (isOccluded(anchor)) continue;
-            state.anchor = anchor.clone();
+            state.anchorIndex = i;
             break;
           }
         }
-        if (!state.anchor) show = false;
-      }
-      let ax = 0;
-      let ay = 0;
-      if (show && state.anchor) {
-        projected.copy(state.anchor).project(camera);
-        ax = (projected.x * 0.5 + 0.5) * width;
-        ay = (-projected.y * 0.5 + 0.5) * height;
-        if (projected.z > 1 || ax < minX || ax > maxX || ay < minY || ay > maxY) show = false;
+        const anchor = state.anchorIndex !== null ? anchors[state.anchorIndex] : undefined;
+        if (!anchor) show = false;
+        else {
+          projected.copy(anchor).project(camera);
+          ax = (projected.x * 0.5 + 0.5) * width;
+          ay = (-projected.y * 0.5 + 0.5) * height;
+          if (projected.z > 1 || ax < minX || ax > maxX || ay < minY || ay > maxY) show = false;
+        }
       }
       let placedBox: { x: number; y: number; w: number; h: number } | null = null;
       if (show) {

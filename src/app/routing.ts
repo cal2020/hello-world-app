@@ -9,6 +9,7 @@ import { isLang, type Lang } from '../i18n/languages';
  *   BASE{lang}/                → whole cell
  *   BASE{lang}/{slug}/         → structure, "In the cell" view
  *   BASE{lang}/{slug}/?view=closeup → structure, close-up view
+ *   BASE{lang}/{slug}/?view=closeup&detail={viewId} → a structure's second (third…) close-up view
  *   BASE{lang}/about/          → About panel over the whole cell
  *
  * Slugs are stable English identifiers shared by all languages.
@@ -21,6 +22,8 @@ export interface Route {
   page: 'cell' | 'about';
   structure: StructureId | null;
   view: InspectView;
+  /** Close-up view index (structures with several close-up views); 0 when absent. */
+  detail?: number;
 }
 
 export type ParsedLocation =
@@ -29,6 +32,7 @@ export type ParsedLocation =
   | { kind: 'not-found'; lang: Lang | null };
 
 const slugToId = new Map<string, StructureId>(STRUCTURE_META.map((s) => [s.slug, s.id]));
+const closeupViewIds = new Map<StructureId, string[]>(STRUCTURE_META.map((s) => [s.id, s.closeup.views.map((v) => v.id)]));
 const idToSlug = new Map<StructureId, string>(STRUCTURE_META.map((s) => [s.id, s.slug]));
 
 export const ABOUT_SLUG = 'about';
@@ -55,7 +59,10 @@ export function buildPath(route: Route, base = '/'): string {
   if (route.page === 'about') return `${prefix}${ABOUT_SLUG}/`;
   if (!route.structure) return prefix;
   const path = `${prefix}${slugFor(route.structure)}/`;
-  return route.view === 'closeup' ? `${path}?view=closeup` : path;
+  if (route.view !== 'closeup') return path;
+  const detail = route.detail ?? 0;
+  const viewId = detail > 0 ? closeupViewIds.get(route.structure)?.[detail] : undefined;
+  return viewId ? `${path}?view=closeup&detail=${encodeURIComponent(viewId)}` : `${path}?view=closeup`;
 }
 
 export function parseLocation(pathname: string, search: string, base = '/'): ParsedLocation {
@@ -87,9 +94,16 @@ export function parseLocation(pathname: string, search: string, base = '/'): Par
   }
   const structure = structureForSlug(slug);
   if (!structure) return { kind: 'not-found', lang };
-  return { kind: 'route', route: { lang, page: 'cell', structure, view }, canonical: hadTrailingSlash };
+  const detailParam = params.get('detail');
+  const detailIndex = view === 'closeup' && detailParam ? (closeupViewIds.get(structure) ?? []).indexOf(detailParam) : -1;
+  const route: Route = { lang, page: 'cell', structure, view };
+  if (detailIndex > 0) route.detail = detailIndex;
+  const canonical = hadTrailingSlash && (!detailParam || detailIndex > 0);
+  return { kind: 'route', route, canonical };
 }
 
 export function routesEqual(a: Route, b: Route): boolean {
-  return a.lang === b.lang && a.page === b.page && a.structure === b.structure && a.view === b.view;
+  const detailA = a.view === 'closeup' ? (a.detail ?? 0) : 0;
+  const detailB = b.view === 'closeup' ? (b.detail ?? 0) : 0;
+  return a.lang === b.lang && a.page === b.page && a.structure === b.structure && a.view === b.view && detailA === detailB;
 }
