@@ -227,7 +227,7 @@ const create: CloseupFactory = (ctx) => {
   );
   root.add(ringMesh);
 
-  // Microtubules: the rings facing the viewer's half get one each (minus end capped by the ring).
+  // Microtubules: some of the rings nucleate one each (the ring caps the minus end).
   const order = rings
     // Prefer rings whose microtubule would run across the screen (not straight at or away from the viewer).
     .map((r, i) => ({ i, score: -Math.abs(r.normal.dot(view)) + rng.range(-0.35, 0.35) }))

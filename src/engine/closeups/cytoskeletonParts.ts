@@ -119,9 +119,3 @@ export function ramp(x: number, a: number, b: number): number {
 export function mod(x: number, m: number): number {
   return ((x % m) + m) % m;
 }
-
-/** Deterministic hash in [0, 1) for integer-ish inputs (pure function, no state). */
-export function hash01(a: number, b = 0, c = 0): number {
-  const s = Math.sin(a * 127.1 + b * 311.7 + c * 74.7) * 43758.5453123;
-  return s - Math.floor(s);
-}

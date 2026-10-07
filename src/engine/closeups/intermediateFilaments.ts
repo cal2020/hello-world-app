@@ -191,7 +191,7 @@ const create: CloseupFactory = (ctx) => {
   const ropeJoined = new THREE.Mesh(ropeGeometry(0, UNIT + 0.5, q), ropeMaterial);
   filament.add(ropeMain, ropeJoined);
 
-  // "Pull" cue: chevrons at the pulled end.
+  // "Pull" cue: chevrons above the filament's right part, shown while it is pulled.
   const chevronParts: THREE.BufferGeometry[] = [];
   for (const sign of [1, -1]) {
     const arm = new THREE.BoxGeometry(9, 2, 1);
@@ -316,8 +316,8 @@ const create: CloseupFactory = (ctx) => {
       placeTetramer(TETRAMER_DIMERS + k * 2, v2, qb, 0, 0, s3);
     }
 
-    // Stage 4 — reset [11.0, 11.8]: the unit joined last loop dissolves into the filament
-    // record while a new ULF appears; dock [11.8, 13.4]; compact [13.4, 14.6].
+    // Stage 4 — reset [11.0, 11.8]: the unit that joined in the previous loop fades out while a
+    // new ULF appears; dock [11.8, 13.4]; compact [13.4, 14.6] as the joined rope unit fades in.
     const joinedScale = t < 11.0 ? 1 : t < 11.4 ? 1 - ramp(t, 11.0, 11.4) : ramp(t, 14.0, 14.6);
     ropeJoined.scale.set(1, Math.max(1e-3, joinedScale), Math.max(1e-3, joinedScale));
     ropeJoined.visible = joinedScale > 0.01;

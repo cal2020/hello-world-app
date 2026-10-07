@@ -573,8 +573,6 @@ const create: CloseupFactory = (ctx) => {
     ],
     setView() {},
     update(_dt, t, calm) {
-      const ct = new URLSearchParams(location.search).get('ct'); // TEMP-DEV
-      if (ct) t = Number(ct); // TEMP-DEV
       time.value = t;
       jiggle.amount.value = calm ? 0.3 : 1;
       update(t, calm);
