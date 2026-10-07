@@ -109,7 +109,8 @@
   /* ---------------------------------------------------------------- rail */
   function meter(inventory, label) {
     const h = HXUI.h;
-    return h("div", { class: "hx-meter", role: "img", "aria-label": label },
+    /* decorative: the link right below carries the same count in words */
+    return h("div", { class: "hx-meter", "aria-hidden": "true", title: label },
       inventory.map((m) => h("span", { class: "hx-meter-cell", dataset: { status: m.status }, title: "HX." + m.ns[0] + ": " + m.status })));
   }
 

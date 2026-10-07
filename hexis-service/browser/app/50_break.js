@@ -149,7 +149,7 @@
         h("span", { class: "br-text" }, line_text(o)));
     });
     return h("figure", { class: "br-diff" },
-      h("figcaption", { class: "br-diff-head" }, h("code", { class: "br-diff-path" }, label),
+      h("figcaption", { class: "br-diff-head" }, HXUI.wrap_id(label, { class: "br-diff-path" }),
         h("span", { class: "br-diff-count" }, h("span", { class: "br-add-n" }, "+" + adds), " ", h("span", { class: "br-del-n" }, "−" + dels))),
       h("pre", { class: "br-diff-code" }, lines));
   }
@@ -243,6 +243,26 @@
     if (counts.error) chips.push(HXUI.chip(plural(counts.error, "error"), "crit"));
     L.meta.replaceChildren(...chips);
     L.meta.dataset.done = done.length === list.length ? "yes" : "no";
+    paint_strip(done, counts);
+  }
+
+  /** the section's summary strip: the sweep, the selected mutation, and parity with the Python test's findings */
+  function paint_strip(done, counts) {
+    if (!L.strip) return;
+    const list = HXUI.mutations.list;
+    const all = done.length === list.length;
+    const m = HXUI.mutations.find(L.selected);
+    const r = results[L.selected];
+    const parity = done.filter((x) => results[x.id].codes_equal && results[x.id].hash_equal).length;
+    L.strip.hx.set([
+      { id: "br-sum-caught", label: "Caught as in Python", value: [h("span", { class: "hx-num" }, String(counts.caught || 0)), h("span", { class: "br-sum-of" }, "of " + list.length)],
+        note: all ? (counts.caught === list.length ? "every mutation rejected" : (list.length - (counts.caught || 0)) + " need a look") : "checking " + done.length + " of " + list.length },
+      { id: "br-sum-selected", label: "Selected", value: m ? h("span", { class: "br-sum-title" }, m.title) : "none", note: r ? (STATE_CHIP[r.state] || STATE_CHIP.pending)[1] : "checking" },
+      { id: "br-sum-findings", label: "Findings", value: h("span", { class: "hx-num" }, r && r.findings ? String(r.findings.length) : "–"),
+        note: r && r.codes ? plural(r.codes.length, "distinct code") : null },
+      { id: "br-sum-parity", label: "Codes and hash equal Python", value: [h("span", { class: "hx-num" }, String(parity)), h("span", { class: "br-sum-of" }, "of " + done.length)],
+        note: "validate_package in this page" },
+    ]);
   }
 
   function paint_item(id) {
@@ -381,7 +401,7 @@
       h("h4", { class: "br-detail-title", id: "br-detail-title" }, m.title),
       h("div", { class: "br-detail-chips" }, state_chip(r.state)));
     const intro = [h("p", { class: "br-why" }, m.why),
-      h("p", { class: "br-test" }, "Python test ", h("code", { class: "br-test-name" }, m.test))];
+      h("p", { class: "br-test" }, "Python test ", HXUI.wrap_id(m.test, { class: "br-test-name" }))];
     if (r.error) {
       return h("div", { class: "br-detail-body" }, head, intro,
         HXUI.notice("crit", "This mutation could not be checked", h("div", { class: "hx-stack-tight" },
@@ -408,7 +428,7 @@
       ? h("ul", { class: "cp-findings br-findings", id: "br-findings", "aria-label": "Findings of validate_package", dataset: { digest: r.report.report_digest || "" } }, r.findings.map((f) =>
         h("li", { class: "cp-finding", dataset: { code: f.code, state: f.state || "", edge: f.edge === null || f.edge === undefined ? "" : f.edge, variable: f.variable || "" } },
           h("div", { class: "cp-finding-head" }, HXUI.chip(f.code, f.severity === "error" ? "crit" : "warn", { mono: true }), finding_where(f)),
-          h("p", { class: "cp-finding-msg" }, f.message),
+          h("p", { class: "cp-finding-msg" }, HXUI.plain_lists(f.message)),
           finding_extra(f))))
       : h("p", { class: "br-note", id: "br-findings" }, "No findings: the mutated package passes validation.");
     const py = m.python;
@@ -710,7 +730,8 @@
   function render() {
     if (!root) return;
     L.sweep++;
-    root.replaceChildren(lab_panel(), playground_panel());
+    L.strip = HXUI.summary_strip("br-summary", "Mutation lab summary");
+    root.replaceChildren(L.strip, lab_panel(), playground_panel());
     if (L.detail) {
       select_mutation(L.selected);
       sweep();

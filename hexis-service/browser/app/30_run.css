@@ -12,26 +12,34 @@
   top: calc(env(safe-area-inset-top, 0px) + var(--rn-sticky-top, 0px));
   z-index: 5;
   display: grid;
-  grid-template-columns: minmax(11rem, 1.2fr) minmax(9rem, 1.4fr) repeat(4, minmax(0, auto));
-  gap: var(--sp-3) var(--sp-5);
+  /* fixed columns: the strip keeps its size as the run moves from state to state */
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1.3fr) minmax(0, 1.3fr) minmax(0, 0.8fr) minmax(0, 0.9fr) minmax(0, 0.9fr);
+  gap: var(--sp-3) var(--sp-4);
   padding: var(--sp-3) var(--sp-4);
   background: var(--surface-2);
   border: 1px solid var(--rule);
   border-radius: var(--r-2);
 }
 .rn-sum-item { display: grid; gap: 0.3rem; align-content: start; min-width: 0; }
-.rn-sum-value { display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 0.35rem; min-width: 0; color: var(--ink); font-weight: 500; }
-.rn-sum-value .hx-mono { overflow-wrap: anywhere; }
-.rn-sum-note { font-size: var(--fs-2); font-weight: 400; color: var(--ink-3); }
-.rn-sum-value .hx-num { font-size: var(--fs-4); font-weight: 600; font-variant-numeric: tabular-nums; }
-.rn-clock { font-size: var(--fs-2); font-weight: 400; }
+/* the value on one line, its note on the line below: every item is two lines high in every state */
+.rn-sum-value { display: flex; flex-wrap: wrap; align-items: center; align-content: start; gap: 0.2rem 0.35rem; min-width: 0; min-height: calc(var(--fs-4) * 1.2 + var(--fs-2) * 1.5 + 0.2rem); color: var(--ink); font-weight: 500; white-space: nowrap; }
+.rn-sum-value > :first-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.rn-sum-value .hx-mono { overflow: hidden; text-overflow: ellipsis; }
+.rn-sum-note { flex: 1 0 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: var(--fs-2); font-weight: 400; color: var(--ink-3); }
+.rn-sum-flags { display: flex; flex-wrap: wrap; gap: 0.25rem; white-space: normal; overflow: visible; }
+.rn-sum-value .hx-num { font-size: var(--fs-4); line-height: 1.2; font-weight: 600; font-variant-numeric: tabular-nums; }
+.rn-clock { font-size: var(--fs-3); font-weight: 500; }
 .rn-sum-flag { font-weight: 400; }
+#rn-sum-status .hx-chip { max-width: 100%; }
 @container rn (max-width: 52rem) {
+  /* not sticky here: a long status may take a second line instead of being cut */
   .rn-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); position: static; }
+  #rn-sum-status .hx-chip { white-space: normal; }
+  #rn-sum-status .hx-chip-text { overflow: visible; text-overflow: clip; white-space: normal; }
 }
 @container rn (max-width: 30rem) {
   .rn-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .rn-sum-item:first-child { grid-column: 1 / -1; }
+  .rn-sum-item:first-child, .rn-sum-item:nth-child(2) { grid-column: 1 / -1; }
 }
 
 /* ------------------------------------------------------------------ start: scenario cards */
@@ -103,6 +111,8 @@
 .rn-seg-opt:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: -2px; }
 .rn-machine-reason { max-width: 30ch; }
 .rn-expect { font-size: var(--fs-2); color: var(--ink-2); }
+.rn-picked { font-size: var(--fs-2); color: var(--ink-2); padding: var(--sp-2) var(--sp-3); border-left: 3px solid var(--accent); background: var(--surface-2); text-wrap: pretty; }
+.rn-picked[hidden] { display: none; }
 .rn-expect .hx-label { margin-right: 0.35rem; }
 
 /* ------------------------------------------------------------------ results (inline, per control group) */
@@ -138,22 +148,35 @@
 .rn-run-btn[aria-current="true"] .hx-mono { text-decoration: none; }
 .rn-runs-table tr.is-selected td { background: color-mix(in srgb, var(--accent-tint) 50%, transparent); }
 
-/* ------------------------------------------------------------------ workbench: graph + side column */
-.rn-work { display: grid; grid-template-columns: minmax(0, 1fr) minmax(17rem, 21rem); gap: var(--sp-5); align-items: start; min-width: 0; }
-.rn-work-graph { min-width: 0; }
+/* ------------------------------------------------------------------ workbench: controls, then the graph */
+/* The graph takes the workbench's full width (its full drawing needs about 760px). The approval or input card
+   comes before it and the outcome after it; a workbench wide enough for both puts them in a column beside it. */
+.rn-panel > .rn-drive { margin-bottom: var(--sp-4); }
+.rn-work { display: flex; flex-direction: column; gap: var(--sp-4); min-width: 0; }
+.rn-work > .rn-human-slot { order: 0; }
+.rn-work > .rn-work-graph { order: 1; min-width: 0; }
+.rn-work > .rn-outcome { order: 2; }
 .rn-graph { min-width: 0; }
-.rn-work-side { display: flex; flex-direction: column; gap: var(--sp-4); min-width: 0; }
-@container rn (max-width: 52rem) {
-  .rn-work { grid-template-columns: minmax(0, 1fr); }
+@container rn (min-width: 70rem) {
+  .rn-work { display: grid; grid-template-columns: minmax(48rem, 1fr) minmax(17rem, 22rem); grid-auto-rows: min-content; align-items: start; column-gap: var(--sp-5); row-gap: var(--sp-4); }
+  .rn-work > .rn-work-graph { grid-column: 1; grid-row: 1 / span 3; }
+  .rn-work > .rn-human-slot, .rn-work > .rn-outcome { grid-column: 2; }
 }
 .rn-drive { display: grid; gap: var(--sp-2); min-width: 0; }
-.rn-drive-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
-.rn-drive-row .hx-btn { width: 100%; }
-.rn-clock-row { grid-template-columns: auto 1fr 1fr; align-items: center; }
-.rn-clock-label { font-size: var(--fs-2); color: var(--ink-2); padding-right: var(--sp-2); }
-.rn-drive > .rn-result { margin-top: var(--sp-2); }
+.rn-drive-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-5); min-width: 0; }
+.rn-drive-group { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); min-width: 0; }
+.rn-clock-label { font-size: var(--fs-2); color: var(--ink-2); }
+.rn-drive > .rn-result { margin-top: var(--sp-1); }
 .rn-drive-wait { font-size: var(--fs-2); color: var(--ink-2); text-wrap: pretty; }
 .rn-drive-wait[hidden] { display: none; }
+@container rn (max-width: 30rem) {
+  /* phones: each group fills the row, its buttons share it equally */
+  .rn-drive-bar { gap: var(--sp-2); }
+  .rn-drive-group { flex: 1 1 100%; }
+  .rn-drive-group > .hx-btn { flex: 1 1 0; }
+  .rn-clock-group > .hx-btn { flex: 0 1 6rem; }
+  .rn-clock-label { flex: 1 1 auto; }
+}
 
 /* approval / input / outcome cards */
 .rn-human-slot { display: grid; gap: var(--sp-3); min-width: 0; }
@@ -251,8 +274,8 @@
   .rn-sc, .rn-run-btn { transition: none; }
 }
 
-/* the outcome card lives in the narrow side column: each label sits above its value */
-.rn-outcome .rn-scope-row { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
-.rn-outcome .rn-scope-row + .rn-scope-row { padding-top: 0.2rem; }
-#rn-sum-status .hx-chip { max-width: 100%; white-space: normal; padding-block: 0.15rem; }
-#rn-sum-status .hx-chip-text { overflow: visible; text-overflow: clip; }
+/* the outcome card: label beside value at full width, each label above its value in the side column */
+@container rn (min-width: 70rem) {
+  .rn-outcome .rn-scope-row { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
+  .rn-outcome .rn-scope-row + .rn-scope-row { padding-top: 0.2rem; }
+}

@@ -43,13 +43,13 @@
 
   /* the development traces the proposal panel offers, each with the aligner its Python test pairs it with */
   const TRACES = [
-    { id: "missing-docs", label: "Missing documents, then supplied", aligner: "FixtureAligner", make: "missing_docs_trace", ref: "A18 setup",
+    { id: "missing-docs", label: "Missing documents, then supplied", aligner: "FixtureAligner", make: "missing_docs_trace", ref: "Python test A18",
       why: "Documents are missing; the requester supplies them once and the run continues. The parent machine cannot represent that, so the aligner proposes a bounded input request." },
-    { id: "missing-docs-breaking", label: "Missing documents, breaking aligner", aligner: "BreakingAligner", make: "missing_docs_trace", ref: "A14",
+    { id: "missing-docs-breaking", label: "Missing documents, breaking aligner", aligner: "BreakingAligner", make: "missing_docs_trace", ref: "Python test A14",
       why: "The same trace, but the aligner also reroutes the registry-conflict path. The protected-replay gate must catch it." },
-    { id: "shortcut", label: "Shortcut: repair, then approve without validating", aligner: "ShortcutAligner", make: "shortcut_trace", ref: "A17",
+    { id: "shortcut", label: "Shortcut: repair, then approve without validating", aligner: "ShortcutAligner", make: "shortcut_trace", ref: "Python test A17",
       why: "The trace skips re-validation after a repair. It violates an ordering requirement, so it is excluded before any candidate is built." },
-    { id: "forbidden-write", label: "ERP write without approval", aligner: "FixtureAligner", make: "forbidden_write_trace", ref: "A15",
+    { id: "forbidden-write", label: "ERP write without approval", aligner: "FixtureAligner", make: "forbidden_write_trace", ref: "Python test A15",
       why: "The answer was right, but the ERP write happened without approval. The trace is excluded and belongs in the negative corpus." },
   ];
 
@@ -63,12 +63,27 @@
 
   const STATUS_TONE = { CANDIDATE: "ok", ADMITTED: "ok", NO_CHANGE: "neutral", EXCLUDED: "warn", REJECTED: "crit", CONFLICT: "warn" };
   const STATUS_ICON = { CANDIDATE: "check", ADMITTED: "check", EXCLUDED: "stop", REJECTED: "cross", CONFLICT: "alert" };
+  /* the one chip rule (HXUI.status_chip): engine status values read as words, the value itself in the tooltip */
   const status_chip = (s, id) => {
-    const c = HXUI.chip(s, STATUS_TONE[s] || "neutral", { icon: STATUS_ICON[s] });
+    const c = HXUI.status_chip ? HXUI.status_chip(s, STATUS_TONE[s] || "neutral", { icon: STATUS_ICON[s] }) : HXUI.chip(s, STATUS_TONE[s] || "neutral", { icon: STATUS_ICON[s] });
     if (id) c.id = id;
     c.dataset.status = s;
     return c;
   };
+  /* replay statuses (PASS, DIVERGED, ...) follow the same rule */
+  const replay_chip = (s) => (HXUI.status_chip ? HXUI.status_chip(s, s === "PASS" ? "ok" : "crit") : HXUI.chip(s, s === "PASS" ? "ok" : "crit"));
+
+  /** The guided demo's step 6a, when it ran in this lab's env: {proposal, admission, refined_hash, parent_hash}.
+      The tour publishes it on HXUI.lab.log (source "tour"); it belongs to this env when its refined machine is
+      admitted in this store. */
+  function tour_learn(env) {
+    const log = Array.isArray(HXUI.lab.log) ? HXUI.lab.log : [];
+    let e = null;
+    for (let i = log.length - 1; i >= 0; i--) if (log[i] && log[i].source === "tour" && log[i].kind === "learn" && log[i].step === "6a") { e = log[i]; break; }
+    if (!e || !env || !e.refined_hash) return null;
+    try { if (!HX.registry.is_admitted_in(env.store, e.refined_hash, ENVIRONMENT)) return null; } catch (err) { return null; }
+    return e;
+  }
 
   /* ---------------------------------------------------------------- small helpers */
   function with_id(el, id) { el.id = id; return el; }
@@ -462,7 +477,8 @@
     } catch (e) {
       S.proposal = { error: e, opt: TRACES.find((t) => t.id === S.choice) };
     }
-    if (!quiet && S.proposal && S.proposal.prop) HXUI.announce("Proposal " + S.proposal.prop.status + ".");
+    if (S.proposal) S.proposal.by_user = !quiet;
+    if (!quiet && S.proposal && S.proposal.prop) HXUI.announce("Proposal " + HXUI.status_words(S.proposal.prop.status) + ".");
   }
 
   function shortcut_now(quiet) {
@@ -562,6 +578,8 @@
     let a = null, ar = null;
     try { a = active(env); ar = archive(env); } catch (e) { a = null; }
     const prop = S.proposal && S.proposal.prop;
+    /* after the guided demo, its proposal is the last one made in this lab, until the viewer proposes here */
+    const tl = !(S.proposal && S.proposal.by_user) ? tour_learn(env) : null;
     const ev = !HXUI.engine_missing(EVAL_NEEDS).length && S.evaluation && S.evaluation.result;
     const items = [
       sum_item("active", "Active version",
@@ -570,9 +588,11 @@
       sum_item("archive", "Protected archive",
         ar ? h("span", { class: "hx-num", dataset: { count: (ar.protected || []).length } }, String((ar.protected || []).length)) : "–",
         ar ? "traces · " + plural((ar.negative || []).length, "negative") : null),
-      sum_item("proposal", "Last proposal",
-        prop ? status_chip(prop.status) : h("span", { class: "hx-faint" }, S.proposal && S.proposal.error ? "error" : "not run yet"),
-        prop ? (TRACES.find((t) => t.id === S.proposal.opt.id) || {}).ref : null),
+      tl ? sum_item("proposal", "Last proposal", [status_chip(tl.proposal, "ln-sum-proposal-status"), tl.admission ? status_chip(tl.admission) : null],
+        "from the guided demo, missing documents")
+        : sum_item("proposal", "Last proposal",
+          prop ? status_chip(prop.status, "ln-sum-proposal-status") : h("span", { class: "hx-faint" }, S.proposal && S.proposal.error ? "error" : "not run yet"),
+          prop ? (TRACES.find((t) => t.id === S.proposal.opt.id) || {}).label + (S.proposal.parent_kind === "refined" ? ", against the refined machine" : "") : null),
       sum_item("eval", "Business success",
         ev ? [h("span", { class: "hx-num" }, HX.eval.fmt2(ev.arms.initial_compiled.summary.business_success)),
           h("span", { class: "ln-arrow", "aria-hidden": "true" }, "→"), h("span", { class: "hx-visually-hidden" }, " initial, then refined "),
@@ -701,10 +721,12 @@
       HXUI.table({
         caption: "Result of the last enrollment", caption_hidden: true,
         columns: [
-          { key: "run_id", label: "Run", render: (r) => h("span", { class: "hx-mono ln-wrap" }, r.run_id) },
+          /* like the archive table: the run id never breaks, and Reason and Outcome fold under it on narrow screens */
+          { key: "run_id", label: "Run", nowrap: true, render: (r) => h("code", { class: "hx-mono ln-nobreak" }, r.run_id) },
           { key: "result", label: "Result", nowrap: true, render: chip },
-          { key: "why", label: "Reason", render: (r) => r.result === "ADMITTED" ? "Enrolled as archive v" + r.version + "." : (r.reasons || []).join(" ") },
-          { key: "terminal", label: "Outcome", fold: true, fold_label: "ends", render: (r) => r.terminal ? code(r.terminal) : r.status },
+          { key: "why", label: "Reason", fold: true, render: (r) => r.result === "ADMITTED" ? "Enrolled as archive v" + r.version + "." : plain_lists((r.reasons || []).join(" ")) },
+          { key: "terminal", label: "Outcome", fold: (r) => (r.terminal ? code(r.terminal) : null), fold_label: "ends",
+            render: (r) => r.terminal ? code(r.terminal) : h("span", { class: "hx-faint" }, "not finished") },
         ],
         rows, row_attrs: (r) => ({ dataset: { run: r.run_id, result: r.result } }),
       }));
@@ -739,7 +761,10 @@
         return;
       }
       p.meta.replaceChildren(HXUI.chip("in " + ms_text(r.ms), "neutral"));
-      p.body.replaceChildren(proposal_view(r));
+      const tl = !r.by_user ? tour_learn(HXUI.lab.env) : null;
+      p.body.replaceChildren(...[tl ? h("p", { class: "ln-origin", id: "ln-tour-note" }, "The guided demo proposed the refined machine from this trace (",
+        status_chip(tl.proposal), ") and admitted it (", status_chip(tl.admission), "). The proposal below runs again against that now-active refined machine, so it reports its own result.") : null,
+      proposal_view(r)].filter(Boolean));
     };
     return p;
   }
@@ -784,7 +809,7 @@
     if (prop.status === "NO_CHANGE") {
       const rep = (prop.gates.new_trace_replay || {}).report || {};
       parts.push(h("div", { class: "ln-block", id: "ln-nochange" }, h("p", { class: "ln-sub" }, "Replay against the parent"),
-        h("p", null, rep.status ? HXUI.chip(rep.status, rep.status === "PASS" ? "ok" : "crit", { mono: true }) : null, " ",
+        h("p", null, rep.status ? replay_chip(rep.status) : null, " ",
           "The parent already walks this trace. No candidate was built, so no other gate ran."),
         Array.isArray(rep.path) && rep.path.length ? h("div", { class: "ln-path" }, h("span", { class: "hx-label" }, "Parent path "), chain(rep.path)) : null));
       return h("div", { class: "ln-result" }, parts);
@@ -806,9 +831,7 @@
   }
 
   /** the engine mirrors Python's messages, which print lists of names as ['a', 'b']: show them as a, b */
-  function plain_lists(msg) {
-    return String(msg).replace(/\[((?:'[^'\]]*'(?:, )?)+)\]/g, (m, inner) => inner.split(/, (?=')/).map((x) => x.slice(1, -1)).join(", "));
-  }
+  const plain_lists = (msg) => HXUI.plain_lists(msg);
 
   function gate_detail(key, g) {
     if (!g) return h("span", { class: "hx-faint" }, "not run");
@@ -821,12 +844,13 @@
     }
     if (key === "new_trace_replay") {
       const rep = g.report || {};
-      return [rep.status ? HXUI.chip(rep.status, rep.status === "PASS" ? "ok" : "crit", { mono: true }) : null, " ",
-        rep.status === "PASS" ? "The candidate represents the trace: " + plural((rep.path || []).length, "state") + " on its path." : (rep.detail || "")];
+      /* the Result column already says passed or failed: a failure names the replay status, a pass needs no chip */
+      return [rep.status && rep.status !== "PASS" ? [replay_chip(rep.status), " "] : null,
+        rep.status === "PASS" ? "The candidate represents the trace: " + plural((rep.path || []).length, "state") + " on its path." : plain_lists(rep.detail || "")];
     }
     if (key === "protected_replay") {
       return h("div", null, h("span", null, plural(g.count, "protected trace") + " replayed, " + plural(g.failures.length, "failure") + "."),
-        g.failures.map((f) => h("div", { class: "ln-finding" }, tid(f.trace_id), " ", HXUI.chip(f.status, "crit", { mono: true }), " ",
+        g.failures.map((f) => h("div", { class: "ln-finding" }, tid(f.trace_id), " ", replay_chip(f.status), " ",
           f.divergence && f.divergence.reason ? f.divergence.reason : f.detail,
           f.divergence && Array.isArray(f.divergence.path) && f.divergence.path.length ? h("div", { class: "ln-path" }, h("span", { class: "hx-label" }, "Candidate path "), chain(f.divergence.path)) : null)));
     }
@@ -959,8 +983,8 @@
       h("div", { class: "hx-action-row" }, admit, admit_reason),
       h("div", { class: "hx-action-row" }, race, race_reason));
     const pointer = h("div", { class: "ln-pointer-box", id: "ln-pointer" });
-    const p = panel("admit", "Admit against the expected parent", ["Admission re-validates the candidate, replays the archive itself and moves the active pointer only if it still names the expected parent (compare-and-swap). ",
-      "Race two updates reproduces A18: two refinements of the same parent are admitted one after the other, and the second must rebase."], controls);
+    const p = panel("admit", "Admit against the expected parent", ["Admission re-validates the candidate, replays the archive itself and moves the active pointer only if it still names the expected parent (a compare-and-swap). ",
+      "Race two updates replays Python test A18: two refinements of the same parent are admitted one after the other, and the second must rebase."], controls);
     p.el.insertBefore(pointer, p.body);
     p.paint = () => {
       const env = HXUI.lab.env;
@@ -1198,7 +1222,7 @@
             { key: "initial", label: "Initial", fold: true, fold_label: "initial", render: outcome },
             { key: "refined", label: "Trace-refined", fold: true, fold_label: "refined", render: (r) => by_task[r.task] ? outcome(by_task[r.task]) : "–" },
             { key: "overlap", label: "Dev overlap", fold: true, fold_label: "dev overlap", render: (r) => ov[r.task]
-              ? h("span", { title: ov[r.task].join("; ") }, HXUI.chip("overlaps", "warn", { icon: "alert" }), h("span", { class: "hx-visually-hidden" }, ": " + ov[r.task].join("; ")))
+              ? h("span", { title: HXUI.plain_lists(ov[r.task].join("; ")) }, HXUI.chip("overlaps", "warn", { icon: "alert" }), h("span", { class: "hx-visually-hidden" }, ": " + HXUI.plain_lists(ov[r.task].join("; "))))
               : h("span", { class: "hx-faint" }, "no") },
           ],
           rows: a0.rows, row_attrs: (r) => ({ dataset: { task: r.task, overlap: ov[r.task] ? "yes" : "no" } }),
@@ -1214,7 +1238,7 @@
     if (!keys.length) return null;
     return h("div", { class: "ln-notrun", id: "ln-eval-notrun" }, HXUI.chip("Not run", "neutral"),
       h("div", { class: "ln-notrun-body" }, keys.map((k) => h("p", { dataset: { arm: k } },
-        NOT_RUN_LABELS[k] || k, ": it needs a live model, and this page has none ", h("span", { class: "hx-faint" }, "(engine: " + nr[k] + ")"), ".")),
+        h("span", { title: "Engine: " + nr[k] }, NOT_RUN_LABELS[k] || k), ": not run, because it needs a live model and this page has none.")),
         h("p", null, "These numbers describe deterministic fixture behavior, not model quality.")));
   }
 
@@ -1229,8 +1253,12 @@
       /* another section moved the active pointer (the Run workbench can admit the refined machine): recheck */
       try { if (active(env).hash !== S.shortcut.parent_hash) shortcut_now(true); } catch (e) { /* no active version */ }
     }
+    /* hidden: on_show repaints; a step in the Run workbench must not rebuild this whole section each time */
+    if (!P.root.isConnected || P.root.closest("[hidden]")) return;
     paint_all();
   });
+  /* the guided demo published its proposal and admission (step 6a) or its shortcut (6b): show them */
+  HXUI.bus.on("tour:learn", () => { if (P && P.root.isConnected && !P.root.closest("[hidden]")) paint_all(); });
   HXUI.bus.on("lab:reset", () => {
     S = fresh_state();
     base_pkg = null;

@@ -711,10 +711,15 @@ export default async function (t) {
     assert.deepEqual(cseq[0], { what: "state", state: "READ_INTAKE", role: "img" }, "compact graph: Tab lands on the first state");
     await page.focus(`#hxgt-after-${c}`);
     await page.keyboard.press("Shift+Tab");
-    // reading order: READ_INTAKE, then its "unverified" pill (the stand-in for END_UNVERIFIED), then LOOKUP_SUPPLIER
-    await page.keyboard.press("ArrowDown");
+    // the arrow keys follow the layout: Right reaches READ_INTAKE's "unverified" pill (the stand-in for
+    // END_UNVERIFIED) beside it, Left comes back, and Down reaches LOOKUP_SUPPLIER below it
+    await page.keyboard.press("ArrowRight");
     const mid = await page.evaluate(() => document.activeElement.getAttribute("data-state"));
-    assert.equal(mid, "END_UNVERIFIED", "compact graph: the arrow keys follow reading order");
+    assert.equal(mid, "END_UNVERIFIED", "compact graph: ArrowRight moves to the state drawn to the right");
+    await page.keyboard.press("ArrowLeft");
+    assert.equal(await page.evaluate(() => document.activeElement.getAttribute("data-state")), "READ_INTAKE", "compact graph: ArrowLeft moves back");
+    await page.keyboard.press("ArrowUp");
+    assert.equal(await page.evaluate(() => document.activeElement.getAttribute("data-state")), "READ_INTAKE", "compact graph: nothing above the first state, focus stays");
     await page.keyboard.press("ArrowDown");
     await page.waitForTimeout(300); // let the ring's (at most 150ms) transition settle
     const cf = await page.evaluate((i) => {
@@ -731,27 +736,27 @@ export default async function (t) {
     assert.equal(cf.caption, "LOOKUP_SUPPLIER: tool · supplier.lookup→ EXTRACT_DRAFT if lookup_status in ['new', 'exists_compatible']→ FALLBACK otherwise",
       "compact graph: focus fills the caption with the state's transitions and guards");
     assert.equal(cf.ring, css.focus, "compact graph: the focused state shows a ring in the focus color");
-    // the pointer reads the state with its guards too and never pushes the page around (the caption reserves the
-    // lines of the longest reading); leaving returns to the focused state
+    // the pointer reads the state with its guards too and never moves the drawing under it (the caption sits below
+    // the canvas); leaving returns to the focused state
     const hov = await page.evaluate((i) => {
       const r = __hxgt.views[i].view.root;
       const cap = r.querySelector(".hxg-caption");
       const g = r.querySelector('.hxg-node[data-state="PERSIST_DRAFT"] .hxg-box');
-      const h0 = cap.getBoundingClientRect().height;
+      const t0 = g.getBoundingClientRect().top;
       g.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
-      const over = { text: cap.textContent, h: cap.getBoundingClientRect().height };
+      const over = { text: cap.textContent, top: g.getBoundingClientRect().top };
       g.dispatchEvent(new MouseEvent("mouseout", { bubbles: true, relatedTarget: document.body }));
-      return { over, back: cap.textContent, h0, line: parseFloat(getComputedStyle(cap).lineHeight) };
+      return { over, back: cap.textContent, t0 };
     }, c);
     assert.equal(hov.over.text, "PERSIST_DRAFT: tool · erp.create_draft→ READ_BACK if persist_status in ['created', 'existing']→ FALLBACK otherwise",
       "compact graph: hovering a state lists its transitions and guards");
-    assert.ok(Math.abs(hov.over.h - hov.h0) < 0.5, `compact graph: hovering does not change the caption's height (${hov.h0} -> ${hov.over.h})`);
+    assert.ok(Math.abs(hov.over.top - hov.t0) < 0.5, `compact graph: hovering does not move the drawing (${hov.t0} -> ${hov.over.top})`);
     assert.equal(hov.back, cf.caption, "compact graph: when the pointer leaves, the focused state's details return");
     assert.match(cf.label, /lookup_status in \['new', 'exists_compatible'\]/, "compact graph: the focused state's name carries its guards");
     assert.ok(cf.shown.every((k) => k.startsWith("LOOKUP_SUPPLIER#")), "compact graph: only the focused state's guards are shown");
     await page.keyboard.press("Tab");
     // a short window (a phone in landscape, or with the keyboard up): focusing or tapping a state near the top keeps
-    // the caption on screen (it is a sticky bar at the bottom of the frame)
+    // the caption on screen (while a state is read it is a sticky bar at the bottom of the frame)
     {
       const vp = page.viewportSize();
       await page.setViewportSize({ width: vp.width, height: 420 });
@@ -819,6 +824,7 @@ export default async function (t) {
         copiesHidden: [...svg.querySelectorAll(".hxg-node[data-copy]")].filter((g) => g.getAttribute("data-copy") !== "0").every((g) => g.getAttribute("aria-hidden") === "true"),
         altItems: alt ? [...alt.querySelectorAll("li")].map((li) => li.textContent) : [],
         altIntro: alt ? alt.querySelector("p").textContent : "",
+        altListHidden: alt ? alt.querySelector("ol").hidden && alt.querySelector("ol").getAttribute("aria-hidden") === "true" : false,
         altHidden: alt ? getComputedStyle(alt).clipPath !== "none" || alt.getBoundingClientRect().width <= 1 : false,
         names, role: svg.getAttribute("role"),
       };
@@ -830,7 +836,7 @@ export default async function (t) {
     assert.ok(info.focusable, "every state is focusable");
     assert.ok(info.copiesHidden, "extra terminal copies are hidden from assistive technology");
     assert.equal(info.role, "group", "the drawing of a selectable graph is a group of buttons");
-    assert.deepEqual(info.names, ["Selectable", null, null], "only the figure is named");
+    assert.deepEqual(info.names, ["Selectable", "States: use the arrow keys to move between them", null], "the figure and its group of states are named");
     const ri = info.labels[info.states.indexOf("READ_INTAKE")];
     assert.match(ri, /READ_INTAKE/, "aria-label names the state");
     assert.match(ri, /documents\.read/, "aria-label names the action");
@@ -838,6 +844,7 @@ export default async function (t) {
     assert.match(ri, /docs_status == 'available'/, "aria-label lists the guards");
     assert.match(info.labels[info.states.indexOf("END_UNVERIFIED")], /unverified/, "terminal aria-label names its category");
     assert.equal(info.altItems.length, ids.length, "text alternative lists every state");
+    assert.ok(info.altListHidden, "with focusable states, the state list is hidden from assistive technology (each state's name carries it)");
     assert.ok(info.altItems.some((s) => /VALIDATE_DRAFT/.test(s) && /repair_count < 2/.test(s) && /REPAIR_DRAFT/.test(s)), "text alternative lists transitions with guards");
     assert.match(info.altIntro, /arrow keys/, "text alternative explains the keyboard");
     assert.ok(!/Selectable/.test(info.altIntro), "text alternative does not repeat the name");
@@ -856,7 +863,7 @@ export default async function (t) {
       return { calls: v.calls.slice(), focused: f && f.getAttribute("data-state"), ring: f ? getComputedStyle(f.querySelector(".hxg-ring")).stroke : "" };
     }, i);
     const order = info.states;
-    assert.deepEqual(after.calls, [order[0], order[1], order[order.length - 1]], "Enter and Space select; arrows and End move focus");
+    assert.deepEqual(after.calls, [order[0], "LOOKUP_SUPPLIER", order[order.length - 1]], "Enter and Space select; ArrowDown moves to the state below, End to the last");
     assert.equal(after.focused, order[order.length - 1], "focus follows the arrow keys");
     assert.equal(after.ring, css.focus, "the focused state shows a ring in the focus color");
     // click on a terminal copy selects the terminal state

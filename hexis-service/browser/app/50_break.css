@@ -8,7 +8,9 @@
   gap: var(--sp-5);
   align-items: start;
 }
-.br-picker { min-width: 0; }
+.br-picker { min-width: 0; align-self: stretch; } /* the full row height, so the sticky list can follow the detail */
+.br-sum-of { font-size: var(--fs-2); font-weight: 400; color: var(--ink-3); }
+.br-sum-title { font-weight: 500; overflow-wrap: anywhere; }
 .br-picker-list {
   position: sticky;
   top: calc(env(safe-area-inset-top, 0px) + var(--sp-4));
@@ -48,11 +50,11 @@
 .br-mut-ok { display: inline-flex; color: var(--ok); }
 .br-mut-wait { color: var(--ink-3); font-size: var(--fs-2); }
 /* a fade on the edge of the list that has more mutations behind it */
-.br-picker-list[data-more-below="yes"] { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 3rem), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 3rem), transparent); }
-.br-picker-list[data-more-above="yes"] { -webkit-mask-image: linear-gradient(to top, #000 calc(100% - 3rem), transparent); mask-image: linear-gradient(to top, #000 calc(100% - 3rem), transparent); }
+.br-picker-list[data-more-below="yes"] { -webkit-mask-image: linear-gradient(to bottom, var(--ink) calc(100% - 3rem), transparent); mask-image: linear-gradient(to bottom, var(--ink) calc(100% - 3rem), transparent); }
+.br-picker-list[data-more-above="yes"] { -webkit-mask-image: linear-gradient(to top, var(--ink) calc(100% - 3rem), transparent); mask-image: linear-gradient(to top, var(--ink) calc(100% - 3rem), transparent); }
 .br-picker-list[data-more-above="yes"][data-more-below="yes"] {
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
-  mask-image: linear-gradient(to bottom, transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, var(--ink) 3rem, var(--ink) calc(100% - 3rem), transparent);
+  mask-image: linear-gradient(to bottom, transparent, var(--ink) 3rem, var(--ink) calc(100% - 3rem), transparent);
 }
 
 @container br (max-width: 50rem) {
@@ -68,7 +70,7 @@
 .br-detail-title { font: 600 var(--fs-5) / 1.25 var(--font-display); color: var(--ink); text-wrap: balance; }
 .br-detail-chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 .br-why { color: var(--ink); max-width: 70ch; text-wrap: pretty; margin-top: calc(-1 * var(--sp-3)); }
-.br-test { font-size: var(--fs-2); color: var(--ink-3); margin-top: calc(-1 * var(--sp-4)); overflow-wrap: anywhere; }
+.br-test { font-size: var(--fs-2); color: var(--ink-3); margin-top: calc(-1 * var(--sp-4)); }
 .br-test-name { font-size: var(--fs-1); color: var(--ink-2); }
 .br-block { display: grid; gap: var(--sp-2); min-width: 0; }
 .br-block-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2); }
@@ -79,7 +81,7 @@
 /* before / after */
 .br-diff { margin: 0; border: 1px solid var(--rule); border-radius: var(--r-1); background: var(--surface-2); min-width: 0; overflow: hidden; }
 .br-diff-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-2); padding: 0.4rem 0.75rem; border-bottom: 1px solid var(--rule); }
-.br-diff-path { font-size: var(--fs-1); color: var(--ink-2); overflow-wrap: anywhere; }
+.br-diff-path { font-size: var(--fs-1); color: var(--ink-2); }
 .br-diff-count { font: 500 var(--fs-1) / 1.4 var(--font-mono); }
 .br-add-n { color: var(--ok); }
 .br-del-n { color: var(--crit); }
@@ -159,3 +161,4 @@
   .br-guard { grid-template-columns: 1.6rem minmax(0, 1fr); }
   .br-guard > .hx-chip { grid-column: 2; justify-self: start; }
 }
+.br.hx-ruled > .hx-sumstrip + * { border-top: 0; padding-top: 0; }

@@ -44,15 +44,18 @@
       body: ["The fixture compiler drafts a state machine from ", { code: "SKILL.md" }, ". Validation rejects a draft that writes to the ERP before validating, the repaired draft passes, and ", { code: "user:dana" }, " admits it."] },
     { title: "Run a clean intake", section: "run",
       body: ["The run reads the documents, looks up the supplier, extracts a draft and validates it with one bounded repair. Then it stops and asks for approval of the exact write."] },
-    { title: "Restart the worker and approve", section: "run",
-      body: ["The worker restarts and resumes from stored state. The initiator cannot approve their own run, so ", { code: "user:bob" }, " approves it."] },
-    { title: "Time out after the ERP commits", section: "run",
-      body: ["The fake ERP commits the draft, then the call times out. The broker reconciles the write by its idempotency key, and the ERP still holds one draft."] },
+    { title: "Restart the worker; self-approval is refused", section: "run",
+      body: ["The worker restarts and resumes from stored state. The initiator, ", { code: "user:alice" }, ", tries to approve her own run, and the engine refuses: the run keeps waiting for someone else."] },
+    { title: "Approve, then the ERP times out after committing", section: "run",
+      body: [{ code: "user:bob" }, " approves the exact write. The fake ERP commits the draft, then the call times out. The broker reconciles the write by its idempotency key, and the ERP still holds one draft."] },
     { title: "Read the evidence-linked record", section: "run",
       body: ["The run reports success only after the draft read back from the ERP matches the approved payload. The record links every receipt to that evidence."] },
     { title: "Learn from a trace and refuse a shortcut", section: "learn",
-      body: ["A missing-documents trace yields a refined machine that passes every gate and is admitted against its parent. A shortcut that skips validation fails the gates, and the active version stays the same."] },
+      body: ["Part a: a missing-documents trace yields a refined machine that passes every gate and is admitted against its parent. Part b: a shortcut that skips validation fails the gates, and the active version stays the same."] },
   ];
+  /* the guide (65_tour.js) names its steps with these titles; 6a and 6b are the two parts of step 6 */
+  HXUI.demo_titles = { "1": STEPS[0].title, "2": STEPS[1].title, "3": STEPS[2].title, "4": STEPS[3].title, "5": STEPS[4].title,
+    "6a": "Learn from a missing-documents trace", "6b": "Refuse a shortcut trace" };
 
   /* parity digests show "sha256:" and 12 hex characters, which fits a grid column with its copy button */
   const SHORT = 19;

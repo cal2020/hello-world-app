@@ -154,6 +154,18 @@ export default async function (t) {
   const r1 = await start(page, assert, "clean");
   assert.equal(r1, "run_0000000000000001", "deterministic ids: the first run id equals the Python reference's");
   assert.equal(await page.evaluate(() => document.activeElement && document.activeElement.id), "rn-step", "after Start, focus moves to Step");
+  /* the graph spans the workbench: on a wide screen it is the full drawing, with guard labels and tool names */
+  const gfull = await page.evaluate(() => {
+    const fig = document.querySelector("#rn-graph .hxg");
+    return { compact: fig.classList.contains("is-compact"), labels: fig.querySelectorAll(".hxg-label").length, subs: fig.querySelectorAll(".hxg-sub").length,
+      cap: (() => { const c = fig.querySelector(".hxg-caption"); return c && !c.hidden ? getComputedStyle(c).position : "none"; })() };
+  });
+  if (t.viewport.width >= 1200) {
+    assert.equal(gfull.compact, false, "at 1280 the workbench shows the full graph drawing");
+    assert.ok(gfull.labels >= 12 && gfull.subs >= 8, `the full drawing has guard labels and tool sublabels (${JSON.stringify(gfull)})`);
+  } else {
+    assert.notEqual(gfull.cap, "sticky", "at rest the compact caption is in normal flow, not a sticky bar over the drawing");
+  }
   await click(page, "rn-step");
   let s = await state(page);
   assert.equal(s.status, "RUNNING");
@@ -192,6 +204,7 @@ export default async function (t) {
   assert.equal(s.state_id, "PERSIST_DRAFT");
   assert.equal(await page.evaluate(() => document.activeElement && document.activeElement.id), "rn-until", "focus moves to the next action when the approval panel closes");
   s = await until(page, assert, "COMPLETED");
+  assert.equal(s.start, null, "the 'Started' notice is cleared once the run has been driven");
   assert.deepEqual([s.outcome.terminal, s.outcome.category], ["END_VERIFIED_DRAFT", "verified"]);
   assert.deepEqual(s.outcome_card, { terminal: "END_VERIFIED_DRAFT", category: "verified", status: "COMPLETED" }, "the outcome card shows the engine's outcome");
   assert.equal(s.drive.tone, "ok", "a verified outcome reads as a success");
@@ -223,6 +236,28 @@ export default async function (t) {
   assert.ok(insp.invalid >= 1, "the repair invalidated the first validation receipt");
   assert.equal(insp.erp, 1);
   assert.ok(insp.metrics, "metrics render from HX.metrics.collect (or its unavailable state without HX.metrics)");
+  assert.match(await page.evaluate(() => document.getElementById("rn-tl-sum").textContent), /^\d+ of \d+ events shown \(timing hidden\), \d+ transitions?\./, "the timeline count reads as words");
+
+  /* ---- keyboard focus never lands under the sticky summary strip (WCAG 2.4.11), forwards or backwards */
+  {
+    await page.focus("#rn-insp-tab-timeline");
+    const covered = [];
+    for (const key of ["Shift+Tab", "Tab"]) {
+      await page.focus(key === "Tab" ? "#rn-start" : "#rn-pol-revoke");
+      for (let i = 0; i < 40; i++) {
+        await page.keyboard.press(key);
+        const r = await page.evaluate(() => {
+          const el = document.activeElement, sum = document.getElementById("rn-summary");
+          if (!el || !sum || !document.getElementById("rn").contains(el) || sum.contains(el)) return null;
+          if (getComputedStyle(sum).position !== "sticky") return null;
+          const a = el.getBoundingClientRect(), b = sum.getBoundingClientRect();
+          return a.top < b.bottom - 0.5 && a.bottom > b.top + 0.5 ? (el.id || el.className || el.tagName) + " at " + Math.round(a.top) + " under the strip ending at " + Math.round(b.bottom) : null;
+        });
+        if (r) covered.push(key + ": " + r);
+      }
+    }
+    assert.deepEqual(covered, [], "no focused control sits under the sticky run summary");
+  }
 
   /* ---- restart while waiting, then resume */
   await start(page, assert, "clean");
@@ -476,4 +511,20 @@ export default async function (t) {
   const after = await page.evaluate(() => ({ env: HXUI.lab.env, status: document.getElementById("rn").dataset.status,
     rows: document.querySelectorAll(".rn-runs-table tbody tr[data-run]").length, checked: document.querySelector("input[name=rn-scenario]:checked").value }));
   assert.deepEqual(after, { env: null, status: "idle", rows: 0, checked: "clean" }, "Reset lab returns the workbench to rest");
+
+  /* ---- the natural order: open Learn from traces first (it seeds the protected archive), then admit the refined
+     machine from the workbench. The admission gates see the stored archive and pass. */
+  const learn_here = await page.evaluate(() => HXUI.has_section("learn") && HXUI.engine_missing(["traces", "update", "reference", "registry", "replay", "normalize"]).length === 0);
+  if (learn_here && can_admit_here) {
+    await page.evaluate(() => HXUI.go("learn"));
+    await page.waitForFunction(() => ["done", "error"].includes(document.getElementById("ln")?.dataset.init), null, { timeout: 90000 });
+    const arch = await page.evaluate(() => (HXUI.lab.env.store.archive(HXUI.lab.packages.initial.machine.skill_id) || { protected: [] }).protected.length);
+    assert.ok(arch >= 1, "Learn seeded the protected archive");
+    await page.evaluate(() => HXUI.go("run"));
+    await page.waitForFunction(() => HXUI.current() === "run");
+    await click(page, "rn-admit-refined");
+    const adm = await page.evaluate(() => { const el = document.getElementById("rn-start-result"); return { code: el.dataset.code, text: el.textContent }; });
+    assert.equal(adm.code, "ADMITTED", "Admit refined machine after Learn: " + adm.text);
+    assert.equal(await page.evaluate(() => document.getElementById("rn-sc-missing-docs").disabled), false, "missing documents is available");
+  }
 }

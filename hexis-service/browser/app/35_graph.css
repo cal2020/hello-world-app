@@ -270,17 +270,14 @@
 }
 
 /* compact: tighter header, and a caption bar at the bottom of the frame for whatever is hovered or focused (the
-   state and one line per transition with its guard), or the run status. It reserves the lines of the longest
-   reading (--hxg-cap-lines, set by the script), so pointing at states and edges never moves what follows. It is
-   sticky: on a short window it stays at the bottom of the screen while the drawing is in view, so tapping a state
-   near the top still shows its details. */
+   state and one line per transition with its guard), or the run status. At rest it is in normal flow and as tall as
+   its text, so it never covers the drawing. While a state is read (pointer or focus) it is sticky: on a short window
+   it stays at the bottom of the screen, and the script scrolls a focused state clear of it. */
 .hxg.is-compact { gap: var(--sp-2); }
 .hxg-caption {
-  position: sticky;
-  bottom: 0;
+  position: static;
   margin: 0;
   padding: var(--sp-2) var(--sp-3);
-  min-height: calc(var(--fs-2) * var(--lh-body) * var(--hxg-cap-lines, 2) + 2 * var(--sp-2) + 1px);
   font: 400 var(--fs-2) / var(--lh-body) var(--font-sans);
   color: var(--ink-2);
   overflow-wrap: anywhere;
@@ -288,6 +285,7 @@
   border-top: 1px solid var(--rule);
   border-radius: 0 0 calc(var(--r-2) - 1px) calc(var(--r-2) - 1px);
 }
+.hxg.is-reading .hxg-caption { position: sticky; bottom: 0; z-index: 1; }
 .hxg-caption[hidden] { display: none; }
 .hxg-code { font-family: var(--font-mono); font-size: var(--fs-1); color: var(--ink); }
 

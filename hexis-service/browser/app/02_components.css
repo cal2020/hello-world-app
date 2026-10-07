@@ -128,11 +128,13 @@
   padding: 0.4rem 0.6rem;
   background: var(--surface);
   color: var(--ink);
-  border: 1px solid var(--rule-strong);
+  /* a field's edge must read at 3:1 against the surface (WCAG 1.4.11): ink mixed into the surface gives 3.7:1 in
+     light and 5:1 in dark, where --rule-strong alone is about 1.7:1 */
+  border: 1px solid color-mix(in srgb, var(--ink) 55%, var(--surface));
   border-radius: var(--r-1);
   transition: border-color 0.12s ease;
 }
-.hx-input:hover, .hx-select:hover, .hx-textarea:hover { border-color: color-mix(in srgb, var(--ink) 35%, transparent); }
+.hx-input:hover, .hx-select:hover, .hx-textarea:hover { border-color: color-mix(in srgb, var(--ink) 75%, var(--surface)); }
 .hx-textarea { font: var(--fs-2) / 1.55 var(--font-mono); resize: vertical; }
 .hx-select {
   appearance: none;
@@ -217,6 +219,27 @@
 .hx-al-center { text-align: center; }
 .hx-table-empty td { color: var(--ink-3); text-align: center; padding-block: var(--sp-4); }
 
+/* ------------------------------------------------------------------ section summary strip (HXUI.summary_strip) */
+.hx-sumstrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: var(--sp-3) var(--sp-5);
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-2);
+}
+.hx-sum-item { display: grid; gap: 0.3rem; align-content: start; min-width: 0; }
+.hx-sum-item dd { margin: 0; }
+.hx-sum-value { display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 0.4rem; min-width: 0; color: var(--ink); font-weight: 500; }
+.hx-sum-value .hx-num { font-size: var(--fs-4); font-weight: 600; font-variant-numeric: tabular-nums; }
+.hx-sum-note { flex: 1 0 100%; font-size: var(--fs-2); font-weight: 400; color: var(--ink-3); }
+
+/* an identifier that wraps only at the <wbr> points HXUI.wrap_id() puts after "_", ".", "/", "::" (a single part longer
+   than the line still breaks, as a last resort) */
+.hx-wrap-id { font-family: var(--font-mono); overflow-wrap: break-word; word-break: normal; }
+
 /* ------------------------------------------------------------------ tabs */
 .hx-tabs { display: grid; gap: var(--sp-4); min-width: 0; }
 .hx-tablist {
@@ -225,6 +248,20 @@
   overflow-x: auto;
   box-shadow: inset 0 -1px 0 var(--rule);
   scrollbar-width: thin;
+  scroll-padding-inline: 2.5rem; /* the selected tab is scrolled clear of the faded edge */
+}
+/* a tab bar too wide for its box fades the edge that has more tabs behind it (like the section strip) */
+.hx-tablist[data-scroll-end="more"] {
+  -webkit-mask-image: linear-gradient(to right, var(--ink) calc(100% - 2.5rem), transparent);
+  mask-image: linear-gradient(to right, var(--ink) calc(100% - 2.5rem), transparent);
+}
+.hx-tablist[data-scroll-start="more"][data-scroll-end="more"] {
+  -webkit-mask-image: linear-gradient(to right, transparent, var(--ink) 2.5rem, var(--ink) calc(100% - 2.5rem), transparent);
+  mask-image: linear-gradient(to right, transparent, var(--ink) 2.5rem, var(--ink) calc(100% - 2.5rem), transparent);
+}
+.hx-tablist[data-scroll-start="more"][data-scroll-end="edge"] {
+  -webkit-mask-image: linear-gradient(to right, transparent, var(--ink) 2.5rem);
+  mask-image: linear-gradient(to right, transparent, var(--ink) 2.5rem);
 }
 .hx-tab {
   flex: none;
@@ -416,4 +453,9 @@
   .hx-theme-toggle { min-width: 2.75rem; }
   .hx-input, .hx-select { min-height: 2.75rem; }
   .hx-tab { min-height: 2.75rem; }
+}
+/* narrow screens: a checkbox's label and a disclosure summary are finger-sized targets (24px at least) */
+@media (max-width: 40rem) {
+  label:has(> input[type="checkbox"]), .st-filter { min-height: 2.75rem; display: flex; align-items: center; }
+  details > summary.ln-summary-line { padding-block: 0.65rem; }
 }

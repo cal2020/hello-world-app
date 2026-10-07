@@ -156,3 +156,4 @@
 .ln-tasks-table .hx-fold-label { white-space: nowrap; }
 .ln-metric { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.5rem; }
 @container ln (max-width: 34rem) { .ln-key { display: none; } }
+.ln-nobreak { white-space: nowrap; font-size: var(--fs-2); }

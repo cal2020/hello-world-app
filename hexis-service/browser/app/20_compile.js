@@ -321,7 +321,7 @@
       items.push(item("Status", HXUI.chip("Compiling", "neutral")));
     } else {
       const ok = r.status === "validated";
-      items.push(item("Status", HXUI.chip(ok ? "Validated" : "Rejected", ok ? "ok" : "crit", { icon: ok ? "check" : "stop" })));
+      items.push(item("Status", HXUI.status_chip(S.result.status, ok ? "ok" : "crit", { icon: ok ? "check" : "stop" })));
       const repairs = Math.max(0, r.attempts.length - 1);
       items.push(item("Attempts", h("span", { class: "cp-stat-text" }, String(r.attempts.length)),
         h("span", { class: "cp-stat-note" }, repairs ? plural(repairs, "repair") : "no repair")));
@@ -365,7 +365,7 @@
       h("div", { class: "cp-finding-head" },
         HXUI.chip(f.code, f.severity === "error" ? "crit" : "warn", { mono: true }),
         h("span", { class: "cp-where" }, where_bits(f, attempt, i))),
-      h("p", { class: "cp-finding-msg" }, f.message),
+      h("p", { class: "cp-finding-msg" }, HXUI.plain_lists(f.message)),
       Array.isArray(detail.path) && detail.path.length ? path_chain(detail.path) : null);
   }
 
@@ -408,7 +408,7 @@
     return h("li", { class: ["hx-card", "cp-attempt"], id: "cp-attempt-" + a.attempt, dataset: { status: a.status } },
       h("div", { class: "cp-attempt-head" },
         h("h4", { class: "cp-attempt-title" }, "Attempt " + a.attempt),
-        HXUI.chip(valid ? "Valid" : "Invalid", valid ? "ok" : "crit", { icon: valid ? "check" : "cross" }),
+        HXUI.status_chip(a.status, valid ? "ok" : "crit", { icon: valid ? "check" : "cross" }),
         errors.length ? HXUI.chip(plural(errors.length, "finding"), "neutral") : null,
         h("span", { class: "cp-attempt-hash" }, h("span", { class: "cp-attempt-hash-k" }, "draft"),
           HXUI.digest(a.draft_hash, { short: 15, label: "draft hash of attempt " + a.attempt, id: "cp-attempt-" + a.attempt + "-hash" }))),
@@ -495,8 +495,9 @@
         h("dl", { class: "cp-kvs" }, rows),
         rep ? h("p", { class: "cp-report" },
           HXUI.chip(rep.passed ? "Validation passed" : "Validation failed", rep.passed ? "ok" : "crit"),
-          " ", plural(analyses.length, "analysis", "analyses") + " (disjointness and loop bounds), " + proven + " proven. Validator ",
-          code(rep.validator || (HX.validate && HX.validate.VALIDATOR_VERSION) || ""), ", profile ", code(rep.profile || "production"), ".") : null,
+          /* one inline sentence: the strip is a flex row, which would put a gap around each code chip */
+          h("span", { class: "cp-report-text" }, plural(analyses.length, "analysis", "analyses") + " (disjointness and loop bounds), " + proven + " proven. Validator ",
+            code(rep.validator || (HX.validate && HX.validate.VALIDATOR_VERSION) || ""), ", profile ", code(rep.profile || "production"), ".")) : null,
         review);
     }
     return h("section", { class: "hx-panel cp-artifact", "aria-labelledby": "cp-artifact-title", dataset: { parity: "none" } },
@@ -538,7 +539,7 @@
 
   function status_chip(status) {
     const tone = status === "ADMITTED" ? "ok" : status === "CONFLICT" ? "warn" : "crit";
-    return HXUI.chip(status, tone, { mono: true, icon: status === "ADMITTED" ? "check" : status === "CONFLICT" ? "alert" : "stop" });
+    return HXUI.status_chip(status, tone, { icon: status === "ADMITTED" ? "check" : status === "CONFLICT" ? "alert" : "stop" });
   }
 
   /** admitted_at is an ISO string from the registry (or epoch seconds from older stand-ins): shown as UTC. */
@@ -640,7 +641,7 @@
       }),
     });
     return h("section", { class: "hx-panel cp-coverage", "aria-labelledby": "cp-cov-title" }, head(meta),
-      h("p", { class: "hx-panel-lead" }, "Every clause is classified. Critical clauses must be executable control: states and guards the kernel enforces. Pointing at a row marks its clause in the skill text; select a clause id to go to the clause."),
+      h("p", { class: "hx-panel-lead" }, "Every clause is classified. Executable control: states and guards the kernel enforces (every critical clause must be this). State-local knowledge: guidance carried by one state's prompt or schema. External precondition: enforced outside the machine, by the tool catalog, an adapter or the broker. Unsupported: not enforced, so it needs review. Hover or focus a row to highlight its clause; select a clause id to go to it."),
       table);
   }
 

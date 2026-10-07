@@ -155,6 +155,7 @@
     system: [["circle", { cx: 8, cy: 8, r: 5.9 }], ["path", { d: "M8 2.1a5.9 5.9 0 0 1 0 11.8Z", fill: "currentColor", stroke: "none" }]],
     reset: [["path", { d: "M2.9 8.1A5.1 5.1 0 1 0 4.5 4.4" }], ["path", { d: "M4.6 1.9v2.6H2" }]],
     arrow: [["path", { d: "M3 8h9.6M8.8 4.2 12.6 8l-3.8 3.8" }]],
+    chevron: [["path", { d: "M6 3.5 10.5 8 6 12.5" }]],
     play: [["path", { d: "M5 3.4 12.4 8 5 12.6Z", fill: "currentColor" }]],
     hex: [["path", { d: "M8 1.4 13.7 4.7v6.6L8 14.6 2.3 11.3V4.7Z" }], ["circle", { cx: 8, cy: 8, r: 1.7, fill: "currentColor", stroke: "none" }]],
     list: [["path", { d: "M5.5 4.5h8M5.5 8h8M5.5 11.5h8M2.5 4.5v.05M2.5 8v.05M2.5 11.5v.05" }]],
@@ -182,6 +183,51 @@
     const o = opts || {};
     return h("span", { class: ["hx-chip", "hx-tone-" + tone_of(tone), o.mono ? "is-mono" : null, o.class], title: o.title || null },
       o.icon ? HXUI.icon(o.icon) : null, h("span", { class: "hx-chip-text" }, text === null || text === undefined ? "" : text));
+  };
+
+  /** plain_lists(text): Python list reprs in an engine message read as plain words in the UI ("['draft']" ->
+      "draft", "['a', 'b']" -> "a, b"). The engine text itself stays as Python writes it. */
+  HXUI.plain_lists = function (msg) {
+    return String(msg === null || msg === undefined ? "" : msg).replace(/\[((?:'[^'\]]*'(?:,\s*)?)+)\]/g,
+      (m, inner) => inner.split(/,\s*/).map((x) => x.replace(/^'|'$/g, "")).filter(Boolean).join(", "));
+  };
+
+  /** Status chips follow one rule everywhere: an engine status value (WAITING_FOR_APPROVAL, CANDIDATE, ADMITTED,
+      NO_CHANGE) reads as words in sentence case ("Waiting for approval", "No change"), with the engine's own value in
+      the tooltip and in data-value. Codes and identifiers (NOT_AUTHORIZED, state ids) stay mono. */
+  /** wrap_id(text, {tag, class}) -> a mono identifier that may wrap only after "_", ".", "/", "-", "[" or "::" (a
+      <wbr> there), never mid-word: test names, paths, claims. */
+  HXUI.wrap_id = function (text, opts) {
+    const o = opts || {};
+    const parts = String(text === null || text === undefined ? "" : text).split(/(?<=::|[_./\-[])/);
+    const kids = [];
+    parts.forEach((p, i) => { if (i) kids.push(h("wbr")); kids.push(p); });
+    return h(o.tag || "code", { class: ["hx-wrap-id", o.class] }, kids);
+  };
+
+  /** summary_strip(id, label) -> dl.hx-sumstrip, the bordered strip that opens a section (as Compile, Run and Learn
+      do). el.hx.set([{id, label, value, note}]) fills it; each item is dt label, then dd value with its note under. */
+  HXUI.summary_strip = function (id, label) {
+    const el = h("dl", { class: "hx-sumstrip", id, "aria-label": label || null });
+    el.hx = {
+      set(items) {
+        el.replaceChildren(...(items || []).filter(Boolean).map((it) => h("div", { class: "hx-sum-item", id: it.id || null },
+          h("dt", { class: "hx-label" }, it.label),
+          h("dd", { class: "hx-sum-value" }, it.value, it.note ? h("span", { class: "hx-sum-note" }, it.note) : null))));
+      },
+    };
+    return el;
+  };
+
+  HXUI.status_words = function (value) {
+    const s = String(value === null || value === undefined ? "" : value).replace(/_/g, " ").toLowerCase().trim();
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+  };
+  HXUI.status_chip = function (value, tone, opts) {
+    const o = opts || {};
+    const c = HXUI.chip(o.text || HXUI.status_words(value), tone, Object.assign({}, o, { title: o.title || "Engine status " + value, mono: false }));
+    c.dataset.value = String(value);
+    return c;
   };
 
   function select_contents(el) {
@@ -437,6 +483,25 @@
      which changes its height, never re-triggers the observer inside its own callback) */
   const observed = new WeakMap();
 
+  /** The one ResizeObserver for scrollers and tab bars; null where ResizeObserver does not exist. */
+  function ensure_observer() {
+    if (typeof ResizeObserver !== "function") return null;
+    if (!overflow_observer) {
+      overflow_observer = new ResizeObserver((entries) => {
+        for (const en of entries) {
+          /* a removed element reports a last resize: stop observing it, or the observer keeps its whole
+             detached tree (a section's old render) alive; sweep_overflow catches the ones removed while hidden */
+          if (!en.target.isConnected) { forget(en.target); continue; }
+          const bar = tab_bars.get(en.target);
+          if (bar) { bar(); continue; }
+          const target = observed.get(en.target);
+          if (target) sync_overflow(target);
+        }
+      });
+    }
+    return overflow_observer;
+  }
+
   /** watch_overflow(el, label, {fade, sizer}) -> el, a labelled, focusable region while it scrolls sideways */
   HXUI.watch_overflow = function (el, label, opts) {
     const o = opts || {};
@@ -445,16 +510,27 @@
       el.dataset.hxFade = "1";
       el.addEventListener("scroll", () => sync_fade(el), { passive: true });
     }
-    if (typeof ResizeObserver !== "function") return el;
-    if (!overflow_observer) {
-      overflow_observer = new ResizeObserver((entries) => {
-        for (const en of entries) { const target = observed.get(en.target); if (target) sync_overflow(target); }
-      });
-    }
+    if (!ensure_observer()) return el;
     const probe = o.sizer || el;
     observed.set(probe, el);
+    watched.add(probe);
     overflow_observer.observe(probe);
     return el;
+  };
+  /* every probe observed now, so a sweep can release the ones whose element left the page */
+  const watched = new Set();
+  const tab_bars = new WeakMap(); /* tablist -> its reveal function (HXUI.tabs) */
+  function forget(probe) {
+    if (overflow_observer) overflow_observer.unobserve(probe);
+    watched.delete(probe);
+    observed.delete(probe);
+    tab_bars.delete(probe);
+  }
+  /** sweep_overflow(): stop observing scrollers that are no longer in the document (run on lab:reset and when a
+      section is shown, after sections have re-rendered). */
+  HXUI.sweep_overflow = function () {
+    for (const p of Array.from(watched)) if (!p.isConnected) forget(p);
+    return watched.size;
   };
 
   /* ------------------------------------------------------------------ table */
@@ -576,7 +652,31 @@
         panels[k].hidden = !on;
       }
       render(tid);
+      if (tablist.isConnected) reveal_selected();
       if (user && changed && typeof o.on_change === "function") o.on_change(tid);
+    }
+    /* a bar wider than its box fades the edge with more tabs behind it, and keeps the selected tab in view */
+    function sync_edges() {
+      const max = tablist.scrollWidth - tablist.clientWidth;
+      tablist.dataset.scrollStart = max > 1 && tablist.scrollLeft > 2 ? "more" : "edge";
+      tablist.dataset.scrollEnd = max > 1 && tablist.scrollLeft < max - 2 ? "more" : "edge";
+    }
+    function reveal_selected() {
+      const tab = selected !== null ? tabs[selected] : null;
+      if (tab && tablist.scrollWidth > tablist.clientWidth + 1) {
+        const pad = 40;
+        const left = tab.offsetLeft - tablist.offsetLeft, right = left + tab.offsetWidth;
+        if (left - pad < tablist.scrollLeft) tablist.scrollLeft = Math.max(0, left - pad);
+        else if (right + pad > tablist.scrollLeft + tablist.clientWidth) tablist.scrollLeft = right + pad - tablist.clientWidth;
+      }
+      sync_edges();
+    }
+    tablist.addEventListener("scroll", sync_edges, { passive: true });
+    /* one shared observer for every tab bar (released by sweep_overflow with the rest) */
+    if (ensure_observer()) {
+      tab_bars.set(tablist, reveal_selected);
+      watched.add(tablist);
+      overflow_observer.observe(tablist);
     }
     const root = h("div", { class: "hx-tabs", id }, tablist, list.map((t) => panels[t.id]));
     const first = o.selected && tabs[o.selected] ? o.selected : list.length ? list[0].id : null;
@@ -709,6 +809,8 @@
     for (const k of Object.keys(lab)) delete lab[k];
     Object.assign(lab, fresh_lab());
     HXUI.bus.emit("lab:reset", {});
+    /* the sections re-rendered: release the scrollers of their old trees */
+    if (typeof HXUI.sweep_overflow === "function") HXUI.sweep_overflow();
     return lab;
   };
 
@@ -748,6 +850,7 @@
     { prefix: "70", ns: ["reference"], ref: "demo/reference.py", label: "reference" },
     { prefix: "75", ns: ["env"], ref: "demo/env.py", label: "env" },
     { prefix: "80", ns: ["demo"], ref: "demo/procurement_demo.py", label: "demo" },
+    { prefix: "90", ns: ["eval"], ref: "evals/run_eval.py", label: "eval" },
   ];
   HXUI.ENGINE_MODULES = ENGINE_MODULES;
 
@@ -991,6 +1094,7 @@
       try { rec.on_show(); } catch (err) { rec.body.replaceChildren(section_error(err)); set_state(rec, "error"); }
     }
     HXUI.bus.emit("section:shown", { id, previous: prev ? prev.id : null });
+    if (typeof HXUI.sweep_overflow === "function") HXUI.sweep_overflow();
     return true;
   }
 

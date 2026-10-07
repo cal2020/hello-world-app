@@ -45,7 +45,7 @@
 .st-group-head {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
+  align-items: start;
   gap: var(--sp-2) var(--sp-3);
   padding: var(--sp-3) var(--sp-1);
   cursor: pointer;
@@ -55,7 +55,8 @@
 .st-group-head::-webkit-details-marker { display: none; }
 .st-group-head:hover .st-group-title { color: var(--accent); }
 .st-group-head:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-.st-group-chevron { display: inline-grid; place-items: center; color: var(--ink-3); transition: transform 0.15s ease; }
+/* a disclosure chevron (not an arrow, which reads as navigation), on the title's first line; it turns when open */
+.st-group-chevron { display: inline-grid; place-items: center; height: calc(var(--fs-4) * 1.3); color: var(--ink-3); transition: transform 0.15s ease; }
 .st-group-chevron .hx-icon { width: 0.875rem; height: 0.875rem; }
 .st-group[open] > .st-group-head .st-group-chevron { transform: rotate(90deg); }
 .st-group-titles { display: grid; gap: 0.15rem; min-width: 0; }
@@ -109,3 +110,9 @@
 .st-file { overflow-wrap: anywhere; }
 .st-sample-table td:first-child { min-width: 12rem; }
 .st-headline-sub { margin-top: -0.4rem; color: var(--ink-2); text-wrap: pretty; }
+
+/* the summary strip opens the section; the checks panel follows without a rule */
+.st.hx-ruled > .hx-sumstrip + * { border-top: 0; padding-top: 0; }
+.st-sum-of { font-size: var(--fs-2); font-weight: 400; color: var(--ink-3); }
+.st-sum-ok { color: var(--ok); }
+.st-sum-crit { color: var(--crit); }

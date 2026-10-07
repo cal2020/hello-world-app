@@ -116,7 +116,7 @@
     const hidden = events.length - shown.length;
     return h("div", { class: "rn-tab" },
       h("div", { class: "rn-tab-head" },
-        h("p", { class: "rn-tab-sum", id: "rn-tl-sum" }, (hidden ? shown.length + " of " + events.length + " events shown (timing hidden), " : events.length + " events, ") +
+        h("p", { class: "rn-tab-sum", id: "rn-tl-sum" }, (hidden ? shown.length + " of " + events.length + (events.length === 1 ? " event" : " events") + " shown (timing hidden), " : events.length + (events.length === 1 ? " event, " : " events, ")) +
           transitions + (transitions === 1 ? " transition" : " transitions") + ". Newest last; numbers are the event sequence."),
         h("label", { class: "rn-check", for: "rn-tl-timing" }, box, "Show timing events")),
       h("ol", { class: "rn-timeline", "aria-label": "Run events", id: "rn-timeline" }, shown.map((e) =>

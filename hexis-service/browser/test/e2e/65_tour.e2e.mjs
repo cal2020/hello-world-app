@@ -46,7 +46,7 @@ export default async function (t) {
     next: !document.getElementById("tour-next").hidden, focus: document.activeElement && document.activeElement.id,
   }));
   assert.equal(err.title, "Step 2 failed: Run a clean intake");
-  assert.equal(err.counter, "Stopped at step 2 of 7");
+  assert.equal(err.counter, "Stopped at step 2 of 6", "the guide counts the Overview's six steps");
   assert.deepEqual(err.failed, ["2"], "the failed step is marked");
   assert.ok(/approval was already answered/.test(err.body), "a plain sentence says what went wrong: " + err.body);
   assert.ok(/ALREADY_ANSWERED/.test(err.body), "the engine code follows");
@@ -60,6 +60,11 @@ export default async function (t) {
   await page.click("#tour-next");
   await settled(page);
   assert.equal(await page.evaluate(() => document.getElementById("tour").dataset.step), "2");
+  /* while the guide narrates its run, the workbench's controls that would move it are disabled with the reason */
+  const locked = await page.evaluate(() => ["rn-step", "rn-cancel", "rn-restart", "rn-approve", "rn-reject", "rn-clock-1h", "rn-clock-25h", "rn-start"]
+    .map((id) => { const b = document.getElementById(id); return [id, !!b && b.getAttribute("aria-disabled") === "true" && /guided demo is narrating/.test(b.getAttribute("aria-description") || "")]; })
+    .filter(([, ok]) => !ok).map(([id]) => id));
+  assert.deepEqual(locked, [], "the workbench cannot move the demo's run while the guide narrates it");
   const approve = await page.$("#rn-approve");
   if (approve && await approve.isVisible() && await page.evaluate(() => document.getElementById("rn-approve").getAttribute("aria-disabled") !== "true")) {
     await page.selectOption("#rn-approver", "user:bob").catch(() => {});
@@ -106,6 +111,12 @@ export default async function (t) {
       break;
     }
     assert.deepEqual(s.current, [s.step], "the step shown is the current one");
+    const head = await page.evaluate(() => ({ title: document.getElementById("tour-title").textContent, counter: document.getElementById("tour-counter").textContent, want: HXUI.demo_titles ? HXUI.demo_titles[document.getElementById("tour").dataset.step] : null }));
+    if (head.want) assert.equal(head.title, head.want, "the guide's heading is the Overview's step name");
+    assert.match(head.counter, /^Step \d of 6(, part [ab])?$/, "the counter counts six steps: " + head.counter);
+    /* focus is never left on a button that is off screen */
+    const fvis = await page.evaluate(() => { const a = document.activeElement; if (!a || !document.getElementById("tour").contains(a)) return "outside"; const r = a.getBoundingClientRect(); return r.top >= -1 && r.bottom <= innerHeight + 1 ? "visible" : a.id + " at " + Math.round(r.top); });
+    assert.ok(fvis === "visible" || fvis === "outside", "the focused control in the guide is on screen: " + fvis);
     if (s.step === "6a" && await page.evaluate(() => !!HXUI.learn)) {
       await page.waitForFunction(() => HXUI.learn.state().store === HXUI.tour.demo().ctx.env.store, null, { timeout: 30000 });
     }
@@ -118,6 +129,9 @@ export default async function (t) {
         return [li.dataset.status, li.getAttribute("aria-current") || "", (li.querySelector(".tour-ov-mark") || { textContent: "" }).textContent.trim()].join("|");
       }));
       assert.deepEqual(ov, ["done||Done", "done||Done", "active|step|Current", "idle||"]);
+      /* one name per step: the Overview's title is the guide's heading */
+      assert.equal(await page.evaluate(() => document.querySelector("#ov-step-3 .ov-step-title").firstChild.nextSibling.textContent), await page.evaluate(() => HXUI.demo_titles["3"]));
+      assert.equal(await page.evaluate(() => document.getElementById("tour-back").hidden), true, "Back to overview is hidden on the Overview");
       assert.ok(await page.evaluate(() => !!document.getElementById("tour")), "the guide stays open");
       /* Start while the tour runs returns to the guide; it does not discard it */
       assert.equal(await page.evaluate(() => document.querySelector("#ov-demo-start .hx-btn-label").textContent), "Continue guided demo");
@@ -148,11 +162,20 @@ export default async function (t) {
   assert.equal(sum.active, "true", "step 6b leaves the active version unchanged");
   assert.equal(sum.active_hash, sum.refined, "the refined machine stays active");
   assert.equal(sum.erp, 2, "one draft from the clean intake plus one from the refined machine's run");
-  assert.ok(/Lines equal the Python CLI/.test(sum.summary_text), "the narration equals the Python CLI's output");
+  assert.ok(/Narration matches the Python CLI/.test(sum.summary_text), "the narration equals the Python CLI's output");
   assert.equal(sum.summary_first, "tour-summary", "the summary comes before the last step's detail");
   assert.equal(sum.last_open, false, "step 6b's detail starts closed");
   assert.equal(sum.focus, "tour-summary-title", "focus moves to the summary");
   assert.deepEqual(sum.lab_log, ["6a", "6b"], "the tour publishes its learning results");
+  /* Learn, shown right below the finished guide, agrees with it: its last proposal is the demo's */
+  if (await page.evaluate(() => !!HXUI.learn)) {
+    await page.waitForFunction(() => !!document.getElementById("ln-sum-proposal-status"), null, { timeout: 30000 });
+    const ln = await page.evaluate(() => ({ status: document.getElementById("ln-sum-proposal-status").dataset.status,
+      note: document.getElementById("ln-sum-proposal").textContent, junk: /\bnull\b|\bundefined\b/.test(document.getElementById("sec-learn").innerText) }));
+    assert.equal(ln.status, sum.proposal, "Learn's last proposal is the demo's (" + ln.note + ")");
+    assert.match(ln.note, /guided demo/, "and it says it comes from the guided demo");
+    assert.equal(ln.junk, false, "no null or undefined text in Learn");
+  }
   /* the Run workbench lists the demo's runs, with the selected one shown */
   await page.evaluate(() => HXUI.go("run"));
   await page.waitForFunction(() => HXUI.current() === "run");

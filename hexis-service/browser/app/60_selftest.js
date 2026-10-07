@@ -146,11 +146,6 @@
         const r = S.results.get(c.key);
         return h("span", { class: "st-progress-cell", dataset: { status: r ? r.status : "pending" }, title: c.id + " · " + c.name });
       }));
-    const chips = [
-      HXUI.chip(n.pass + " passed", n.pass ? "ok" : "neutral", { icon: n.pass ? "check" : undefined }),
-      HXUI.chip(n.fail + " failed", n.fail ? "crit" : "neutral", { icon: n.fail ? "stop" : undefined }),
-      HXUI.chip(n.skip + " skipped", "neutral"),
-    ];
     const timing = S.state === "idle" ? null
       : h("p", { class: "st-timing" }, S.state === "running"
         ? [String(done), " of ", String(n.total), " finished in ", ms_text(total_ms), "."]
@@ -161,8 +156,24 @@
         on: { click: (e) => { e.preventDefault(); show_failures(); } } }, "Show the " + plural(n.fail, "failure", "failures"))) : null,
       hl.sub ? h("p", { class: "st-headline-sub" }, hl.sub) : null,
       meter,
-      h("div", { class: "st-chips" }, chips),
       timing);
+  }
+
+  /** the section's summary strip (the same component Break it uses): counts and time, read from the results */
+  function paint_strip() {
+    if (!P || !P.strip) return;
+    const n = counts();
+    const done = n.pass + n.fail + n.skip;
+    const total_ms = S.state === "done" ? S.finished - S.started : S.state === "running" ? now() - S.started : 0;
+    const num = (v, tone) => h("span", { class: ["hx-num", tone ? "st-sum-" + tone : null] }, String(v));
+    P.strip.hx.set([
+      { id: "st-sum-passed", label: "Passed", value: [num(n.pass, n.pass ? "ok" : null), h("span", { class: "st-sum-of" }, "of " + n.total)],
+        note: S.state === "running" ? done + " finished so far" : S.state === "idle" ? "not run yet" : "every check in this page" },
+      { id: "st-sum-failed", label: "Failed", value: num(n.fail, n.fail ? "crit" : null), note: n.fail ? "assertion shown in its row" : "none" },
+      { id: "st-sum-skipped", label: "Skipped", value: num(n.skip), note: n.skip ? "needs modules not in this build" : "none" },
+      { id: "st-sum-time", label: "Time", value: h("span", { class: "hx-num" }, S.state === "idle" ? "–" : ms_text(total_ms)),
+        note: S.state === "done" ? ms_text(S.engine_ms) + " of engine time" : S.state === "running" ? "running" : null },
+    ]);
   }
 
   function paint_summary() {
@@ -171,6 +182,7 @@
     P.root.dataset.runState = S.state;
     for (const k of ["pass", "fail", "skip", "total"]) P.root.dataset[k] = String(n[k]);
     P.summary.replaceChildren(summary_block());
+    paint_strip();
     const running = S.state === "running";
     const label = running ? "Running…" : S.state === "done" ? "Run all checks again" : "Run all checks";
     P.run.querySelector(".hx-btn-label").textContent = label;
@@ -234,7 +246,11 @@
       if (!r) continue;
       if (r.status === "pass") pass++; else if (r.status === "fail") fail++; else if (r.status === "skip") skip++;
     }
-    const chips = [HXUI.chip(pass + " of " + g.items.length + " passed", pass === g.items.length ? "ok" : "neutral", { icon: pass === g.items.length ? "check" : undefined })];
+    const finished = pass + fail + skip;
+    /* a group still running counts what ran; "passed" is said only once every check in it has finished */
+    const chips = [finished < g.items.length
+      ? HXUI.chip(S.state === "running" ? finished + " of " + g.items.length + " run" : "Not run yet", "neutral")
+      : HXUI.chip(pass + " of " + g.items.length + " passed", pass === g.items.length ? "ok" : "neutral", { icon: pass === g.items.length ? "check" : undefined })];
     if (fail) chips.push(HXUI.chip(fail + " failed", "crit", { icon: "stop" }));
     if (skip) chips.push(HXUI.chip(skip + " skipped", "neutral"));
     g.meta.replaceChildren(...chips);
@@ -404,7 +420,7 @@
         /* closed while every check passes, so the section at rest is its summary; a failure or a skip opens it */
         const el = h("details", { class: "st-group", id: "st-group-" + g.id },
           h("summary", { class: "st-group-head", id: "st-group-" + g.id + "-toggle", "aria-describedby": title_id + "-lead" },
-            h("span", { class: "st-group-chevron", "aria-hidden": "true" }, HXUI.icon("arrow")),
+            h("span", { class: "st-group-chevron", "aria-hidden": "true" }, HXUI.icon("chevron")),
             h("span", { class: "st-group-titles" },
               h("span", { class: "st-group-title", id: title_id }, g.title),
               h("span", { class: "st-group-lead", id: title_id + "-lead" }, g.lead + " " + plural(gi.length, "check", "checks") + ".")),
@@ -422,9 +438,10 @@
       filter_note,
       C ? h("div", { class: "st-groups" }, group_els) : HXUI.unavailable(["HXUI.checks"], { compact: true, title: "The check catalog is not in this build",
         lead: "The checks live in app/62_checks.js, which this build does not include:", hint: false }));
-    const root = h("div", { class: "st hx-ruled", id: "st-root", dataset: { runState: S.state } }, checks_panel, sample_panel(), engine_panel());
+    const strip = HXUI.summary_strip("st-summary", "Self-test summary");
+    const root = h("div", { class: "st hx-ruled", id: "st-root", dataset: { runState: S.state } }, strip, checks_panel, sample_panel(), engine_panel());
     el.replaceChildren(root);
-    P = { root, run, summary, groups, only, filter_note };
+    P = { root, run, summary, groups, only, filter_note, strip };
     paint_all();
   }
 

@@ -16,7 +16,8 @@ Each module gets its own <script> element, so a module that fails to parse or th
 own namespace (the boot code reports which ones are missing) instead of taking the whole engine down.
 
 Run: python build.py [--check] [--engine-prefixes 00,05,10,15] [--app-prefixes 00,35] [--out DIR]
-  --check            also fail if the page is larger than 15 MB
+  --check            also fail if the page is larger than the 3 MB budget of specs/UI.md (the platform's hard
+                     cap is 15 MB)
   --engine-prefixes  include only the src modules with these two-digit prefixes (UI development against a
                      partially ported engine); the default includes every module
   --app-prefixes     the same filter for app/ files (.css and .js), for developing one UI file in isolation
@@ -34,6 +35,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 SRC, APP, DIST = HERE / "src", HERE / "app", HERE / "dist"
 NUMBERED = re.compile(r"^\d\d_.*")
+BUDGET_BYTES = 3 * 1024 * 1024  # specs/UI.md section 6: the page (with the golden sample) stays under 3 MB
 
 CSP = ("default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; "
        "font-src https://fonts.gstatic.com; img-src data: blob:; connect-src 'none'; worker-src blob:; "
@@ -132,7 +134,9 @@ def build(check: bool = False, engine_prefixes: list[str] | None = None, out: Pa
         tmp.replace(out / name)  # atomic: a test never loads a half-written page
     size = len(page.encode("utf-8"))
     if check and size > 15 * 1024 * 1024:
-        raise SystemExit(f"page too large: {size} bytes")
+        raise SystemExit(f"page too large: {size} bytes (the platform cap is 15 MB)")
+    if check and size > BUDGET_BYTES:
+        raise SystemExit(f"page over budget: {size} bytes; specs/UI.md budgets the page under 3 MB ({BUDGET_BYTES} bytes)")
     info = {"bytes": size, "engine_files": [f.name for f in engine_files], "app_files": [f.name for f in app_files],
             "css_files": [f.name for f in css_files], "embedded": sorted(embed), "escaped_sequences": n1 + n2}
     return info

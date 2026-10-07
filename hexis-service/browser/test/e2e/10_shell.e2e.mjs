@@ -668,6 +668,7 @@ export default async function (t) {
         await tick();
         const fit = panel.dataset.fit;
         const at_rest = panel.getBoundingClientRect();
+        const at_rest_doc = at_rest.top + scrollY;
         const bad = [];
         for (const g of panel.querySelectorAll(".hxg-canvas g[data-state][tabindex]")) {
           g.focus({ preventScroll: true });
@@ -675,7 +676,12 @@ export default async function (t) {
           const r = panel.getBoundingClientRect();
           const id = g.getAttribute("data-state");
           if (panel.dataset.fit !== fit) bad.push(`${id}: fit ${fit} -> ${panel.dataset.fit}`);
-          if (Math.abs(r.top - at_rest.top) > 1) bad.push(`${id}: panel moved from ${Math.round(at_rest.top)} to ${Math.round(r.top)}`);
+          /* a panel that fits stays put on screen; a taller one may scroll the page, but only to clear the caption bar
+             from the focused state: in the document it never moves (no sticky flip, no reflow above it) */
+          if (fit === "yes" && Math.abs(r.top - at_rest.top) > 1) bad.push(`${id}: panel moved from ${Math.round(at_rest.top)} to ${Math.round(r.top)}`);
+          if (Math.abs(r.top + scrollY - at_rest_doc) > 1) bad.push(`${id}: panel moved in the document from ${Math.round(at_rest_doc)} to ${Math.round(r.top + scrollY)}`);
+          const cap = panel.querySelector(".hxg-caption"), gr = g.getBoundingClientRect(), cr = cap ? cap.getBoundingClientRect() : null;
+          if (cr && gr.bottom > cr.top + 0.5 && gr.top < cr.bottom - 0.5) bad.push(`${id}: the focused state is under the caption bar`);
           if (fit === "yes" && (r.top < 0 || r.bottom > innerHeight + 0.5)) bad.push(`${id}: sticky panel spans ${Math.round(r.top)}..${Math.round(r.bottom)} of ${innerHeight}`);
         }
         const n = panel.querySelectorAll(".hxg-canvas g[data-state][tabindex]").length;

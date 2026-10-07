@@ -41,6 +41,14 @@ export default async function (t) {
   if (r.embed_listed) assert.ok(r.embed, "the golden sample in #hx-embed parses");
   /* the engine inventory lists every module, loaded where its namespaces are present */
   assert.ok(r.modules.length >= 20, "the engine inventory lists the modules");
+  const inv = await page.evaluate(() => ({ n: HXUI.engine_inventory().length, scripts: document.querySelectorAll("script[data-hx-module^='src/']").length,
+    rail: (document.querySelector(".hx-rail-note .hx-link") || {}).textContent || "", extras: HXUI.engine_extras() }));
+  assert.equal(inv.n, inv.scripts, "the inventory has one row per engine script in the build");
+  assert.ok(!inv.extras.includes("eval"), "HX.eval is an inventory module, not an extra namespace");
+  assert.match(inv.rail, new RegExp("of " + inv.scripts + " modules loaded"), "the rail counts every engine module: " + inv.rail);
+  /* the shared summary strip opens the section with the counts */
+  const strip = await page.evaluate(() => [...document.querySelectorAll("#st-summary .hx-sum-item")].map((x) => x.id));
+  assert.deepEqual(strip, ["st-sum-passed", "st-sum-failed", "st-sum-skipped", "st-sum-time"], "Self-test opens with its summary strip");
   for (const m of r.inventory) {
     const row = r.modules.find((x) => x.prefix === m.prefix);
     assert.ok(row, "inventory row for module " + m.prefix);

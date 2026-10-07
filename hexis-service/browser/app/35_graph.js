@@ -1122,25 +1122,19 @@
     for (const n of L0.nodes) by_id0[n.id] = n;
     const alt_intro = el("p");
     const alt_run = el("p", { class: "hxg-alt-run", text: "No run is shown on this graph." });
-    const alt = el("div", { class: "hxg-sr", id: uid + "-alt" },
-      alt_intro,
-      el("ol", null, L0.nodes.map((n) => {
+    const alt_list = el("ol", null, L0.nodes.map((n) => {
         const outs = L0.edges.filter((e) => e.from === n.id);
         return el("li", { text: n.id + ": " + node_sentence(n) + (n.initial ? "; initial state" : "") + "." +
           (outs.length ? " Transitions: " + outs.map((e, i) => (i + 1) + ") " + edge_sentence(e, by_id0)).join("; ") + "." : "") });
-      })),
-      alt_run);
+      }));
+    const alt = el("div", { class: "hxg-sr", id: uid + "-alt" }, alt_intro, alt_list, alt_run);
 
     // ---- frame (border, fill) > canvas (scrolls sideways) > drawing; the caption line under compact drawings
-    // The caption is the frame's bottom bar. It is sticky, so on a short window it stays at the bottom of the screen
-    // while any of the drawing is in view (a state tapped near the top still shows its details). It reserves room
-    // for the longest state reading (the state, then one line per transition), so pointing never moves the page.
+    // The caption is the frame's bottom bar, in normal flow and as tall as its text, so at rest it never covers the
+    // drawing. While a state is focused or pointed at it becomes sticky: on a short window the reading stays at the
+    // bottom of the screen, and a focused state is scrolled clear of it.
     const canvas = el("div", { class: "hxg-canvas" }, alt);
     const caption = mode === "normal" ? null : el("p", { class: "hxg-caption", "aria-hidden": "true", hidden: true });
-    if (caption) {
-      const most = Math.max(1, ...L0.nodes.map((n) => L0.edges.filter((e) => e.from === n.id).length));
-      caption.style.setProperty("--hxg-cap-lines", String(Math.min(5, most + 1)));
-    }
     const frame = el("div", { class: "hxg-frame" }, canvas, caption);
     const root = el("figure", { class: "hxg" + (on_select ? " is-selectable" : ""), "data-hxg": uid }, head, frame);
     if (title) root.setAttribute("aria-labelledby", uid + "-title");
@@ -1175,8 +1169,10 @@
       const svg = sv("svg", { class: "hxg-svg", width: L.width, height: L.height, viewBox: "0 0 " + L.width + " " + L.height });
       // states are focusable (role group of buttons or images), or the drawing is hidden from assistive technology
       // and the text alternative stands in for it
-      if (focusable) svg.setAttribute("role", "group");
-      else svg.setAttribute("aria-hidden", "true");
+      if (focusable) {
+        svg.setAttribute("role", "group");
+        svg.setAttribute("aria-label", "States: use the arrow keys to move between them");
+      } else svg.setAttribute("aria-hidden", "true");
       const markers = {};
       const defs = sv("defs", null,
         sv("pattern", { id: did + "-grid", width: 16, height: 16, patternUnits: "userSpaceOnUse" },
@@ -1218,6 +1214,7 @@
       const g_nodes = sv("g", { class: "hxg-nodes" });
       const node_els = {}; // id -> [{g, copy, box}]
       const focusables = [];
+      const focus_box = new Map(); // focusable g -> its drawn box (the arrow keys move by position)
       const base_label = {}; // id -> aria-label without the run (update() appends "Current state", "Visited", ...)
       const Mt = L.metrics;
       function node_label(n) {
@@ -1267,6 +1264,7 @@
             g.setAttribute("tabindex", "-1");
             g.setAttribute("aria-label", base_label[n.id]);
             focusables.push(g);
+            focus_box.set(g, bx);
           } else {
             g.setAttribute("aria-hidden", "true");
           }
@@ -1307,7 +1305,7 @@
       svg.appendChild(g_badges);
       svg.appendChild(g_tags);
 
-      const d = { L, compact, svg, by_id, node_els, edge_el, label_el, focusables, base_label, g_badges, g_jumps, g_tags, markers, focusable, roving: null };
+      const d = { L, compact, svg, by_id, node_els, edge_el, label_el, focusables, focus_box, base_label, g_badges, g_jumps, g_tags, markers, focusable, roving: null };
       if (focusables.length) { d.roving = focusables[0]; d.roving.setAttribute("tabindex", "0"); }
       return d;
     }
@@ -1323,7 +1321,10 @@
       const hint = !d.focusable ? "" : on_select
         ? "Tab to the graph, use the arrow keys to move between states, and press Enter or Space to select one."
         : "Tab to the graph and use the arrow keys to move between states.";
-      alt_intro.textContent = [head ? "" : meta_text + ".", hint, "Each state and its transitions:"].filter(Boolean).join(" ");
+      // focusable states carry their own transitions in their names: the list would say everything twice
+      alt_list.hidden = d.focusable;
+      if (d.focusable) alt_list.setAttribute("aria-hidden", "true"); else alt_list.removeAttribute("aria-hidden");
+      alt_intro.textContent = [head ? "" : meta_text + ".", hint, d.focusable ? "" : "Each state and its transitions:"].filter(Boolean).join(" ");
     }
 
     /* ---------------------------------------------------------------- interaction */
@@ -1390,6 +1391,7 @@
         D.edge_el[e.key].g.classList.toggle("is-hover", on);
         if (D.label_el[e.key]) D.label_el[e.key].classList.toggle("is-shown", on);
       }
+      root.classList.toggle("is-reading", !!(pointer.state || pointer.edge || focused));
       if (pointer.edge && D.edge_el[pointer.edge]) set_caption(edge_caption(D.edge_el[pointer.edge].e));
       else if (pointer.state && D.by_id[pointer.state]) set_caption(node_caption(D.by_id[pointer.state]));
       else if (focused && D.by_id[focused]) set_caption(node_caption(D.by_id[focused]));
@@ -1414,8 +1416,8 @@
         return;
       }
       let next = null;
-      if (ev.key === "ArrowDown" || ev.key === "ArrowRight") next = D.focusables[Math.min(D.focusables.length - 1, i + 1)];
-      else if (ev.key === "ArrowUp" || ev.key === "ArrowLeft") next = D.focusables[Math.max(0, i - 1)];
+      const dir = { ArrowDown: [0, 1], ArrowUp: [0, -1], ArrowRight: [1, 0], ArrowLeft: [-1, 0] }[ev.key];
+      if (dir) next = nearest(g, dir);
       else if (ev.key === "Home") next = D.focusables[0];
       else if (ev.key === "End") next = D.focusables[D.focusables.length - 1];
       if (next) {
@@ -1425,12 +1427,41 @@
         reveal(next.getAttribute("data-state"));
       }
     });
+    /** The focusable state nearest to g in direction [dx, dy] of the drawing (the arrow keys follow the layout):
+        the closest along that axis, preferring states that line up with g across it; null when there is none. */
+    function nearest(g, dir) {
+      const a = D.focus_box.get(g);
+      if (!a) return null;
+      let best = null, best_score = Infinity;
+      for (const f of D.focusables) {
+        if (f === g) continue;
+        const b = D.focus_box.get(f);
+        if (!b) continue;
+        const along = dir[0] ? (dir[0] > 0 ? b.x - (a.x + a.w) : a.x - (b.x + b.w)) : (dir[1] > 0 ? b.y - (a.y + a.h) : a.y - (b.y + b.h));
+        const centre = dir[0] ? (b.x + b.w / 2 - (a.x + a.w / 2)) * dir[0] : (b.y + b.h / 2 - (a.y + a.h / 2)) * dir[1];
+        if (centre <= 2 || along < -Math.min(a.w, a.h) / 2) continue; // not in that direction
+        const gap = dir[0] ? Math.max(0, b.y - (a.y + a.h), a.y - (b.y + b.h)) : Math.max(0, b.x - (a.x + a.w), a.x - (b.x + b.w));
+        const score = Math.max(0, along) + 3 * gap;
+        if (score < best_score) { best_score = score; best = f; }
+      }
+      return best;
+    }
+    /** A focused state never sits under the (then sticky) caption bar: scroll the page just enough to clear it. */
+    function clear_caption(g) {
+      if (!caption || caption.hidden || !g || !g.getBoundingClientRect) return;
+      const r = g.getBoundingClientRect(), c = caption.getBoundingClientRect();
+      /* only while the bar is stuck to the bottom of the window and actually covers the state */
+      const stuck = c.bottom >= (globalThis.innerHeight || 0) - 1;
+      if (!stuck || !r.height || !c.height || r.bottom <= c.top + 0.5 || r.top >= c.bottom) return;
+      try { globalThis.scrollBy({ top: r.bottom + 8 - c.top, behavior: "auto" }); } catch (err) { /* old engines */ }
+    }
     listen(canvas, "focusin", (ev) => {
       const g = node_of(ev.target);
       if (!g) return;
       set_roving(g);
       focused = g.getAttribute("data-state");
       refresh_marks();
+      clear_caption(g);
     });
     listen(canvas, "focusout", (ev) => {
       const g = node_of(ev.target);

@@ -35,8 +35,19 @@
   const NEEDS = ["demo", "env", "service", "registry", "update", "reference", "traces", "normalize", "replay", "compile"];
   /* demo step id -> the section that shows its effect, and the Overview step it belongs to */
   const PLACE = { "1": ["compile", 1], "2": ["run", 2], "3": ["run", 3], "4": ["run", 4], "5": ["run", 5], "6a": ["learn", 6], "6b": ["learn", 6] };
-  const SHORT = { "1": "Compile the skill", "2": "Run a clean intake", "3": "Restart and approve", "4": "ERP timeout after commit",
-    "5": "Evidence-linked record", "6a": "Learn from a trace", "6b": "Refuse a shortcut" };
+  /* One name per step everywhere (the Overview's list, this guide's heading, its Next button and announcements). The
+     command-line heading appears only inside "Engine output". 10_overview.js publishes the same names as
+     HXUI.demo_titles; these are the fallback when the Overview is not in the build. */
+  const SHORT = { "1": "Compile the skill", "2": "Run a clean intake", "3": "Restart the worker; self-approval is refused",
+    "4": "Approve, then the ERP times out after committing", "5": "Read the evidence-linked record",
+    "6a": "Learn from a missing-documents trace", "6b": "Refuse a shortcut trace" };
+  const title_of = (id, fallback) => (HXUI.demo_titles && HXUI.demo_titles[id]) || SHORT[id] || fallback || "";
+  /* the Overview counts six steps; the demo's 6a and 6b are the two parts of step 6 */
+  const STEP_COUNT = 6;
+  const step_no = (id) => String(id || "").replace(/[ab]$/, "");
+  const part_of = (id) => (/[ab]$/.test(String(id || "")) ? String(id).slice(-1) : "");
+  /** "Step 3 of 6" or "Step 6 of 6, part a" */
+  const step_label = (id) => "Step " + step_no(id) + " of " + STEP_COUNT + (part_of(id) ? ", part " + part_of(id) : "");
   const SECTION_NAMES = { compile: "Compile", run: "Run workbench", learn: "Learn from traces", overview: "Overview" };
   const GATE_LABELS = { policy_non_widening: "Policy not widened", static_validation: "Static validation", new_trace_replay: "New trace replays",
     protected_replay: "Protected traces replay", negative_corpus: "Negative corpus" };
@@ -190,10 +201,12 @@
     FAILED: "crit",
     REFUSED: "neutral", ALLOWED: "neutral", EXCLUDED: "neutral", REJECTED: "neutral", DENY: "neutral", ALLOW: "neutral",
     UNCHANGED: "neutral", CHANGED: "neutral", "NOT PASSED": "neutral", PASSED: "neutral" };
-  /** a status value: mono, upper case, toned by the value itself */
+  /** a status value, toned by the value itself. The one chip rule (HXUI.status_chip): engine status values read as
+      words ("Waiting for approval", "Candidate"), with the engine's value in the tooltip; state ids stay mono. */
   const chip = (t) => {
     const v = String(t === null || t === undefined ? "NONE" : t).toUpperCase();
-    return HXUI.chip(v, STATUS_TONE[v] || "neutral", { mono: true });
+    if (/^END_/.test(v)) return HXUI.chip(v, STATUS_TONE[v] || "neutral", { mono: true, title: "Terminal state" });
+    return HXUI.status_chip ? HXUI.status_chip(v, STATUS_TONE[v] || "neutral") : HXUI.chip(v, STATUS_TONE[v] || "neutral");
   };
   /** did the safeguard hold */
   const expect = (held) => (held ? HXUI.chip("As expected", "ok", { icon: "check" }) : HXUI.chip("Not expected", "crit", { icon: "cross" }));
@@ -240,9 +253,10 @@
         const sa = self_approval(f);
         return {
           what: ["The worker process restarted and resumed the run from its stored checkpoint. The initiator, ", code("user:alice"), ", then tried to approve her own run. ",
-            !sa.refused ? "The service did not refuse it." : sa.by_rule ? ["The service refused it: ", code(f.detail || "")]
-              : ["The service refused it for a reason unrelated to the approval rules: ", code(f.detail || "")], "."],
-          why: ["Approval is a separate identity's decision. In isolation, an approver acting on their own run gets ", code(f.sod_outcome), f.sod_reasons.length ? [" (", f.sod_reasons.join("; "), ")"] : "", "."],
+            !sa.refused ? "The service did not refuse it." : sa.by_rule ? ["The service refused it with ", code(sa.code || first_code(f.detail) || "a refusal"), ": ", h("span", { class: "tour-msg" }, String(f.detail || "").replace(/^[A-Z][A-Z0-9_]+:\s*/, ""))]
+              : ["The service refused it for a reason unrelated to the approval rules: ", code(sa.code || "?"), " ", h("span", { class: "tour-msg" }, String(f.detail || "").replace(/^[A-Z][A-Z0-9_]+:\s*/, ""))],
+            sa.by_rule ? ". The run keeps waiting for an approval by an eligible principal; " : ". ", sa.by_rule ? [code("user:bob"), " approves it in step 4."] : ""],
+          why: ["Approval is a separate identity's decision. Checked on its own, the separation-of-duties rule returns ", code(f.sod_outcome), f.sod_reasons.length ? [" (", f.sod_reasons.join("; "), ")"] : "", "."],
           facts: [fact("Self-approval", [chip(!sa.refused ? "ALLOWED" : sa.by_rule ? "REFUSED" : sa.code || "REFUSED"), expect(sa.by_rule)]),
             fact("Separation of duties", [chip(f.sod_outcome), expect(f.sod_outcome === "DENY")])],
         };
@@ -265,7 +279,7 @@
         const bad = failing_gates(f.gates);
         return {
           what: ["A development trace where documents were missing produced a refined machine that asks for input once. The proposal is ", code(f.proposal), " and ",
-            bad.length ? ["these gates failed: ", gate_names(bad)] : "every gate passed", "; the admission with a compare-and-set on the parent is ", code(f.admission), ". A live run on the refined machine paused at ",
+            bad.length ? ["these gates failed: ", gate_names(bad)] : "every gate passed", ". Admission uses a compare-and-swap: the candidate is admitted only if the active version is still its expected parent. The result is ", code(f.admission), ". A live run on the refined machine paused at ",
             code(f.refined_first_status), ", took the documents and the approval, and ended at ", code(f.refined_terminal), "."],
           why: "Machines learn from traces only through the same gates: policy is not widened, validation passes, the new trace replays and every protected trace still replays.",
           facts: [fact("Refined", [HXUI.digest(f.refined_hash, { short: 19, label: "refined artifact hash", id: "tour-hash-refined" }), parity(f.refined_hash, pb().refined_artifact_hash, "refined artifact hash")]),
@@ -299,8 +313,8 @@
     if (sec === "run") return ["Shown in ", link, " with the run selected."];
     if (sec === "compile") return ["Shown in ", link, "."];
     const n = (d.ctx.protected || []).length;
-    return [link, " shows the result in its summary: the refined machine as the active version and ", plural(n, "protected trace", "protected traces"),
-      " in the archive. Its own proposal and admission tools run against the machine that is active now, so they report their own results, not the tour's."];
+    return [link, " shows this result as its last proposal, labelled as coming from the guided demo, with the refined machine as the active version and ",
+      plural(n, "protected trace", "protected traces"), " in the archive. Its own tools run against the machine that is active now."];
   }
 
   /* ---------------------------------------------------------------- final summary */
@@ -328,7 +342,7 @@
       ["drafts", "ERP drafts", [HXUI.chip(plural(s.run.erp_drafts, "draft", "drafts"), "neutral", { mono: true }), expect(s.run.erp_drafts === 1)],
         f4.fault_injected ? "after a timeout after commit" : "no fault injected"],
       ["proposal", "Refinement proposal", [chip(s.refine.proposal)], bad.length ? "failed: " + gate_names(bad) : "every gate passed"],
-      ["admission", "Refinement admission", [chip(s.refine.admission)], "compare-and-set on the parent " + String(f6a.parent_hash || "").slice(7, 19)],
+      ["admission", "Refinement admission", [chip(s.refine.admission)], "compare-and-swap on the parent " + String(f6a.parent_hash || "").slice(7, 19)],
       ["shortcut", "Shortcut trace", [chip(sc.eligibility), expect(sc.eligibility === "EXCLUDED")], sc_note],
       ["active", "Active version", [chip(sc.active_unchanged ? "UNCHANGED" : "CHANGED"), expect(!!sc.active_unchanged)], short_hash(f6b.active_after[0])],
     ];
@@ -341,8 +355,8 @@
         h("div", { class: "tour-sum-row", id: "tour-sum-" + k, dataset: { value: vals[k] } },
           h("dt", null, label), h("dd", null, h("span", { class: "tour-sum-value" }, value), h("span", { class: "tour-sum-note" }, note))))),
       h("p", { class: "tour-sum-foot" },
-        match === true ? [HXUI.chip("Lines equal the Python CLI", "ok", { icon: "check" }), " Every narration line equals the Python demo's output for the same clock and ids."]
-          : match === false ? [HXUI.chip("Lines differ from the Python CLI", "crit", { icon: "cross" }), " Open Self-test and run check G15 to see the first difference."]
+        match === true ? [HXUI.chip("Narration matches the Python CLI", "ok", { icon: "check" }), " Every narration line equals the Python demo's output for the same clock and ids."]
+          : match === false ? [HXUI.chip("Narration differs from the Python CLI", "crit", { icon: "cross" }), " Open Self-test and run check G15 to see the first difference."]
             : "The refined machine is now active in the lab.",
         " Run and Learn show the demo's runs. Refined hash ", code(short_hash(f6a.refined_hash)), "."));
   }
@@ -369,6 +383,20 @@
     return { panel, head, progress, counter, title, body, next, restart, expand, back, end_btn };
   }
 
+  /** After a new step the narration starts at the top of the guide. When focus stays on Next (the viewer pressed it)
+      and the taller panel pushed it off screen, focus the step's title instead, so a keyboard user starts reading
+      the new step and never presses an invisible button. */
+  function reveal_focus() {
+    if (!T || !T.parts) return;
+    const a = document.activeElement;
+    if (!a || !T.parts.panel.contains(a)) return;
+    const r = a.getBoundingClientRect();
+    if (r.top >= 0 && r.bottom <= (globalThis.innerHeight || 0)) return;
+    const title = T.parts.title;
+    try { title.focus({ preventScroll: true }); } catch (e) { title.focus(); }
+    try { title.scrollIntoView({ block: "nearest", behavior: reduced_motion() ? "auto" : "smooth" }); } catch (e) { title.scrollIntoView(); }
+  }
+
   function focus_id(id) {
     const el = document.getElementById(id);
     if (el) { try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); } }
@@ -381,8 +409,9 @@
     P.progress.replaceChildren(...d.steps.map((s, i) => {
       const state = i === failed ? "failed" : i === current ? "current" : T.status === "done" || i <= idx ? "done" : "todo";
       const word = { failed: " (failed)", current: T.status === "running" ? " (running)" : " (current)", done: " (done)", todo: "" }[state];
-      return h("li", { class: "tour-dot", dataset: { state }, title: "Step " + s.id + ": " + s.title + word, "aria-current": i === current ? "step" : null },
-        h("span", { class: "hx-visually-hidden" }, "Step " + s.id + ": " + s.title + word),
+      const name = step_label(s.id).replace(/ of \d+/, "") + ": " + title_of(s.id, s.title);
+      return h("li", { class: "tour-dot", dataset: { state }, title: name + word, "aria-current": i === current ? "step" : null },
+        h("span", { class: "hx-visually-hidden" }, name + word),
         state === "done" ? HXUI.icon("check", { class: "tour-dot-icon" }) : state === "failed" ? HXUI.icon("cross", { class: "tour-dot-icon" }) : null,
         h("span", { "aria-hidden": "true" }, s.id));
     }));
@@ -397,6 +426,7 @@
       h("dl", { class: "tour-facts" }, c.facts),
       h("details", { class: "tour-out", open: !!opts.open_output },
         h("summary", null, "Engine output, as the command-line demo prints it (" + plural(lines.length, "line", "lines") + ")"),
+        h("p", { class: "tour-cli-title" }, h("span", { class: "hx-label" }, "CLI heading"), " ", r.title),
         h("ol", { class: "tour-lines", id: opts.ids ? "tour-lines" : null }, lines.map((l) => h("li", null, l.replace(/^ {3}/, ""))))),
       h("p", { class: "tour-where" }, where_for(r, d)),
     ];
@@ -417,7 +447,6 @@
     const P = T.parts;
     const idx = d.results.length - 1;
     const r = idx >= 0 ? d.results[idx] : null;
-    const total = d.steps.length;
     const nxt = d.done ? null : d.steps[d.cursor];
     const sec = HXUI.current ? HXUI.current() : null;
     const collapsed = T.status === "done" && !T.expanded && sec !== PLACE["6b"][0];
@@ -425,12 +454,13 @@
     P.panel.dataset.step = r ? r.id : "";
     P.panel.dataset.collapsed = collapsed ? "true" : "false";
     paint_progress(d, idx);
-    P.counter.textContent = T.status === "done" ? "Finished, " + total + " of " + total + " steps"
-      : T.status === "error" ? "Stopped at step " + (d.cursor + 1) + " of " + total
-        : T.status === "changed" ? "Paused after step " + (idx + 1) + " of " + total
-          : "Step " + (T.status === "running" ? Math.min(idx + 2, total) : Math.max(idx + 1, 1)) + " of " + total;
+    const shown_id = T.status === "running" ? (nxt ? nxt.id : r ? r.id : "1") : r ? r.id : "1";
+    P.counter.textContent = T.status === "done" ? "Finished, all " + STEP_COUNT + " steps"
+      : T.status === "error" ? "Stopped at s" + step_label(nxt ? nxt.id : shown_id).slice(1)
+        : T.status === "changed" ? "Paused after s" + step_label(r ? r.id : "1").slice(1)
+          : step_label(shown_id);
     if (T.status === "error") {
-      P.title.textContent = "Step " + (nxt ? nxt.id + " failed: " + (SHORT[nxt.id] || nxt.title) : "failed");
+      P.title.textContent = nxt ? "Step " + nxt.id + " failed: " + title_of(nxt.id, nxt.title) : "The step failed";
       const e = T.error || {};
       P.body.replaceChildren(HXUI.notice("crit", e.plain || "The engine raised an error while running this step.",
         [e.detail ? h("p", null, "Engine error: ", code(e.detail)) : null,
@@ -442,17 +472,17 @@
         [h("ul", { class: "tour-changes" }, (T.change || []).map((x) => h("li", null, x.text))),
           h("p", null, "The next steps assume the state step " + (r ? r.id : "1") + " left. Run the demo again to start over with a fresh environment; what you did in the workbench stays in the old one until then.")]));
     } else if (!r) {
-      P.title.textContent = d.steps[0].title;
+      P.title.textContent = title_of(d.steps[0].id, d.steps[0].title);
       P.body.replaceChildren(h("p", { class: "tour-what" }, "Running the first step in this page…"));
     } else if (T.status === "done") {
       P.title.textContent = collapsed ? "Guided demo finished" : "The guided demo is finished";
-      P.body.replaceChildren(...(collapsed ? [h("p", { class: "tour-what" }, "All " + total + " steps ran. The summary stays here until you end the demo.")]
+      P.body.replaceChildren(...(collapsed ? [h("p", { class: "tour-what" }, "All " + STEP_COUNT + " steps ran (step 6 in two parts). The summary stays here until you end the demo.")]
         : [summary_el(d),
           h("details", { class: "tour-last" },
-            h("summary", null, "Step " + r.id + ": " + (SHORT[r.id] || r.title)),
+            h("summary", null, step_label(r.id) + ": " + title_of(r.id, r.title)),
             h("div", { class: "tour-body" }, step_body(r, d, { open_output: false, ids: true })))]));
     } else {
-      P.title.textContent = r.title;
+      P.title.textContent = title_of(r.id, r.title);
       P.body.replaceChildren(...step_body(r, d, { open_output: wide(), ids: true }));
     }
     const busy = T.status === "running";
@@ -462,8 +492,10 @@
     P.expand.hidden = !collapsed;
     P.restart.classList.toggle("hx-btn--primary", stopped);
     P.restart.classList.toggle("hx-btn--secondary", !stopped);
-    P.next.querySelector(".hx-btn-label").textContent = busy ? "Working…" : nxt ? "Next: " + (SHORT[nxt.id] || nxt.title) : "Next";
+    P.next.querySelector(".hx-btn-label").textContent = busy ? "Working…" : nxt ? "Next: " + title_of(nxt.id, nxt.title) : "Next";
     HXUI.set_disabled(P.next, busy, "The engine is running this step.");
+    /* Back to overview does nothing on the Overview itself */
+    P.back.hidden = sec === "overview";
   }
 
   function show_place(step_id) {
@@ -508,7 +540,7 @@
       paint();
       mark_overview();
       if (r && tour.status !== "error") {
-        HXUI.announce("Guided demo, step " + r.id + ": " + r.title + (tour.status === "done" ? ". The demo is finished." : "."));
+        HXUI.announce("Guided demo, " + step_label(r.id).toLowerCase() + ": " + title_of(r.id, r.title) + (tour.status === "done" ? ". The demo is finished." : "."));
         HXUI.bus.emit("tour:step", { id: r.id, index: tour.demo.results.length - 1, status: tour.status });
       } else {
         HXUI.announce("The guided demo stopped: " + tour.parts.title.textContent + ".");
@@ -517,6 +549,7 @@
       if (tour.status === "error") focus_id("tour-restart");
       else if (typeof after === "function") after();
       else if (tour.status === "done") focus_id("tour-summary-title");
+      else reveal_focus();
     }, 0);
   }
 
@@ -611,8 +644,9 @@
   document.addEventListener("keyup", (e) => { if (e.key === "Enter" || e.key === " ") after_action(e); }, true);
   HXUI.bus.on("section:shown", (p) => {
     if (!T) return;
-    if (T.status === "ready") check_in_sync();
-    else if (T.status === "done") paint(); /* collapse to one line away from Learn, expand there */
+    /* repaint: the done bar collapses away from Learn, and Back to overview hides on the Overview */
+    if (T.status === "ready") { if (check_in_sync()) paint(); }
+    else if (T.status === "done") paint();
     if (p && p.id === "overview") mark_overview(); /* the Overview may have re-rendered its step list */
   });
 
