@@ -358,6 +358,31 @@
     return el;
   };
 
+  /* A click on a disabled button says why, next to the button, instead of doing nothing silently. */
+  function show_disabled_reason(btn) {
+    const reason = btn.getAttribute("aria-description") || btn.getAttribute("title");
+    if (!reason) return;
+    let note = btn.nextElementSibling;
+    if (!note || !note.classList || !note.classList.contains("hx-why")) {
+      note = h("span", { class: "hx-why", role: "status" });
+      btn.insertAdjacentElement("afterend", note);
+    }
+    note.textContent = reason;
+    clearTimeout(note._hx_timer);
+    note._hx_timer = setTimeout(() => { if (note.isConnected) note.remove(); }, 5000);
+    if (HXUI.announce) HXUI.announce(reason);
+  }
+  if (!HXUI._why_installed && typeof document !== "undefined") {
+    HXUI._why_installed = true;
+    document.addEventListener("click", (e) => {
+      const btn = e.target && e.target.closest && e.target.closest('[aria-disabled="true"]');
+      if (!btn) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      show_disabled_reason(btn);
+    }, true);
+  }
+
   HXUI.is_disabled = function (el) {
     return !!el && (el.getAttribute("aria-disabled") === "true" || el.disabled === true);
   };

@@ -66,6 +66,19 @@
   color: var(--ink-3);
   border-color: var(--rule);
   cursor: not-allowed;
+  opacity: 0.6;
+}
+.hx-why {
+  display: inline-block;
+  margin-inline-start: var(--sp-2);
+  padding: 2px var(--sp-2);
+  border-radius: var(--r-1);
+  background: var(--warn-tint);
+  color: var(--warn);
+  font-size: var(--fs-2);
+  line-height: var(--lh-tight);
+  max-width: 28rem;
+  vertical-align: middle;
 }
 .hx-btn--ghost[aria-disabled="true"], .hx-btn--ghost:disabled { background: transparent; border-color: transparent; }
 
