@@ -28,15 +28,16 @@ the evidence behind it, and measures the cost difference between two runs.
 
 | Path | Responsibility |
 | --- | --- |
-| `backend/cost_inspector/ingest/parse.py` | Bounded decoding of one JSON object, a JSON array or JSONL. Floats parse as `Decimal`, `NaN`/`Infinity` are rejected, and every record keeps its source line. |
-| `backend/cost_inspector/ingest/validate.py` | Validates each record against the vendored official AUDR v1.0.0 schema (Draft 2020-12) and turns schema errors into line-specific messages that say how to fix the problem. |
-| `backend/cost_inspector/ingest/sink.py` | AUDR sink rules (§3.3): exact duplicate `record_id`s are dropped with a note, conflicting ones are errors, corrections replace the record they restate, voids leave the analysis. Shared merge keys and missing `attribution.environment` produce warnings. |
-| `backend/cost_inspector/ingest/normalize.py` | Converts a record into a `CallRecord`. It drops `user_id`, `account_id`, `subscription_id`, `key_name` and `trace_id`. AUDR has no prompt content, so none can be stored. |
-| `backend/cost_inspector/analysis/kora.py` | The only module that imports `kora_doctor`. It runs `analyze()` on records rebuilt from stored telemetry and re-derives each finding's evidence with the analyzer's own helpers. When re-derivation disagrees with the analyzer, it says so instead of showing evidence. |
-| `backend/cost_inspector/money.py` | `Decimal` totals per currency, with unknown costs counted separately and never treated as zero. Includes percent change with an explicit zero-baseline rule. |
-| `backend/cost_inspector/compare.py` | Compares two runs per scope (all calls / model calls) and per currency. The user's equivalence choice is required. |
-| `backend/cost_inspector/report.py` | Portable JSON report (versioned) and a self-contained HTML rendering of the same data. |
-| `backend/cost_inspector/store.py` | SQLite access, `PRAGMA user_version` migrations, transactional import/delete. |
+| `backend/src/cost_inspector/ingest/parse.py` | Bounded decoding of one JSON object, a JSON array or JSONL. Floats parse as `Decimal`, `NaN`/`Infinity` are rejected, and every record keeps its source line. |
+| `backend/src/cost_inspector/ingest/validate.py` | Validates each record against the vendored official AUDR v1.0.0 schema (Draft 2020-12) and turns schema errors into line-specific messages that say how to fix the problem. |
+| `backend/src/cost_inspector/ingest/sink.py` | AUDR sink rules (§3.3): exact duplicate `record_id`s are dropped with a note, conflicting ones are errors, corrections replace the record they restate, voids leave the analysis. Shared merge keys and missing `attribution.environment` produce warnings. |
+| `backend/src/cost_inspector/ingest/normalize.py` | Converts a record into a `CallRecord`. It drops `user_id`, `account_id`, `subscription_id`, `key_name` and `trace_id`. AUDR has no prompt content, so none can be stored. |
+| `backend/src/cost_inspector/analysis/kora.py` | The only module that imports `kora_doctor`. It runs `analyze()` on records rebuilt from stored telemetry and re-derives each finding's evidence with the analyzer's own helpers. When re-derivation disagrees with the analyzer, it says so instead of showing evidence. |
+| `backend/src/cost_inspector/money.py` | `Decimal` totals per currency, with unknown costs counted separately and never treated as zero. Includes percent change with an explicit zero-baseline rule. |
+| `backend/src/cost_inspector/compare.py` | Compares two runs per scope (all calls / model calls) and per currency. The user's equivalence choice is required. |
+| `backend/src/cost_inspector/views.py` | JSON shapes for the API. Lists (import and run views) carry light finding summaries; the full finding (evidence, affected calls, rule, limits, overlaps) is a separate request. Run and finding views load only the rows they show, through the `finding_calls` index. |
+| `backend/src/cost_inspector/report.py` | Portable JSON report (versioned) and a self-contained HTML rendering of the same data. Rules and calls are listed once and referenced by category and `call_id`, so large imports do not repeat them per finding. |
+| `backend/src/cost_inspector/store.py` | SQLite access, `PRAGMA user_version` migrations, transactional import/delete. |
 | `frontend/src` | React 19 + TypeScript + Tailwind 4. Server state goes through TanStack Query. Selection lives in the URL, so a reload restores the view. |
 
 ## Data model
