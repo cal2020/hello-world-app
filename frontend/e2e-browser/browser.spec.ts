@@ -136,6 +136,8 @@ test.describe('in-browser build', () => {
     await expect(page.getByText('$0.10235').first()).toBeVisible()
     await expect(page.getByText('Where the cost goes')).toBeVisible()
     await expect(page.getByText(/Claude Code's own cost figure for the one session that records it/)).toBeVisible()
+    // Scan once the "Imported" toast has gone: mid-animation colours fail contrast checks.
+    await expect(page.locator('[data-sonner-toast]')).toHaveCount(0, { timeout: 15_000 })
     expect(await accessibilityViolations(page)).toEqual([])
   })
 
