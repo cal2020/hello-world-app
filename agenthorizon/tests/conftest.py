@@ -61,3 +61,27 @@ def write_json(path: Path, obj) -> None:
 
 def copytree(src: Path, dst: Path) -> None:
     shutil.copytree(src, dst, dirs_exist_ok=True)
+
+
+@pytest.fixture(scope="session")
+def pg_cluster():
+    """A throwaway local PostgreSQL cluster with migrations applied (skipped when binaries are absent)."""
+    import socket
+    import tempfile
+
+    from agenthorizon.app.db import dispose_all, migrate
+    from agenthorizon.app.pgcluster import LocalCluster, pg_bindir
+
+    if pg_bindir() is None:
+        pytest.skip("PostgreSQL server binaries not available")
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+    root = Path(tempfile.mkdtemp(prefix="ahpg-"))
+    os.chmod(root, 0o755)
+    cluster = LocalCluster(root / "pg", port=port).ensure()
+    migrate(url=cluster.url())
+    yield cluster
+    dispose_all()
+    cluster.stop()
+    shutil.rmtree(root, ignore_errors=True)

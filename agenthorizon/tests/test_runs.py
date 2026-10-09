@@ -117,10 +117,13 @@ def test_attempt_policy_matches_released_runner(reference_checkout, tmp_path, fa
         assert ours == {k: t[k] for k in ("calls", "saved", "has_success")}, (s, t, ours)
 
 
-# ---- 2. orchestration semantics with a scripted judge ------------------------------------------------------
-def _definition(ids, policy=AGENTIC, model="m-1", trial=1) -> RunDefinition:
+# ---- 2. orchestration semantics with a scripted judge (file and PostgreSQL stores) ------------------------------
+def _definition(ids, policy=AGENTIC, model="m-1", trial=1, nonce=None) -> RunDefinition:
+    import uuid
+
     return RunDefinition(
-        dataset_version_id="dv-test", dataset_input_digest="0" * 64, normalizer_version="n/1", synthetic_data=True,
+        dataset_version_id="dv-test", dataset_input_digest=nonce or uuid.uuid4().hex, normalizer_version="n/1",
+        synthetic_data=True,
         selection={"source": "explicit", "example_ids": sorted(ids), "official": False}, scoring_manifest_id=None,
         judge={"config_id": "test", "interface": "claude_code", "provider_model_id": model, "route": "anthropic"},
         prompt={"prompt_id": "p", "sha256": "s"}, instructions=None, preprocessing=None, staging_mode="paper-paths",
@@ -128,34 +131,85 @@ def _definition(ids, policy=AGENTIC, model="m-1", trial=1) -> RunDefinition:
         trial=trial, classification={"result_kind": "test_fixture"})
 
 
-def _orch(tmp_path, ids, judge, *, policy=AGENTIC, controls=None, item_cost=None, definition=None):
+class Backend:
+    def __init__(self, kind, tmp_path, cluster=None):
+        self.kind, self.tmp, self.cluster = kind, tmp_path, cluster
+        self.runs_dir = tmp_path / "runs"
+        if kind == "pg":
+            from sqlalchemy import create_engine
+
+            from agenthorizon.app.db import engine as _e  # noqa: F401 — engines are per-URL singletons
+
+            self.url = cluster.url("ah_worker")
+            self.engine = create_engine(self.url)
+
+    def create(self, definition, controls=None):
+        if self.kind == "file":
+            return FileRunStore.create_or_open(self.runs_dir, definition, controls or {})
+        from agenthorizon.app.runstore import PgRunStore
+
+        return PgRunStore.create_or_open(self.engine, self.runs_dir, definition, controls or {})
+
+    def handle(self, store):
+        if self.kind == "file":
+            return FileRunStore(store.dir)
+        from agenthorizon.app.runstore import PgRunStore
+
+        return PgRunStore(self.engine, store.run_id, self.runs_dir)
+
+
+@pytest.fixture(params=["file", "pg"])
+def backend(request, tmp_path):
+    if request.param == "pg":
+        cluster = request.getfixturevalue("pg_cluster")
+        b = Backend("pg", tmp_path, cluster)
+        yield b
+        b.engine.dispose()
+    else:
+        yield Backend("file", tmp_path)
+
+
+def _orch(backend, ids, judge, *, policy=AGENTIC, controls=None, item_cost=None, definition=None, price=None):
     d = definition or _definition(ids, policy)
-    store, _ = FileRunStore.create_or_open(tmp_path / "runs", d, {"budget_usd": (controls or RunControls()).budget_usd})
-    return store, Orchestrator(store, judge, policy, controls=controls or RunControls(metered=False),
-                               item_cost=item_cost or {}, price=None)
+    controls = controls or RunControls(metered=False)
+    store, _ = backend.create(d, {"budget_usd": controls.budget_usd})
+    return store, Orchestrator(store, judge, policy, controls=controls, item_cost=item_cost or {}, price=price)
 
 
-def test_identity_resume_only_identical(tmp_path):
+def _again(store, judge=None, controls=None, policy=AGENTIC, **kw):
+    return Orchestrator(store, judge or ScriptedJudge(), policy, controls=controls or RunControls(metered=False),
+                        item_cost=kw.get("item_cost", {}), price=kw.get("price")).run()
+
+
+def test_identity_resume_only_identical(backend):
+    a = _definition(["e1", "e2"], nonce="fixed")
+    assert a.run_id == _definition(["e2", "e1"], nonce="fixed").run_id  # canonical
+    assert a.run_id != _definition(["e1", "e2"], model="m-2", nonce="fixed").run_id  # a new model is a new run
+    assert a.run_id != _definition(["e1", "e2"], trial=2, nonce="fixed").run_id  # repeated trials are separate
     a = _definition(["e1", "e2"])
-    assert a.run_id == _definition(["e2", "e1"]).run_id  # canonical
-    assert a.run_id != _definition(["e1", "e2"], model="m-2").run_id  # a new model is a new run
-    assert a.run_id != _definition(["e1", "e2"], trial=2).run_id  # repeated trials are separate identities
-    FileRunStore.create_or_open(tmp_path, a, {})
-    _, created = FileRunStore.create_or_open(tmp_path, a, {"budget_usd": 5})  # controls may change on resume
+    backend.create(a)
+    _, created = backend.create(a, {"budget_usd": 5})  # controls may change on resume
     assert not created
-    tampered = tmp_path / a.run_id / "definition.json"
-    d = json.loads(tampered.read_text())
-    d["judge"]["provider_model_id"] = "other"
-    tampered.write_text(json.dumps(d))
+    if backend.kind == "file":
+        tampered = backend.runs_dir / a.run_id / "definition.json"
+        d = json.loads(tampered.read_text())
+        d["judge"]["provider_model_id"] = "other"
+        tampered.write_text(json.dumps(d))
+    else:
+        from sqlalchemy import text
+
+        with backend.cluster and __import__("sqlalchemy").create_engine(backend.cluster.url()).begin() as c:
+            c.execute(text("UPDATE runs SET definition = jsonb_set(definition, '{judge,provider_model_id}', '\"other\"') "
+                           "WHERE run_id = :r"), {"r": a.run_id})
     with pytest.raises(RunStoreError):
-        FileRunStore.create_or_open(tmp_path, a, {})
+        backend.create(a)
 
 
-def test_policy_sequences_selection_and_no_rerun_of_valid_judgments(tmp_path):
+def test_policy_sequences_selection_and_no_rerun_of_valid_judgments(backend):
     script = {"a": ["verdict:false"], "b": ["unparseable", "verdict:true"], "c": ["unparseable"] * 3,
               "d": ["process_failed"], "e": ["short"], "f": ["verdict:str"], "g": ["unparseable", "timed_out"]}
     judge = ScriptedJudge(script)
-    store, orch = _orch(tmp_path, list(script), judge, controls=RunControls(concurrency=3, metered=False))
+    store, orch = _orch(backend, list(script), judge, controls=RunControls(concurrency=3, metered=False))
     summary = orch.run()
     assert summary["status"] == "completed"
     calls = {}
@@ -171,15 +225,14 @@ def test_policy_sequences_selection_and_no_rerun_of_valid_judgments(tmp_path):
     assert {r.example_id for r in ps.records} == {"a", "b", "c", "e", "f"}  # d, g missing
     by = ps.by_id()
     assert by["f"].verdict.has_success_key and not by["f"].verdict.binary_valid
-    # every attempt is retained, and the event log is gap-free
-    assert sum(len(store.attempts(e)) for e in script) == len(judge.calls)
+    assert sum(len(store.attempts(e)) for e in script) == len(judge.calls)  # every attempt is retained
     seqs = [e["seq"] for e in store.events()]
-    assert seqs == list(range(1, len(seqs) + 1))
+    assert seqs == list(range(1, len(seqs) + 1))  # gap-free event log
 
 
-def test_crash_recovery_records_interrupted_and_never_duplicates_finals(tmp_path):
+def test_crash_recovery_records_interrupted_and_never_duplicates_finals(backend):
     ids = ["x1", "x2", "x3"]
-    store, orch = _orch(tmp_path, ids, ScriptedJudge())
+    store, orch = _orch(backend, ids, ScriptedJudge())
     store.begin_attempt("x2", 1, "dead-worker")  # a worker died mid-attempt
     store.finalize("x3", {"selected_attempt": None, "has_response": False, "final_class": None})  # finalized earlier
     orch.run()
@@ -191,11 +244,12 @@ def test_crash_recovery_records_interrupted_and_never_duplicates_finals(tmp_path
         store.finalize("x2", {"selected_attempt": 1})
 
 
-def test_killed_worker_process_resumes_without_duplicates(tmp_path):
+def test_killed_worker_process_resumes_without_duplicates(backend):
     ids = [f"k{i}" for i in range(8)]
-    store, _ = FileRunStore.create_or_open(tmp_path / "runs", _definition(ids), {})
-    proc = subprocess.Popen([sys.executable, "-m", "agenthorizon.testing.fake_judge", str(tmp_path / "runs"), store.run_id,
-                             "0.4", "2"], cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    store, _ = backend.create(_definition(ids))
+    extra = [backend.url] if backend.kind == "pg" else []
+    proc = subprocess.Popen([sys.executable, "-m", "agenthorizon.testing.fake_judge", str(backend.runs_dir), store.run_id,
+                             "0.4", "2", *extra], cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     deadline = time.monotonic() + 30
     while time.monotonic() < deadline:  # wait until some tasks finished and others are in flight
         finals = sum(1 for e in ids if store.final(e))
@@ -205,9 +259,8 @@ def test_killed_worker_process_resumes_without_duplicates(tmp_path):
     os.kill(proc.pid, signal.SIGKILL)
     proc.wait(timeout=10)
     finals_before = {e: store.final(e) for e in ids if store.final(e)}
-    assert 2 <= len(finals_before) < len(ids)
-    summary = Orchestrator(store, ScriptedJudge(), AGENTIC, controls=RunControls(concurrency=2, metered=False),
-                           item_cost={}, price=None).run()
+    assert 2 <= len(finals_before) < len(ids), proc.stderr.read().decode()[-2000:]
+    summary = _again(store, controls=RunControls(concurrency=2, metered=False))
     assert summary["status"] == "completed"
     for e in ids:
         recs = store.attempts(e)
@@ -219,10 +272,9 @@ def test_killed_worker_process_resumes_without_duplicates(tmp_path):
     assert any(ev["type"] == "recovered_interrupted" for ev in store.events())
 
 
-def test_cancel_stops_running_attempts_and_resume_completes(tmp_path):
+def test_cancel_stops_running_attempts_and_resume_completes(backend):
     ids = [f"c{i}" for i in range(6)]
-    judge = ScriptedJudge(delay_s=5.0)
-    store, orch = _orch(tmp_path, ids, judge, controls=RunControls(concurrency=2, metered=False, poll_s=0.05))
+    store, orch = _orch(backend, ids, ScriptedJudge(delay_s=5.0), controls=RunControls(concurrency=2, metered=False, poll_s=0.05))
     t = threading.Thread(target=orch.run)
     t.start()
     while not any(ev["type"] == "attempt_started" for ev in store.events()):
@@ -230,83 +282,75 @@ def test_cancel_stops_running_attempts_and_resume_completes(tmp_path):
     store.request("cancel", by="tester", reason="test")
     t.join(timeout=20)
     assert not t.is_alive()
-    st = run_summary(store)
-    assert st["status"] == "cancelled"
+    assert run_summary(store)["status"] == "cancelled"
     cancelled = [r for e in ids for r in store.attempts(e) if r.status == "cancelled"]
     assert cancelled and all(not r.counts_toward_limit for r in cancelled)
     assert not any(store.final(e) for e in ids)
-    with pytest.raises(RunLocked):  # another process cannot execute the same run concurrently
+    with pytest.raises(RunLocked):  # another worker cannot execute the same run concurrently
         with store.execution_lock():
-            with FileRunStore(store.dir).execution_lock():
+            with backend.handle(store).execution_lock():
                 pass
-    summary = Orchestrator(store, ScriptedJudge(), AGENTIC, controls=RunControls(concurrency=2, metered=False),
-                           item_cost={}, price=None).run()
-    assert summary["status"] == "completed"
+    assert _again(store, controls=RunControls(concurrency=2, metered=False))["status"] == "completed"
     assert all(store.final(e)["has_response"] for e in ids)
 
 
-def test_pause_lets_running_attempts_finish(tmp_path):
+def test_pause_lets_running_attempts_finish(backend):
     ids = [f"p{i}" for i in range(6)]
-    store, orch = _orch(tmp_path, ids, ScriptedJudge(delay_s=0.3), controls=RunControls(concurrency=2, metered=False, poll_s=0.02))
+    store, orch = _orch(backend, ids, ScriptedJudge(delay_s=0.3), controls=RunControls(concurrency=2, metered=False, poll_s=0.02))
     t = threading.Thread(target=orch.run)
     t.start()
     while not any(ev["type"] == "attempt_started" for ev in store.events()):
         time.sleep(0.01)
     store.request("pause", by="tester")
     t.join(timeout=20)
-    st = run_summary(store)
-    assert st["status"] == "paused"
+    assert run_summary(store)["status"] == "paused"
     recs = [r for e in ids for r in store.attempts(e)]
     assert recs and all(r.status == "completed" for r in recs)  # in-flight attempts completed, none cancelled
     assert 0 < sum(1 for e in ids if store.final(e)) < len(ids)
 
 
-def test_budget_reservation_pauses_and_resume_with_higher_budget(tmp_path):
-    ids = [f"b{i}" for i in range(5)]
-    controls = RunControls(concurrency=1, budget_usd=2.5, metered=True)
+def test_budget_reservation_pauses_and_resume_with_higher_budget(backend):
     from agenthorizon.runs.pricing import PRICES
 
-    price = PRICES[("anthropic", "claude-haiku-4-5")]  # 1000 in / 100 out tokens per scripted attempt -> $0.0015
-    store, _ = FileRunStore.create_or_open(tmp_path / "runs", _definition(ids), {"budget_usd": 2.5})
-    orch = Orchestrator(store, ScriptedJudge(tokens=None), AGENTIC, controls=controls,
+    ids = [f"b{i}" for i in range(5)]
+    price = PRICES[("anthropic", "claude-haiku-4-5")]
+    store, orch = _orch(backend, ids, ScriptedJudge(tokens=None), controls=RunControls(concurrency=1, budget_usd=2.5, metered=True),
                         item_cost={e: 1.0 for e in ids}, price=price)
     s = orch.run()
     assert s["status"] == "paused" and "budget exhausted" in s["reason"]
     assert sum(1 for e in ids if store.final(e)) == 2  # unknown usage keeps each $1 reservation as a charge
     b = store.state()["budget"]
     assert b["committed_usd"] <= 2.5 and b["unknown_cost_attempts"] == 2
-    s2 = Orchestrator(store, ScriptedJudge(), AGENTIC, controls=RunControls(budget_usd=10.0, metered=True),
-                      item_cost={e: 1.0 for e in ids}, price=price).run()
+    s2 = _again(store, controls=RunControls(budget_usd=10.0, metered=True), item_cost={e: 1.0 for e in ids}, price=price)
     assert s2["status"] == "completed"
     b2 = store.state()["budget"]
     assert abs(b2["spent_estimated_usd"] - 3 * (1000 * 1.0 + 100 * 5.0) / 1e6) < 1e-9  # token-priced settlements
     assert b2["reserved_usd"] == 0
 
 
-def test_blocked_pauses_run_instead_of_mass_missing(tmp_path):
+def test_blocked_pauses_run_instead_of_mass_missing(backend):
     ids = ["z1", "z2", "z3"]
-    store, orch = _orch(tmp_path, ids, ScriptedJudge(default="blocked"))
+    store, orch = _orch(backend, ids, ScriptedJudge(default="blocked"))
     s = orch.run()
     assert s["status"] == "paused" and "blocked" in s["reason"]
     assert not any(store.final(e) for e in ids)
-    s2 = Orchestrator(store, ScriptedJudge(), AGENTIC, controls=RunControls(metered=False), item_cost={}, price=None).run()
-    assert s2["status"] == "completed"
+    assert _again(store)["status"] == "completed"
     assert store.final("z1")["counted_attempts"] == 1
 
 
-def test_retry_errors_is_explicit_bounded_and_skips_responses(tmp_path):
+def test_retry_errors_is_explicit_bounded_and_skips_responses(backend):
     script = {"r1": ["process_failed", "verdict:true"], "r2": ["unparseable"] * 3, "r3": ["timed_out", "timed_out"]}
-    store, orch = _orch(tmp_path, list(script), ScriptedJudge(script))
+    store, orch = _orch(backend, list(script), ScriptedJudge(script))
     orch.run()
     assert not store.final("r1")["has_response"] and store.final("r2")["has_response"]
     reopened = retry_errors(store, AGENTIC, by="tester", reason="infrastructure outage")
     assert sorted(reopened) == ["r1", "r3"]  # r2 produced responses (invalid) and is never eligible
     again = ScriptedJudge({"r1": ["verdict:true"], "r3": ["timed_out"]})
-    Orchestrator(store, again, AGENTIC, controls=RunControls(metered=False), item_cost={}, price=None).run()
+    _again(store, again)
     assert sorted(again.calls) == [("r1", 3), ("r3", 3)]  # attempt 2 is the audited re-open marker
     assert store.final("r1")["has_response"] and store.final("r1")["selected_attempt"] == 3
     assert not store.final("r3")["has_response"]
-    assert (store.dir / "tasks" / "r1" / "final.superseded-1.json").is_file()
+    assert any(e["type"] == "final_superseded" and e["example_id"] == "r1" for e in store.events())
     assert retry_errors(store, AGENTIC, by="tester", reason="again") == []  # one pass per policy
 
 

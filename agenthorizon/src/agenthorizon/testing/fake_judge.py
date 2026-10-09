@@ -8,7 +8,7 @@ default. ``delay_s`` makes each attempt wait (honouring cancellation) so tests c
 
 Run as a module to execute a run in a separate worker process (used by the kill/restart test)::
 
-    python -m agenthorizon.testing.fake_judge <runs_dir> <run_id> <delay_s> <concurrency>
+    python -m agenthorizon.testing.fake_judge <runs_dir> <run_id> <delay_s> <concurrency> [<database_url>]
 """
 
 from __future__ import annotations
@@ -75,7 +75,14 @@ def main(argv: list[str]) -> int:
     from agenthorizon.runs.store import FileRunStore
 
     runs_dir, run_id, delay, conc = Path(argv[0]), argv[1], float(argv[2]), int(argv[3])
-    store = FileRunStore(runs_dir / run_id)
+    if len(argv) > 4:  # PostgreSQL store (application worker path)
+        from sqlalchemy import create_engine
+
+        from agenthorizon.app.runstore import PgRunStore
+
+        store = PgRunStore(create_engine(argv[4]), run_id, runs_dir)
+    else:
+        store = FileRunStore(runs_dir / run_id)
     d = store.definition()
     orch = Orchestrator(store, ScriptedJudge(delay_s=delay), POLICIES[d.attempt_policy["policy_id"]],
                         controls=RunControls(concurrency=conc, metered=False), item_cost={}, price=None,

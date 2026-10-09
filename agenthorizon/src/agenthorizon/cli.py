@@ -478,6 +478,141 @@ def export_cmd(
                            "redactions_applied": man["redactions_applied"]}, indent=2))
 
 
+# ---- application: bootstrap, database, users, workers, servers -----------------------------------------------
+db_app = typer.Typer(no_args_is_help=True, help="Application database")
+app.add_typer(db_app, name="db")
+users_app = typer.Typer(no_args_is_help=True, help="Application users and API tokens")
+app.add_typer(users_app, name="users")
+
+
+def _local_cluster():
+    from agenthorizon.app.pgcluster import LocalCluster
+
+    s = get_settings()
+    return LocalCluster(s.var_dir / "pg", port=s.local_pg_port)
+
+
+def _uses_local_cluster() -> bool:
+    s = get_settings()
+    return s.mode == "local" and str(s.var_dir / "pg" / "socket") in s.database_url
+
+
+@app.command("bootstrap")
+def bootstrap(
+    operator: str = typer.Option("operator", help="Initial operator user id"),
+    no_token: bool = typer.Option(False, "--no-token", help="Do not create a new operator token"),
+) -> None:
+    """Create var/ directories, start the local PostgreSQL cluster, migrate, and create the first operator token."""
+    from sqlalchemy import select
+
+    from agenthorizon.app.api.auth import create_user
+    from agenthorizon.app.db import engine, migrate
+    from agenthorizon.app.schema import users
+
+    s = get_settings()
+    for d in (s.datasets_dir, s.media_dir, s.runs_dir, s.exports_dir, s.private_dir, s.sources_dir):
+        d.mkdir(parents=True, exist_ok=True)
+    s.private_dir.chmod(0o700)
+    if _uses_local_cluster():
+        c = _local_cluster().ensure()
+        typer.echo(f"postgres: local cluster at {c.data} (socket {c.socket}, port {c.port})")
+    head = migrate(s)
+    typer.echo(f"migrations: at {head}")
+    with engine("owner", s).connect() as conn:
+        has_op = conn.execute(select(users.c.user_id).where(users.c.role == "operator")).first() is not None
+    if not no_token and (not has_op or operator):
+        tok = create_user(engine("owner", s), operator, "operator", label="bootstrap")
+        typer.echo(f"operator token for {operator!r} (shown once; store it securely):\n  {tok}")
+        typer.echo(f"local login link: http://{s.api_host}:{s.api_port}/#login={tok}")
+
+
+@db_app.command("migrate")
+def db_migrate() -> None:
+    from agenthorizon.app.db import migrate
+
+    if _uses_local_cluster():
+        _local_cluster().ensure()
+    typer.echo(f"at {migrate(get_settings())}")
+
+
+@db_app.command("stop")
+def db_stop() -> None:
+    """Stop the project-local PostgreSQL cluster."""
+    _local_cluster().stop()
+    typer.echo("stopped")
+
+
+@users_app.command("add")
+def users_add(user_id: str, role: str = typer.Option(..., help="viewer | reviewer | researcher | operator")) -> None:
+    from agenthorizon.app.api.auth import create_user
+    from agenthorizon.app.db import engine
+
+    tok = create_user(engine("owner", get_settings()), user_id, role, label="cli")
+    typer.echo(f"token for {user_id} ({role}), shown once:\n  {tok}")
+
+
+@app.command("worker")
+def worker_cmd(queue: str = typer.Option(..., help="judge | trusted"), poll_s: float = typer.Option(1.0),
+               lease_s: float = typer.Option(60.0)) -> None:
+    """Run a job worker. judge: executes runs as ah_worker (needs provider credentials, no label access);
+    trusted: ingest/index/materialize/score/export as ah_scorer (no provider credentials)."""
+    import signal
+    import threading
+
+    from agenthorizon.app.db import engine
+    from agenthorizon.app.worker import WorkerContext, default_worker_id, run_worker
+
+    if queue not in ("judge", "trusted"):
+        raise typer.BadParameter("queue must be judge or trusted")
+    s = get_settings()
+    ctx = WorkerContext(s, engine("worker" if queue == "judge" else "scorer", s), default_worker_id(queue))
+    stop = threading.Event()
+    signal.signal(signal.SIGTERM, lambda *_: stop.set())
+    signal.signal(signal.SIGINT, lambda *_: stop.set())
+    run_worker(ctx, queue, stop, poll_s=poll_s, lease_s=lease_s, log=typer.echo)
+
+
+@app.command("api")
+def api_cmd(host: str | None = typer.Option(None), port: int | None = typer.Option(None)) -> None:
+    """Serve the API (and the built frontend) with uvicorn."""
+    import uvicorn
+
+    from agenthorizon.app.api.main import create_app
+
+    s = get_settings()
+    if s.mode == "local" and (host or s.api_host) not in ("127.0.0.1", "localhost", "::1"):
+        raise typer.BadParameter("local mode binds to loopback only; use AH_MODE=hosted with authentication for remote access")
+    uvicorn.run(create_app(s), host=host or s.api_host, port=port or s.api_port, log_level="info")
+
+
+@app.command("dev")
+def dev_cmd(build_frontend: bool = typer.Option(True, "--build-frontend/--no-build-frontend")) -> None:
+    """Local single-user mode: database, migrations, API + built frontend, one judge and one trusted worker."""
+    import subprocess
+    import sys
+
+    from agenthorizon.app.db import migrate
+
+    s = get_settings()
+    if _uses_local_cluster():
+        _local_cluster().ensure()
+    migrate(s)
+    fe = PROJECT_ROOT / "frontend"
+    if build_frontend and (fe / "package.json").is_file():
+        if not (fe / "node_modules").is_dir():
+            subprocess.run(["npm", "ci"], cwd=fe, check=True)
+        subprocess.run(["npm", "run", "build"], cwd=fe, check=True)
+    procs = [subprocess.Popen([sys.executable, "-m", "agenthorizon.cli", "worker", "--queue", q]) for q in ("judge", "trusted")]
+    typer.echo(f"workers: {[p.pid for p in procs]}  ->  http://{s.api_host}:{s.api_port}/  (log in with your operator token)")
+    try:
+        api_cmd(None, None)
+    finally:
+        for p in procs:
+            p.terminate()
+        for p in procs:
+            p.wait(timeout=30)
+
+
 def main() -> None:  # pragma: no cover
     app()
 

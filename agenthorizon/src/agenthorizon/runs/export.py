@@ -64,9 +64,11 @@ def _clean(text: str, secrets: list[str]) -> tuple[str, int]:
     return out, n + (0 if out == text else 1)
 
 
-def build_bundle(settings: Settings, run_id: str, *, score_report: dict | None = None,
+def build_bundle(settings: Settings, run: str | object, *, score_report: dict | None = None,
                  score_markdown: str | None = None, include_artifacts: bool = False) -> tuple[dict[str, bytes], dict]:
-    store = FileRunStore(settings.runs_dir / run_id)
+    """``run`` is a run id (file store) or any run-store instance (file or PostgreSQL)."""
+    store = FileRunStore(settings.runs_dir / run) if isinstance(run, str) else run
+    run_id = store.run_id
     if not store.exists():
         raise FileNotFoundError(f"no run {run_id}")
     d = store.definition()

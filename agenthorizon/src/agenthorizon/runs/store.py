@@ -263,6 +263,12 @@ class FileRunStore:
                   final_class=final.get("final_class"), has_response=final.get("has_response"))
         return True
 
+    def supersede_final(self, example_id: str, pass_no: int) -> None:
+        """Move a task's final record aside (kept for audit) so an explicit retry pass can re-finalize it."""
+        d = self._tdir(example_id)
+        os.replace(d / "final.json", d / f"final.superseded-{pass_no}.json")
+        self.emit("final_superseded", example_id=example_id, pass_no=pass_no)
+
     def recover_interrupted(self) -> list[tuple[str, int]]:
         """Record attempts whose worker died (start marker, no record) as ``interrupted``. Idempotent."""
         found = []

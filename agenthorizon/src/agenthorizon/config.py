@@ -25,9 +25,15 @@ class Settings(BaseSettings):
 
     # Application database (API + orchestration). The private/gold schema is only readable by the
     # scorer/research identity; judge-staging workers should use ``worker_database_url``.
+    # ``database_url`` is the owner/migration identity; service identities default to the same server with the
+    # ah_api / ah_worker / ah_scorer roles in local mode and must be explicit in hosted mode.
     database_url: str = "postgresql+psycopg://agenthorizon@/agenthorizon?host=" + str(PROJECT_ROOT / "var" / "pg" / "socket") + "&port=5433"
+    api_database_url: str | None = None
     worker_database_url: str | None = None
     scorer_database_url: str | None = None
+    local_pg_port: int = 5433
+    session_ttl_hours: int = 12
+    media_url_secret: SecretStr | None = None  # HMAC key for signed media URLs (generated per process if unset)
 
     api_host: str = "127.0.0.1"
     api_port: int = 8765

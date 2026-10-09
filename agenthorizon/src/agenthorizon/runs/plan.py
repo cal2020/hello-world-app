@@ -193,21 +193,44 @@ def resolve(settings: Settings, cfg: RunConfig) -> tuple[RunDefinition, dict]:
 
 
 def preflight(settings: Settings, definition: RunDefinition, dv: DatasetVersion, problems: list[str], *,
-              budget_usd: float | None, price_override: dict | None = None, environ: dict | None = None) -> dict:
+              budget_usd: float | None, price_override: dict | None = None, environ: dict | None = None,
+              worker_caps: dict | None = None) -> dict:
+    """``worker_caps`` (application mode) describes the live judge workers: credential names present, harness
+    versions, isolation. Without it, this process's own environment and binaries are checked (CLI mode)."""
     j = definition.judge
     checks: dict[str, dict] = {}
     blocked = [p for p in problems if p.startswith("BLOCKED")]
     names = required_secret_names(j["interface"], j["route"]) if j["route"] else []
+    if worker_caps is not None:
+        environ = {n: "present" for n in worker_caps.get("credentials", [])}
     _, missing = load_secrets(names, environ)
-    checks["credentials"] = {"ok": not missing, "required": names, "missing": missing}
+    checks["credentials"] = {"ok": not missing, "required": names, "missing": missing,
+                             "checked_in": "judge workers" if worker_caps is not None else "this process"}
     if missing:
-        blocked.append(f"BLOCKED: missing credential(s) {missing} (set them in the worker environment)")
+        blocked.append(f"BLOCKED: missing credential(s) {missing} (set them in the judge worker environment)")
+    if worker_caps is not None and not worker_caps.get("workers"):
+        blocked.append("BLOCKED: no judge worker is running")
     if j.get("harness"):
-        ok = bool(j["harness"].get("path") and j["harness"].get("version"))
-        checks["harness"] = {"ok": ok, **j["harness"]}
+        h = j["harness"]
+        if worker_caps is not None:
+            wh = (worker_caps.get("harness") or {}).get(h["interface"]) or {}
+            ok = bool(wh.get("version"))
+            checks["harness"] = {"ok": ok, "interface": h["interface"], "worker_version": wh.get("version"),
+                                 "defined_version": h.get("version"),
+                                 "matches_definition": wh.get("version") == h.get("version")}
+            if ok and wh.get("version") != h.get("version"):
+                blocked.append(f"BLOCKED: judge worker has {h['interface']} {wh.get('version')}, run defined with {h.get('version')}")
+        else:
+            ok = bool(h.get("path") and h.get("version"))
+            checks["harness"] = {"ok": ok, **h}
         if not ok:
-            blocked.append(f"BLOCKED: harness {j['harness']['interface']} not installed")
-    iso_ok, iso_detail = isolation_available() if definition.execution["isolation"] == "unshare" else (True, "disabled")
+            blocked.append(f"BLOCKED: harness {h['interface']} not installed")
+    if worker_caps is not None:
+        iso = worker_caps.get("isolation") or {}
+        iso_ok, iso_detail = (bool(iso.get("ok")), iso.get("detail")) if definition.execution["isolation"] == "unshare" \
+            else (True, "disabled")
+    else:
+        iso_ok, iso_detail = isolation_available() if definition.execution["isolation"] == "unshare" else (True, "disabled")
     checks["isolation"] = {"ok": iso_ok, "backend": definition.execution["isolation"], "detail": iso_detail}
     if not iso_ok:
         blocked.append(f"BLOCKED: isolation backend unavailable ({iso_detail})")

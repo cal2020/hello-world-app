@@ -316,8 +316,7 @@ def retry_errors(store: FileRunStore, policy: AttemptPolicy, *, by: str, reason:
             if passes >= policy.error_redispatch_passes:
                 continue
             n = max(r.attempt_no for r in recs) + 1
-            tdir = store.task_dir(eid, n).parent
-            os.replace(tdir / "final.json", tdir / f"final.superseded-{passes + 1}.json")
+            store.supersede_final(eid, passes + 1)
             store.record_attempt(AttemptRecord(store.run_id, eid, n, "reopened", "reopened", False, utcnow_iso(),
                                                utcnow_iso(), {"status": "reopened", "error": None},
                                                worker=by, notes=[f"retry-errors pass {passes + 1}: {reason}"]))
