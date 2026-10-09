@@ -5,6 +5,7 @@ import type { ResourceRow } from '../../api/types'
 import { Card, CardHeader } from '../../components/ui/card'
 import { SpendValue } from '../../components/ui/money'
 import { cn } from '../../lib/cn'
+import { hasEstimates } from '../../lib/cost-basis'
 import { geometryValue, plural } from '../../lib/format'
 
 export function ResourceBreakdown({ rows, title = 'Cost by model and tool' }: { rows: ResourceRow[]; title?: string }) {
@@ -31,9 +32,11 @@ export function ResourceBreakdown({ rows, title = 'Cost by model and tool' }: { 
         titleId="resources-title"
         title={title}
         description={
-          currencies.length > 1
-            ? 'Observed cost per resource. Bars compare amounts within the same currency only.'
-            : 'Observed cost per resource, from reported cost.total_cost.'
+          rows.some((row) => hasEstimates(row.spend))
+            ? 'Cost per resource, estimated from token counts at Anthropic list prices.'
+            : currencies.length > 1
+              ? 'Observed cost per resource. Bars compare amounts within the same currency only.'
+              : 'Observed cost per resource, from reported cost.total_cost.'
         }
       />
       <ul className="space-y-1 px-5 pb-4">

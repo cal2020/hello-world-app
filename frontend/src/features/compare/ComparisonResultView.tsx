@@ -197,7 +197,7 @@ function ResourcePairs({ result }: { result: ComparisonResult }) {
       <CardHeader
         titleId="pairs-title"
         title="By model and tool"
-        description="Baseline (light) and candidate (dark) observed cost per resource."
+        description="Baseline (light) and candidate (dark) cost per resource."
         actions={
           <div className="flex gap-3 text-xs text-ink-2">
             <span className="inline-flex items-center gap-1.5">

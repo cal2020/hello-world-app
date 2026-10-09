@@ -6,6 +6,7 @@ import { Badge } from '../../components/ui/badge'
 import { Money, SpendValue } from '../../components/ui/money'
 import { Tip } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
+import { costLabel, costWord, hasEstimates } from '../../lib/cost-basis'
 import { formatDuration, formatInt, plural } from '../../lib/format'
 
 const DOTS = { observed: 'bg-model', candidate: 'bg-candidate', neutral: 'bg-ink-3/50' } as const
@@ -44,27 +45,47 @@ export function StatTile({
   )
 }
 
-export function SpendTile({ spend, label = 'Observed spend', glossary }: { spend: Spend; label?: string; glossary?: string }) {
+export function SpendTile({
+  spend,
+  label,
+  glossary,
+  estimateGlossary,
+}: {
+  spend: Spend
+  label?: string
+  /** What observed values are. */
+  glossary?: string
+  /** What estimated costs are; shown instead when the spend includes estimates. */
+  estimateGlossary?: string
+}) {
+  const estimated = hasEstimates(spend)
+  const allPriced =
+    spend.basis === 'estimated'
+      ? `All ${spend.total_calls} calls priced from their tokens`
+      : spend.basis === 'mixed'
+        ? `All ${spend.total_calls} calls have a cost; ${spend.estimated_calls} estimated`
+        : `All ${spend.total_calls} calls report a cost`
   return (
     <StatTile
-      label={label}
+      label={label ?? `${costLabel(spend)} spend`}
       kind="observed"
-      hint={glossary}
+      hint={estimated ? (estimateGlossary ?? glossary) : glossary}
       footer={
         <>
           {spend.unknown_calls === 0 ? (
             <span className="inline-flex items-center gap-1">
               <CircleCheck className="size-3.5 shrink-0 text-good-ink" />
-              All {spend.total_calls} calls report a cost
+              {allPriced}
             </span>
           ) : (
             <span className="inline-flex items-start gap-1 text-warn-ink">
               <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
               <span>
-                {plural(spend.unknown_calls, 'call')} without a reported cost (not counted as zero)
+                {plural(spend.unknown_calls, 'call')} without a {estimated ? 'known' : 'reported'} cost (not counted as zero)
               </span>
             </span>
           )}
+          {estimated && <span className="mt-0.5 block">At Anthropic API list prices; not billed amounts.</span>}
           {spend.by_currency.length > 1 && <span className="mt-0.5 block">Currencies are never converted or combined.</span>}
         </>
       }
@@ -196,14 +217,14 @@ export function CandidatesTile({
           </span>
           {flagged > 0 && (
             <span className="block">
-              <SpendValue spend={flaggedSpend} className="text-ink-2" /> observed on flagged calls
+              <SpendValue spend={flaggedSpend} className="text-ink-2" /> {costWord(observed)} on flagged calls
               {share != null && ` (${Math.round(share * 100)}%)`}
             </span>
           )}
           {share != null && flagged > 0 && (
             <span
               role="meter"
-              aria-label="Share of observed spend on flagged calls"
+              aria-label={`Share of ${costWord(observed)} spend on flagged calls`}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={Math.round(share * 100)}

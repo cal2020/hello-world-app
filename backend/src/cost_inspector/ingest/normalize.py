@@ -21,6 +21,7 @@ from decimal import Decimal
 from typing import Any, Literal
 
 from .. import ids
+from ..pricing import COST_BASIS_ESTIMATE, COST_BASIS_LABEL
 from .issues import Issue, IssueList
 from .parse import SourceItem
 from .sink import canonical_json
@@ -143,6 +144,13 @@ class CallRecord:
     def is_model(self) -> bool:
         # Same rule as kora_doctor.analyzer._is_model.
         return self.resource_type == "model" or self.usage_kind == "llm"
+
+    @property
+    def cost_is_estimate(self) -> bool:
+        """The cost was estimated at list prices by the importer, not reported."""
+        return (
+            self.cost_total is not None and self.labels.get(COST_BASIS_LABEL) == COST_BASIS_ESTIMATE
+        )
 
     @property
     def start_ms(self) -> int | None:

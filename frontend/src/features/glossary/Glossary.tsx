@@ -5,6 +5,7 @@ import { Badge, type BadgeTone } from '../../components/ui/badge'
 
 const ORDER: { key: keyof Meta['glossary']; label: string; tone: BadgeTone }[] = [
   { key: 'observed', label: 'Observed', tone: 'observed' },
+  { key: 'estimated_cost', label: 'Estimated cost', tone: 'estimated' },
   { key: 'candidate', label: 'Candidate', tone: 'candidate' },
   { key: 'scenario_estimate', label: 'Scenario estimate', tone: 'estimate' },
   { key: 'measured_change', label: 'Measured change', tone: 'measured' },

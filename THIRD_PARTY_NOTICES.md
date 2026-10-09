@@ -36,6 +36,14 @@ This product includes software developed at Chargebee, Inc.
 (https://www.chargebee.com/).
 ```
 
+## Anthropic API list prices
+
+`backend/src/cost_inspector/pricing.py` contains Anthropic's published API list prices
+(USD per million tokens and per web search), copied from
+<https://platform.claude.com/docs/en/about-claude/pricing> on 2026-10-09 to estimate the
+cost of Claude Code calls. They are facts, not code, and they change; every estimate in
+the app says which list it used.
+
 ## Shipped in the web app (`frontend/dist`)
 
 | Package | Version | License | Copyright |

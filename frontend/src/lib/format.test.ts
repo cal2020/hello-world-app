@@ -41,12 +41,14 @@ describe('formatSpend', () => {
       unknown_calls: 3,
       total_calls: 7,
       complete: false,
+      estimated_calls: 0,
+      basis: 'reported' as const,
     }
     expect(formatSpend(spend)).toBe('€0.0070 + $0.0014')
   })
 
   it('reports unknown when no call has a cost', () => {
-    expect(formatSpend({ by_currency: [], known_calls: 0, unknown_calls: 2, total_calls: 2, complete: false })).toBe('Unknown')
+    expect(formatSpend({ by_currency: [], known_calls: 0, unknown_calls: 2, total_calls: 2, complete: false, estimated_calls: 0, basis: 'none' })).toBe('Unknown')
   })
 })
 
@@ -62,6 +64,11 @@ describe('other formatters', () => {
     expect(formatDuration(920)).toBe('920 ms')
     expect(formatDuration(2410)).toBe('2.41 s')
     expect(formatDuration(65_000)).toBe('1m 05s')
+    expect(formatDuration(119_600)).toBe('2m 00s')
+    expect(formatDuration(43_200_000)).toBe('12h')
+    expect(formatDuration(5_400_000)).toBe('1h 30m')
+    expect(formatDuration(208_599_000)).toBe('2d 10h')
+    expect(formatDuration(86_400_000)).toBe('1d')
     expect(formatDuration(null)).toBe('—')
     expect(plural(1, 'call')).toBe('1 call')
     expect(plural(1200, 'call')).toBe('1,200 calls')

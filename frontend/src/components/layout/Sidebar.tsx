@@ -60,7 +60,7 @@ export function Sidebar({
         <p className="text-[11px] font-semibold tracking-[0.08em] text-ink-3 uppercase">
           Imports {imports && imports.length > 0 && <span className="ml-1 text-ink-3/80">{imports.length}</span>}
         </p>
-        <Button variant="ghost" size="icon-sm" aria-label="Import an AUDR file" onClick={onImport}>
+        <Button variant="ghost" size="icon-sm" aria-label="Import telemetry" onClick={onImport}>
           <Upload />
         </Button>
       </div>
@@ -85,7 +85,7 @@ export function Sidebar({
           <div className="mx-1.5 mt-2 rounded-xl border border-dashed border-line-strong p-4 text-center">
             <Inbox className="mx-auto size-5 text-ink-3" />
             <p className="mt-2 text-[13px] font-medium">No runs yet</p>
-            <p className="mt-0.5 text-xs text-ink-3">Import AUDR telemetry or explore the synthetic demo.</p>
+            <p className="mt-0.5 text-xs text-ink-3">Import AUDR telemetry or Claude Code transcripts, or explore the demo.</p>
             <div className="mt-3 flex flex-col gap-1.5">
               <Button size="sm" variant="primary" onClick={onLoadDemo} disabled={demoLoading}>
                 <Sparkles /> {demoLoading ? 'Loading demo…' : 'Load demo runs'}

@@ -105,8 +105,8 @@ test.describe('in-browser build', () => {
 
   test('rejects an invalid file by line and imports a valid one', async ({ page }) => {
     await boot(page)
-    await page.getByRole('button', { name: 'Import an AUDR file' }).first().click()
-    const dialog = page.getByRole('dialog', { name: 'Import AUDR telemetry' })
+    await page.getByRole('button', { name: 'Import telemetry' }).first().click()
+    const dialog = page.getByRole('dialog', { name: 'Import telemetry' })
     const good = readFileSync(`${FIXTURES}kora-doctor/simple.jsonl`, 'utf-8').split('\n')[0] ?? ''
     await dialog.locator('input[type=file]').setInputFiles({
       name: 'broken.jsonl',
@@ -123,6 +123,20 @@ test.describe('in-browser build', () => {
     await expect(page.getByText('Imported inefficient_agent.jsonl')).toBeVisible()
     await expect(page.getByRole('heading', { level: 1, name: 'inefficient_agent.jsonl' })).toBeVisible()
     await expect(page.getByText('$0.1050').first()).toBeVisible()
+  })
+
+  test('reads a Claude Code transcript in the page and prices it at list prices', async ({ page }) => {
+    await boot(page)
+    await page.getByRole('button', { name: 'Import transcripts' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Import telemetry' })
+    await dialog.locator('input[type=file]').setInputFiles(`${FIXTURES}claude-code/session.jsonl`)
+    await dialog.getByRole('button', { name: 'Import transcript' }).click()
+    await expect(page.getByRole('heading', { level: 1, name: 'Claude Code – 2 sessions' })).toBeVisible()
+    await expect(page.getByText('Estimated spend', { exact: true }).first()).toBeVisible()
+    await expect(page.getByText('$0.10235').first()).toBeVisible()
+    await expect(page.getByText('Where the cost goes')).toBeVisible()
+    await expect(page.getByText(/Claude Code's own cost figure for the one session that records it/)).toBeVisible()
+    expect(await accessibilityViolations(page)).toEqual([])
   })
 
   test('clearing saved data starts over', async ({ page }) => {

@@ -28,6 +28,9 @@ page (React)  ──request──▶  worker: Pyodide ─▶ cost_inspector.brow
   an ASGI call. Routing, validation, size limits, the client-header check and error handling
   are the production code. Pyodide has no threads, so FastAPI's thread pool is replaced by a
   direct call there.
+- Claude Code transcripts are read by the page itself (`frontend/src/features/imports/claude-code.ts`),
+  which keeps only model names, token counts and times before handing the result to the
+  engine. A 28 MB transcript imports in about 3 seconds.
 - A Web Lock lets one tab at a time own the saved data. A second tab says so instead of
   risking one tab overwriting the other's changes.
 - The page has a Content Security Policy in a meta tag (GitHub Pages cannot send headers):

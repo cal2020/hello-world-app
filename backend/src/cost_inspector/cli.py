@@ -4,7 +4,7 @@ cost-inspector serve [--host 127.0.0.1] [--port 8765]
 cost-inspector seed-demo        # add the synthetic demo imports (idempotent)
 cost-inspector reset-demo       # remove demo imports (and their comparisons), then re-seed
 cost-inspector reset --yes      # delete every import and comparison
-cost-inspector import FILE      # validate and import an AUDR file from disk
+cost-inspector import FILE      # import an AUDR file or a Claude Code transcript from disk
 """
 
 from __future__ import annotations
@@ -17,7 +17,12 @@ from pathlib import Path
 from .config import LOOPBACK_HOSTS, Settings
 from .demo import remove_demo, seed_demo
 from .importer import ImportRejectedError, import_bytes
+from .ingest import claude_code
 from .store import DuplicateImportError, Store
+
+#: Claude Code transcripts are mostly conversation text that the import discards, so
+#: they may be much larger than an AUDR file.
+MAX_TRANSCRIPT_BYTES = 1024**3
 
 
 def _serve(args: argparse.Namespace) -> int:
@@ -69,7 +74,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("reset-demo", help="remove demo imports and seed them again")
     reset = sub.add_parser("reset", help="delete all imports and comparisons")
     reset.add_argument("--yes", action="store_true", help="confirm deletion")
-    imp = sub.add_parser("import", help="import an AUDR JSON/JSONL file")
+    imp = sub.add_parser("import", help="import an AUDR file or a Claude Code transcript")
     imp.add_argument("path", type=Path)
     args = parser.parse_args(argv)
 
@@ -105,11 +110,13 @@ def main(argv: list[str] | None = None) -> int:
         if not path.is_file():
             print(f"Not a file: {path}", file=sys.stderr)
             return 2
-        if path.stat().st_size > settings.max_upload_bytes:
-            print(
-                f"{path} is larger than the {settings.max_upload_bytes} byte limit.",
-                file=sys.stderr,
-            )
+        with path.open("rb") as fh:
+            head = fh.read(64 * 1024)
+        limit = settings.max_upload_bytes
+        if claude_code.looks_like_transcript(head):
+            limit = MAX_TRANSCRIPT_BYTES
+        if path.stat().st_size > limit:
+            print(f"{path} is larger than the {limit} byte limit.", file=sys.stderr)
             return 2
         try:
             summary = import_bytes(store, settings, path.read_bytes(), path.name)

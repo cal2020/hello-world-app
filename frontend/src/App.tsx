@@ -54,7 +54,10 @@ function InspectorFrame({ title, onClose, children }: { title: string; onClose?:
           </Button>
         )}
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin">{children}</div>
+      {/* Focusable so keyboard users can scroll long evidence. */}
+      <div tabIndex={0} role="region" aria-label={title} className="min-h-0 flex-1 overflow-y-auto scrollbar-thin">
+        {children}
+      </div>
     </div>
   )
 }

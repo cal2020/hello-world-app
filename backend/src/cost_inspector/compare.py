@@ -47,6 +47,12 @@ def _scope(
             f"The candidate has {c.unknown_calls} call(s) without a reported cost, so its total "
             "is incomplete."
         )
+    priced = {b.basis, c.basis} - {"none"}
+    if "mixed" in priced or priced == {"reported", "estimated"}:
+        reasons.append(
+            "One side's costs are list-price estimates and the other's are reported amounts "
+            "(or a mix), so the difference would mix pricing with billing."
+        )
     comparable = not reasons
     currencies = sorted(set(b.by_currency) | set(c.by_currency))
     rows = []
@@ -80,6 +86,11 @@ def _scope(
     if set(b.by_currency) != set(c.by_currency) and b.by_currency and c.by_currency:
         notes.append(
             "The runs report spend in different currencies, so there is no single overall change."
+        )
+    if comparable and priced == {"estimated"}:
+        notes.append(
+            "Both runs' costs are list-price estimates from their token counts, so the change "
+            "reflects measured usage priced at the same list prices, not billed amounts."
         )
     return {
         "scope": key,

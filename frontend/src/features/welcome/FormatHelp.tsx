@@ -1,8 +1,8 @@
-import { FileCheck2, ShieldCheck, Ruler } from 'lucide-react'
+import { FileCheck2, Ruler, ShieldCheck, SquareTerminal } from 'lucide-react'
 
 import type { Meta } from '../../api/types'
 import { cn } from '../../lib/cn'
-import { formatBytes } from '../../lib/format'
+import { formatBytes, formatDay } from '../../lib/format'
 
 const EXAMPLE = `{"spec_version":"1.0.0","record_id":"01K4N8D2J4P7Q9R3S6T8V1W5XY",
  "emitter":{"component":"router","name":"my-router","version":"1.2.0"},
@@ -30,12 +30,24 @@ export function FormatHelp({ meta, className }: { meta: Meta | undefined; classN
       ),
     },
     {
+      icon: SquareTerminal,
+      title: 'Claude Code transcripts',
+      body: (
+        <>
+          Each session is saved as <code className="text-[12px]">~/.claude/projects/&lt;project&gt;/&lt;session&gt;.jsonl</code>
+          , with subagents in <code className="text-[12px]">&lt;session&gt;/subagents/</code>. Choose one or several. Costs
+          are estimated from tokens at Anthropic API list prices ({formatDay(meta?.pricing.date ?? '2026-10-09')}), not
+          billed amounts. The folder is hidden in file pickers: press ⌘⇧. on macOS or Ctrl+H on Linux.
+        </>
+      ),
+    },
+    {
       icon: Ruler,
       title: 'Bounded',
       body: (
         <>
-          Up to {formatBytes(maxBytes)} and {maxRecords.toLocaleString('en-US')} records per file. Larger traces can be
-          split by run.
+          Up to {maxRecords.toLocaleString('en-US')} records per import. AUDR files up to {formatBytes(maxBytes)}, larger
+          traces can be split by run; transcripts of any size.
         </>
       ),
     },
@@ -44,15 +56,15 @@ export function FormatHelp({ meta, className }: { meta: Meta | undefined; classN
       title: 'Private by design',
       body: (
         <>
-          AUDR carries no prompts or responses. User, account, subscription, credential-label and trace identifiers are
-          dropped at import; normalized telemetry is stored locally in SQLite.
+          AUDR carries no prompts or responses, and from transcripts only model names, token counts and times are kept.
+          User, account and credential identifiers are dropped; everything is stored locally in SQLite.
         </>
       ),
     },
   ]
   return (
     <div className={cn('rounded-2xl border border-line bg-surface shadow-card', className)}>
-      <div className="grid gap-px overflow-hidden rounded-t-2xl bg-line @2xl:grid-cols-3">
+      <div className="grid gap-px overflow-hidden rounded-t-2xl bg-line @2xl:grid-cols-2">
         {items.map(({ icon: Icon, title, body }) => (
           <div key={title} className="bg-surface p-5">
             <Icon className="size-[18px] text-accent-ink" />

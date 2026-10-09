@@ -136,8 +136,8 @@ test.describe.serial('AI Cost Inspector workflow', () => {
 
   test('invalid files are rejected with line-specific errors; valid files import', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('button', { name: 'Import an AUDR file' }).first().click()
-    const dialog = page.getByRole('dialog', { name: 'Import AUDR telemetry' })
+    await page.getByRole('button', { name: 'Import telemetry' }).first().click()
+    const dialog = page.getByRole('dialog', { name: 'Import telemetry' })
     const good = readFileSync(`${FIXTURES}kora-doctor/simple.jsonl`, 'utf-8').split('\n')[0] ?? ''
     await dialog.locator('input[type=file]').setInputFiles({
       name: 'broken.jsonl',
@@ -198,6 +198,61 @@ test.describe.serial('AI Cost Inspector workflow', () => {
       .toBe(true)
     await sheet.getByRole('button', { name: 'Close inspector' }).click()
     await expect(sheet).toHaveCount(0)
+  })
+})
+
+test.describe('Claude Code transcripts', () => {
+  test('a transcript is read in the page, priced at list prices, and imported once', async ({ page }) => {
+    // Record what the page sends: Playwright can't read a File body from the network.
+    await page.addInitScript(() => {
+      const sent: Promise<string>[] = []
+      Object.assign(window, { __sent: sent })
+      type Send = (this: XMLHttpRequest, body?: Document | XMLHttpRequestBodyInit | null) => void
+      const send = Object.getOwnPropertyDescriptor(XMLHttpRequest.prototype, 'send')?.value as Send
+      XMLHttpRequest.prototype.send = function (this: XMLHttpRequest, body?: Document | XMLHttpRequestBodyInit | null) {
+        if (body instanceof Blob) sent.push(body.text())
+        send.call(this, body)
+      }
+    })
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Import telemetry' }).first().click()
+    const dialog = page.getByRole('dialog', { name: 'Import telemetry' })
+    await dialog.locator('input[type=file]').setInputFiles(`${FIXTURES}claude-code/session.jsonl`)
+    await expect(dialog.getByText('Claude Code transcript', { exact: true })).toBeVisible()
+
+    await dialog.getByRole('button', { name: 'Import transcript' }).click()
+    await expect(page.getByRole('heading', { level: 1, name: 'Claude Code – 2 sessions' })).toBeVisible()
+    // Only usage left the page: no prompts, replies, commands or paths.
+    const sent = await page.evaluate(() => Promise.all((window as unknown as { __sent: Promise<string>[] }).__sent))
+    expect(sent).toHaveLength(1)
+    expect(sent[0]).toContain('"requestId":"req_test_A"')
+    expect(sent[0]).not.toMatch(/SECRET|home\/dev/)
+
+    await expect(page.getByText('Estimated spend', { exact: true }).first()).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: 'Estimated spend' })).toBeVisible()
+    await expect(page.getByText('At Anthropic API list prices; not billed amounts.')).toBeVisible()
+    await expect(page.getByText('Claude Code transcript', { exact: true })).toBeVisible()
+    await expect(page.getByText(/Read as a Claude Code transcript: 7 API calls in 2 sessions/)).toBeVisible()
+    await expect(page.getByText(/Claude Code's own cost figure for the one session that records it/)).toBeVisible()
+    await expect(page.getByRole('link', { name: 'https://platform.claude.com/docs/en/about-claude/pricing' })).toBeVisible()
+
+    // The full transcript, sent straight to the API, is the same import.
+    const response = await page.request.post('/api/imports?filename=session.jsonl', {
+      data: readFileSync(`${FIXTURES}claude-code/session.jsonl`),
+      headers: { 'X-Requested-With': 'cost-inspector', 'Content-Type': 'application/octet-stream' },
+    })
+    expect(response.status()).toBe(409)
+  })
+
+  test('several files import together only when they are all transcripts', async ({ page }) => {
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Import telemetry' }).first().click()
+    const dialog = page.getByRole('dialog', { name: 'Import telemetry' })
+    await dialog
+      .locator('input[type=file]')
+      .setInputFiles([`${FIXTURES}claude-code/session.jsonl`, `${FIXTURES}kora-doctor/simple.jsonl`])
+    await expect(dialog.getByText(/Several files can be imported together only when they are all Claude Code transcripts/)).toBeVisible()
+    await expect(dialog.getByRole('button', { name: 'Import file' })).toBeDisabled()
   })
 })
 

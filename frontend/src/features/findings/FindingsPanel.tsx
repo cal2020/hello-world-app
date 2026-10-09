@@ -17,13 +17,14 @@ import { EmptyState } from '../../components/ui/empty-state'
 import { SpendValue } from '../../components/ui/money'
 import { categoryMeta } from '../../lib/categories'
 import { cn } from '../../lib/cn'
+import { costWord } from '../../lib/cost-basis'
 import { geometryValue, plural } from '../../lib/format'
 import { readStorage, writeStorage } from '../../lib/storage'
 
 type SortKey = 'rank' | 'spend' | 'calls'
 const SORT_LABELS: Record<SortKey, string> = {
   rank: 'Analyzer rank (confidence, then calls)',
-  spend: 'Observed spend on affected calls',
+  spend: 'Spend on affected calls',
   calls: 'Number of affected calls',
 }
 const PAGE = 60
@@ -88,7 +89,7 @@ function FindingRow({ finding, selected, onSelect }: { finding: FindingSummary; 
             <span>{plural(finding.affected_count, 'call')}</span>
             <span aria-hidden>·</span>
             <span>
-              <SpendValue spend={finding.affected_spend} className="text-ink-2 tabular" /> observed on them
+              <SpendValue spend={finding.affected_spend} className="text-ink-2 tabular" /> {costWord(finding.affected_spend)} on them
             </span>
             {finding.affected_spend.unknown_calls > 0 && (
               <span className="text-warn-ink">({finding.affected_spend.unknown_calls} unknown)</span>

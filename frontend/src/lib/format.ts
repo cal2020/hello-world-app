@@ -92,9 +92,18 @@ export function formatDuration(ms: number | null | undefined): string {
   if (ms == null) return '—'
   if (ms < 1000) return `${Math.round(ms)} ms`
   if (ms < 60_000) return `${(ms / 1000).toFixed(ms < 10_000 ? 2 : 1)} s`
-  const minutes = Math.floor(ms / 60_000)
-  const seconds = Math.round((ms % 60_000) / 1000)
-  return `${minutes}m ${String(seconds).padStart(2, '0')}s`
+  if (ms < 3_600_000) {
+    const seconds = Math.round(ms / 1000)
+    return `${Math.floor(seconds / 60)}m ${String(seconds % 60).padStart(2, '0')}s`
+  }
+  if (ms < 86_400_000) {
+    const minutes = Math.round(ms / 60_000)
+    const rest = minutes % 60
+    return rest ? `${Math.floor(minutes / 60)}h ${rest}m` : `${minutes / 60}h`
+  }
+  const hours = Math.round(ms / 3_600_000)
+  const rest = hours % 24
+  return rest ? `${Math.floor(hours / 24)}d ${rest}h` : `${hours / 24}d`
 }
 
 export function formatOffset(ms: number): string {
@@ -112,6 +121,18 @@ export function formatDateTime(epochMs: number): string {
     hour12: false,
   })
   return `${base}.${String(date.getMilliseconds()).padStart(3, '0')}`
+}
+
+/** A calendar date such as 9 Oct 2026, from YYYY-MM-DD. */
+export function formatDay(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-').map(Number)
+  if (!year || !month || !day) return isoDate
+  return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
 }
 
 export function formatRelative(iso: string, now: number = Date.now()): string {

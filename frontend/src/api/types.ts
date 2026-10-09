@@ -3,12 +3,18 @@
 
 export type Money = { currency: string; amount: string }
 
+/** Where known costs come from: reported by the telemetry, or estimated at list prices. */
+export type CostBasis = 'none' | 'reported' | 'estimated' | 'mixed'
+
 export interface Spend {
   by_currency: Money[]
   known_calls: number
   unknown_calls: number
   total_calls: number
   complete: boolean
+  /** Known costs that this app estimated at list prices (Claude Code transcripts). */
+  estimated_calls: number
+  basis: CostBasis
 }
 
 export type TokenField =
@@ -92,7 +98,7 @@ export interface ImportSummary {
   source: 'upload' | 'demo'
   synthetic: boolean
   demo_key: string | null
-  format: 'jsonl' | 'json-array' | 'json-object'
+  format: 'jsonl' | 'json-array' | 'json-object' | 'claude-code'
   file_sha256: string
   byte_size: number
   record_count: number
@@ -315,12 +321,26 @@ export interface CallRecord {
   findings: { id: string; category: Category; dismissed: boolean }[]
 }
 
+/** Model-call cost by token type (AUDR cost.llm), over the calls that report it. */
+export interface CostParts {
+  covered_calls: number
+  priced_model_calls: number
+  by_currency: {
+    currency: string
+    parts: Partial<
+      Record<'input_token_cost' | 'cache_write_cost' | 'cache_read_cost' | 'output_token_cost' | 'reasoning_cost', string>
+    >
+  }[]
+  tokens: Partial<Record<TokenField, number>>
+}
+
 export interface ImportDetail extends ImportSummary {
   notes: Issue[]
   category_counts: Record<Category, number>
   findings: FindingSummary[]
   scenario: Scenario
   by_model: ResourceRow[]
+  cost_parts: CostParts | null
 }
 
 export interface RunDetail {
@@ -330,6 +350,7 @@ export interface RunDetail {
   findings: FindingSummary[]
   scenario: Scenario
   by_model: ResourceRow[]
+  cost_parts: CostParts | null
   timeline: { start_ms: number; end_ms: number; rule: string }
 }
 
@@ -347,7 +368,11 @@ export interface Meta {
   audr_spec_version: string
   limits: { max_upload_bytes: number; max_records: number }
   accepted_formats: string[]
-  glossary: Record<'observed' | 'candidate' | 'scenario_estimate' | 'measured_change' | 'unknown_cost', string>
+  pricing: { price_list: string; date: string; source: string }
+  glossary: Record<
+    'observed' | 'candidate' | 'scenario_estimate' | 'measured_change' | 'unknown_cost' | 'estimated_cost',
+    string
+  >
   categories: Record<Category, CategoryInfo>
   dropped_fields: string[]
   demo: { loaded: boolean }

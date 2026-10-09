@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from . import ids
 from .analysis.kora import AnalysisResult, run_analysis
 from .config import Settings
+from .ingest import claude_code
 from .ingest.issues import Issue, IssueList
 from .ingest.normalize import CallRecord, normalize_items
 from .ingest.parse import parse_document
@@ -86,6 +87,15 @@ def analyze_import(
     return parsed.format.value, record_count, calls, notes, analysis
 
 
+def convert_transcript(data: bytes, settings: Settings) -> claude_code.Conversion:
+    """Claude Code transcript to AUDR records. Raises :class:`ImportRejectedError`."""
+    errors = IssueList(settings.max_reported_issues)
+    converted = claude_code.convert(data, max_records=settings.max_records, errors=errors)
+    if converted is None:
+        raise ImportRejectedError(_reject_message(errors), errors)
+    return converted
+
+
 def _reject_message(errors: IssueList) -> str:
     if errors.total == 1:
         return "The file was not imported: 1 problem needs fixing."
@@ -102,14 +112,27 @@ def import_bytes(
     synthetic: bool = False,
     demo_key: str | None = None,
 ) -> ImportSummary:
-    """Validate, analyze and store one file. Nothing is stored if any stage fails."""
-    sha256 = hashlib.sha256(data).hexdigest()
+    """Validate, analyze and store one file. Nothing is stored if any stage fails.
+
+    A Claude Code transcript is first converted to AUDR records. Its identity is
+    the converted records, so the same session imports once whether the file is
+    the full transcript or the usage-only copy the web app sends.
+    """
+    byte_size = len(data)
+    converted = (
+        convert_transcript(data, settings) if claude_code.looks_like_transcript(data) else None
+    )
+    records = converted.data if converted else data
+    sha256 = hashlib.sha256(records).hexdigest()
     existing = store.find_import_by_sha(sha256)
     if existing:
         raise DuplicateImportError(existing)
 
     import_id = ids.new_import_id()
-    file_format, record_count, calls, notes, analysis = analyze_import(data, settings, import_id)
+    file_format, record_count, calls, notes, analysis = analyze_import(records, settings, import_id)
+    if converted:
+        file_format = claude_code.FORMAT
+        notes = [*converted.notes, *notes]
     meta = ImportMeta(
         id=import_id,
         filename=clean_filename(filename),
@@ -118,7 +141,7 @@ def import_bytes(
         demo_key=demo_key,
         format=file_format,
         file_sha256=sha256,
-        byte_size=len(data),
+        byte_size=byte_size,
         record_count=record_count,
         notes=notes,
     )

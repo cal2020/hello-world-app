@@ -4,10 +4,20 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Sequence
+from decimal import Decimal
 from typing import Any
 
-from .ingest.normalize import LLM_TOKEN_FIELDS, CallRecord
+from .ingest.normalize import LLM_TOKEN_FIELDS, CallRecord, decimal_str
 from .money import summarize_spend
+
+#: AUDR ``cost.llm`` components and the usage counter each one prices.
+COST_PARTS = {
+    "input_token_cost": "input_tokens",
+    "cache_write_cost": "cache_write_tokens",
+    "cache_read_cost": "cache_read_tokens",
+    "output_token_cost": "output_tokens",
+    "reasoning_cost": "reasoning_tokens",
+}
 
 
 def summarize_tokens(calls: Sequence[CallRecord]) -> dict[str, Any]:
@@ -69,6 +79,41 @@ def summarize_runs(calls: Sequence[CallRecord]) -> dict[str, dict[str, Any]]:
     for call in calls:
         by_run[call.run_pk].append(call)
     return {pk: summarize_run(group) for pk, group in by_run.items()}
+
+
+def cost_parts(calls: Sequence[CallRecord]) -> dict[str, Any] | None:
+    """Model-call cost by token type (AUDR ``cost.llm``), over the calls that report it.
+
+    Amounts stay per currency. ``None`` when no priced model call reports a breakdown.
+    """
+    priced = [c for c in calls if c.usage_kind == "llm" and c.cost_total is not None]
+    totals: dict[str, dict[str, Decimal]] = {}
+    tokens: dict[str, int] = {}
+    covered = 0
+    for call in priced:
+        llm = (call.cost_detail or {}).get("llm")
+        if not isinstance(llm, dict) or not any(part in llm for part in COST_PARTS):
+            continue
+        covered += 1
+        amounts = totals.setdefault(str(call.cost_currency), {})
+        for part, counter in COST_PARTS.items():
+            if part not in llm:
+                continue
+            amounts[part] = amounts.get(part, Decimal(0)) + Decimal(str(llm[part]))
+            value = call.counter(counter)
+            if value is not None:
+                tokens[counter] = tokens.get(counter, 0) + int(value)
+    if not covered:
+        return None
+    return {
+        "covered_calls": covered,
+        "priced_model_calls": len(priced),
+        "by_currency": [
+            {"currency": currency, "parts": {k: decimal_str(v) for k, v in amounts.items()}}
+            for currency, amounts in sorted(totals.items())
+        ],
+        "tokens": tokens,
+    }
 
 
 def by_model(calls: Sequence[CallRecord]) -> list[dict[str, Any]]:

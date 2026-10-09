@@ -1,4 +1,4 @@
-import { Coins, GitCompareArrows, Microscope, ShieldCheck, Sparkles, Upload } from 'lucide-react'
+import { Coins, GitCompareArrows, Microscope, ShieldCheck, Sparkles, SquareTerminal, Upload } from 'lucide-react'
 
 import { IN_BROWSER } from '../../api/transport'
 import type { Meta } from '../../api/types'
@@ -54,20 +54,41 @@ export function Welcome({
           </span>
         </h1>
         <p className="mt-5 max-w-2xl text-[17px] leading-7 text-ink-2 text-pretty">
-          Import AUDR telemetry, follow every model and tool call on a timeline, review optimization candidates with the
-          evidence behind them, and measure what changed after a fix.
+          Import AUDR telemetry or your Claude Code transcripts, follow every model and tool call on a timeline, review
+          optimization candidates with the evidence behind them, and measure what changed after a fix.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <Button size="lg" variant="primary" onClick={onLoadDemo} disabled={demoLoading}>
             <Sparkles /> {demoLoading ? 'Loading demo…' : 'Explore the demo'}
           </Button>
           <Button size="lg" onClick={onImport}>
-            <Upload /> Import AUDR file
+            <Upload /> Import a file
           </Button>
         </div>
         <p className="mt-3 text-[13px] text-ink-3">
           The demo adds three synthetic, documented runs, labelled as synthetic everywhere.
         </p>
+
+        <section
+          aria-labelledby="claude-code-title"
+          className="mt-8 flex max-w-2xl flex-col gap-3 rounded-2xl border border-line bg-surface/80 p-4 shadow-card backdrop-blur sm:flex-row sm:items-center"
+        >
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent-ink">
+            <SquareTerminal className="size-[18px]" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 id="claude-code-title" className="text-sm font-semibold">
+              Using Claude Code?
+            </h2>
+            <p className="mt-0.5 text-[13px] leading-5 text-ink-2">
+              Import session transcripts from <code className="text-[12px]">~/.claude/projects</code> to see what each call
+              would cost at API list prices. The conversation itself never leaves this device.
+            </p>
+          </div>
+          <Button onClick={onImport} className="shrink-0">
+            Import transcripts
+          </Button>
+        </section>
 
         <div className="mt-14 grid gap-4 @2xl:grid-cols-3">
           {FEATURES.map(({ icon: Icon, title, body }) => (

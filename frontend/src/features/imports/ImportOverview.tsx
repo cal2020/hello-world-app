@@ -14,13 +14,37 @@ import { SpendValue } from '../../components/ui/money'
 import { Skeleton } from '../../components/ui/skeleton'
 import { CATEGORY_ORDER, categoryMeta } from '../../lib/categories'
 import { cn } from '../../lib/cn'
+import { costLabel } from '../../lib/cost-basis'
 import { formatBytes, formatRelative, plural } from '../../lib/format'
 import { FindingsPanel } from '../findings/FindingsPanel'
+import { CostParts } from '../run/CostParts'
 import { ResourceBreakdown } from '../run/ResourceBreakdown'
 import { CallsTile, CandidatesTile, SpendTile } from '../run/StatTiles'
 import { ExportMenu } from './ExportMenu'
 
-const FORMAT_LABEL = { jsonl: 'JSONL', 'json-array': 'JSON array', 'json-object': 'JSON object' } as const
+const FORMAT_LABEL = {
+  jsonl: 'JSONL',
+  'json-array': 'JSON array',
+  'json-object': 'JSON object',
+  'claude-code': 'Claude Code transcript',
+} as const
+
+/** Shows a hint, turning web addresses into links. */
+function HintText({ text }: { text: string }) {
+  return (
+    <span className="block text-xs text-ink-3">
+      {text.split(/(https:\/\/\S+)/).map((part, index) =>
+        part.startsWith('https://') ? (
+          <a key={index} href={part} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-ink">
+            {part}
+          </a>
+        ) : (
+          part
+        ),
+      )}
+    </span>
+  )
+}
 
 function NoteRow({ note }: { note: Issue }) {
   const Icon = note.severity === 'warning' ? TriangleAlert : note.severity === 'error' ? CircleAlert : Info
@@ -32,6 +56,7 @@ function NoteRow({ note }: { note: Issue }) {
       />
       <span className="min-w-0">
         <span className="text-ink">{note.message}</span>
+        {note.hint && <HintText text={note.hint} />}
         {note.lines && note.lines.length > 0 && (
           <span className="block text-xs text-ink-3">Lines {note.lines.slice(0, 20).join(', ')}{note.lines.length > 20 ? '…' : ''}</span>
         )}
@@ -160,7 +185,7 @@ export function ImportOverview({
       </div>
 
       <div className="grid gap-4 @xl:grid-cols-2 @3xl:grid-cols-3">
-        <SpendTile spend={data.spend} glossary={meta?.glossary.observed} />
+        <SpendTile spend={data.spend} glossary={meta?.glossary.observed} estimateGlossary={meta?.glossary.estimated_cost} />
         <CallsTile
           calls={totalCalls}
           modelCalls={modelCalls}
@@ -176,6 +201,8 @@ export function ImportOverview({
           glossary={meta?.glossary}
         />
       </div>
+
+      <CostParts parts={data.cost_parts} spend={data.spend} />
 
       {data.notes.length > 0 && (
         <Card aria-labelledby="notes-title">
@@ -196,7 +223,7 @@ export function ImportOverview({
               <tr>
                 <th scope="col" className="px-5 py-2 font-medium">Run</th>
                 <th scope="col" className="px-3 py-2 text-right font-medium">Calls</th>
-                <th scope="col" className="px-3 py-2 text-right font-medium">Observed spend</th>
+                <th scope="col" className="px-3 py-2 text-right font-medium">{costLabel(data.spend)} spend</th>
                 <th scope="col" className="px-5 py-2 text-right font-medium">Open candidates</th>
               </tr>
             </thead>

@@ -4,11 +4,16 @@ See where an AI agent's money went, call by call, and which calls are worth a
 second look.
 
 AI Cost Inspector is a local web app for [AUDR](https://github.com/openaudr/audr)
-agent-cost telemetry. Import a trace and you get:
+agent-cost telemetry and for Claude Code session transcripts. Import a trace and you
+get:
 
 - **Observed spend** per run, per model and per call, in exact decimal money. Costs
   in different currencies are never added together, and a call with no reported cost
   shows as unknown, never as $0.
+- **Your own Claude Code usage.** Import session transcripts from `~/.claude/projects`:
+  every API call is priced at Anthropic's published list prices, shown as an estimate,
+  split by token type, and checked against Claude Code's own cost figure. Only model
+  names, token counts and times are kept; the conversation is dropped before import.
 - **Optimization candidates** from [KORA Doctor](https://github.com/Krako-Labs/kora-doctor).
   Each finding opens an evidence inspector with the affected calls, the data the
   heuristic matched, its rule, its rationale and its limits.
@@ -66,11 +71,12 @@ server on <http://127.0.0.1:5173>, which proxies `/api` to the API.
 
 ## Using it
 
-1. **Import** a `.jsonl`, `.json` or `.ndjson` file: choose **Import** and drop or
-   pick the file, or run `uv run --frozen cost-inspector import FILE` from `backend/`.
-   One import is up to 8 MiB and 10,000 records. A file is imported whole or not at
-   all: if any record is invalid, nothing is stored and every problem is listed with
-   its line number and a suggested fix.
+1. **Import** an AUDR file (`.jsonl`, `.json` or `.ndjson`) or one or more Claude Code
+   transcripts: choose **Import** and drop or pick the files, or run
+   `uv run --frozen cost-inspector import FILE` from `backend/`. An AUDR file is up to
+   8 MiB, a transcript can be any size, and one import holds up to 10,000 records. A
+   file is imported whole or not at all: if any record is invalid, nothing is stored and
+   every problem is listed with its line number and a suggested fix.
 2. **Inspect a run.** The center column shows observed spend, calls, tokens and
    candidates, then a call timeline and the list of findings. Selecting a finding
    highlights its calls on the timeline and opens its evidence on the right: what
@@ -101,6 +107,7 @@ The app keeps these labels apart everywhere, including in reports:
 | **Scenario estimate** | KORA Doctor's fixed assumption of how much of a flagged call's observed cost might be avoidable (100%, 80%, 70% or 50% depending on the rule). Each call counts once, at its highest ratio, so overlapping findings never add up. |
 | **Measured change** | The cost difference between two recorded runs. It is labelled *measured* only when both runs report complete, comparable costs and you marked them as equivalent work. Otherwise it is shown as an observed difference, or not compared. |
 | **Unknown cost** | A call without `cost.total_cost`. It is excluded from totals and counted separately, never treated as zero. |
+| **Estimated cost** | A cost the app computed from reported token counts at Anthropic's published API list prices, for telemetry that records tokens but no cost (Claude Code transcripts). Amounts are labelled *Estimated* instead of *Observed*, and a run with estimated costs is compared only with another estimated run. |
 
 Some consequences:
 
@@ -138,6 +145,40 @@ The in-app import dialog shows the same explanation, and
 [`backend/src/cost_inspector/demo/`](backend/src/cost_inspector/demo/) has complete
 example files with their expected totals.
 
+## Claude Code transcripts
+
+Claude Code saves each session as `~/.claude/projects/<project>/<session-id>.jsonl`
+(`%USERPROFILE%\.claude\projects` on Windows) and each subagent as
+`<session-id>/subagents/agent-<id>.jsonl`. Choose one or several of these files in the
+import dialog, or import one with the command line. File pickers hide the `.claude`
+folder: press <kbd>⌘</kbd><kbd>⇧</kbd><kbd>.</kbd> on macOS or <kbd>Ctrl</kbd>+<kbd>H</kbd>
+on Linux.
+
+- **What is read.** The page reads the transcript itself and keeps one entry per API
+  request: the model, token counts (input, output, thinking, cache reads, and cache
+  writes by duration), the time, the session title and Claude Code's own running cost
+  figure. Prompts, replies, tool input and file paths are dropped before anything is
+  imported. A response is logged once per content block; the repeats count once.
+- **How calls are priced.** At Anthropic's first-party API list prices as published on
+  9 October 2026 ([`pricing.py`](backend/src/cost_inspector/pricing.py)): cache writes
+  by duration, cache reads at each model's own rate, fast mode, US-only inference
+  (1.1×) and Claude Haiku 5.5's long-prompt rate card. Web searches become tool calls at
+  $10 per 1,000. Amazon Bedrock and Google Cloud model IDs, and the batch and priority
+  tiers, are left as unknown cost rather than guessed.
+- **What the numbers mean.** They are estimates and are labelled that way. Claude
+  subscriptions don't bill per token, and transcripts don't record what was charged. The
+  import notes set Claude Code's own cost figure next to the estimate for the same
+  calls; in validation they agreed within 1.3%
+  ([docs/VALIDATION.md](docs/VALIDATION.md#claude-code-transcripts)). Claude Code also
+  counts a few calls its transcript doesn't list, such as context compaction.
+- **Where the cost goes.** Each session becomes a run (subagent calls are labelled
+  `thread=subagent`), and the *Where the cost goes* card splits model cost by token
+  type. For long sessions this is usually the most telling view: re-reading cached
+  context tends to dominate.
+- **Reading the candidates.** KORA Doctor's rules were written for agent runs. In a long
+  interactive session its orchestration rule flags every call after the fourth, so those
+  candidates measure session length rather than waste. The import notes say so.
+
 ## What is stored
 
 Data lives in one SQLite file, `backend/.data/inspector.sqlite3` by default
@@ -147,7 +188,8 @@ counters, cost (as exact decimal text), labels and emitter. It does not keep the
 uploaded file. These identifiers are dropped at import and never stored:
 `attribution.user_id`, `attribution.account_id`, `attribution.subscription_id`,
 `resource.key_name` and `run.trace_id`. AUDR records carry no prompt or response
-content, so there is none to store. Labels are kept as your emitter wrote them.
+content, so there is none to store. Labels are kept as your emitter wrote them. For a
+Claude Code transcript, only the converted records are stored, never the transcript.
 
 Dismissal notes and saved comparisons are stored in the same file. Delete imports in
 the app, or use the commands below.
@@ -163,7 +205,7 @@ the app, or use the commands below.
 | `make seed-demo` | `uv run --frozen cost-inspector seed-demo` | Add the synthetic demo imports (idempotent) |
 | `make reset-demo` | `uv run --frozen cost-inspector reset-demo` | Remove the demo imports and their comparisons, then seed them again |
 | `make reset CONFIRM=yes` | `uv run --frozen cost-inspector reset --yes` | Delete every import and comparison |
-| | `uv run --frozen cost-inspector import FILE` | Validate and import a file from disk |
+| | `uv run --frozen cost-inspector import FILE` | Validate and import an AUDR file or a Claude Code transcript from disk |
 | `make test` | `uv run --frozen pytest`; `npm test` | Backend and frontend unit/integration tests |
 | `make lint` | ruff, mypy, `tsc -b`, ESLint | Static checks |
 | `make e2e` | `npm run e2e` (in `frontend/`) | Build, then run Playwright end to end on a throwaway database |
@@ -279,6 +321,11 @@ performance.
   the AUDR schema and conformance fixtures were taken from the
   [openaudr/audr](https://github.com/openaudr/audr) repository at commit `95213e3`.
   The validator agrees with all 38 upstream conformance cases.
+- **Claude Code costs are list-price estimates.** They are not what a subscription
+  or an invoice charged, and calls the transcript doesn't log (such as context
+  compaction) are missing. Prices change: the estimate uses the list as published on
+  9 October 2026. Transcripts are an internal Claude Code format, so a future version
+  could change what is recorded; the converter skips what it can't read and says so.
 - **Tested in Chromium.** The end-to-end suite and the visual checks ran in
   headless Chromium on Linux. Firefox, Safari and screen readers were not tested.
 

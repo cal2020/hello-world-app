@@ -88,7 +88,7 @@ export function TopBar({
             </DropdownRadioGroup>
           </DropdownContent>
         </DropdownMenu>
-        <Button variant="primary" onClick={onOpenImport} aria-label="Import an AUDR file">
+        <Button variant="primary" onClick={onOpenImport} aria-label="Import telemetry">
           <Upload />
           <span className="hidden sm:inline">Import</span>
         </Button>

@@ -9,6 +9,7 @@ const tones = {
   observed: 'bg-observed-soft text-observed-ink border-transparent',
   candidate: 'bg-candidate-soft text-candidate-ink border-transparent',
   estimate: 'bg-transparent text-candidate-ink border-dashed border-candidate',
+  estimated: 'bg-transparent text-observed-ink border-dashed border-observed-ink/60',
   measured: 'bg-good-soft text-good-ink border-transparent',
   good: 'bg-good-soft text-good-ink border-transparent',
   bad: 'bg-bad-soft text-bad-ink border-transparent',

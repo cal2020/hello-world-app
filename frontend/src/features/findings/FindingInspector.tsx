@@ -12,6 +12,7 @@ import { Money, SpendValue } from '../../components/ui/money'
 import { ShowMoreList } from '../../components/ui/show-more'
 import { Skeleton } from '../../components/ui/skeleton'
 import { Textarea } from '../../components/ui/textarea'
+import { costWord } from '../../lib/cost-basis'
 import { formatRelative, plural } from '../../lib/format'
 import { CategoryIcon, ConfidenceBadge } from './FindingsPanel'
 import { FindingEvidence, NotProofNote } from './FindingEvidence'
@@ -131,7 +132,7 @@ export function FindingInspector({
         title={`Affected calls (${finding.affected.length})`}
         aside={
           <span className="text-xs text-ink-3">
-            <SpendValue spend={finding.affected_spend} className="tabular" /> observed
+            <SpendValue spend={finding.affected_spend} className="tabular" /> {costWord(finding.affected_spend)}
           </span>
         }
       >
@@ -197,7 +198,8 @@ export function FindingInspector({
         <div className="rounded-xl border border-dashed border-candidate/70 px-3.5 py-3 text-[13px] leading-5">
           <Badge tone="estimate">Estimate · not measured</Badge>
           <p className="mt-2 text-ink-2">
-            KORA Doctor v0 assumes {finding.scenario.ratio_percent}% of the observed cost on these calls could be avoided:{' '}
+            KORA Doctor v0 assumes {finding.scenario.ratio_percent}% of the {costWord(finding.affected_spend)} cost on these calls
+            could be avoided:{' '}
             {finding.scenario.estimate.length ? (
               finding.scenario.estimate.map((m, i) => (
                 <span key={m.currency}>

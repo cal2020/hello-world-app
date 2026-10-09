@@ -70,8 +70,8 @@ export function CommandPalette({
       <Command.List className="max-h-[min(60vh,440px)] overflow-y-auto py-1.5 scrollbar-thin">
         <Command.Empty className="px-4 py-8 text-center text-[13px] text-ink-3">No matches.</Command.Empty>
         <Command.Group heading="Actions" className={groupClass}>
-          <Item value="Import an AUDR file" onSelect={run(onImport)}>
-            <Upload /> Import an AUDR file…
+          <Item value="Import an AUDR file or Claude Code transcripts" onSelect={run(onImport)}>
+            <Upload /> Import an AUDR file or Claude Code transcripts…
           </Item>
           <Item value="Load the synthetic demo runs" onSelect={run(onLoadDemo)}>
             <Sparkles /> Load the synthetic demo runs

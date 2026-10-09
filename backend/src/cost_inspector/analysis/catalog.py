@@ -130,6 +130,9 @@ GLOSSARY: dict[str, str] = {
     "when both runs report complete, comparable costs and you marked them as equivalent work.",
     "unknown_cost": "A call without cost.total_cost. It is excluded from totals and counted "
     "separately; it is never treated as zero.",
+    "estimated_cost": "A cost this app computed from reported token counts at Anthropic's "
+    "published API list prices, for telemetry that records tokens but no cost, such as Claude "
+    "Code transcripts. It is not what was billed.",
 }
 
 

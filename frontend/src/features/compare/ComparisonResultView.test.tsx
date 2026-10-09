@@ -10,6 +10,8 @@ const spend = (amount: string | null, unknown = 0): Spend => ({
   unknown_calls: unknown,
   total_calls: (amount == null ? 0 : 1) + unknown,
   complete: unknown === 0 && amount != null,
+  estimated_calls: 0,
+  basis: amount == null ? 'none' : 'reported',
 })
 
 function scope(partial: Partial<ComparisonScope>): ComparisonScope {

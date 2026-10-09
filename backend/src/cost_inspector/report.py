@@ -45,6 +45,32 @@ HOW_TO_READ = [
     "Each finding names its calls by call_id (their details are under calls) and its rule and "
     "limits by category (under rules).",
 ]
+ESTIMATE_LINE = (
+    "Estimated costs were computed from token counts at Anthropic's published API list prices, "
+    "for telemetry that records tokens but no cost (such as Claude Code transcripts). They are "
+    "not billed amounts."
+)
+_COST_WORDS = {"estimated": "Estimated", "mixed": "Observed + estimated"}
+PART_LABELS = {
+    "cache_read_cost": "Cache reads",
+    "cache_write_cost": "Cache writes",
+    "output_token_cost": "Output",
+    "reasoning_cost": "Thinking (reasoning)",
+    "input_token_cost": "Uncached input",
+}
+
+
+def _how_to_read(*spends: dict[str, Any] | None) -> list[str]:
+    estimated = any(s and s.get("estimated_calls") for s in spends)
+    return [*HOW_TO_READ, ESTIMATE_LINE] if estimated else HOW_TO_READ
+
+
+def cost_word(*spends: dict[str, Any] | None) -> str:
+    """How the report labels costs: Observed, Estimated, or both when they are mixed."""
+    bases = {s.get("basis", "reported") for s in spends if s} - {"none"}
+    if len(bases) > 1:
+        return _COST_WORDS["mixed"]
+    return _COST_WORDS.get(next(iter(bases), "reported"), "Observed")
 
 
 def _header(kind: str) -> dict[str, Any]:
@@ -129,7 +155,7 @@ def import_report(store: Store, import_id: str) -> dict[str, Any] | None:
                 comparisons.append(item)
     return {
         "report": {**_header("import"), "analyzer": detail["analyzer"]},
-        "how_to_read": HOW_TO_READ,
+        "how_to_read": _how_to_read(detail["spend"]),
         "glossary": catalog.GLOSSARY,
         "privacy": PRIVACY,
         "import": {
@@ -154,6 +180,7 @@ def import_report(store: Store, import_id: str) -> dict[str, Any] | None:
             "runs": len(detail["runs"]),
             "calls": len(calls),
             "by_model": detail["by_model"],
+            "cost_parts": detail["cost_parts"],
         },
         "candidates": {
             "open_findings": detail["open_findings"],
@@ -197,7 +224,7 @@ def comparison_report(store: Store, comparison_id: str) -> dict[str, Any] | None
         calls[side] = [views.call_json(c) for c in store.load_calls(run.import_id, run.id)]
     return {
         "report": _header("comparison"),
-        "how_to_read": HOW_TO_READ,
+        "how_to_read": _how_to_read(*(run.get("spend") for run in runs.values())),
         "glossary": catalog.GLOSSARY,
         "privacy": PRIVACY,
         "comparison": item,
@@ -243,14 +270,24 @@ def _env() -> Environment:
     env.filters["money"] = lambda m: money(m.get("amount"), m.get("currency"))
     env.filters["spend"] = spend_text
     env.globals["label_for"] = catalog.label_for
+    env.globals["part_label"] = PART_LABELS.get
     return env
 
 
 def render_html(report: dict[str, Any]) -> str:
     calls = report.get("calls")
     calls_by_id = {c["id"]: c for c in calls} if isinstance(calls, list) else {}
+    if "observed" in report:
+        word = cost_word(report["observed"]["spend"])
+    else:
+        word = cost_word(*(run.get("spend") for run in report.get("runs", {}).values()))
     return (
         _env()
         .get_template("report.html.j2")
-        .render(r=report, calls_by_id=calls_by_id, row_limit=HTML_ROWS_PER_FINDING)
+        .render(
+            r=report,
+            calls_by_id=calls_by_id,
+            row_limit=HTML_ROWS_PER_FINDING,
+            cost_word=word,
+        )
     )

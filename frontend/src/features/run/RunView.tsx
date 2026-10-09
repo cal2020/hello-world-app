@@ -29,6 +29,7 @@ import { FindingsPanel } from '../findings/FindingsPanel'
 import { ExportMenu } from '../imports/ExportMenu'
 import { CallsTable } from './CallsTable'
 import { ResourceBreakdown } from './ResourceBreakdown'
+import { CostParts } from './CostParts'
 import { CallsTile, CandidatesTile, SpendTile, TokensTile } from './StatTiles'
 import { highlightFor } from './highlight'
 import { Timeline } from './Timeline'
@@ -180,7 +181,7 @@ export function RunView({
       <RunHeader data={data} onOpenImport={onOpenImport} />
 
       <div className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
-        <SpendTile spend={run.spend} glossary={meta?.glossary.observed} />
+        <SpendTile spend={run.spend} glossary={meta?.glossary.observed} estimateGlossary={meta?.glossary.estimated_cost} />
         <CallsTile calls={run.calls} modelCalls={run.model_calls} toolCalls={run.tool_calls} spanMs={run.last_event_ms - run.start_ms} />
         <TokensTile tokens={run.tokens} />
         <CandidatesTile
@@ -192,6 +193,8 @@ export function RunView({
           glossary={meta?.glossary}
         />
       </div>
+
+      <CostParts parts={data.cost_parts} spend={run.spend} />
 
       <Timeline
         calls={data.calls}

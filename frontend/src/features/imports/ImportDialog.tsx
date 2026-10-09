@@ -1,24 +1,33 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { CircleAlert, FileJson, FileUp, LoaderCircle, X } from 'lucide-react'
+import { CircleAlert, FileJson, FileUp, LoaderCircle, SquareTerminal, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type DragEvent } from 'react'
 
 import { ApiError, errorMessage, uploadImport, type UploadPhase } from '../../api/client'
 import type { ImportDetail, Issue, Meta } from '../../api/types'
+import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { Callout } from '../../components/ui/callout'
 import { Dialog } from '../../components/ui/dialog'
 import { cn } from '../../lib/cn'
 import { formatBytes, plural } from '../../lib/format'
 import { FormatHelp } from '../welcome/FormatHelp'
+import { isTranscript, readTranscripts } from './claude-code'
+
+/** One AUDR file, or one or more Claude Code transcripts. */
+type Source = { kind: 'audr' | 'claude-code'; files: File[] }
+type Phase = 'reading' | UploadPhase
 
 type State =
   | { kind: 'idle' }
-  | { kind: 'selected'; file: File }
-  | { kind: 'working'; file: File; phase: UploadPhase; fraction: number }
-  | { kind: 'rejected'; file: File; message: string; issues: Issue[]; total: number; truncated: boolean }
-  | { kind: 'duplicate'; file: File; importId: string; message: string }
-  | { kind: 'failed'; file: File | null; message: string }
-  | { kind: 'cancelled'; file: File }
+  | { kind: 'checking'; files: File[] }
+  | { kind: 'selected'; source: Source }
+  | { kind: 'working'; source: Source; phase: Phase; fraction: number }
+  | { kind: 'rejected'; source: Source; message: string; issues: Issue[]; total: number; truncated: boolean }
+  | { kind: 'duplicate'; source: Source; importId: string; message: string }
+  | { kind: 'failed'; source: Source | null; message: string }
+  | { kind: 'cancelled'; source: Source }
+
+const LISTED_FILES = 4
 
 function IssueList({ issues }: { issues: Issue[] }) {
   return (
@@ -44,6 +53,54 @@ function IssueList({ issues }: { issues: Issue[] }) {
   )
 }
 
+function FileList({ files, transcripts, checking }: { files: File[]; transcripts: boolean; checking: boolean }) {
+  const shown = files.slice(0, LISTED_FILES)
+  const total = files.reduce((sum, file) => sum + file.size, 0)
+  return (
+    <div className="rounded-xl border border-line bg-surface-2">
+      <ul className="divide-y divide-line">
+        {shown.map((file, index) => (
+          <li key={`${file.name}-${index}`} className="flex items-center gap-3 px-3.5 py-2.5">
+            {transcripts ? (
+              <SquareTerminal className="size-5 shrink-0 text-ink-3" />
+            ) : (
+              <FileJson className="size-5 shrink-0 text-ink-3" />
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{file.name}</p>
+              <p className="text-xs text-ink-3">{formatBytes(file.size)}</p>
+            </div>
+            {checking ? (
+              <LoaderCircle aria-label="Checking the file" className="size-4 shrink-0 animate-spin text-ink-3" />
+            ) : (
+              transcripts && <Badge tone="outline">Claude Code transcript</Badge>
+            )}
+          </li>
+        ))}
+      </ul>
+      {files.length > LISTED_FILES && (
+        <p className="border-t border-line px-3.5 py-2 text-xs text-ink-3">
+          and {plural(files.length - LISTED_FILES, 'more file')} · {formatBytes(total)} in all
+        </p>
+      )}
+    </div>
+  )
+}
+
+function progressText(source: Source, phase: Phase): string {
+  if (phase === 'reading') {
+    return source.files.length === 1
+      ? 'Reading the transcript in this browser…'
+      : `Reading ${source.files.length} transcripts in this browser…`
+  }
+  if (phase === 'uploading') {
+    return source.kind === 'claude-code' ? 'Sending the usage to the local service…' : 'Uploading to the local service…'
+  }
+  return source.kind === 'claude-code'
+    ? 'Pricing each call, checking the records and running KORA Doctor…'
+    : 'Validating against the AUDR schema and running KORA Doctor…'
+}
+
 export function ImportDialog({
   open,
   onOpenChange,
@@ -61,46 +118,117 @@ export function ImportDialog({
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const controller = useRef<AbortController | null>(null)
+  const pick = useRef(0)
   const queryClient = useQueryClient()
   const inputId = useId()
   const limit = meta?.limits.max_upload_bytes ?? 8 * 1024 * 1024
+  const maxRecords = meta?.limits.max_records ?? 10_000
 
   // The parent remounts this dialog on every open (key), so state starts fresh;
-  // an upload still running when it goes away is aborted.
+  // an import still running when it goes away is aborted.
   useEffect(() => () => controller.current?.abort(), [])
 
-  const choose = (file: File | undefined) => {
-    if (!file) return
-    if (file.size === 0) {
-      setState({ kind: 'failed', file, message: 'This file is empty. Choose an AUDR JSON or JSONL file.' })
-      return
-    }
-    if (file.size > limit) {
+  const choose = async (files: File[]) => {
+    if (files.length === 0) return
+    const id = ++pick.current
+    const empty = files.find((file) => file.size === 0)
+    if (empty) {
       setState({
         kind: 'failed',
-        file,
-        message: `This file is ${formatBytes(file.size)}; one import is limited to ${formatBytes(limit)}. Split it by run and import the parts.`,
+        source: { kind: 'audr', files },
+        message: `${empty.name} is empty. Choose an AUDR file or a Claude Code transcript.`,
       })
       return
     }
-    setState({ kind: 'selected', file })
+    setState({ kind: 'checking', files })
+    let transcripts: boolean[]
+    try {
+      transcripts = await Promise.all(files.map((file) => isTranscript(file)))
+    } catch {
+      if (id === pick.current) {
+        setState({ kind: 'failed', source: { kind: 'audr', files }, message: 'The file couldn’t be read. Choose it again.' })
+      }
+      return
+    }
+    if (id !== pick.current) return
+    if (transcripts.every(Boolean)) {
+      setState({ kind: 'selected', source: { kind: 'claude-code', files } })
+      return
+    }
+    const source: Source = { kind: 'audr', files }
+    if (files.length > 1) {
+      setState({
+        kind: 'failed',
+        source,
+        message:
+          'Choose one AUDR file at a time. Several files can be imported together only when they are all Claude Code transcripts.',
+      })
+      return
+    }
+    const size = files[0]?.size ?? 0
+    if (size > limit) {
+      setState({
+        kind: 'failed',
+        source,
+        message: `This file is ${formatBytes(size)}; one import is limited to ${formatBytes(limit)}. Split it by run and import the parts.`,
+      })
+      return
+    }
+    setState({ kind: 'selected', source })
   }
 
-  const start = async (file: File) => {
+  const start = async (source: Source) => {
     const abort = new AbortController()
     controller.current = abort
-    setState({ kind: 'working', file, phase: 'uploading', fraction: 0 })
     try {
+      let upload = source.files[0]
+      if (source.kind === 'claude-code') {
+        setState({ kind: 'working', source, phase: 'reading', fraction: 0 })
+        const usage = await readTranscripts(
+          source.files,
+          (fraction) => setState({ kind: 'working', source, phase: 'reading', fraction }),
+          abort.signal,
+        )
+        if (usage.requests === 0) {
+          setState({
+            kind: 'failed',
+            source,
+            message:
+              'No API calls were found. Choose a session transcript from ~/.claude/projects/; a session with no replies yet has nothing to analyze.',
+          })
+          return
+        }
+        if (usage.requests > maxRecords) {
+          setState({
+            kind: 'failed',
+            source,
+            message: `These transcripts have ${plural(usage.requests, 'API call')}; one import holds at most ${maxRecords.toLocaleString('en-US')}. Import fewer sessions at a time.`,
+          })
+          return
+        }
+        const fallback = source.files.length === 1 ? (upload?.name ?? 'transcript.jsonl') : `${source.files.length} Claude Code transcripts`
+        upload = new File([usage.toText()], usage.displayName(fallback), { type: 'application/x-ndjson' })
+        if (upload.size > limit) {
+          setState({
+            kind: 'failed',
+            source,
+            message: `The usage in these transcripts takes ${formatBytes(upload.size)}, over the ${formatBytes(limit)} import limit. Import fewer sessions at a time.`,
+          })
+          return
+        }
+      }
+      if (!upload) return
+      setState({ kind: 'working', source, phase: 'uploading', fraction: 0 })
       const detail = await uploadImport(
-        file,
-        (phase, fraction) => setState({ kind: 'working', file, phase, fraction }),
+        upload,
+        (phase, fraction) => setState({ kind: 'working', source, phase, fraction }),
         abort.signal,
       )
       await queryClient.invalidateQueries()
       onImported(detail)
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
-        setState({ kind: 'cancelled', file })
+        setState({ kind: 'cancelled', source })
         // The server may have finished a fully uploaded file; show the real list.
         await queryClient.invalidateQueries()
         return
@@ -108,16 +236,16 @@ export function ImportDialog({
       if (error instanceof ApiError && error.code === 'invalid_file' && error.payload) {
         setState({
           kind: 'rejected',
-          file,
+          source,
           message: error.message,
           issues: error.payload.issues ?? [],
           total: error.payload.issue_count ?? 0,
           truncated: Boolean(error.payload.truncated),
         })
       } else if (error instanceof ApiError && error.code === 'already_imported' && error.payload?.import_id) {
-        setState({ kind: 'duplicate', file, importId: error.payload.import_id, message: error.message })
+        setState({ kind: 'duplicate', source, importId: error.payload.import_id, message: error.message })
       } else {
-        setState({ kind: 'failed', file, message: errorMessage(error) })
+        setState({ kind: 'failed', source, message: errorMessage(error) })
       }
     } finally {
       controller.current = null
@@ -127,12 +255,20 @@ export function ImportDialog({
   const onDrop = (event: DragEvent<HTMLLabelElement>) => {
     event.preventDefault()
     setDragging(false)
-    choose(event.dataTransfer.files[0])
+    void choose(Array.from(event.dataTransfer.files))
   }
 
   const working = state.kind === 'working'
-  const file = state.kind === 'idle' ? null : state.file
+  const source = state.kind === 'idle' || state.kind === 'checking' ? null : state.source
+  const files = state.kind === 'checking' ? state.files : (source?.files ?? [])
+  const transcripts = source?.kind === 'claude-code'
   const percent = working ? Math.round(state.fraction * 100) : 0
+  const determinate = working && state.phase !== 'processing'
+  const importLabel = transcripts
+    ? files.length === 1
+      ? 'Import transcript'
+      : `Import ${files.length} transcripts`
+    : 'Import file'
 
   return (
     <Dialog
@@ -141,8 +277,8 @@ export function ImportDialog({
         if (!next && working) controller.current?.abort()
         onOpenChange(next)
       }}
-      title="Import AUDR telemetry"
-      description="The file is validated and analyzed locally; nothing is sent anywhere else."
+      title="Import telemetry"
+      description="AUDR files and Claude Code transcripts are read and analyzed on this device; nothing is sent anywhere else."
       wide
       footer={
         <>
@@ -157,11 +293,11 @@ export function ImportDialog({
           )}
           <Button
             variant="primary"
-            disabled={!file || working || state.kind === 'failed' || state.kind === 'duplicate'}
-            onClick={() => file && void start(file)}
+            disabled={!source || working || state.kind === 'failed' || state.kind === 'duplicate'}
+            onClick={() => source && void start(source)}
           >
             {working ? <LoaderCircle className="animate-spin" /> : <FileUp />}
-            {working ? 'Importing…' : state.kind === 'rejected' || state.kind === 'cancelled' ? 'Try again' : 'Import file'}
+            {working ? 'Importing…' : state.kind === 'rejected' || state.kind === 'cancelled' ? 'Try again' : importLabel}
           </Button>
         </>
       }
@@ -185,45 +321,39 @@ export function ImportDialog({
             <FileUp className="size-5" />
           </span>
           <span className="mt-3 text-sm font-semibold">
-            {file ? 'Choose a different file' : 'Drop an AUDR file here, or browse'}
+            {files.length === 0
+              ? 'Drop an AUDR file or Claude Code transcripts here, or browse'
+              : files.length === 1
+                ? 'Choose a different file'
+                : 'Choose different files'}
           </span>
-          <span className="mt-1 text-xs text-ink-3">
-            .jsonl, .json or .ndjson · up to {formatBytes(limit)} · {meta?.limits.max_records.toLocaleString('en-US') ?? '10,000'} records
+          <span className="mt-1 text-xs text-balance text-ink-3">
+            AUDR .jsonl, .json or .ndjson up to {formatBytes(limit)} · Claude Code transcripts of any size ·{' '}
+            {maxRecords.toLocaleString('en-US')} records per import
           </span>
           <input
             id={inputId}
             ref={inputRef}
             type="file"
+            multiple
             accept=".jsonl,.json,.ndjson,.txt,application/json,application/x-ndjson"
             className="sr-only"
             disabled={working}
             onChange={(event) => {
-              choose(event.target.files?.[0])
+              void choose(Array.from(event.target.files ?? []))
               event.target.value = ''
             }}
           />
         </label>
 
-        {file && (
-          <div className="flex items-center gap-3 rounded-xl border border-line bg-surface-2 px-3.5 py-2.5">
-            <FileJson className="size-5 shrink-0 text-ink-3" />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{file.name}</p>
-              <p className="text-xs text-ink-3">{formatBytes(file.size)}</p>
-            </div>
-          </div>
-        )}
+        {files.length > 0 && <FileList files={files} transcripts={transcripts} checking={state.kind === 'checking'} />}
 
         <div aria-live="polite" className="space-y-3">
           {working && (
             <div>
               <div className="flex items-center justify-between text-[13px]">
-                <span className="text-ink-2">
-                  {state.phase === 'uploading'
-                    ? 'Uploading to the local service…'
-                    : 'Validating against the AUDR schema and running KORA Doctor…'}
-                </span>
-                {state.phase === 'uploading' && <span className="text-ink-3 tabular">{percent}%</span>}
+                <span className="text-ink-2">{progressText(state.source, state.phase)}</span>
+                {determinate && <span className="text-ink-3 tabular">{percent}%</span>}
               </div>
               <div
                 className="mt-2 h-1.5 overflow-hidden rounded-full bg-hover"
@@ -231,14 +361,19 @@ export function ImportDialog({
                 aria-label="Import progress"
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-valuenow={state.phase === 'uploading' ? percent : undefined}
+                aria-valuenow={determinate ? percent : undefined}
               >
-                {state.phase === 'uploading' ? (
+                {determinate ? (
                   <div className="h-full rounded-full bg-accent transition-[width] duration-200" style={{ width: `${percent}%` }} />
                 ) : (
                   <div className="h-full w-1/3 animate-indeterminate rounded-full bg-accent/80" />
                 )}
               </div>
+              {state.phase === 'reading' && (
+                <p className="mt-1.5 text-xs text-ink-3">
+                  Only model names, token counts and times are kept; the conversation stays on this device.
+                </p>
+              )}
               {state.phase === 'processing' && (
                 <p className="mt-1.5 text-xs text-ink-3">Large files take a few seconds (about 0.5 ms per record).</p>
               )}
@@ -277,7 +412,7 @@ export function ImportDialog({
           )}
           {state.kind === 'cancelled' && (
             <Callout tone="warn" title="Import cancelled">
-              The upload was stopped. If the file had already reached the service, the import may still have completed —
+              The import was stopped. If the data had already reached the service, the import may still have completed —
               check the list of imports.
             </Callout>
           )}

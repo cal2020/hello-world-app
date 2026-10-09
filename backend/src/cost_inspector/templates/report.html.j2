@@ -95,9 +95,9 @@
       <span><span class="tag candidate">Candidate</span><span class="tag">{{ f.confidence }} confidence</span>{% if f.dismissed %}<span class="tag">Dismissed</span>{% endif %}</span>
     </header>
     {% if f.dismissed %}<p><strong>Dismissed{% if f.dismissed_at %} {{ f.dismissed_at }}{% endif %}:</strong> {{ f.dismissal_note or "no note" }}</p>{% endif %}
-    <div class="section"><div class="label">Affected calls ({{ f.affected_count }}) · observed spend on them: {{ f.affected_spend|spend }}</div>
+    <div class="section"><div class="label">Affected calls ({{ f.affected_count }}) · {{ cost_word|lower }} spend on them: {{ f.affected_spend|spend }}</div>
       <div class="scroll"><table>
-        <tr><th>Record</th><th>Run</th><th class="num">Step</th><th>Resource</th><th class="num">Observed cost</th></tr>
+        <tr><th>Record</th><th>Run</th><th class="num">Step</th><th>Resource</th><th class="num">{{ cost_word }} cost</th></tr>
         {% for cid in f.call_ids[:row_limit] %}{% set a = calls_by_id[cid] %}<tr><td class="mono">{{ a.record_id }}</td><td class="mono">{{ a.run_id }}</td><td class="num">{{ a.step if a.step is not none else "—" }}</td><td>{{ a.resource.name }}</td><td class="num">{{ a.cost|money }}</td></tr>{% endfor %}
       </table></div>
       {% if f.call_ids|length > row_limit %}<p class="muted">… and {{ f.call_ids|length - row_limit }} more; the JSON report lists every call.</p>{% endif %}
@@ -107,7 +107,7 @@
     {% if rule %}<div class="section"><div class="label">Rule</div><p><strong>{{ rule.rule.name }}.</strong> {{ rule.rule.summary }} <a href="#rule-{{ f.category }}">Limits of this rule</a></p></div>{% endif %}
     <div class="section"><div class="label">Analyzer rationale</div><p>{{ f.rationale }}</p></div>
     <div class="section"><div class="label"><span class="tag estimate">Scenario estimate</span></div>
-      <p>{{ f.scenario.ratio_percent }}% of observed cost on these calls under KORA Doctor's assumption:
+      <p>{{ f.scenario.ratio_percent }}% of {{ cost_word|lower }} cost on these calls under KORA Doctor's assumption:
       {% for m in f.scenario.estimate %}{{ m|money }}{% if not loop.last %} + {% endif %}{% else %}no reported cost{% endfor %}.
       {% if f.overlaps %}Overlaps with {% for o in f.overlaps %}{{ o.category_label }} ({{ o.findings }} finding{{ "s" if o.findings != 1 }}, {{ o.shared_calls }} shared call{{ "s" if o.shared_calls != 1 }}){% if not loop.last %}, {% endif %}{% endfor %}; overlapping estimates are never added together.{% endif %}</p>
     </div>
@@ -151,22 +151,32 @@
 <p class="muted" style="margin-top:8px">{% for key, text in r.glossary.items() %}<strong>{{ key|replace("_", " ")|capitalize }}:</strong> {{ text }} {% endfor %}</p></div>
 
 {% if r.report.kind == "import" %}
-  <h2>Observed spending <span class="tag observed">Observed</span></h2>
+  <h2>{{ cost_word }} spending <span class="tag observed">{{ cost_word }}</span></h2>
   <div class="grid">
-    <div class="card stat"><div class="label">Reported cost</div><div class="value">{{ r.observed.spend|spend }}</div><p class="muted">{{ r.observed.spend.known_calls }} of {{ r.observed.spend.total_calls }} calls report a cost.</p></div>
+    <div class="card stat"><div class="label">{{ "Reported cost" if cost_word == "Observed" else cost_word ~ " cost" }}</div><div class="value">{{ r.observed.spend|spend }}</div><p class="muted">{{ r.observed.spend.known_calls }} of {{ r.observed.spend.total_calls }} calls have a cost{% if r.observed.spend.estimated_calls %}; {{ r.observed.spend.estimated_calls }} of those are estimated at list prices{% endif %}.</p></div>
     <div class="card stat"><div class="label">Runs · calls</div><div class="value">{{ r.observed.runs }} · {{ r.observed.calls }}</div><p class="muted">{{ r.import.record_count }} records in the file, {{ r.import.accepted_count }} analyzed.</p></div>
     <div class="card stat"><div class="label">Open candidates</div><div class="value">{{ r.candidates.open_findings }}</div><p class="muted">{{ r.candidates.scenario_estimate.open.flagged_calls }} flagged call(s); {{ r.candidates.dismissed_findings }} dismissed finding(s).</p></div>
   </div>
   <div class="card scroll"><table>
-    <tr><th>Resource</th><th>Provider</th><th class="num">Calls</th><th class="num">Observed cost</th></tr>
+    <tr><th>Resource</th><th>Provider</th><th class="num">Calls</th><th class="num">{{ cost_word }} cost</th></tr>
     {% for m in r.observed.by_model %}<tr><td>{{ m.name }} <span class="muted">({{ m.resource_type }})</span></td><td>{{ m.provider }}</td><td class="num">{{ m.calls }}</td><td class="num">{{ m.spend|spend }}</td></tr>{% endfor %}
   </table></div>
+
+  {% if r.observed.cost_parts %}
+  <div class="card scroll"><table>
+    <tr><th>Token type</th>{% for cur in r.observed.cost_parts.by_currency %}<th class="num">{{ cost_word }} cost ({{ cur.currency }})</th>{% endfor %}<th class="num">Tokens</th></tr>
+    {% for part, counter in [("cache_read_cost", "cache_read_tokens"), ("cache_write_cost", "cache_write_tokens"), ("output_token_cost", "output_tokens"), ("reasoning_cost", "reasoning_tokens"), ("input_token_cost", "input_tokens")] %}
+    {% if r.observed.cost_parts.by_currency|selectattr("parts." ~ part, "defined")|list %}<tr><td>{{ part_label(part) }}</td>{% for cur in r.observed.cost_parts.by_currency %}<td class="num">{{ {"amount": cur.parts.get(part), "currency": cur.currency}|money }}</td>{% endfor %}<td class="num">{{ "{:,}".format(r.observed.cost_parts.tokens.get(counter)) if r.observed.cost_parts.tokens.get(counter) is not none else "—" }}</td></tr>{% endif %}
+    {% endfor %}
+  </table>
+  <p class="muted">Model-call cost by token type, from {{ r.observed.cost_parts.covered_calls }} of {{ r.observed.cost_parts.priced_model_calls }} priced model calls that report the breakdown.</p></div>
+  {% endif %}
 
   <h2>Optimization candidates <span class="tag candidate">Candidate</span></h2>
   <div class="card">
     <p><span class="tag estimate">Scenario estimate</span> If every open candidate were acted on, KORA Doctor's fixed assumptions put up to
     {% for m in r.candidates.scenario_estimate.open.estimate %}<strong>{{ m|money }}</strong>{% if not loop.last %} + {% endif %}{% else %}<strong>nothing with a reported cost</strong>{% endfor %}
-    of the observed spend on {{ r.candidates.scenario_estimate.open.flagged_calls }} flagged call(s) in scope. This is not a measured or guaranteed saving.</p>
+    of the {{ cost_word|lower }} spend on {{ r.candidates.scenario_estimate.open.flagged_calls }} flagged call(s) in scope. This is not a measured or guaranteed saving.</p>
     <p class="muted">{{ r.candidates.scenario_estimate.method }} Ratios: {% for k, v in r.candidates.scenario_estimate.ratios.items() %}{{ label_for(k) }} {{ v }}{% if not loop.last %}, {% endif %}{% endfor %}.</p>
   </div>
   {% for f in r.findings if not f.dismissed %}{{ finding_card(f) }}{% else %}<p class="muted">No open findings.</p>{% endfor %}
@@ -188,13 +198,13 @@
 
   <h2>Runs</h2>
   <div class="card scroll"><table>
-    <tr><th>Run</th><th>run_id</th><th class="num">Calls</th><th class="num">Model / tool</th><th>Outcome</th><th class="num">Observed cost</th></tr>
+    <tr><th>Run</th><th>run_id</th><th class="num">Calls</th><th class="num">Model / tool</th><th>Outcome</th><th class="num">{{ cost_word }} cost</th></tr>
     {% for run in r.runs %}<tr><td>{{ run.display_name }}</td><td class="mono">{{ run.run_id }}</td><td class="num">{{ run.calls }}</td><td class="num">{{ run.model_calls }} / {{ run.tool_calls }}</td><td>{{ run.outcome or "—" }}</td><td class="num">{{ run.spend|spend }}</td></tr>{% endfor %}
   </table></div>
 
   <h2>Calls</h2>
   <div class="card scroll"><table>
-    <tr><th class="num">Line</th><th>Record</th><th>Run</th><th class="num">Step</th><th>Resource</th><th class="num">In / out tokens</th><th class="num">Observed cost</th><th>Findings</th></tr>
+    <tr><th class="num">Line</th><th>Record</th><th>Run</th><th class="num">Step</th><th>Resource</th><th class="num">In / out tokens</th><th class="num">{{ cost_word }} cost</th><th>Findings</th></tr>
     {% for c in r.calls %}<tr><td class="num">{{ c.line }}</td><td class="mono">{{ c.record_id }}</td><td class="mono">{{ c.run_id }}</td><td class="num">{{ c.step if c.step is not none else "—" }}</td><td>{{ c.resource.name }}</td>
     <td class="num">{% if c.usage_kind == "llm" %}{{ c.usage.input_tokens if c.usage.input_tokens is defined else "—" }} / {{ c.usage.output_tokens if c.usage.output_tokens is defined else "—" }}{% else %}—{% endif %}</td>
     <td class="num">{{ c.cost|money }}</td><td>{% for f in c.findings %}{{ label_for(f.category) }}{% if f.dismissed %} (dismissed){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</td></tr>{% endfor %}
@@ -226,7 +236,7 @@
   {% for side in ["baseline", "candidate"] %}
     <h2>{{ side|capitalize }} calls · {{ r.runs[side].display_name }}</h2>
     <div class="card scroll"><table>
-      <tr><th class="num">Step</th><th>Record</th><th>Resource</th><th class="num">In / out tokens</th><th class="num">Observed cost</th></tr>
+      <tr><th class="num">Step</th><th>Record</th><th>Resource</th><th class="num">In / out tokens</th><th class="num">{{ cost_word }} cost</th></tr>
       {% for c in r.calls[side] %}<tr><td class="num">{{ c.step if c.step is not none else "—" }}</td><td class="mono">{{ c.record_id }}</td><td>{{ c.resource.name }}</td>
       <td class="num">{% if c.usage_kind == "llm" %}{{ c.usage.input_tokens if c.usage.input_tokens is defined else "—" }} / {{ c.usage.output_tokens if c.usage.output_tokens is defined else "—" }}{% else %}—{% endif %}</td><td class="num">{{ c.cost|money }}</td></tr>{% endfor %}
     </table></div>

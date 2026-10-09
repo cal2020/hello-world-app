@@ -46,6 +46,8 @@ def test_zero_cost_run_is_complete_not_unknown(client) -> None:
         "unknown_calls": 0,
         "total_calls": 2,
         "complete": True,
+        "estimated_calls": 0,
+        "basis": "reported",
     }
 
 

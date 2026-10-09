@@ -1,8 +1,8 @@
 # Validation
 
 What was checked, how, and what the results were. Every number here was measured
-on the machine below (on 2026-10-07, and on 2026-10-09 for the in-browser build); none is
-an estimate.
+on the machine below (on 2026-10-07, and on 2026-10-09 for the in-browser build and Claude
+Code transcripts); none is an estimate.
 
 **Machine:** Intel Xeon @ 2.80 GHz, 4 logical CPUs, 15.7 GiB RAM, Linux 6.18
 (x86_64). Python 3.13.16 (uv 0.11.32), Node.js 22.22.0 (npm 10.9.4), headless
@@ -12,14 +12,15 @@ Chromium from Playwright 1.56.1.
 
 | Check | Command | Result |
 | --- | --- | --- |
-| Backend tests | `make test` (pytest) | 158 passed |
-| Frontend tests | `make test` (Vitest) | 21 passed, 5 files |
-| End to end | `make e2e` (Playwright, Chromium) | 12 passed |
+| Backend tests | `make test` (pytest) | 213 passed |
+| Frontend tests | `make test` (Vitest) | 28 passed, 6 files |
+| End to end | `make e2e` (Playwright, Chromium) | 14 passed |
 | Lint and types | `make lint`: ruff, ruff format, mypy (strict), `tsc -b`, ESLint (type-checked) | clean |
 | AUDR conformance | `tests/test_validate.py` | the validator agrees with all 38 official conformance cases |
 | Analyzer parity | `tests/test_kora_parity.py` | identical findings to the `kora-doctor audit --json` CLI on 7 files |
 | Accessibility | axe-core 4.14 (WCAG 2.0–2.2 A/AA and best practices), see below | 0 violations |
-| In-browser build | `make browser-e2e` (Playwright, Chromium, static files served from a subfolder) | 7 passed; see [In-browser build](#in-browser-build) |
+| In-browser build | `make browser-e2e` (Playwright, Chromium, static files served from a subfolder) | 8 passed; see [In-browser build](#in-browser-build) |
+| Claude Code transcripts | `tests/test_claude_code.py`, `tests/test_pricing.py`, `claude-code.test.ts`, three e2e tests | see [Claude Code transcripts](#claude-code-transcripts) |
 
 The end-to-end suite starts the real server on a throwaway database
 (`frontend/e2e/.tmp`) and drives the built app the way a person would.
@@ -160,12 +161,13 @@ Web Worker. Checks:
   their download headers, and data survives a restart on the same database file.
 - Under Pyodide itself (Node, the same runtime files), every endpoint returned the same
   status codes as the server, and the demo totals matched the documented values exactly.
-- `make browser-e2e` (7 tests) loads the static build from a subfolder in Chromium with no
+- `make browser-e2e` (8 tests) loads the static build from a subfolder in Chromium with no
   server, and checks: startup progress and that no API request reaches the network; the
   demo, evidence and a dismissal note surviving a reload (IndexedDB); comparison, saving
-  and both report exports; line-numbered import errors and a valid import; clearing saved
-  data; the second-tab warning; and a phone-sized screen. axe-core reports no violations
-  on the welcome screen, a run with a finding open, and the second-tab screen.
+  and both report exports; line-numbered import errors and a valid import; a Claude Code
+  transcript import; clearing saved data; the second-tab warning; and a phone-sized
+  screen. axe-core reports no violations on the welcome screen, a run with a finding open,
+  the transcript import and the second-tab screen.
 
 Performance, measured with headless Chromium against the build served locally (medians of
 3 runs each):
@@ -180,7 +182,52 @@ Performance, measured with headless Chromium against the build served locally (m
 Startup is mostly CPU work, not download: Pyodide itself takes about 3 s to start, and
 importing FastAPI about 1 s more even from bytecode. Shipping bytecode compiled at build
 time (`browser/precompile.mjs`) cut Python's import time from 3.4 s to 1.7 s; it is
-limited to the 255 modules a first visit actually imports (2.1 MB).
+limited to the 257 modules a first visit actually imports (2.1 MB).
+
+## Claude Code transcripts
+
+**Prices.** `backend/src/cost_inspector/pricing.py` holds Anthropic's first-party API list
+prices, copied from <https://platform.claude.com/docs/en/about-claude/pricing> on
+2026-10-09. `tests/test_pricing.py` checks every listed model against the page's published
+multipliers (5-minute writes 1.25×, 1-hour writes 2×, cache reads 0.1× except 0.025× on
+Claude Fable 5.1 and Claude Mythos 5.1 and 0.05× on Claude Opus 5.5 and Claude Sonnet 5.5),
+plus fast mode, US-only inference (1.1× on Claude 4.6 and later only), Claude Haiku 5.5's
+100,000-token threshold, dated model IDs, and that Bedrock and Vertex AI IDs stay unpriced.
+
+**Conversion.** `tests/test_claude_code.py` uses a synthetic transcript
+(`tests/fixtures/claude-code/session.jsonl`) with a request logged twice, a Claude Code
+error message, a subagent, an unknown model ID, fast mode, web searches, a long prompt, a
+saved cost figure and a cut-off last line. It checks: one record per request in time
+order; deterministic UUIDv7 record IDs; AUDR token fields (thinking split from output);
+per-component costs to the last digit; labels; every import note; that no prompt, reply,
+command or path reaches the records; that the page's usage-only copy converts to
+byte-identical records (so the same session imports once either way); rejection of
+transcripts with no calls or too many; estimated labels in both report formats; and that
+estimated runs compare only with estimated runs. `claude-code.test.ts` covers the page's
+reader (detection, last-entry-wins in file order, no content, chunked lines). The e2e
+tests import the fixture through the dialog in both builds, check what the page sent, and
+post the full transcript to the API to confirm it is recognised as the same import.
+
+**A real session.** The transcript of the session that built this feature (28 MB, written
+by Claude Code 2.1.292–2.1.296 with Claude Opus 5.5) was converted and compared with the
+cost figure Claude Code saved in it. Claude Code last saved its figure after 495 calls:
+
+| For those 495 calls | Claude Code's own figure | This converter |
+| --- | ---: | ---: |
+| Input tokens | 5,068 | 990 |
+| Output tokens (including thinking) | 911,597 | 894,626 |
+| Cache read tokens | 210,676,187 | 207,749,150 |
+| Cache write tokens | 2,196,303 | 2,188,446 (all 1-hour) |
+| Cost | $77.96 | $76.95 (−1.3%) |
+
+The converter's counts are slightly lower in every column, consistent with calls Claude
+Code makes but doesn't log as responses in its transcript (the session had two context
+compactions and a session-title call). Pricing the 1-hour cache writes at the 5-minute
+rate would give $70.39 instead, so the duration split matters.
+
+**Speed.** Importing the same transcript (614 calls by then) through the dialog took 2.7 s
+in the desktop version and 3.3 s in the in-browser build, which sent no request to the
+network. The first visit to the in-browser build still downloads 19.2 MB.
 
 ## Not verified
 
@@ -189,6 +236,9 @@ limited to the 255 modules a first visit actually imports (2.1 MB).
   [openaudr/audr](https://github.com/openaudr/audr) repository at commit
   `95213e30568d4ffcdb4b6861358676778d9d8fd1`.
 - Firefox, Safari and Windows were not tested.
+- Claude Code transcripts were checked against versions 2.1.292–2.1.296 only; the format is
+  internal to Claude Code and could change. Subscription billing was not compared, since
+  transcripts don't record it.
 - Performance was measured on one machine.
 - The published GitHub Pages copy could not be loaded from the build environment (its
   network policy blocks `github.io`). The deployed files are the tested build, verified

@@ -19,12 +19,13 @@ from pydantic import BaseModel, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from . import __version__, report, views
+from . import __version__, pricing, report, views
 from .analysis import catalog, kora
 from .compare import EQUIVALENCE_CHOICES, ComparisonError, compare_runs
 from .config import Settings
 from .demo import remove_demo, seed_demo
 from .importer import ImportRejectedError, delete_run, import_bytes
+from .ingest import claude_code
 from .ingest.normalize import DROPPED_FIELDS
 from .ingest.validate import AUDR_SPEC_VERSION
 from .store import DuplicateImportError, Store
@@ -101,7 +102,12 @@ def meta(settings: Settings, store: Store) -> dict[str, Any]:
             "max_upload_bytes": settings.max_upload_bytes,
             "max_records": settings.max_records,
         },
-        "accepted_formats": ["jsonl", "json-array", "json-object"],
+        "accepted_formats": ["jsonl", "json-array", "json-object", claude_code.FORMAT],
+        "pricing": {
+            "price_list": pricing.PRICE_LIST,
+            "date": pricing.PRICE_LIST_DATE,
+            "source": pricing.PRICE_LIST_URL,
+        },
         "glossary": catalog.GLOSSARY,
         "categories": {
             cat: {

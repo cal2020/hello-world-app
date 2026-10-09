@@ -6,7 +6,7 @@ import sqlite3
 from pathlib import Path
 
 import pytest
-from conftest import KORA_SAMPLES
+from conftest import FIXTURES, KORA_SAMPLES
 
 from cost_inspector import cli
 from cost_inspector.config import Settings
@@ -75,3 +75,16 @@ def test_cli_seed_reset_and_import(env: Path, capsys: pytest.CaptureFixture[str]
 def test_cli_serve_refuses_public_bind(capsys: pytest.CaptureFixture[str]) -> None:
     assert cli.main(["serve", "--host", "0.0.0.0"]) == 2  # noqa: S104
     assert "binds to loopback only" in capsys.readouterr().err
+
+
+def test_cli_imports_large_claude_code_transcripts(
+    env: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # Transcripts are mostly conversation text, so the upload cap doesn't apply to them.
+    monkeypatch.setenv("ACI_MAX_UPLOAD_BYTES", "1024")
+    assert cli.main(["import", str(KORA_SAMPLES / "simple.jsonl")]) == 2
+    assert "byte limit" in capsys.readouterr().err
+    assert cli.main(["import", str(FIXTURES / "claude-code" / "session.jsonl")]) == 0
+    out = capsys.readouterr().out
+    assert "Imported 8 record(s)" in out
+    assert "Costs are estimates" in out

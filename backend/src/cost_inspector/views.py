@@ -16,7 +16,7 @@ from .analysis import catalog, kora
 from .ingest.normalize import CallRecord, decimal_str
 from .money import Spend, money_list, scale, summarize_spend
 from .store import FindingRow, ImportRow, RunRow, Store
-from .summaries import by_model
+from .summaries import by_model, cost_parts
 
 CATEGORY_ORDER = list(kora.CATEGORIES)
 TIMELINE_RULE = (
@@ -25,7 +25,7 @@ TIMELINE_RULE = (
     "duration are drawn as points."
 )
 SCENARIO_METHOD = (
-    "Each flagged call contributes its observed cost × the highest scenario ratio among the "
+    "Each flagged call contributes its cost × the highest scenario ratio among the "
     "findings that flag it, so overlapping findings never add up. Calls without a reported cost "
     "contribute nothing. These ratios are KORA Doctor v0 assumptions, not measurements."
 )
@@ -45,13 +45,14 @@ def json_safe(value: Any) -> Any:
 
 def combine_spends(spends: Iterable[Spend]) -> Spend:
     totals: dict[str, Decimal] = {}
-    known = unknown = 0
+    known = unknown = estimated = 0
     for spend in spends:
         known += spend.known_calls
         unknown += spend.unknown_calls
+        estimated += spend.estimated_calls
         for currency, amount in spend.by_currency.items():
             totals[currency] = totals.get(currency, Decimal(0)) + amount
-    return Spend(dict(sorted(totals.items())), known, unknown)
+    return Spend(dict(sorted(totals.items())), known, unknown, estimated)
 
 
 def cost_json(call: CallRecord) -> dict[str, Any]:
@@ -425,6 +426,7 @@ class ImportData:
             "category_counts": self.imp.analysis.get("category_counts", {}),
             "scenario": scenario_json(self.findings, self.ctx.calls_by_id),
             "by_model": by_model(self.calls),
+            "cost_parts": cost_parts(self.calls),
         }
 
 
@@ -474,6 +476,7 @@ def run_detail(store: Store, run_pk: str) -> dict[str, Any] | None:
         ),
         "scenario": scenario_json(touching, calls_by_id, run_pk=run_pk),
         "by_model": by_model(run_calls),
+        "cost_parts": cost_parts(run_calls),
         "timeline": {
             "start_ms": min(starts),
             "end_ms": max(c.event_ms for c in run_calls),
