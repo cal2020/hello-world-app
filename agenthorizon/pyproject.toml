@@ -18,14 +18,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-gemini = ["google-genai>=1.0"]
-anthropic = ["anthropic>=0.40"]
+gemini = ["google-genai>=2.29"]
+anthropic = ["anthropic>=1.13"]
 
 [project.scripts]
 agenthorizon = "agenthorizon.cli:app"
 
 [dependency-groups]
 dev = [
+    "anthropic>=1.13",
+    "google-genai>=2.29",
     "pytest>=8.3",
     "pytest-timeout>=2.3",
     "ruff>=0.6",

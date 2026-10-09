@@ -27,7 +27,7 @@ from agenthorizon.data.normalize import NORMALIZER_VERSION, normalize_example
 from agenthorizon.data.splits import LEGACY_LABEL_FILES, Manifest
 from agenthorizon.data.standard import SchemaError, parse_label, parse_trajectory
 from agenthorizon.scoring.categories import CATEGORY_MAP_VERSION, normalize_native
-from agenthorizon.sources.hf import HFDatasetClient, HFError, TreeEntry
+from agenthorizon.sources.hf import HFDatasetClient, TreeEntry
 from agenthorizon.util.hashing import sha256_file, tree_digest
 from agenthorizon.util.io import atomic_write_json, utcnow_iso, write_jsonl
 

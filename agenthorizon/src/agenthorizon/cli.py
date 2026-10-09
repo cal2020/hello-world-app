@@ -74,7 +74,11 @@ def evidence_reference(output: Path = typer.Option(EVIDENCE_DIR / "REFERENCE_DAT
         legacy_composition_inference,
         mt_definition_analysis,
     )
-    from agenthorizon.reference.tables import check_construction_arithmetic, construction_accounting, supplementary_tables
+    from agenthorizon.reference.tables import (
+        check_construction_arithmetic,
+        construction_accounting,
+        supplementary_tables,
+    )
     from agenthorizon.util.io import atomic_write_json, utcnow_iso
 
     tables = supplementary_tables()

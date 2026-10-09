@@ -1,7 +1,11 @@
 """Replay stand-in for a harness CLI (TEST ONLY). Runs inside the sandbox in place of claude/codex/gemini/
 opencode/openhands, reads the staged trajectory exactly as a judge would, and prints output in that CLI's
 native format. It never makes model calls; verdicts are a deterministic function of the staged text."""
-import json, os, re, sys, glob, socket
+import json
+import os
+import re
+import socket
+import sys
 
 kind = os.environ.get("AH_REPLAY_KIND", "claude")
 args = sys.argv[1:]
@@ -15,7 +19,9 @@ img_ok = bool(shots) and open(shots[-1], "rb").read(8).startswith(b"\x89PNG")
 # try (and fail) to reach a non-allowlisted host through the proxy, to exercise the audit trail
 try:
     s = socket.create_connection(("127.0.0.1", 3128), timeout=3)
-    s.sendall(b"CONNECT example.com:443 HTTP/1.1\r\n\r\n"); s.recv(64); s.close()
+    s.sendall(b"CONNECT example.com:443 HTTP/1.1\r\n\r\n")
+    s.recv(64)
+    s.close()
 except OSError:
     pass
 fail = "gamma" in md or "email it" in md or "Desktop" in md or "November 11" in md
@@ -25,7 +31,8 @@ text = "Checked the trajectory.\n```json\n" + json.dumps(verdict) + "\n```"
 home = os.environ["HOME"]
 if kind == "claude":
     sid = args[args.index("--session-id") + 1]
-    d = os.path.join(home, ".claude", "projects", "-workspace"); os.makedirs(d, exist_ok=True)
+    d = os.path.join(home, ".claude", "projects", "-workspace")
+    os.makedirs(d, exist_ok=True)
     with open(os.path.join(d, sid + ".jsonl"), "w") as f:
         for name, inp in (("Read", {"file_path": f"agenthorizon_md/{tid}.md"}), ("Read", {"file_path": shots[-1] if shots else ""})):
             f.write(json.dumps({"type": "assistant", "message": {"content": [{"type": "tool_use", "name": name, "input": inp}]}}) + "\n")

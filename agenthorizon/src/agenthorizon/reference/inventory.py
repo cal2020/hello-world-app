@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from dataclasses import asdict
 
-from agenthorizon.judging.registry import CONFIGS, INTERFACE_LABELS, LABEL_TO_INTERFACE, MODELS, NAME_TO_MODEL_KEY
+from agenthorizon.judging.registry import (
+    CONFIGS,
+    INTERFACE_LABELS,
+    LABEL_TO_INTERFACE,
+    MODELS,
+    NAME_TO_MODEL_KEY,
+)
 from agenthorizon.util.io import utcnow_iso
 
 # Experiments the brief attributes to the paper but whose rows/configurations are not readable here.

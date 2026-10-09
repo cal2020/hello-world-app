@@ -20,7 +20,12 @@ from agenthorizon.data.ingest import IngestOptions, ingest
 from agenthorizon.data.media import LocalMediaStore
 from agenthorizon.judging.agentic import run_agentic_attempt
 from agenthorizon.judging.harnesses import (
-    ClaudeCodeAdapter, CodexAdapter, GeminiCliAdapter, HarnessRun, OpenCodeAdapter, OpenHandsAdapter,
+    ClaudeCodeAdapter,
+    CodexAdapter,
+    GeminiCliAdapter,
+    HarnessRun,
+    OpenCodeAdapter,
+    OpenHandsAdapter,
 )
 from agenthorizon.judging.isolation.sandbox import isolation_available
 from agenthorizon.judging.prompts import official_agentic_prompt, rubric_extension_instructions
