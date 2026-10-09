@@ -1,0 +1,88 @@
+/home/user/hello-world-app/agenthorizon/var/tools/uv/tools/openhands/lib/python3.12/site-packages/openhands/sdk/llm/auth/openai.py:25: AuthlibDeprecationWarning: authlib.jose module is deprecated, please use joserfc instead.
+It will be compatible before version 2.0.0.
+  from authlib.jose import JsonWebKey, jwt
++----------------------------------------------------------------------+
+|  OpenHands SDK v1.21.0                                               |
+|                                                                      |
+|  Report a bug: github.com/OpenHands/software-agent-sdk/issues        |
+|  Get help: openhands.dev/joinslack                                   |
+|  Scale up: openhands.dev/product/sdk                                 |
+|                                                                      |
+|  Set OPENHANDS_SUPPRESS_BANNER=1 to hide this message                |
++----------------------------------------------------------------------+
+
+usage: openhands [-h] [--version] [-t TASK] [-f FILE] [--resume [RESUME]]
+                 [--last] [--headless] [--json]
+                 [--always-approve | --llm-approve]
+                 [--exit-without-confirmation] [--override-with-envs]
+                 {acp,serve,web,mcp,cloud,login,logout,view} ...
+
+OpenHands CLI - Terminal User Interface for OpenHands AI Agent
+
+positional arguments:
+  {acp,serve,web,mcp,cloud,login,logout,view}
+                        Additional commands
+    acp                 Start OpenHands as an Agent Client Protocol (ACP)
+                        agent (e.g., Toad CLI, Zed IDE)
+    serve               Launch the OpenHands GUI server using Docker (web
+                        interface)
+    web                 Launch the OpenHands CLI as a web application (browser
+                        interface)
+    mcp                 Manage Model Context Protocol (MCP) server
+                        configurations
+    cloud               Create a new conversation in OpenHands Cloud
+    login               Authenticate with OpenHands Cloud using OAuth 2.0
+                        Device Flow
+    logout              Log out from OpenHands Cloud
+    view                View the trajectory of an existing conversation
+
+options:
+  -h, --help            show this help message and exit
+  --version, -v         Show the version number and exit
+  -t TASK, --task TASK  Initial task text to seed the conversation with
+  -f FILE, --file FILE  Path to a file whose contents will seed the initial
+                        conversation
+  --resume [RESUME]     Conversation ID to resume. If no ID provided, shows
+                        list of recent conversations
+  --last                Resume the most recent conversation (use with
+                        --resume)
+  --headless            Run in headless mode (no UI output, auto-approve
+                        actions). Requires --task or --file.
+  --json                Enable JSON output mode for headless operation.
+                        Streams JSONL event outputs to terminal. Must be used
+                        with --headless.
+  --always-approve, --yolo
+                        Auto-approve all actions without asking for
+                        confirmation
+  --llm-approve         Enable LLM-based security analyzer (only confirm LLM-
+                        predicted high-risk actions)
+  --exit-without-confirmation
+                        Exit the application without showing confirmation
+                        dialog
+  --override-with-envs  Override LLM settings with environment variables
+                        (LLM_API_KEY, LLM_BASE_URL, LLM_MODEL). By default,
+                        environment variables are ignored.
+
+            By default, OpenHands runs in textual UI mode (terminal interface)
+            with 'always-ask' confirmation mode, where all agent actions
+            require user confirmation.
+
+            Use 'serve' subcommand to launch the GUI server instead.
+
+            Examples:
+                openhands                           # Start textual UI mode
+                openhands --headless                # Start textual UI in headless mode
+                openhands --headless --json -t "Fix bug"  # Headless with JSON output
+                openhands --resume conversation-id  # Resume conversation
+                openhands --yolo                    # Auto-approve all actions
+                openhands --llm-approve             # LLM-based approval mode
+                openhands cloud -t "Fix bug"        # Create cloud conversation
+                openhands serve                     # Launch GUI server
+                openhands serve --gpu               # Launch with GPU support
+                openhands web                       # Launch CLI as web app
+                openhands web --port 8080           # Launch web app on custom port
+                openhands acp                       # Agent-Client Protocol
+                                                      server (e.g., Toad CLI, Zed IDE)
+                openhands login                     # Authenticate with OpenHands Cloud
+                openhands logout                    # Log out from OpenHands Cloud
+        
