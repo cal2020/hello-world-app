@@ -88,3 +88,4 @@ The original greeting-card starter app remains available at `/greeting-card.html
 - [`docs/GAPS.md`](docs/GAPS.md): what is simulated, untested, or needs domain expertise
 - [`docs/INTERVIEW_PACKET.md`](docs/INTERVIEW_PACKET.md): interview preparation packet
 - [`docs/IMPLEMENTATION_BRIEF.md`](docs/IMPLEMENTATION_BRIEF.md): implementation brief v2. First priority is live local models: a model gateway in the app and a policy-enforcing relay on the owner's laptop, reaching Ollama over Tailscale. It then covers evaluation, review discipline, ingestion, identity, SaaS platform and enterprise workstreams, with requirement ids, tests and acceptance criteria
+- [`docs/IMPLEMENTATION_BRIEF.pdf`](docs/IMPLEMENTATION_BRIEF.pdf): the same brief as a 37-page PDF, with a linked contents page, bookmarks and vector diagrams
