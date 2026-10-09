@@ -134,6 +134,17 @@ uv run pytest -q                       # full suite (PostgreSQL tests provision 
 uv run ruff check src tests
 cd frontend && npm ci && npm run build && npx playwright test   # needs AH_E2E from `python -m agenthorizon.testing.e2e_server`
 python3 docker/smoke.py --out evidence/STACK_SMOKE.json        # Compose stack, after `docker compose build`
+
+# the suite inside the test image, under the judge worker's restrictions (pinned checkouts mounted read-only)
+docker build -f docker/Dockerfile --target test -t agenthorizon-test:local .
+mkdir -p -m 0777 var/junit                                      # the image runs as uid 10001
+docker run --rm --cap-drop ALL --security-opt no-new-privileges --security-opt seccomp=docker/seccomp-judge.json \
+  --security-opt systempaths=unconfined --tmpfs /tmp:rw,exec,size=4g -v "$PWD/var/sources:/data/sources:ro" \
+  -v "$PWD/var/junit:/junit" agenthorizon-test:local python -m pytest -q -p no:cacheprovider --junitxml=/junit/image.xml
+
+# reports from recorded results (pytest --junitxml; Playwright --reporter=junit with PLAYWRIGHT_JUNIT_OUTPUT_NAME)
+uv run agenthorizon evidence tests --pytest-junit host.xml --image-junit var/junit/image.xml --playwright-junit ui.xml
+uv run agenthorizon evidence reproduction                       # REPRODUCTION_REPORT.md from the files in evidence/
 ```
 
 Layout: `src/agenthorizon/` (core library, API in `app/`), `frontend/` (React workbench), `tests/`, `docker/`
