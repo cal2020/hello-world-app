@@ -41,8 +41,11 @@ def sources(p: Principal = Depends(require("catalog.read"))):
     avail = _evidence("DATA_AVAILABILITY.json") or {}
     return {
         "lock_generated_at": lock.get("generated_at"),
-        "sources": [{k: s.get(k) for k in ("source_id", "citation", "kind", "status", "resolved_revision", "license",
-                                           "access_detail", "urls")} for s in lock.get("sources", [])],
+        "sources": [{**{k: s.get(k) for k in ("source_id", "citation", "kind", "status", "title", "role", "resolved_revision")},
+                     "license": (s.get("license") or {}).get("status") if isinstance(s.get("license"), dict) else s.get("license"),
+                     "last_access": ({k: (s.get("access_attempts") or [{}])[-1].get(k) for k in ("outcome", "url", "detail", "at")}
+                                     if s.get("access_attempts") else None)}
+                    for s in lock.get("sources", [])],
         "availability": avail,
     }
 

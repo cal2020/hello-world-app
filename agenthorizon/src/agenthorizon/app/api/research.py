@@ -32,9 +32,10 @@ from agenthorizon.app.schema import (
     score_item_outcomes,
     score_reports,
 )
+from agenthorizon.scoring.categories import NATIVE_TO_CATEGORY
 
 router = APIRouter(prefix="/api")
-NATIVE_MISTAKE_TYPES = ("Critical Mistake", "Bad Side Effect", "Misunderstanding of the Instructions")
+NATIVE_MISTAKE_TYPES = tuple(NATIVE_TO_CATEGORY)  # canonical S7 spellings plus the released plural variant
 
 
 def _group(c, dv: str, eid: str) -> list[dict]:

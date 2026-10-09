@@ -440,6 +440,7 @@ def compare(request: Request, runs_: str = Query(..., alias="runs"), p: Principa
         raise err(404, "not_found", f"unknown runs {missing}")
     base = rows[ids[0]]["definition"]
     return {"runs": [{"run_id": rid, "label": rows[rid]["label"], "status": rows[rid]["status"],
+                      "dataset_version_id": rows[rid]["dataset_version_id"],
                       "result_kind": rows[rid]["result_kind"], "config_id": rows[rid]["config_id"], "score": scores[rid],
                       "differences_from_first": protocol_diff(base, rows[rid]["definition"])} for rid in ids],
             "note": "Only runs with no protocol differences (same manifest, prompt, preprocessing, policy) are directly comparable."}
