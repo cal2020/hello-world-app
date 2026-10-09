@@ -19,9 +19,11 @@ Uses the live browser build: https://cal2020.github.io/hello-world-app/dmmc-work
 > machine."
 
 ### 1. Baseline (1 min 30)
-**Click:** **Import model A**, then **Import evidence set A**, then **Build package (fixture drafter)**.
+**Click:** **Import model A**, then **Import evidence set A** (the app moves to the Evidence page), then
+**Dashboard** in the top menu, then **Build package (fixture drafter)**.
 > "The model is the kind of export a modelling tool would produce: components, boundaries, flows and permissions.
-> Evidence items each have a validity window. When I build, deterministic checks run first. The AC-3 check compares
+> Each evidence item records its environment and status; the test observations are also tied to the model
+> revisions they were collected against and have an expiry date. When I build, deterministic checks run first. The AC-3 check compares
 > the model's permissions with the enforced OPA policy, and that policy also has 15 independent tests. The drafter
 > then writes SSP-style statements from those results."
 
@@ -33,8 +35,10 @@ Uses the live browser build: https://cal2020.github.io/hello-world-app/dmmc-work
 > "Every sentence points to exactly what it's based on: this check, this model element, this evidence version."
 
 ### 2. Human review and authorization (1 min 30)
-**Click** into the package, type a reason, then **Record decision as current identity** (still as Bob).
-> "Bob is an engineer, and the server-side rules refuse to let him review."
+Press the browser's **Back** button to return to the package (or click **Dashboard**, then **pkg-001-A**), type a
+reason, then **Record decision as current identity** (still as Bob).
+> "Bob is an engineer, and the workbench's authorization rules refuse to let him review. That check runs in the same
+> Python code the local server uses, not in the page's buttons."
 
 **Switch to Alice**, enter a reason, record **ACCEPT**, then **Export as currently reviewed**.
 > "A reviewer accepts with a reason. The decision is bound to the exact digest of what she saw. Export includes an
@@ -43,29 +47,36 @@ Uses the live browser build: https://cal2020.github.io/hello-world-app/dmmc-work
 ### 3. The model changes (1 min 30)
 **Switch to Bob**, go to the Dashboard, click **Import model B**. **Switch to Alice**, open the package, try
 **Export as currently reviewed** again.
-> "Someone added a data flow. The approval is now stale, and export is refused. The system doesn't let yesterday's
-> review cover today's design."
+> "Someone added an external provider connection and changed which role may write telemetry. The approval is now
+> stale, and export is refused. The system doesn't let yesterday's review cover today's design."
 
 **Click Impact.**
 > "It lists what changed and which evidence no longer applies. That guides the re-review, but it never keeps an
 > approval alive by itself. Invalidation is conservative on purpose."
 
 ### 4. The policy catches a real mismatch (1 min)
-**As Bob:** click **Import evidence set B**, then **Build package (fixture drafter)**.
-> "With the new model, AC-3 fails and names the two permission mismatches: the model grants write access that the
-> enforced policy doesn't. That's computed live by the policy, not asserted by the drafter."
+**Switch to Bob**, go to the **Dashboard** and click **Import evidence set B**. Then go back to the **Dashboard** and
+click **Build package (fixture drafter)**.
+> "With the new model, AC-3 fails and names two permission mismatches, one in each direction: the model gives the
+> provider-integration role write access that the reviewed policy denies, and it no longer gives maintainers the
+> write access that the policy still allows. That's computed live by the policy, not asserted by the drafter."
 
 ### 5. Where the AI sits (1 min)
-**Click:** **Build package (seeded drafter errors)**, then **Evaluate generated candidate**, then
-**Evaluate candidate using http.send**.
+**Click** **Dashboard**, then **Build package (seeded drafter errors)**. The new package page shows six ⚠ validator
+flags; point at them.
 > "The drafter only proposes text from pinned sources. It has no tools and can't touch evidence, policy or review
-> state. Here I seeded six bad statements, and the validator flags them. The same boundary applies to AI-suggested
-> policy: this generated candidate fails 5 of the 15 independent tests, so it's quarantined. The one that tries a
-> network call is rejected at compile. So the value comes from the checks, and the AI stays behind them."
+> state. Here I seeded six bad statements, and the validator flags them."
+
+**Click** **Dashboard** again, then **Evaluate generated candidate** (the message shows 10 pass / 5 fail), then
+**Evaluate candidate using http.send** (the message shows REJECTED_AT_COMPILE).
+> "The same boundary applies to AI-suggested policy. These candidates stand in for AI-written policy: this one fails
+> 5 of the 15 independent tests, so it's quarantined, and the one that tries a network call is rejected at compile.
+> So the value comes from the checks, and the AI stays behind them."
 
 ### 6. Close (30 s)
 **Click Audit.**
-> "Every action is in a hash-chained, append-only log. What I'd want to learn is how this maps onto your real model
+> "Every state change is in a hash-chained, append-only log, including the refused review and the refused export.
+> Evaluating a candidate policy changes nothing, so it isn't logged. What I'd want to learn is how this maps onto your real model
 > exports and review process: where the models come from, who signs off, and what 'stale' should mean for you."
 
 ---
@@ -76,8 +87,9 @@ Uses the live browser build: https://cal2020.github.io/hello-world-app/dmmc-work
 - **"Did you use AI to build it?"** Answer truthfully, in your own words.
 - **"Does it integrate with Cameo?"** "No. It reads a JSON model contract I defined. An adapter from a real tool's
   export would be the next step."
-- **"How do you know it works?"** "22 acceptance scenarios, unit tests, and a browser test suite. Those are
-  engineering checks I wrote myself, not independent measurements."
+- **"How do you know it works?"** "22 acceptance scenarios, unit tests, and a browser test suite. They were written
+  in the same AI-assisted coding sessions as the code, from my brief, so they are engineering checks, not
+  independent measurements."
 - **"Why UNKNOWN instead of FAIL?"** "Missing evidence isn't evidence of failure. Keeping them separate tells the
   reviewer what to go and get."
 

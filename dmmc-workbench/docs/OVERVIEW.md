@@ -17,33 +17,40 @@ shows which statements and approvals are out of date when the design changes. On
 
 | Part | What it does |
 |---|---|
-| Model importer (`importer.py`) | Validates a JSON system model (components, boundaries, data flows, permissions) and stores each version as an immutable snapshot with its digest |
-| Evidence intake | Evidence items carry an environment, target revisions, a status and a validity window; one applicability rule decides whether each item still counts |
-| Checks (`checks.py`) | **AC-3:** the model's permissions compared with the enforced OPA policy, which also has 15 independent Rego tests. **AU-12:** every declared audit event type has records with the required fields. **SC-8:** the model's transport assertion and an applicable transport test must agree. **Inherited controls:** UNKNOWN without provider evidence. Results are PASS, FAIL, UNKNOWN or ERROR |
-| Drafter and validator (`drafting.py`) | Writes SSP-style statements in which every claim cites its source. The validator flags claims that are uncited, cite something that does not resolve, cite a source the drafter may not use, or use prohibited or overclaiming wording |
+| Model importer (`importer.py`) | Validates the structure of a JSON system model (ids, names and revisions of components, boundaries and data flows, and that their references resolve) and stores each version as an immutable snapshot with its digest. Permissions and other attributes are stored as given, not validated |
+| Evidence intake | Evidence items carry an environment, a status and, for observations, target revisions and an expiry date. One applicability rule decides, each time checks run, whether each item still counts |
+| Checks (`checks.py`) | **AC-3:** the model's permissions compared with the enforced OPA policy, which also has 15 independent Rego tests. **AU-12:** every declared audit event type has records with the required fields. **SC-8:** the model must contain a transport-protection assertion (its value is recorded but not checked), and the applicable transport tests must report pass; with no applicable test the result is UNKNOWN. **Inherited controls:** UNKNOWN without provider evidence. Results are PASS, FAIL, UNKNOWN or ERROR |
+| Drafter and validator (`drafting.py`) | Writes SSP-style statements in which every fact and gap claim cites its sources (limitation notes need no citation). The validator flags fact or gap claims that are uncited, and any claim that cites something that does not resolve, cites a source the drafter may not use, or uses prohibited or overclaiming wording. Whether a source actually supports a claim is left to the reviewer |
 | Review (`review.py`) | Role-based: engineers cannot review. A decision is bound to the exact package digest, can be revoked, and uses optimistic concurrency |
-| Staleness and impact (`packages.py`, `impact.py`) | Any change to model, evidence, catalog, mappings or policy makes a review STALE and blocks "export as currently reviewed". The impact report lists what changed and which evidence no longer applies |
+| Staleness and impact (`packages.py`, `impact.py`) | Any change to the model, the evidence set (import, withdrawal or restore), catalog, mappings or policy makes a review STALE and blocks "export as currently reviewed". Evidence passing its expiry date does not by itself make a review STALE; it shows up when the package is rebuilt. The impact report lists what changed and which evidence no longer applies |
 | Export (`export.py`) | Markdown SSP excerpt, evidence manifest, change-impact report, and an OSCAL component definition validated against NIST's OSCAL 1.2.3 schema (or clearly marked unvalidated when the validator is not installed) |
-| Audit (`db.py`) | Append-only tables and a hash-chained log of every action |
-| AI-policy quarantine (`opa.py`) | A generated policy candidate is run against the independent tests with restricted capabilities before anyone considers it. In the demo one candidate fails 5 of 15 tests and one that calls `http.send` is rejected at compile |
+| Audit (`db.py`) | Append-only tables and a hash-chained log of every state change and of denied, refused or conflicting attempts (candidate-policy evaluations, acceptance-suite runs, identity switches and imports that fail validation are not logged) |
+| AI-policy quarantine (`opa.py`) | A candidate policy (in the demo, fixture files standing in for AI-generated ones) is run against the independent tests with restricted capabilities before anyone considers it. One candidate fails 5 of 15 tests and one that calls `http.send` is rejected at compile |
 | Evaluation | 22 acceptance scenarios, unit tests, and a browser end-to-end suite. The static build is reproducible |
 
 ## 2. How it works
 
 1. **Import a model version.** It is digested and stored; it never changes afterwards.
-2. **Import evidence.** Each item is checked for status, expiry, environment and target revision.
+2. **Import evidence.** Each item is stored with its digest; import only checks that its envelope is complete.
+   Whether an item still counts (status, expiry, environment and target revision) is decided each time checks run,
+   against the current model and clock, so evidence can stop applying later.
 3. **Build a package.** Deterministic checks run first and produce structured results. The drafter then writes text
    only from those results and permitted, digest-pinned sources.
-4. **Validate and fingerprint.** The validator checks each claim against its citations, and the package records a
-   manifest of everything it depends on.
+4. **Validate and fingerprint.** The validator flags claims that have no required citation, cite a source the drafter
+   may not use, cite something that does not resolve to a pinned version, or use prohibited or overclaiming wording.
+   Whether a source actually supports a claim is left to the reviewer. The package records a manifest of everything
+   it depends on.
 5. **Review.** A reviewer accepts or rejects; the decision applies to that package digest only.
-6. **Detect change.** When anything the package depends on changes, its review becomes STALE, current export is
-   refused, and the impact report guides the re-review. Impact analysis explains *what* to look at; it never keeps
+6. **Detect change.** When the model, evidence set, catalog, mappings or policy change, the review becomes STALE,
+   current export is refused, and the impact report guides the re-review. Evidence expiring over time is not
+   detected until the package is rebuilt. Impact analysis explains *what* to look at; it never keeps
    an approval alive.
 
 ## 3. Value
 
-- **Traceability:** every statement leads back to a model element, an evidence version or a check result.
+- **Traceability:** facts and gaps must cite their sources (a model element, an evidence version, a check result, a
+  catalog control statement or a curated mapping), and the validator flags any that have no citation, or that cite
+  something which does not resolve or is not permitted.
 - **No silent drift:** an approval cannot carry over to a changed design.
 - **Honest uncertainty:** UNKNOWN is kept apart from PASS, so missing evidence shows up as work to do.
 - **AI inside guardrails:** the drafter has no tools and cannot change evidence, review state or policy;
@@ -53,7 +60,8 @@ shows which statements and approvals are out of date when the design changes. On
 ## 4. Use cases
 
 - Keeping SSP / ATO sections current while a model-based design evolves.
-- Continuous-monitoring style re-checks when evidence expires or changes.
+- Re-checks when evidence changes: a new evidence item or a status change (such as withdrawal) makes an existing
+  review STALE. Expiry is caught only when a package is rebuilt.
 - Pre-assessment readiness: seeing what is UNKNOWN or STALE before an assessor does.
 - Change-impact review: which controls and approvals a design change touches.
 - Trialling AI drafting or AI-written policy safely in a regulated workflow.
@@ -70,7 +78,7 @@ another project).
 | Area | Comparable work | How this differs |
 |---|---|---|
 | OSCAL / compliance as code | NIST's OSCAL tooling and open-source and commercial OSCAL-based compliance tools | Starts from the system model and focuses on when a review stops being valid, not only on generating documents |
-| Policy as code | OPA / Conftest in CI and admission control | Uses policy to check a design model against enforced rules, plus a quarantine for AI-written policy |
+| Policy as code | OPA / Conftest in CI and admission control | Uses policy to check a design model against a reviewed policy bundle (not shown to be deployed), plus a quarantine for AI-written policy |
 | Model-based engineering documentation | Document generation from modelling tools | Adds evidence validity, digest-bound review and invalidation, not just rendering |
 | Continuous authorization | Continuous-ATO efforts and compliance-automation products | Same goal of staying current; this is a small, transparent reference design |
 | TTP-assistance prototype | — | Snapshots, citations, validator, digest-bound review, audit and the evaluation harness are reusable; the control logic is not ([ARCHITECTURE.md](ARCHITECTURE.md#reuse-with-a-ttp-assistance-prototype)) |
@@ -85,10 +93,14 @@ another project).
 - **Evidence dates:** fixture evidence expires on 2027-06-30 unless the clock is pinned (the browser build pins it).
 - **Browser build:** it cannot compile Rego, so only policies compiled at build time can be evaluated, and
   `opa check` verdicts are recorded at build time rather than recomputed. First load is about 15 MB. Building a
-  package for a very large pasted model is slow (about 8 s with 2,000 permission roles, over 2 minutes with 8,000).
+  package for a very large pasted model is slow, and the time grows much faster than the model does (in measurements
+  on one machine, roughly 6 to 8 s with 2,000 permission roles, about 30 s with 4,000 and about 2 minutes with
+  8,000).
   One tab at a time; no shared or multi-user state.
-- **Local build:** a live model call would hold the database write lock while it waits, and export files are written
-  before the export row commits, so a failed commit can leave orphan files.
+- **Local build:** a live model call would hold the database write lock while it waits.
+- **Exports (both builds):** export files are written before the export row commits, so a failed commit can leave
+  orphan files.
+- **Expiry:** evidence passing its expiry date does not mark an existing review STALE; only a rebuild shows it.
 - **Authority:** review here is document review. Nothing acts as an assessor or authorizing official.
 - **Evaluation:** the cases and expected values were written by the same author as the code; they are engineering
   checks, not independent measurements.
@@ -138,7 +150,8 @@ STALE and UNKNOWN counts, expiring evidence, drift over time); an AI layer limit
 advisory judge and per-tenant evaluation sets; a public API and webhooks; import and export to GRC platforms.
 
 **Operations:** infrastructure as code, staging and production, metrics and tracing, backup and restore, disaster
-recovery, rate limits, billing, and keeping the reproducible, hash-pinned builds with an SBOM and signed releases.
+recovery, rate limits, billing, and keeping the reproducible, hash-pinned builds while adding an SBOM and signed
+releases.
 
 **A sensible first increment:** Postgres, real sign-in, one real model adapter and one evidence connector, and a full
 OSCAL SSP, piloted on one program before going multi-tenant.
