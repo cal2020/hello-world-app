@@ -1,6 +1,6 @@
 # Evidence-grounded procedure workbench (interview prototype)
 
-**Live demo:** https://claude.ai/artifact/KgfLNw5us6t1U3ga1uixrA. It is a browser-only build: the same server code runs inside the page on an in-memory SQLite (sql.js), and state resets on reload. Add `#draft` or `#reviewed` to the URL to start at a later stage. The link is private until it is shared from the page's Share menu.
+**Live demo:** https://claude.ai/artifact/KgfLNw5us6t1U3ga1uixrA. It is a browser-only build: the same server code runs inside the page on an in-memory SQLite (sql.js), and state resets on reload. Add `#draft`, `#reviewed` or `#changed` to the URL to start at a later stage (add `,guide` for the presenter guide, for example `#reviewed,guide`). The link is private until it is shared from the page's Share menu.
 
 **Demo playbook** (links, how to use it, 10-minute interview walkthrough with spoken transcript, practice Q&A, recorded execution run): https://claude.ai/artifact/GfY35c2FCZxRdEiQhyvLTB (private until shared; source in `docs/demo-guide/index.html`). Public copy of the demo: https://cal2020.github.io/hello-world-app/procedure-workbench/
 
@@ -42,7 +42,7 @@ Browser-only build (the hosted demo): `npm run build:static` writes `artifact/in
 Other commands:
 
 ```bash
-npm test                    # 18 tests: workflow, boundaries, crash/retry, restart, eval gate
+npm test                    # 20 tests: workflow, boundaries, crash/retry, restart, eval gate
 npm run eval                # runs the evaluation suite; writes docs/EVALUATION_REPORT.md
 npm run demo:walkthrough    # prints the full demo path from a fresh in-memory workbench (CLI fallback)
 npm run demo:reset -- --stage=draft     # start with a generated first draft
@@ -87,4 +87,4 @@ The original greeting-card starter app remains available at `/greeting-card.html
 - [`docs/EVALUATION_REPORT.md`](docs/EVALUATION_REPORT.md): generated from actual executed cases
 - [`docs/GAPS.md`](docs/GAPS.md): what is simulated, untested, or needs domain expertise
 - [`docs/INTERVIEW_PACKET.md`](docs/INTERVIEW_PACKET.md): interview preparation packet
-- [`docs/IMPLEMENTATION_BRIEF.md`](docs/IMPLEMENTATION_BRIEF.md): plan from prototype to pilot to SaaS, including a local Ollama provider over Tailscale
+- [`docs/IMPLEMENTATION_BRIEF.md`](docs/IMPLEMENTATION_BRIEF.md): implementation brief v2. First priority is live local models: a model gateway in the app and a policy-enforcing relay on the owner's laptop, reaching Ollama over Tailscale. It then covers evaluation, review discipline, ingestion, identity, SaaS platform and enterprise workstreams, with requirement ids, tests and acceptance criteria
