@@ -87,3 +87,4 @@ The original greeting-card starter app remains available at `/greeting-card.html
 - [`docs/EVALUATION_REPORT.md`](docs/EVALUATION_REPORT.md): generated from actual executed cases
 - [`docs/GAPS.md`](docs/GAPS.md): what is simulated, untested, or needs domain expertise
 - [`docs/INTERVIEW_PACKET.md`](docs/INTERVIEW_PACKET.md): interview preparation packet
+- [`docs/IMPLEMENTATION_BRIEF.md`](docs/IMPLEMENTATION_BRIEF.md): plan from prototype to pilot to SaaS, including a local Ollama provider over Tailscale
