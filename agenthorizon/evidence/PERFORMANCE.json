@@ -1,12 +1,13 @@
 {
- "generated": "2026-10-09T21:48:16Z",
+ "generated": "2026-10-09T23:28:46Z",
  "warning": "SYNTHETIC catalogue rows at release scale; latency measurements only \u2014 not benchmark data",
  "scale": {
   "examples": 1373,
   "steps": 129399,
   "longest": 420
  },
- "catalogue_build_s": 9.2,
+ "catalogue_build_s": 8.2,
+ "database_size_bytes": 88275991,
  "environment": {
   "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
   "cores": 4,
@@ -21,59 +22,59 @@
  "results": {
   "catalogue_first_page": {
    "n": 200,
-   "p50_ms": 10.5,
-   "p95_ms": 14.91,
-   "max_ms": 17.41,
-   "server_p95_ms": 12.2,
-   "mean_ms": 11.14
+   "p50_ms": 9.15,
+   "p95_ms": 11.91,
+   "max_ms": 15.64,
+   "server_p95_ms": 9.9,
+   "mean_ms": 9.47
   },
   "catalogue_text_search": {
    "n": 200,
-   "p50_ms": 13.33,
-   "p95_ms": 17.06,
-   "max_ms": 20.77,
-   "server_p95_ms": 14.6,
-   "mean_ms": 13.66
+   "p50_ms": 11.8,
+   "p95_ms": 14.79,
+   "max_ms": 18.02,
+   "server_p95_ms": 12.5,
+   "mean_ms": 12.03
   },
   "catalogue_filters": {
    "n": 200,
-   "p50_ms": 9.95,
-   "p95_ms": 13.65,
-   "max_ms": 17.82,
-   "server_p95_ms": 11.1,
-   "mean_ms": 10.37
+   "p50_ms": 8.13,
+   "p95_ms": 10.85,
+   "max_ms": 13.33,
+   "server_p95_ms": 8.6,
+   "mean_ms": 8.42
   },
   "catalogue_deep_page": {
    "n": 200,
-   "p50_ms": 10.31,
-   "p95_ms": 13.89,
-   "max_ms": 18.34,
-   "server_p95_ms": 10.8,
-   "mean_ms": 10.54
+   "p50_ms": 9.45,
+   "p95_ms": 11.52,
+   "max_ms": 13.46,
+   "server_p95_ms": 9.4,
+   "mean_ms": 9.59
   },
   "example_detail": {
    "n": 200,
-   "p50_ms": 8.66,
-   "p95_ms": 11.84,
-   "max_ms": 18.27,
-   "server_p95_ms": 9.0,
-   "mean_ms": 9.01
+   "p50_ms": 7.06,
+   "p95_ms": 8.72,
+   "max_ms": 10.39,
+   "server_p95_ms": 6.5,
+   "mean_ms": 7.15
   },
   "step_window_longest": {
    "n": 200,
-   "p50_ms": 17.01,
-   "p95_ms": 21.67,
-   "max_ms": 35.9,
-   "server_p95_ms": 18.7,
-   "mean_ms": 17.06
+   "p50_ms": 12.1,
+   "p95_ms": 16.8,
+   "max_ms": 18.84,
+   "server_p95_ms": 14.2,
+   "mean_ms": 12.29
   },
   "facets": {
    "n": 200,
-   "p50_ms": 13.52,
-   "p95_ms": 17.63,
-   "max_ms": 21.85,
-   "server_p95_ms": 15.1,
-   "mean_ms": 13.89
+   "p50_ms": 11.32,
+   "p95_ms": 14.98,
+   "max_ms": 19.32,
+   "server_p95_ms": 13.0,
+   "mean_ms": 11.7
   }
  },
  "met": {

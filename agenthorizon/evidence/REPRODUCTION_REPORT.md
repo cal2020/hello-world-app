@@ -1,6 +1,6 @@
 # Reproduction report
 
-Generated 2026-10-09T23:04:01Z by `agenthorizon evidence reproduction` from the files in `evidence/`.
+Generated 2026-10-09T23:27:58Z by `agenthorizon evidence reproduction` from the files in `evidence/`.
 
 ## Verdict
 
@@ -108,7 +108,7 @@ Unresolved (`PAPER_SPEC.json → unresolved`):
 
 ## Models and harnesses
 
-Registered judge configurations: 23; capability status: blocked: 23. Most frequent reasons:
+Registered judge configurations: 23; capability status on the build host (`MODEL_CAPABILITIES.json`, 2026-10-09T23:27:46Z): blocked: 23. Most frequent reasons:
 
 - self-hosted endpoint required (operator supplies --base-url and GPU serving) (10)
 - no released artifact states the provider model identifier (5)
@@ -116,8 +116,8 @@ Registered judge configurations: 23; capability status: blocked: 23. Most freque
 - route host unreachable from this environment (egress_denied) (3)
 - serving route not stated by any accessible source (3)
 - credentials missing: CODEX_AUTH_JSON (2)
+- installed '2.1.296 (Claude Code)' is not the verified release 2.1.295 (runs are extension-class) (2)
 - credentials missing: ANTHROPIC_API_KEY (2)
-- credentials missing: OPENROUTER_API_KEY (1)
 
 Executed live: **none**. The five harness adapters ran end to end inside the real sandbox with replayed harness outputs; the direct providers ran against local fake endpoints that capture the exact wire payloads.
 
@@ -166,7 +166,7 @@ Most frequent blockers:
 
 ## Requirement coverage
 
-`TRACEABILITY.csv` lists 83 requirements, each with resolvable implementation and verification references. Counts by classification and status:
+`TRACEABILITY.csv` lists 84 requirements, each with resolvable implementation and verification references. Counts by classification and status:
 
 - APPLICATION LAYER — implemented: 1
 - APPLICATION LAYER — measured on a release-scale synthetic catalogue (real data unreachable): 1
@@ -180,7 +180,7 @@ Most frequent blockers:
 - PAPER CORE — implemented and boundary-tested: 1
 - PAPER CORE — implemented as a documented engineering choice (no released implementation, U7): 1
 - PAPER CORE — task definitions: 1
-- PAPER CORE — verified: 32
+- PAPER CORE — verified: 33
 - PAPER CORE — verified (digests): 1
 - PAPER CORE — verified against local fakes: 1
 - PAPER CORE — verified against the released supplementary tables: 1

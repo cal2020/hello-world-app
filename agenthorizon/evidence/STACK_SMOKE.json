@@ -1,8 +1,8 @@
 {
  "warning": "TEST ONLY: synthetic fixture and a fake model endpoint; not benchmark results",
- "project": "ahsmoke8ae2c9",
+ "project": "ahsmokef59c97",
  "steps": {
-  "stack_up_s": 10.6,
+  "stack_up_s": 11.6,
   "operator": {
    "user": "smoke-operator",
    "role": "operator",
@@ -22,7 +22,7 @@
    }
   },
   "judge_worker_presence": {
-   "worker_id": "judge@7003d7925e42:7",
+   "worker_id": "judge@1f2eab29e78a:6",
    "isolation": {
     "ok": true,
     "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
@@ -47,8 +47,35 @@
    "source_id": "agenthorizon-repo",
    "revision": "8584a347370ab1d92b908732cfabe72b3a23486d"
   },
+  "agentic_plans": {
+   "claude_code": {
+    "config": "claude_code:claude-opus-4.7",
+    "harness_version": "2.1.295 (Claude Code)",
+    "other_blocks": 0
+   },
+   "codex": {
+    "config": "codex:gpt-5.5",
+    "harness_version": "codex-cli 0.162.1",
+    "other_blocks": 2
+   },
+   "gemini_cli": {
+    "config": "gemini_cli:gemini-3.1-pro",
+    "harness_version": "0.63.0",
+    "other_blocks": 1
+   },
+   "opencode": {
+    "config": "opencode:qwen3.6-27b",
+    "harness_version": "1.18.35",
+    "other_blocks": 1
+   },
+   "openhands": {
+    "config": "openhands:qwen3.6-27b",
+    "harness_version": "OpenHands CLI 1.16.0",
+    "other_blocks": 1
+   }
+  },
   "run": {
-   "run_id": "run-58043e3592aa742f5cc5",
+   "run_id": "run-ea1e6ee0fc1e8d43bfce",
    "status": "completed",
    "task_states": {
     "completed": 4
@@ -60,13 +87,13 @@
    "manifest_id": "fixture-synthetic@local-12e2b585e02e+n1:full-release"
   },
   "export": {
-   "sha256": "8743e180daeca348cdaea3113c9a5c820c5c7baeaddd204e9bb089c9d9c9bc66",
+   "sha256": "3991d90460b1bd55ba90b42daecbe1c8eb7ed3013f0e8c19b85423666c7443cf",
    "files": 11,
    "secret_values_found": []
   },
   "capability_probe": {
    "source": "judge worker",
-   "measured_by": "judge@7003d7925e42:7",
+   "measured_by": "judge@1f2eab29e78a:6",
    "harness": {
     "claude_code": {
      "config": "claude_code:claude-opus-4.7",
@@ -115,5 +142,5 @@
   }
  },
  "passed": true,
- "generated_at": "2026-10-09T22:52:34Z"
+ "generated_at": "2026-10-09T23:25:39Z"
 }

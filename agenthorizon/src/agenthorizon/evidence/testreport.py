@@ -152,8 +152,10 @@ def render(suites: dict[str, tuple[str, list[Case]]], smoke: dict | None, perf: 
         if smoke.get("error"):
             lines.append(f"- error: {smoke['error'][:500]}")
     if perf:
+        db = perf.get("database_size_bytes")
+        db_text = f"{db / 1e6:.0f} MB" if db else "size not recorded"  # absent stays absent, never 0
         lines += ["", "## Performance (`evidence/PERFORMANCE.json`)", "",
-                  f"{perf.get('warning', '')}. Scale: {perf.get('scale')}; database {perf.get('database_size_bytes', 0) / 1e6:.0f} MB; "
+                  f"{perf.get('warning', '')}. Scale: {perf.get('scale')}; database {db_text}; "
                   f"environment: {perf.get('environment')}.", "",
                   "| Request | p50 (ms) | p95 (ms) | max (ms) | target p95 < 500 ms |", "| --- | ---: | ---: | ---: | --- |"]
         for name, r in perf.get("results", {}).items():

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-09T20:53:24Z",
+  "generated_at": "2026-10-09T23:27:46Z",
   "live_probes": false,
   "counts": {
     "blocked": 23
@@ -23,6 +23,8 @@
           "ok": true,
           "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/codex",
           "version": "codex-cli 0.162.1",
+          "verified_version": "0.162.1",
+          "matches_verified": true,
           "package": "@openai/codex"
         },
         "isolation": {
@@ -83,6 +85,8 @@
           "ok": true,
           "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/gemini",
           "version": "0.63.0",
+          "verified_version": "0.63.0",
+          "matches_verified": true,
           "package": "@google/gemini-cli"
         },
         "isolation": {
@@ -138,7 +142,9 @@
         "installation": {
           "ok": true,
           "binary": "/opt/node22/bin/claude",
-          "version": "2.1.295 (Claude Code)",
+          "version": "2.1.296 (Claude Code)",
+          "verified_version": "2.1.295",
+          "matches_verified": false,
           "package": "@anthropic-ai/claude-code"
         },
         "isolation": {
@@ -175,6 +181,7 @@
       },
       "status": "blocked",
       "reasons": [
+        "installed '2.1.296 (Claude Code)' is not the verified release 2.1.295 (runs are extension-class)",
         "credentials missing: ANTHROPIC_API_KEY"
       ]
     },
@@ -195,6 +202,8 @@
           "ok": true,
           "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/opencode",
           "version": "1.18.35",
+          "verified_version": "1.18.35",
+          "matches_verified": true,
           "package": "opencode-ai"
         },
         "isolation": {
@@ -243,6 +252,8 @@
           "ok": true,
           "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/codex",
           "version": "codex-cli 0.162.1",
+          "verified_version": "0.162.1",
+          "matches_verified": true,
           "package": "@openai/codex"
         },
         "isolation": {
@@ -303,6 +314,8 @@
           "ok": true,
           "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/opencode",
           "version": "1.18.35",
+          "verified_version": "1.18.35",
+          "matches_verified": true,
           "package": "opencode-ai"
         },
         "isolation": {
@@ -351,6 +364,8 @@
           "ok": true,
           "binary": "/home/user/hello-world-app/agenthorizon/var/tools/uv/bin/openhands",
           "version": "OpenHands CLI 1.16.0",
+          "verified_version": "1.16.0",
+          "matches_verified": true,
           "package": "openhands (PyPI, CLI)"
         },
         "isolation": {
@@ -398,7 +413,9 @@
         "installation": {
           "ok": true,
           "binary": "/opt/node22/bin/claude",
-          "version": "2.1.295 (Claude Code)",
+          "version": "2.1.296 (Claude Code)",
+          "verified_version": "2.1.295",
+          "matches_verified": false,
           "package": "@anthropic-ai/claude-code"
         },
         "isolation": {
@@ -435,6 +452,7 @@
       },
       "status": "blocked",
       "reasons": [
+        "installed '2.1.296 (Claude Code)' is not the verified release 2.1.295 (runs are extension-class)",
         "credentials missing: ANTHROPIC_API_KEY"
       ]
     },
@@ -455,6 +473,8 @@
           "ok": true,
           "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/opencode",
           "version": "1.18.35",
+          "verified_version": "1.18.35",
+          "matches_verified": true,
           "package": "opencode-ai"
         },
         "isolation": {
@@ -498,6 +518,8 @@
           "ok": true,
           "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/gemini",
           "version": "0.63.0",
+          "verified_version": "0.63.0",
+          "matches_verified": true,
           "package": "@google/gemini-cli"
         },
         "isolation": {
@@ -554,6 +576,8 @@
           "ok": true,
           "binary": "/home/user/hello-world-app/agenthorizon/var/tools/uv/bin/openhands",
           "version": "OpenHands CLI 1.16.0",
+          "verified_version": "1.16.0",
+          "matches_verified": true,
           "package": "openhands (PyPI, CLI)"
         },
         "isolation": {
@@ -610,6 +634,8 @@
           "ok": true,
           "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/opencode",
           "version": "1.18.35",
+          "verified_version": "1.18.35",
+          "matches_verified": true,
           "package": "opencode-ai"
         },
         "isolation": {
@@ -658,6 +684,8 @@
           "ok": true,
           "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/codex",
           "version": "codex-cli 0.162.1",
+          "verified_version": "0.162.1",
+          "matches_verified": true,
           "package": "@openai/codex"
         },
         "isolation": {
@@ -715,6 +743,8 @@
           "ok": true,
           "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/opencode",
           "version": "1.18.35",
+          "verified_version": "1.18.35",
+          "matches_verified": true,
           "package": "opencode-ai"
         },
         "isolation": {
@@ -763,6 +793,8 @@
           "ok": true,
           "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/opencode",
           "version": "1.18.35",
+          "verified_version": "1.18.35",
+          "matches_verified": true,
           "package": "opencode-ai"
         },
         "isolation": {
@@ -811,6 +843,8 @@
           "ok": true,
           "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/opencode",
           "version": "1.18.35",
+          "verified_version": "1.18.35",
+          "matches_verified": true,
           "package": "opencode-ai"
         },
         "isolation": {
@@ -859,6 +893,8 @@
           "ok": true,
           "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/opencode",
           "version": "1.18.35",
+          "verified_version": "1.18.35",
+          "matches_verified": true,
           "package": "opencode-ai"
         },
         "isolation": {
@@ -902,6 +938,8 @@
           "ok": true,
           "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/opencode",
           "version": "1.18.35",
+          "verified_version": "1.18.35",
+          "matches_verified": true,
           "package": "opencode-ai"
         },
         "isolation": {
