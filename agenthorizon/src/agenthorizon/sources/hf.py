@@ -251,7 +251,7 @@ class HFDatasetClient:
                         else:
                             mode = "ab" if (have and r.status_code == 206) else "wb"
                             with open(partial, mode) as f:
-                                for chunk in r.iter_bytes(1 << 20):
+                                for chunk in r.iter_bytes():  # unbuffered: partial bytes reach disk before a drop
                                     f.write(chunk)
                     method = verify_file(partial, entry)
                     os.replace(partial, dest)
