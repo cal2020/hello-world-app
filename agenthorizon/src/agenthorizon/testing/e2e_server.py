@@ -16,6 +16,7 @@ import os
 import signal
 import tempfile
 import threading
+import time
 from pathlib import Path
 
 
@@ -74,6 +75,22 @@ def main() -> int:
     for ctx, q in ((judge, "judge"), (trusted, "trusted")):
         threading.Thread(target=run_worker, args=(ctx, q, stop), kwargs={"poll_s": 0.3, "lease_s": 30, "log": lambda *_: None},
                          daemon=True).start()
+
+    # ready means the workers have registered: until a judge worker reports its presence, every plan is (correctly)
+    # blocked with "no judge worker is running", and a judge worker's presence probes every harness first
+    from sqlalchemy import select
+
+    from agenthorizon.app.schema import workers
+
+    deadline = time.monotonic() + 300
+    while True:
+        with owner.connect() as c:
+            seen = set(c.execute(select(workers.c.worker_id)).scalars())
+        if {"judge@e2e", "trusted@e2e"} <= seen:
+            break
+        if time.monotonic() > deadline:
+            raise SystemExit(f"workers did not register within 300 s (seen: {sorted(seen)})")
+        time.sleep(0.5)
 
     app = create_app(s)
     info = {"url": f"http://127.0.0.1:{a.port}", "tokens": tokens, "dataset_version": dv.id,
