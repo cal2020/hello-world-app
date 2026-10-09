@@ -110,8 +110,8 @@ def reproduction_report(settings: Settings) -> str:
         "Unresolved (`PAPER_SPEC.json → unresolved`):", "",
         *[f"- **{u['item']}**: {u['detail']}" for u in spec.get("unresolved", [])], "",
         "## Models and harnesses", "",
-        f"Registered judge configurations: {len(caps.get('configurations', []))}; capability status: {_counts(cap_counts)}. "
-        "Most frequent reasons:", "",
+        f"Registered judge configurations: {len(caps.get('configurations', []))}; capability status on the build host "
+        f"(`MODEL_CAPABILITIES.json`, {caps.get('generated_at', '—')}): {_counts(cap_counts)}. Most frequent reasons:", "",
         *[f"- {r} ({n})" for r, n in cap_reasons.most_common(8)], "",
         "Executed live: **none**. The five harness adapters ran end to end inside the real sandbox with replayed "
         "harness outputs; the direct providers ran against local fake endpoints that capture the exact wire payloads.",

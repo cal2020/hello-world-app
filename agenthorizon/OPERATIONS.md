@@ -72,7 +72,14 @@ committed in `evidence/`.
 
 Capability report: Operations → Data → "Refresh capability report" queues a probe on a judge worker. It reports the
 harness installs, the per-task sandbox and credential *names* of the process that will execute runs. The API's own
-environment holds none of these.
+environment holds none of these, so a run plan takes its harness identity (version, path, digest) from the judge
+workers' reports.
+
+Harness versions: each adapter names the release its invocation flags were verified against (Claude Code 2.1.295,
+Codex 0.162.1, Gemini CLI 0.63.0, OpenCode 1.18.35, OpenHands 1.16.0; `evidence/harness_cli/`), and the judge image
+installs exactly those. A harness reporting any other version (for example one found on `PATH` on a development host)
+still runs, but the capability report flags it, every attempt's lineage records it, and the run is extension-class,
+never paper-compatible.
 
 ## 4. Judge isolation inside containers
 
