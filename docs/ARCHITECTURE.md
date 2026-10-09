@@ -39,6 +39,9 @@ the evidence behind it, and measures the cost difference between two runs.
 | `backend/src/cost_inspector/report.py` | Portable JSON report (versioned) and a self-contained HTML rendering of the same data. Rules and calls are listed once and referenced by category and `call_id`, so large imports do not repeat them per finding. |
 | `backend/src/cost_inspector/store.py` | SQLite access, `PRAGMA user_version` migrations, transactional import/delete. |
 | `frontend/src` | React 19 + TypeScript + Tailwind 4. Server state goes through TanStack Query. Selection lives in the URL, so a reload restores the view. |
+| `frontend/src/api/transport.ts`, `frontend/src/runtime/` | The in-browser build's transport: requests go to a Web Worker that runs the backend in Pyodide, the database is saved to IndexedDB after each change, and a Web Lock keeps one tab in charge of the data. |
+| `backend/src/cost_inspector/browser_runtime.py` | Serves the worker's requests by calling the unchanged FastAPI app over ASGI, with FastAPI's thread pool replaced by direct calls (Pyodide has no threads). |
+| `browser/` | Builds the in-browser version: a pinned, checksum-verified Pyodide release, the app bundle, bytecode compiled at build time, notices and a manifest. See `browser/README.md`. |
 
 ## Data model
 

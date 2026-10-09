@@ -1,10 +1,12 @@
+import { IN_BROWSER, transport } from './transport'
 import type { ApiErrorPayload, ImportDetail } from './types'
 
 /** Sent on every request; the API refuses changes without it (blocks cross-site forms). */
 export const CLIENT_HEADERS = { 'X-Requested-With': 'cost-inspector' } as const
 
-export const NETWORK_MESSAGE =
-  "Can't reach the local analysis service. Start it with `make dev` (or `make start`), then try again."
+export const NETWORK_MESSAGE = IN_BROWSER
+  ? 'The in-browser analysis engine stopped responding. Reload the page to start it again.'
+  : "Can't reach the local analysis service. Start it with `make dev` (or `make start`), then try again."
 
 export class ApiError extends Error {
   readonly status: number
@@ -39,7 +41,7 @@ async function toApiError(response: Response): Promise<ApiError> {
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   let response: Response
   try {
-    response = await fetch(path, {
+    response = await transport(path, {
       ...init,
       headers: { Accept: 'application/json', ...CLIENT_HEADERS, ...init.headers },
     })
@@ -67,6 +69,16 @@ export function uploadImport(
   onProgress: (phase: UploadPhase, fraction: number) => void,
   signal: AbortSignal,
 ): Promise<ImportDetail> {
+  if (IN_BROWSER) {
+    // Nothing is uploaded: the file goes straight to the engine in this page.
+    onProgress('processing', 1)
+    return api<ImportDetail>(`/api/imports?filename=${encodeURIComponent(file.name)}`, {
+      method: 'POST',
+      body: file,
+      headers: { 'Content-Type': 'application/octet-stream' },
+      signal,
+    })
+  }
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
     xhr.open('POST', `/api/imports?filename=${encodeURIComponent(file.name)}`)
@@ -128,7 +140,7 @@ function filenameFrom(disposition: string | null, fallback: string): string {
 export async function downloadFile(url: string, fallbackName: string): Promise<{ filename: string; size: number }> {
   let response: Response
   try {
-    response = await fetch(url, { headers: CLIENT_HEADERS })
+    response = await transport(url, { headers: CLIENT_HEADERS })
   } catch {
     throw new ApiError(0, 'network', NETWORK_MESSAGE)
   }

@@ -1,6 +1,7 @@
 import { FileJson, FlaskConical, Inbox, Lock, Sparkles, Upload } from 'lucide-react'
 import type { KeyboardEvent } from 'react'
 
+import { IN_BROWSER } from '../../api/transport'
 import type { ImportSummary } from '../../api/types'
 import { cn } from '../../lib/cn'
 import { formatRelative, plural } from '../../lib/format'
@@ -34,6 +35,7 @@ export function Sidebar({
   demoLoading,
   demoLoaded,
   footer,
+  onClearData,
 }: {
   imports: ImportSummary[] | undefined
   loading: boolean
@@ -48,6 +50,8 @@ export function Sidebar({
   demoLoading: boolean
   demoLoaded: boolean
   footer?: string
+  /** Browser build: offer to delete the data saved in this browser. */
+  onClearData?: () => void
 }) {
   const ordered = [...(imports ?? [])].reverse()
   return (
@@ -178,9 +182,19 @@ export function Sidebar({
 
       <div className="border-t border-line px-4 py-3 text-xs leading-5 text-ink-3">
         <p className="flex items-center gap-1.5">
-          <Lock className="size-3.5" /> Local only · telemetry stays on this machine
+          <Lock className="size-3.5" />{' '}
+          {IN_BROWSER ? 'Runs in your browser · files stay on this device' : 'Local only · telemetry stays on this machine'}
         </p>
         {footer && <p className="mt-0.5 truncate">{footer}</p>}
+        {onClearData && (
+          <button
+            type="button"
+            onClick={onClearData}
+            className="-mx-1 mt-1 rounded px-1 text-xs text-ink-3 underline decoration-line-strong underline-offset-2 hover:text-ink-2"
+          >
+            Clear data saved in this browser
+          </button>
+        )}
       </div>
     </div>
   )

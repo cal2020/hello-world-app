@@ -4,6 +4,7 @@ import { Toaster, toast } from 'sonner'
 
 import { ActionsContext, type AppActions } from './app-actions'
 import { downloadFile, errorMessage } from './api/client'
+import { clearBrowserData, DATA_HOME, IN_BROWSER } from './api/transport'
 import {
   useComparisons,
   useDeleteImport,
@@ -36,7 +37,11 @@ import { useMediaQuery } from './lib/media'
 import { useTheme } from './lib/theme'
 import { useUrlState } from './lib/url-state'
 
-type PendingDelete = { kind: 'import'; summary: ImportSummary } | { kind: 'run'; run: RunSummary } | null
+type PendingDelete =
+  | { kind: 'import'; summary: ImportSummary }
+  | { kind: 'run'; run: RunSummary }
+  | { kind: 'everything' }
+  | null
 
 function InspectorFrame({ title, onClose, children }: { title: string; onClose?: () => void; children: ReactNode }) {
   return (
@@ -86,6 +91,7 @@ export function App() {
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<PendingDelete>(null)
+  const [wiping, setWiping] = useState(false)
   const wide = useMediaQuery('(min-width: 1280px)')
   const desktop = useMediaQuery('(min-width: 1024px)')
 
@@ -185,6 +191,7 @@ export function App() {
 
   const deleteImpact = useMemo(() => {
     if (!pendingDelete) return null
+    if (pendingDelete.kind === 'everything') return { runIds: new Set<string>(), comparisons: comparisons.data?.length ?? 0 }
     const runIds = new Set(
       pendingDelete.kind === 'import' ? pendingDelete.summary.runs.map((r) => r.id) : [pendingDelete.run.id],
     )
@@ -197,7 +204,16 @@ export function App() {
   const confirmDelete = () => {
     if (!pendingDelete) return
     const leave = () => navigate({ run: null, import: null, finding: null, call: null }, { replace: true })
-    if (pendingDelete.kind === 'import') {
+    if (pendingDelete.kind === 'everything') {
+      setWiping(true)
+      clearBrowserData().then(
+        () => window.location.replace(window.location.pathname),
+        (error: unknown) => {
+          setWiping(false)
+          toast.error(errorMessage(error))
+        },
+      )
+    } else if (pendingDelete.kind === 'import') {
       const { summary } = pendingDelete
       deleteImport.mutate(summary.id, {
         onSuccess: () => {
@@ -233,7 +249,7 @@ export function App() {
       <div className="mx-auto max-w-xl px-6 py-16">
         <Callout
           tone="error"
-          title="The local analysis service isn’t responding"
+          title={IN_BROWSER ? 'The in-browser analysis engine isn’t responding' : 'The local analysis service isn’t responding'}
           action={
             <Button size="sm" onClick={() => void imports.refetch()}>
               <ServerCrash /> Retry
@@ -329,6 +345,7 @@ export function App() {
       demoLoading={loadDemo.isPending}
       demoLoaded={Boolean(meta.data?.demo.loaded || imports.data?.some((i) => i.source === 'demo'))}
       footer={meta.data ? `${meta.data.analyzer.name} ${meta.data.analyzer.version} · AUDR ${meta.data.audr_spec_version}` : undefined}
+      onClearData={IN_BROWSER ? () => setPendingDelete({ kind: 'everything' }) : undefined}
     />
   )
 
@@ -414,28 +431,40 @@ export function App() {
         <ConfirmDialog
           open={pendingDelete != null}
           onOpenChange={(open) => !open && setPendingDelete(null)}
-          busy={deleteImport.isPending || deleteRun.isPending}
-          confirmLabel={pendingDelete?.kind === 'run' ? 'Delete run' : 'Delete import'}
+          busy={deleteImport.isPending || deleteRun.isPending || wiping}
+          confirmLabel={
+            pendingDelete?.kind === 'run' ? 'Delete run' : pendingDelete?.kind === 'everything' ? 'Delete everything' : 'Delete import'
+          }
           onConfirm={confirmDelete}
           title={
             pendingDelete?.kind === 'import'
               ? `Delete “${pendingDelete.summary.filename}”?`
               : pendingDelete?.kind === 'run'
                 ? `Delete the run “${pendingDelete.run.display_name}”?`
-                : ''
+                : pendingDelete?.kind === 'everything'
+                  ? 'Delete all data saved in this browser?'
+                  : ''
           }
           description={
             pendingDelete?.kind === 'import'
-              ? `This permanently removes ${plural(pendingDelete.summary.runs.length, 'run')}, ${plural(pendingDelete.summary.accepted_count, 'stored call')} and every finding and dismissal note from this machine. Your original file is not touched.`
+              ? `This permanently removes ${plural(pendingDelete.summary.runs.length, 'run')}, ${plural(pendingDelete.summary.accepted_count, 'stored call')} and every finding and dismissal note from ${DATA_HOME}. Your original file is not touched.`
               : pendingDelete?.kind === 'run'
                 ? `This removes the run’s ${plural(pendingDelete.run.calls, 'call')}. The import’s other runs are re-analyzed, because some findings span runs; dismissals of unchanged findings are kept. If this is the import’s only run, the import is deleted too.`
-                : ''
+                : pendingDelete?.kind === 'everything'
+                  ? 'This permanently removes every import, run, finding, dismissal note and saved comparison stored in this browser, including the demo. Files on your device are not touched.'
+                  : ''
           }
         >
           {deleteImpact && deleteImpact.comparisons > 0 && (
             <Callout tone="warn">
-              {plural(deleteImpact.comparisons, 'saved comparison')} using {pendingDelete?.kind === 'run' ? 'this run' : 'these runs'}{' '}
-              will be deleted as well.
+              {pendingDelete?.kind === 'everything' ? (
+                <>{plural(deleteImpact.comparisons, 'saved comparison')} will be deleted as well.</>
+              ) : (
+                <>
+                  {plural(deleteImpact.comparisons, 'saved comparison')} using {pendingDelete?.kind === 'run' ? 'this run' : 'these runs'}{' '}
+                  will be deleted as well.
+                </>
+              )}
             </Callout>
           )}
         </ConfirmDialog>

@@ -21,6 +21,11 @@ agent-cost telemetry. Import a trace and you get:
 Everything runs on your machine. The app calls no model, needs no account or API
 key, and makes no outbound network requests.
 
+**Try it in your browser:** <https://cal2020.github.io/hello-world-app/ai-cost-inspector/>.
+Nothing to install: the same Python backend runs inside the page (via Pyodide), and files
+you import never leave your device. The first visit downloads about 19 MB and startup
+takes a few seconds. See [browser/README.md](browser/README.md).
+
 ![A run with a repeated-call finding open in the evidence inspector](docs/screenshots/run-finding-dark.png)
 
 | Comparing two runs | Import errors, by line | Phone layout |
@@ -163,6 +168,9 @@ the app, or use the commands below.
 | `make lint` | ruff, mypy, `tsc -b`, ESLint | Static checks |
 | `make e2e` | `npm run e2e` (in `frontend/`) | Build, then run Playwright end to end on a throwaway database |
 | `make check` | | `lint`, `test` and `e2e` |
+| `make browser` | `uv run --frozen python ../browser/build.py` (in `backend/`) | Build the in-browser version into `browser/dist/ai-cost-inspector` |
+| `make browser-serve` | `python3 -m http.server 8790 --directory browser/dist` | Serve it on <http://127.0.0.1:8790/ai-cost-inspector/> |
+| `make browser-e2e` | `npx playwright test -c playwright.browser.config.ts` (in `frontend/`) | End-to-end suite against the in-browser build |
 
 ## Configuration
 
@@ -240,6 +248,9 @@ authentication.
   unmodified at a pinned commit), Jinja2 for HTML reports.
 - **Frontend** (`frontend/`): React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Radix
   primitives, TanStack Query, cmdk, Geist fonts, lucide icons.
+- **In-browser build** (`browser/`): the same frontend and backend as static files. The
+  backend runs in a Web Worker on Pyodide 314.0.7 (Python 3.14 compiled to WebAssembly),
+  and the database is saved in the browser's IndexedDB.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the components, data model,
 integrations and the hardest design questions, and
@@ -248,6 +259,9 @@ performance.
 
 ## Limitations
 
+- **The in-browser version is slower.** Startup takes about 6–7 seconds and analysis
+  runs about 2–2.5 times slower than native Python. Its data lives in one browser
+  profile, and one tab at a time can use it. See [browser/README.md](browser/README.md).
 - **Heuristics only.** Findings are KORA Doctor v0.1.0's five heuristics. They can
   miss real waste and flag necessary calls; every finding lists the rule's limits.
 - **Evidence depends on the pinned analyzer.** KORA Doctor reports only which records

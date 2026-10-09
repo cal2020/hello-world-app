@@ -39,7 +39,7 @@ export function TopBar({
         <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open imports and runs" onClick={onOpenSidebar}>
           <Menu />
         </Button>
-        <a href="/" className="flex items-center gap-2.5 rounded-lg pr-1" aria-label="AI Cost Inspector home">
+        <a href={import.meta.env.BASE_URL} className="flex items-center gap-2.5 rounded-lg pr-1" aria-label="AI Cost Inspector home">
           <LogoMark />
           <span className="hidden text-[15px] font-semibold tracking-[-0.015em] sm:inline">AI Cost Inspector</span>
         </a>

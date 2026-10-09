@@ -1,5 +1,6 @@
 import { Coins, GitCompareArrows, Microscope, ShieldCheck, Sparkles, Upload } from 'lucide-react'
 
+import { IN_BROWSER } from '../../api/transport'
 import type { Meta } from '../../api/types'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
@@ -43,7 +44,7 @@ export function Welcome({
       />
       <div className="mx-auto max-w-4xl px-5 pt-14 pb-16 sm:px-8 sm:pt-20">
         <Badge tone="accent" className="h-7 px-3 text-xs">
-          <ShieldCheck /> Runs locally · AUDR {meta?.audr_spec_version ?? '1.0.0'} · {meta?.analyzer.name ?? 'KORA Doctor'}{' '}
+          <ShieldCheck /> {IN_BROWSER ? 'Runs in your browser' : 'Runs locally'} · AUDR {meta?.audr_spec_version ?? '1.0.0'} · {meta?.analyzer.name ?? 'KORA Doctor'}{' '}
           {meta?.analyzer.version ?? '0.1.0'}
         </Badge>
         <h1 className="mt-6 text-[2.5rem] leading-[1.04] font-semibold tracking-[-0.04em] text-balance sm:text-[3.4rem]">

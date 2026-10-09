@@ -17,10 +17,15 @@ const queryClient = new QueryClient({
 const root = document.getElementById('root')
 if (!root) throw new Error('Missing #root element')
 
-createRoot(root).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </StrictMode>,
+let tree = (
+  <QueryClientProvider client={queryClient}>
+    <App />
+  </QueryClientProvider>
 )
+if (__BROWSER_BUILD__) {
+  // Browser build: the backend runs in a worker; show its startup before the app.
+  const { RuntimeGate } = await import('./runtime/RuntimeGate')
+  tree = <RuntimeGate>{tree}</RuntimeGate>
+}
+
+createRoot(root).render(<StrictMode>{tree}</StrictMode>)

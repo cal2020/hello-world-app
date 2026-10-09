@@ -4,7 +4,7 @@ BACKEND := backend
 FRONTEND := frontend
 UV := uv run --frozen
 
-.PHONY: help setup build start dev dev-api dev-web test lint e2e check seed-demo reset-demo reset clean
+.PHONY: help setup build start dev dev-api dev-web test lint e2e check browser browser-serve browser-e2e seed-demo reset-demo reset clean
 
 help: ## List the targets
 	@grep -E '^[a-z0-9-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  %-12s %s\n", $$1, $$2}'
@@ -33,13 +33,22 @@ test: ## Backend (pytest) and frontend (Vitest) tests
 	cd $(FRONTEND) && npm test
 
 lint: ## Ruff, mypy, TypeScript and ESLint
-	cd $(BACKEND) && $(UV) ruff check . && $(UV) ruff format --check . && $(UV) mypy
+	cd $(BACKEND) && $(UV) ruff check . ../browser && $(UV) ruff format --check . ../browser && $(UV) mypy
 	cd $(FRONTEND) && npm run typecheck && npm run lint
 
 e2e: ## Build, then run the Playwright end-to-end suite on a throwaway database
 	cd $(FRONTEND) && npm run e2e
 
 check: lint test e2e ## Everything CI would run
+
+browser: ## Build the in-browser version (static site) into browser/dist/ai-cost-inspector
+	cd $(BACKEND) && $(UV) python ../browser/build.py
+
+browser-serve: ## Serve the in-browser build on http://127.0.0.1:8790/ai-cost-inspector/
+	python3 -m http.server 8790 --bind 127.0.0.1 --directory browser/dist
+
+browser-e2e: ## Run the end-to-end suite against the in-browser build
+	cd $(FRONTEND) && npx playwright test -c playwright.browser.config.ts
 
 seed-demo: ## Add the synthetic demo imports (idempotent)
 	cd $(BACKEND) && $(UV) cost-inspector seed-demo
@@ -57,4 +66,4 @@ else
 endif
 
 clean: ## Remove build output and test artifacts (keeps your data)
-	rm -rf $(FRONTEND)/dist $(FRONTEND)/test-results $(FRONTEND)/playwright-report $(FRONTEND)/e2e/.tmp
+	rm -rf $(FRONTEND)/dist $(FRONTEND)/test-results $(FRONTEND)/playwright-report $(FRONTEND)/e2e/.tmp browser/dist

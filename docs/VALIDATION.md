@@ -1,7 +1,8 @@
 # Validation
 
 What was checked, how, and what the results were. Every number here was measured
-on the machine below on 2026-10-07; none is an estimate.
+on the machine below (on 2026-10-07, and on 2026-10-09 for the in-browser build); none is
+an estimate.
 
 **Machine:** Intel Xeon @ 2.80 GHz, 4 logical CPUs, 15.7 GiB RAM, Linux 6.18
 (x86_64). Python 3.13.16 (uv 0.11.32), Node.js 22.22.0 (npm 10.9.4), headless
@@ -11,13 +12,14 @@ Chromium from Playwright 1.56.1.
 
 | Check | Command | Result |
 | --- | --- | --- |
-| Backend tests | `make test` (pytest) | 156 passed |
+| Backend tests | `make test` (pytest) | 158 passed |
 | Frontend tests | `make test` (Vitest) | 21 passed, 5 files |
 | End to end | `make e2e` (Playwright, Chromium) | 12 passed |
 | Lint and types | `make lint`: ruff, ruff format, mypy (strict), `tsc -b`, ESLint (type-checked) | clean |
 | AUDR conformance | `tests/test_validate.py` | the validator agrees with all 38 official conformance cases |
 | Analyzer parity | `tests/test_kora_parity.py` | identical findings to the `kora-doctor audit --json` CLI on 7 files |
 | Accessibility | axe-core 4.14 (WCAG 2.0–2.2 A/AA and best practices), see below | 0 violations |
+| In-browser build | `make browser-e2e` (Playwright, Chromium, static files served from a subfolder) | 7 passed; see [In-browser build](#in-browser-build) |
 
 The end-to-end suite starts the real server on a throwaway database
 (`frontend/e2e/.tmp`) and drives the built app the way a person would.
@@ -147,6 +149,39 @@ click until the evidence section is shown, for the finding with the most calls.
   per finding (59.5 MB to 43 MB for this file), and the report is built from one
   load of the import (3.4 s to 1.6 s of build time).
 
+## In-browser build
+
+The in-browser build (`browser/`) runs the same FastAPI backend in Pyodide 314.0.7 inside a
+Web Worker. Checks:
+
+- `tests/test_browser_runtime.py` drives the request shim exactly as the worker does: the
+  real API answers, the client-header check still refuses writes without it, uploads keep
+  their percent-encoded file names, invalid files get line-numbered errors, reports keep
+  their download headers, and data survives a restart on the same database file.
+- Under Pyodide itself (Node, the same runtime files), every endpoint returned the same
+  status codes as the server, and the demo totals matched the documented values exactly.
+- `make browser-e2e` (7 tests) loads the static build from a subfolder in Chromium with no
+  server, and checks: startup progress and that no API request reaches the network; the
+  demo, evidence and a dismissal note surviving a reload (IndexedDB); comparison, saving
+  and both report exports; line-numbered import errors and a valid import; clearing saved
+  data; the second-tab warning; and a phone-sized screen. axe-core reports no violations
+  on the welcome screen, a run with a finding open, and the second-tab screen.
+
+Performance, measured with headless Chromium against the build served locally (medians of
+3 runs each):
+
+| Measure | In-browser build | Desktop version |
+| --- | ---: | ---: |
+| Startup to the app, empty cache | 6.6 s | — |
+| Startup to the app, reload | 6.0 s | — |
+| Import 2,000 records through the UI | 4.3 s | 1.6 s (native Python, same file) |
+| First-visit download | 19.2 MB (before HTTP compression) | — |
+
+Startup is mostly CPU work, not download: Pyodide itself takes about 3 s to start, and
+importing FastAPI about 1 s more even from bytecode. Shipping bytecode compiled at build
+time (`browser/precompile.mjs`) cut Python's import time from 3.4 s to 1.7 s; it is
+limited to the 255 modules a first visit actually imports (2.1 MB).
+
 ## Not verified
 
 - openaudr.dev was unreachable from the build environment (the proxy refused it),
@@ -155,3 +190,6 @@ click until the evidence section is shown, for the finding with the most calls.
   `95213e30568d4ffcdb4b6861358676778d9d8fd1`.
 - Firefox, Safari and Windows were not tested.
 - Performance was measured on one machine.
+- The published GitHub Pages copy could not be loaded from the build environment (its
+  network policy blocks `github.io`). The deployed files are the tested build, verified
+  through the GitHub API.

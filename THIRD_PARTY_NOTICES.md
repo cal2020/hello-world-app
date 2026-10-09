@@ -72,3 +72,24 @@ The complete license texts are in each package under `frontend/node_modules/` af
 pytest, ruff, mypy, httpx2, TypeScript, Vite, Vitest, ESLint, typescript-eslint,
 Testing Library, jsdom and Playwright are used to build and test the project.
 axe-core (MPL-2.0) runs only inside the end-to-end accessibility test.
+
+## In-browser build (published on GitHub Pages)
+
+The in-browser build (`browser/`) also redistributes the following. `browser/build.py`
+copies their license texts into the published folder (`licenses/` and `NOTICES.md`);
+the texts are kept in `browser/licenses/`.
+
+| Component | Version | License |
+| --- | --- | --- |
+| Pyodide (source: <https://github.com/pyodide/pyodide>) | 314.0.7 | MPL-2.0 |
+| CPython inside Pyodide, with its incorporated software | 3.14.2 | PSF-2.0 and the notices in `CPython-3.14.2-incorporated-software.rst` |
+| Emscripten runtime, musl, LLVM libc++/libc++abi/compiler-rt, HACL\*, SQLite, bzip2, Zstandard (inside Pyodide) | emsdk 5.0.3 | MIT / NCSA; MIT; Apache-2.0 with LLVM exception; MIT; public domain; bzip2; BSD-3-Clause |
+| fastapi, pydantic, pydantic-core, anyio, annotated-types, annotated-doc, typing-inspection | 0.136.1, 2.12.5, 2.41.5, 4.13.0, 0.7.0, 0.0.4, 0.4.2 | MIT |
+| starlette, httpx, jinja2, markupsafe | 1.0.0, 0.28.1, 3.1.6, 3.0.3 | BSD-3-Clause |
+| jsonschema, jsonschema-specifications, referencing, rpds-py, attrs, pyrsistent, six | 4.26.0, 2025.9.1, 0.37.0, 0.30.0, 26.1.0, 0.20.0, 1.17.0 | MIT |
+| sniffio | 1.3.1 | MIT or Apache-2.0 |
+| typing-extensions | 4.15.0 | PSF-2.0 |
+
+These are the Pyodide project's builds of the packages, taken from the release tarball and
+checked against its lock file.
+
