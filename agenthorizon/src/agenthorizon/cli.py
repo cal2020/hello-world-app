@@ -346,13 +346,7 @@ def run_cmd(
     price_source: str | None = typer.Option(None, "--price-source", help="Where the operator price comes from"),
 ) -> None:
     """Plan (always) and execute (unless --dry-run) a judge run with a canonical identity."""
-    from agenthorizon.data.media import LocalMediaStore
-    from agenthorizon.runs.judges import build_judge, estimate_items, load_secrets, required_secret_names
-    from agenthorizon.runs.orchestrator import Orchestrator, RunControls
-    from agenthorizon.runs.plan import RunConfig, preflight, resolve, write_plan
-    from agenthorizon.runs.policy import POLICIES
-    from agenthorizon.runs.pricing import price_for, route_cost_basis
-    from agenthorizon.runs.store import FileRunStore
+    from agenthorizon.runs.plan import RunConfig
 
     s = get_settings()
     if config:
@@ -367,6 +361,21 @@ def run_cmd(
     if trial != 1:
         cfg.trial = trial
     override = _price_override(price_input, price_output, price_source)
+    _plan_and_execute(s, cfg, dry_run=dry_run, budget_usd=budget_usd, concurrency=concurrency, max_tasks=max_tasks,
+                      override=override)
+
+
+def _plan_and_execute(s, cfg, *, dry_run: bool, budget_usd: float | None, concurrency: int, max_tasks: int | None,
+                      override: dict | None) -> dict | None:
+    """Always plan; execute only when the plan is ready (credentials, binaries, media, explicit budget)."""
+    from agenthorizon.data.media import LocalMediaStore
+    from agenthorizon.runs.judges import build_judge, estimate_items, load_secrets, required_secret_names
+    from agenthorizon.runs.orchestrator import Orchestrator, RunControls
+    from agenthorizon.runs.plan import preflight, resolve, write_plan
+    from agenthorizon.runs.policy import POLICIES
+    from agenthorizon.runs.pricing import price_for, route_cost_basis
+    from agenthorizon.runs.store import FileRunStore
+
     definition, info = resolve(s, cfg)
     plan = preflight(s, definition, info["dataset_version"], info["problems"], budget_usd=budget_usd, price_override=override)
     path = write_plan(s, plan)
@@ -376,7 +385,7 @@ def run_cmd(
     typer.echo(f"forecast: {f['basis']}; total ${f['total_cost_usd']} over {f['n_items']} items "
                f"({f['items_with_cost']} priced)  plan: {path}")
     if dry_run:
-        return
+        return None
     if not plan["ready_for_live_run"]:
         typer.echo("NOT EXECUTED: resolve the blocks above (no live results were produced).", err=True)
         raise typer.Exit(3)
@@ -393,7 +402,9 @@ def run_cmd(
                         controls=RunControls(concurrency=concurrency, budget_usd=budget_usd, metered=metered,
                                              max_new_tasks=max_tasks),
                         item_cost={i["example_id"]: i["cost_usd"] for i in est["items"]}, price=price)
-    typer.echo(json.dumps(orch.run(), indent=2))
+    summary = orch.run()
+    typer.echo(json.dumps(summary, indent=2))
+    return summary
 
 
 @runs_app.command("list")
@@ -476,6 +487,120 @@ def export_cmd(
     digest = write_tar_gz(files, output)
     typer.echo(json.dumps({"output": str(output), "sha256": digest, "files": len(man["files"]),
                            "redactions_applied": man["redactions_applied"]}, indent=2))
+
+
+# ---- experiments ------------------------------------------------------------------------------------------------
+experiments_app = typer.Typer(no_args_is_help=True, help="Registered paper experiments: status, plans, runs, reports")
+app.add_typer(experiments_app, name="experiments")
+
+
+def _experiment_status_context(dataset_version: str | None):
+    avail = {a["artifact_id"]: a["status"] for a in json.loads((EVIDENCE_DIR / "DATA_AVAILABILITY.json").read_text())["artifacts"]}
+    capp = EVIDENCE_DIR / "MODEL_CAPABILITIES.json"
+    caps = {c["config_id"]: c for c in json.loads(capp.read_text())["configurations"]} if capp.is_file() else {}
+    ctx = {}
+    if dataset_version:
+        dv = _dataset(dataset_version)
+        ctx = {"dataset_manifests": {m.manifest_id for m in dv.manifests()}, "dataset_version_id": dv.id,
+               "dataset_synthetic": dv.synthetic}
+    return avail, caps, ctx
+
+
+@experiments_app.command("list")
+def experiments_list(dataset_version: str | None = typer.Option(None, "--dataset-version")) -> None:
+    """Every registered experiment with its runnable/blocked status and first blockers."""
+    from agenthorizon.experiments.registry import experiments, status
+
+    avail, caps, ctx = _experiment_status_context(dataset_version)
+    for e in experiments():
+        st = status(e, avail, caps, **ctx)
+        typer.echo(f"{st.status:<9} {e.experiment_id:<56} {'; '.join(st.blockers[:2])[:140]}")
+
+
+@experiments_app.command("show")
+def experiments_show(experiment_id: str, dataset_version: str | None = typer.Option(None, "--dataset-version")) -> None:
+    from agenthorizon.experiments.registry import get, status
+
+    e = get(experiment_id)
+    avail, caps, ctx = _experiment_status_context(dataset_version)
+    typer.echo(json.dumps({"experiment": e.to_dict(), "status": status(e, avail, caps, **ctx).to_dict()}, indent=2))
+
+
+def _experiment_configs(experiment_id, dataset_version, model_id, route, base_url, instructions):
+    from agenthorizon.experiments.registry import get, run_configs
+
+    e = get(experiment_id)
+    dv = _dataset(dataset_version)
+    op = {k: v for k, v in (("provider_model_id", model_id), ("route", route), ("base_url", base_url),
+                            ("instructions", instructions)) if v is not None}
+    try:
+        return e, run_configs(e, dv.id, {m.manifest_id for m in dv.manifests()}, operator=op)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+
+@experiments_app.command("plan")
+def experiments_plan(experiment_id: str, dataset_version: str = typer.Option(..., "--dataset-version"),
+                     model_id: str | None = typer.Option(None, "--model-id"), route: str | None = typer.Option(None, "--route"),
+                     base_url: str | None = typer.Option(None, "--base-url"),
+                     instructions: str | None = typer.Option(None, "--instructions"),
+                     budget_usd: float | None = typer.Option(None, "--budget-usd")) -> None:
+    """Dry-run plan for every trial of an experiment (nothing is executed)."""
+    e, cfgs = _experiment_configs(experiment_id, dataset_version, model_id, route, base_url, instructions)
+    for cfg in cfgs:
+        _plan_and_execute(get_settings(), cfg, dry_run=True, budget_usd=budget_usd, concurrency=1, max_tasks=None, override=None)
+
+
+@experiments_app.command("run")
+def experiments_run(experiment_id: str, dataset_version: str = typer.Option(..., "--dataset-version"),
+                    budget_usd: float | None = typer.Option(None, "--budget-usd", help="Explicit budget per trial"),
+                    concurrency: int = typer.Option(2, "--concurrency"),
+                    model_id: str | None = typer.Option(None, "--model-id"), route: str | None = typer.Option(None, "--route"),
+                    base_url: str | None = typer.Option(None, "--base-url"),
+                    instructions: str | None = typer.Option(None, "--instructions")) -> None:
+    """Execute every trial of an experiment (each a separate run identity), refusing anything not ready."""
+    e, cfgs = _experiment_configs(experiment_id, dataset_version, model_id, route, base_url, instructions)
+    for cfg in cfgs:
+        _plan_and_execute(get_settings(), cfg, dry_run=False, budget_usd=budget_usd, concurrency=concurrency,
+                          max_tasks=None, override=None)
+
+
+@experiments_app.command("report")
+def experiments_report(experiment_id: str, runs: str = typer.Option(..., "--runs", help="Comma-separated run ids (one per trial)"),
+                       output: Path | None = typer.Option(None, "--output", help="JSON report path"),
+                       markdown: Path | None = typer.Option(None, "--markdown")) -> None:
+    """Scores per report manifest, slices, resources, caveated paper comparison, partition reconstruction."""
+    from agenthorizon.experiments.registry import get
+    from agenthorizon.experiments.report import experiment_report, render_markdown
+    from agenthorizon.runs.store import FileRunStore
+    from agenthorizon.util.io import atomic_write_json, atomic_write_text
+
+    s = get_settings()
+    stores = [FileRunStore(s.runs_dir / r) for r in runs.split(",") if r]
+    rep = experiment_report(s, get(experiment_id), stores)
+    if output:
+        atomic_write_json(output, rep)
+    md = render_markdown(rep)
+    if markdown:
+        atomic_write_text(markdown, md)
+    typer.echo(md)
+
+
+@evidence_app.command("experiments")
+def evidence_experiments(output: Path = typer.Option(EVIDENCE_DIR / "EXPERIMENT_REGISTRY.json"),
+                         dataset_version: str | None = typer.Option(None, "--dataset-version")) -> None:
+    """Every registered experiment with its status and blockers in this environment."""
+    from agenthorizon.experiments.registry import experiments, status
+    from agenthorizon.util.io import atomic_write_json, utcnow_iso
+
+    avail, caps, ctx = _experiment_status_context(dataset_version)
+    rows = [{**e.to_dict(), "status": status(e, avail, caps, **ctx).to_dict()} for e in experiments()]
+    counts: dict[str, int] = {}
+    for r in rows:
+        counts[r["status"]["status"]] = counts.get(r["status"]["status"], 0) + 1
+    atomic_write_json(output, {"generated_at": utcnow_iso(), "dataset_version": dataset_version, "counts": counts,
+                               "experiments": rows})
+    typer.echo(f"{counts}  wrote {output}")
 
 
 # ---- application: bootstrap, database, users, workers, servers -----------------------------------------------

@@ -1,0 +1,2412 @@
+{
+  "generated_at": "2026-10-09T21:37:20Z",
+  "dataset_version": null,
+  "counts": {
+    "blocked": 41
+  },
+  "experiments": [
+    {
+      "experiment_id": "grid:codex:gpt-5.5",
+      "title": "GPT-5.5 · Codex on the full release (S8 legacy grids)",
+      "kind": "reference_grid",
+      "judge_config": "codex:gpt-5.5",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "S8.T1",
+          "manifest_kind": "legacy-AH",
+          "reference": {
+            "table_id": "S8.T1",
+            "line": 18
+          }
+        },
+        {
+          "report_id": "S8.T2",
+          "manifest_kind": "legacy-AH-S",
+          "reference": {
+            "table_id": "S8.T2",
+            "line": 41
+          }
+        },
+        {
+          "report_id": "S8.T3",
+          "manifest_kind": "full-release",
+          "reference": {
+            "table_id": "S8.T3",
+            "line": 64
+          }
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-legacy-labels-main",
+        "ah-legacy-labels-simple"
+      ],
+      "analyses": [
+        "slices",
+        "resources",
+        "reference_compare"
+      ],
+      "notes": "Legacy-partition sensitivity grid; comparisons to S8 require the same model id, harness version, prompt and AGENTS.md (the official file is unreleased, so agentic runs are extensions unless an operator registers it).",
+      "status": {
+        "experiment_id": "grid:codex:gpt-5.5",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable",
+          "no released artifact states the provider model identifier",
+          "credentials missing: CODEX_AUTH_JSON",
+          "route host unreachable from this environment (egress_denied)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "no released artifact states the provider model identifier",
+          "credentials missing: CODEX_AUTH_JSON",
+          "route host unreachable from this environment (egress_denied)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "grid:gemini_cli:gemini-3.1-pro",
+      "title": "Gemini 3.1 Pro · Gemini CLI on the full release (S8 legacy grids)",
+      "kind": "reference_grid",
+      "judge_config": "gemini_cli:gemini-3.1-pro",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "S8.T1",
+          "manifest_kind": "legacy-AH",
+          "reference": {
+            "table_id": "S8.T1",
+            "line": 19
+          }
+        },
+        {
+          "report_id": "S8.T2",
+          "manifest_kind": "legacy-AH-S",
+          "reference": {
+            "table_id": "S8.T2",
+            "line": 46
+          }
+        },
+        {
+          "report_id": "S8.T3",
+          "manifest_kind": "full-release",
+          "reference": {
+            "table_id": "S8.T3",
+            "line": 63
+          }
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-legacy-labels-main",
+        "ah-legacy-labels-simple"
+      ],
+      "analyses": [
+        "slices",
+        "resources",
+        "reference_compare"
+      ],
+      "notes": "Legacy-partition sensitivity grid; comparisons to S8 require the same model id, harness version, prompt and AGENTS.md (the official file is unreleased, so agentic runs are extensions unless an operator registers it).",
+      "status": {
+        "experiment_id": "grid:gemini_cli:gemini-3.1-pro",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable",
+          "credentials missing: GEMINI_API_KEY"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "credentials missing: GEMINI_API_KEY"
+        ]
+      }
+    },
+    {
+      "experiment_id": "grid:claude_code:claude-opus-4.7",
+      "title": "Claude Opus 4.7 · Claude Code on the full release (S8 legacy grids)",
+      "kind": "reference_grid",
+      "judge_config": "claude_code:claude-opus-4.7",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "S8.T1",
+          "manifest_kind": "legacy-AH",
+          "reference": {
+            "table_id": "S8.T1",
+            "line": 20
+          }
+        },
+        {
+          "report_id": "S8.T2",
+          "manifest_kind": "legacy-AH-S",
+          "reference": {
+            "table_id": "S8.T2",
+            "line": 39
+          }
+        },
+        {
+          "report_id": "S8.T3",
+          "manifest_kind": "full-release",
+          "reference": {
+            "table_id": "S8.T3",
+            "line": 65
+          }
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-legacy-labels-main",
+        "ah-legacy-labels-simple"
+      ],
+      "analyses": [
+        "slices",
+        "resources",
+        "reference_compare"
+      ],
+      "notes": "Legacy-partition sensitivity grid; comparisons to S8 require the same model id, harness version, prompt and AGENTS.md (the official file is unreleased, so agentic runs are extensions unless an operator registers it).",
+      "status": {
+        "experiment_id": "grid:claude_code:claude-opus-4.7",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable",
+          "credentials missing: ANTHROPIC_API_KEY"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "credentials missing: ANTHROPIC_API_KEY"
+        ]
+      }
+    },
+    {
+      "experiment_id": "grid:opencode:qwen3.6-27b",
+      "title": "Qwen 3.6 27B · OpenCode on the full release (S8 legacy grids)",
+      "kind": "reference_grid",
+      "judge_config": "opencode:qwen3.6-27b",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "S8.T1",
+          "manifest_kind": "legacy-AH",
+          "reference": {
+            "table_id": "S8.T1",
+            "line": 21
+          }
+        },
+        {
+          "report_id": "S8.T2",
+          "manifest_kind": "legacy-AH-S",
+          "reference": {
+            "table_id": "S8.T2",
+            "line": 40
+          }
+        },
+        {
+          "report_id": "S8.T3",
+          "manifest_kind": "full-release",
+          "reference": {
+            "table_id": "S8.T3",
+            "line": 67
+          }
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-legacy-labels-main",
+        "ah-legacy-labels-simple"
+      ],
+      "analyses": [
+        "slices",
+        "resources",
+        "reference_compare"
+      ],
+      "notes": "Legacy-partition sensitivity grid; comparisons to S8 require the same model id, harness version, prompt and AGENTS.md (the official file is unreleased, so agentic runs are extensions unless an operator registers it).",
+      "status": {
+        "experiment_id": "grid:opencode:qwen3.6-27b",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable",
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "grid:codex:gpt-5.4-mini",
+      "title": "GPT-5.4 mini · Codex on the full release (S8 legacy grids)",
+      "kind": "reference_grid",
+      "judge_config": "codex:gpt-5.4-mini",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "S8.T1",
+          "manifest_kind": "legacy-AH",
+          "reference": {
+            "table_id": "S8.T1",
+            "line": 22
+          }
+        },
+        {
+          "report_id": "S8.T2",
+          "manifest_kind": "legacy-AH-S",
+          "reference": {
+            "table_id": "S8.T2",
+            "line": 42
+          }
+        },
+        {
+          "report_id": "S8.T3",
+          "manifest_kind": "full-release",
+          "reference": {
+            "table_id": "S8.T3",
+            "line": 66
+          }
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-legacy-labels-main",
+        "ah-legacy-labels-simple"
+      ],
+      "analyses": [
+        "slices",
+        "resources",
+        "reference_compare"
+      ],
+      "notes": "Legacy-partition sensitivity grid; comparisons to S8 require the same model id, harness version, prompt and AGENTS.md (the official file is unreleased, so agentic runs are extensions unless an operator registers it).",
+      "status": {
+        "experiment_id": "grid:codex:gpt-5.4-mini",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable",
+          "no released artifact states the provider model identifier",
+          "credentials missing: CODEX_AUTH_JSON",
+          "route host unreachable from this environment (egress_denied)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "no released artifact states the provider model identifier",
+          "credentials missing: CODEX_AUTH_JSON",
+          "route host unreachable from this environment (egress_denied)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "grid:opencode:qwen3.6-35b-a3b",
+      "title": "Qwen 3.6 35B-A3B · OpenCode on the full release (S8 legacy grids)",
+      "kind": "reference_grid",
+      "judge_config": "opencode:qwen3.6-35b-a3b",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "S8.T1",
+          "manifest_kind": "legacy-AH",
+          "reference": {
+            "table_id": "S8.T1",
+            "line": 23
+          }
+        },
+        {
+          "report_id": "S8.T2",
+          "manifest_kind": "legacy-AH-S",
+          "reference": {
+            "table_id": "S8.T2",
+            "line": 44
+          }
+        },
+        {
+          "report_id": "S8.T3",
+          "manifest_kind": "full-release",
+          "reference": {
+            "table_id": "S8.T3",
+            "line": 73
+          }
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-legacy-labels-main",
+        "ah-legacy-labels-simple"
+      ],
+      "analyses": [
+        "slices",
+        "resources",
+        "reference_compare"
+      ],
+      "notes": "Legacy-partition sensitivity grid; comparisons to S8 require the same model id, harness version, prompt and AGENTS.md (the official file is unreleased, so agentic runs are extensions unless an operator registers it).",
+      "status": {
+        "experiment_id": "grid:opencode:qwen3.6-35b-a3b",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable",
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "grid:openhands:qwen3.6-27b",
+      "title": "Qwen 3.6 27B · OpenHands on the full release (S8 legacy grids)",
+      "kind": "reference_grid",
+      "judge_config": "openhands:qwen3.6-27b",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "S8.T1",
+          "manifest_kind": "legacy-AH",
+          "reference": {
+            "table_id": "S8.T1",
+            "line": 24
+          }
+        },
+        {
+          "report_id": "S8.T2",
+          "manifest_kind": "legacy-AH-S",
+          "reference": {
+            "table_id": "S8.T2",
+            "line": 48
+          }
+        },
+        {
+          "report_id": "S8.T3",
+          "manifest_kind": "full-release",
+          "reference": {
+            "table_id": "S8.T3",
+            "line": 74
+          }
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-legacy-labels-main",
+        "ah-legacy-labels-simple"
+      ],
+      "analyses": [
+        "slices",
+        "resources",
+        "reference_compare"
+      ],
+      "notes": "Legacy-partition sensitivity grid; comparisons to S8 require the same model id, harness version, prompt and AGENTS.md (the official file is unreleased, so agentic runs are extensions unless an operator registers it).",
+      "status": {
+        "experiment_id": "grid:openhands:qwen3.6-27b",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable",
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "grid:claude_code:claude-haiku-4.5",
+      "title": "Claude Haiku 4.5 · Claude Code on the full release (S8 legacy grids)",
+      "kind": "reference_grid",
+      "judge_config": "claude_code:claude-haiku-4.5",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "S8.T1",
+          "manifest_kind": "legacy-AH",
+          "reference": {
+            "table_id": "S8.T1",
+            "line": 25
+          }
+        },
+        {
+          "report_id": "S8.T2",
+          "manifest_kind": "legacy-AH-S",
+          "reference": {
+            "table_id": "S8.T2",
+            "line": 45
+          }
+        },
+        {
+          "report_id": "S8.T3",
+          "manifest_kind": "full-release",
+          "reference": {
+            "table_id": "S8.T3",
+            "line": 68
+          }
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-legacy-labels-main",
+        "ah-legacy-labels-simple"
+      ],
+      "analyses": [
+        "slices",
+        "resources",
+        "reference_compare"
+      ],
+      "notes": "Legacy-partition sensitivity grid; comparisons to S8 require the same model id, harness version, prompt and AGENTS.md (the official file is unreleased, so agentic runs are extensions unless an operator registers it).",
+      "status": {
+        "experiment_id": "grid:claude_code:claude-haiku-4.5",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable",
+          "credentials missing: ANTHROPIC_API_KEY"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "credentials missing: ANTHROPIC_API_KEY"
+        ]
+      }
+    },
+    {
+      "experiment_id": "grid:opencode:gemini-3.1-flash-lite",
+      "title": "Gemini 3.1 Flash Lite · OpenCode on the full release (S8 legacy grids)",
+      "kind": "reference_grid",
+      "judge_config": "opencode:gemini-3.1-flash-lite",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "S8.T1",
+          "manifest_kind": "legacy-AH",
+          "reference": {
+            "table_id": "S8.T1",
+            "line": 26
+          }
+        },
+        {
+          "report_id": "S8.T2",
+          "manifest_kind": "legacy-AH-S",
+          "reference": {
+            "table_id": "S8.T2",
+            "line": 47
+          }
+        },
+        {
+          "report_id": "S8.T3",
+          "manifest_kind": "full-release",
+          "reference": {
+            "table_id": "S8.T3",
+            "line": 72
+          }
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-legacy-labels-main",
+        "ah-legacy-labels-simple"
+      ],
+      "analyses": [
+        "slices",
+        "resources",
+        "reference_compare"
+      ],
+      "notes": "Legacy-partition sensitivity grid; comparisons to S8 require the same model id, harness version, prompt and AGENTS.md (the official file is unreleased, so agentic runs are extensions unless an operator registers it).",
+      "status": {
+        "experiment_id": "grid:opencode:gemini-3.1-flash-lite",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable",
+          "no released artifact states the provider model identifier",
+          "serving route not stated by any accessible source"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "no released artifact states the provider model identifier",
+          "serving route not stated by any accessible source"
+        ]
+      }
+    },
+    {
+      "experiment_id": "grid:gemini_cli:gemini-3.1-flash-lite",
+      "title": "Gemini 3.1 Flash Lite · Gemini CLI on the full release (S8 legacy grids)",
+      "kind": "reference_grid",
+      "judge_config": "gemini_cli:gemini-3.1-flash-lite",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "S8.T1",
+          "manifest_kind": "legacy-AH",
+          "reference": {
+            "table_id": "S8.T1",
+            "line": 27
+          }
+        },
+        {
+          "report_id": "S8.T2",
+          "manifest_kind": "legacy-AH-S",
+          "reference": {
+            "table_id": "S8.T2",
+            "line": 49
+          }
+        },
+        {
+          "report_id": "S8.T3",
+          "manifest_kind": "full-release",
+          "reference": {
+            "table_id": "S8.T3",
+            "line": 75
+          }
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-legacy-labels-main",
+        "ah-legacy-labels-simple"
+      ],
+      "analyses": [
+        "slices",
+        "resources",
+        "reference_compare"
+      ],
+      "notes": "Legacy-partition sensitivity grid; comparisons to S8 require the same model id, harness version, prompt and AGENTS.md (the official file is unreleased, so agentic runs are extensions unless an operator registers it).",
+      "status": {
+        "experiment_id": "grid:gemini_cli:gemini-3.1-flash-lite",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable",
+          "credentials missing: GEMINI_API_KEY"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "credentials missing: GEMINI_API_KEY"
+        ]
+      }
+    },
+    {
+      "experiment_id": "grid:openhands:gemini-3.1-flash-lite",
+      "title": "Gemini 3.1 Flash Lite · OpenHands on the full release (S8 legacy grids)",
+      "kind": "reference_grid",
+      "judge_config": "openhands:gemini-3.1-flash-lite",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "S8.T1",
+          "manifest_kind": "legacy-AH",
+          "reference": {
+            "table_id": "S8.T1",
+            "line": 28
+          }
+        },
+        {
+          "report_id": "S8.T2",
+          "manifest_kind": "legacy-AH-S",
+          "reference": {
+            "table_id": "S8.T2",
+            "line": 52
+          }
+        },
+        {
+          "report_id": "S8.T3",
+          "manifest_kind": "full-release",
+          "reference": {
+            "table_id": "S8.T3",
+            "line": 70
+          }
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-legacy-labels-main",
+        "ah-legacy-labels-simple"
+      ],
+      "analyses": [
+        "slices",
+        "resources",
+        "reference_compare"
+      ],
+      "notes": "Legacy-partition sensitivity grid; comparisons to S8 require the same model id, harness version, prompt and AGENTS.md (the official file is unreleased, so agentic runs are extensions unless an operator registers it).",
+      "status": {
+        "experiment_id": "grid:openhands:gemini-3.1-flash-lite",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable",
+          "credentials missing: GEMINI_API_KEY"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "credentials missing: GEMINI_API_KEY"
+        ]
+      }
+    },
+    {
+      "experiment_id": "grid:opencode:gemma-4-26b-a4b",
+      "title": "Gemma 4 26B-A4B · OpenCode on the full release (S8 legacy grids)",
+      "kind": "reference_grid",
+      "judge_config": "opencode:gemma-4-26b-a4b",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "S8.T1",
+          "manifest_kind": "legacy-AH",
+          "reference": {
+            "table_id": "S8.T1",
+            "line": 29
+          }
+        },
+        {
+          "report_id": "S8.T2",
+          "manifest_kind": "legacy-AH-S",
+          "reference": {
+            "table_id": "S8.T2",
+            "line": 51
+          }
+        },
+        {
+          "report_id": "S8.T3",
+          "manifest_kind": "full-release",
+          "reference": {
+            "table_id": "S8.T3",
+            "line": 77
+          }
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-legacy-labels-main",
+        "ah-legacy-labels-simple"
+      ],
+      "analyses": [
+        "slices",
+        "resources",
+        "reference_compare"
+      ],
+      "notes": "Legacy-partition sensitivity grid; comparisons to S8 require the same model id, harness version, prompt and AGENTS.md (the official file is unreleased, so agentic runs are extensions unless an operator registers it).",
+      "status": {
+        "experiment_id": "grid:opencode:gemma-4-26b-a4b",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable",
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "grid:codex:gemini-3.1-flash-lite",
+      "title": "Gemini 3.1 Flash Lite · Codex on the full release (S8 legacy grids)",
+      "kind": "reference_grid",
+      "judge_config": "codex:gemini-3.1-flash-lite",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "S8.T1",
+          "manifest_kind": "legacy-AH",
+          "reference": {
+            "table_id": "S8.T1",
+            "line": 30
+          }
+        },
+        {
+          "report_id": "S8.T2",
+          "manifest_kind": "legacy-AH-S",
+          "reference": {
+            "table_id": "S8.T2",
+            "line": 50
+          }
+        },
+        {
+          "report_id": "S8.T3",
+          "manifest_kind": "full-release",
+          "reference": {
+            "table_id": "S8.T3",
+            "line": 71
+          }
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-legacy-labels-main",
+        "ah-legacy-labels-simple"
+      ],
+      "analyses": [
+        "slices",
+        "resources",
+        "reference_compare"
+      ],
+      "notes": "Legacy-partition sensitivity grid; comparisons to S8 require the same model id, harness version, prompt and AGENTS.md (the official file is unreleased, so agentic runs are extensions unless an operator registers it).",
+      "status": {
+        "experiment_id": "grid:codex:gemini-3.1-flash-lite",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable",
+          "credentials missing: OPENROUTER_API_KEY",
+          "route host unreachable from this environment (egress_denied)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "credentials missing: OPENROUTER_API_KEY",
+          "route host unreachable from this environment (egress_denied)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "grid:opencode:gemma-4-31b",
+      "title": "Gemma 4 31B · OpenCode on the full release (S8 legacy grids)",
+      "kind": "reference_grid",
+      "judge_config": "opencode:gemma-4-31b",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "S8.T1",
+          "manifest_kind": "legacy-AH",
+          "reference": {
+            "table_id": "S8.T1",
+            "line": 31
+          }
+        },
+        {
+          "report_id": "S8.T2",
+          "manifest_kind": "legacy-AH-S",
+          "reference": {
+            "table_id": "S8.T2",
+            "line": 43
+          }
+        },
+        {
+          "report_id": "S8.T3",
+          "manifest_kind": "full-release",
+          "reference": {
+            "table_id": "S8.T3",
+            "line": 76
+          }
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-legacy-labels-main",
+        "ah-legacy-labels-simple"
+      ],
+      "analyses": [
+        "slices",
+        "resources",
+        "reference_compare"
+      ],
+      "notes": "Legacy-partition sensitivity grid; comparisons to S8 require the same model id, harness version, prompt and AGENTS.md (the official file is unreleased, so agentic runs are extensions unless an operator registers it).",
+      "status": {
+        "experiment_id": "grid:opencode:gemma-4-31b",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable",
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "grid:opencode:qwen3.5-122b-a10b:splitter",
+      "title": "Qwen 3.5 122B-A10B · OpenCode on the full release (S8 legacy grids)",
+      "kind": "reference_grid",
+      "judge_config": "opencode:qwen3.5-122b-a10b:splitter",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "S8.T1",
+          "manifest_kind": "legacy-AH",
+          "reference": {
+            "table_id": "S8.T1",
+            "line": 32
+          }
+        },
+        {
+          "report_id": "S8.T2",
+          "manifest_kind": "legacy-AH-S",
+          "reference": {
+            "table_id": "S8.T2",
+            "line": 38
+          }
+        },
+        {
+          "report_id": "S8.T3",
+          "manifest_kind": "full-release",
+          "reference": {
+            "table_id": "S8.T3",
+            "line": 69
+          }
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-legacy-labels-main",
+        "ah-legacy-labels-simple"
+      ],
+      "analyses": [
+        "slices",
+        "resources",
+        "reference_compare"
+      ],
+      "notes": "Legacy-partition sensitivity grid; comparisons to S8 require the same model id, harness version, prompt and AGENTS.md (the official file is unreleased, so agentic runs are extensions unless an operator registers it). Also the legacy splitter configuration (its row is affected by defining the partition).",
+      "status": {
+        "experiment_id": "grid:opencode:qwen3.5-122b-a10b:splitter",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable",
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "direct:qwen3.5-9b:native-512x332",
+      "title": "Qwen 3.5 9B direct judge (native-512x332)",
+      "kind": "direct",
+      "judge_config": "direct:qwen3.5-9b:native-512x332",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "full",
+          "manifest_kind": "full-release",
+          "reference": null
+        },
+        {
+          "report_id": "legacy-AH",
+          "manifest_kind": "legacy-AH",
+          "reference": null
+        },
+        {
+          "report_id": "legacy-AH-S",
+          "manifest_kind": "legacy-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Direct-table rows are unreadable (S1 inaccessible); results are new measurements without a paper row.",
+      "status": {
+        "experiment_id": "direct:qwen3.5-9b:native-512x332",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "direct:gemini-3.1-flash-lite:native-512x332",
+      "title": "Gemini 3.1 Flash Lite direct judge (native-512x332)",
+      "kind": "direct",
+      "judge_config": "direct:gemini-3.1-flash-lite:native-512x332",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "full",
+          "manifest_kind": "full-release",
+          "reference": null
+        },
+        {
+          "report_id": "legacy-AH",
+          "manifest_kind": "legacy-AH",
+          "reference": null
+        },
+        {
+          "report_id": "legacy-AH-S",
+          "manifest_kind": "legacy-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Direct-table rows are unreadable (S1 inaccessible); results are new measurements without a paper row.",
+      "status": {
+        "experiment_id": "direct:gemini-3.1-flash-lite:native-512x332",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "credentials missing: GEMINI_API_KEY"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "credentials missing: GEMINI_API_KEY"
+        ]
+      }
+    },
+    {
+      "experiment_id": "direct:gemini-3.1-pro:native-512x332",
+      "title": "Gemini 3.1 Pro direct judge (native-512x332)",
+      "kind": "direct",
+      "judge_config": "direct:gemini-3.1-pro:native-512x332",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "full",
+          "manifest_kind": "full-release",
+          "reference": null
+        },
+        {
+          "report_id": "legacy-AH",
+          "manifest_kind": "legacy-AH",
+          "reference": null
+        },
+        {
+          "report_id": "legacy-AH-S",
+          "manifest_kind": "legacy-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Direct-table rows are unreadable (S1 inaccessible); results are new measurements without a paper row.",
+      "status": {
+        "experiment_id": "direct:gemini-3.1-pro:native-512x332",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "credentials missing: GEMINI_API_KEY"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "credentials missing: GEMINI_API_KEY"
+        ]
+      }
+    },
+    {
+      "experiment_id": "direct:qwen3.6-27b:native-512x332",
+      "title": "Qwen 3.6 27B direct judge (native-512x332)",
+      "kind": "direct",
+      "judge_config": "direct:qwen3.6-27b:native-512x332",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "full",
+          "manifest_kind": "full-release",
+          "reference": null
+        },
+        {
+          "report_id": "legacy-AH",
+          "manifest_kind": "legacy-AH",
+          "reference": null
+        },
+        {
+          "report_id": "legacy-AH-S",
+          "manifest_kind": "legacy-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Direct-table rows are unreadable (S1 inaccessible); results are new measurements without a paper row.",
+      "status": {
+        "experiment_id": "direct:qwen3.6-27b:native-512x332",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "direct:gemma-4-31b:native-512x332",
+      "title": "Gemma 4 31B direct judge (native-512x332)",
+      "kind": "direct",
+      "judge_config": "direct:gemma-4-31b:native-512x332",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "full",
+          "manifest_kind": "full-release",
+          "reference": null
+        },
+        {
+          "report_id": "legacy-AH",
+          "manifest_kind": "legacy-AH",
+          "reference": null
+        },
+        {
+          "report_id": "legacy-AH-S",
+          "manifest_kind": "legacy-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Direct-table rows are unreadable (S1 inaccessible); results are new measurements without a paper row.",
+      "status": {
+        "experiment_id": "direct:gemma-4-31b:native-512x332",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "splitter:legacy",
+      "title": "Legacy partition reconstruction: Qwen 3.5 122B-A10B splitter, 8 trials over the full release",
+      "kind": "splitter_legacy",
+      "judge_config": "opencode:qwen3.5-122b-a10b:splitter",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "full",
+          "manifest_kind": "full-release",
+          "reference": null
+        }
+      ],
+      "trials": 8,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-legacy-labels-main",
+        "ah-legacy-labels-simple"
+      ],
+      "analyses": [
+        "legacy_partition_agreement"
+      ],
+      "notes": "Easy iff >= 7/8 verdicts agree with gold (scripts/aggregate_difficulty.py). The released legacy membership is the comparison target; a reconstruction is never relabelled as the official partition.",
+      "status": {
+        "experiment_id": "splitter:legacy",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable",
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-legacy-labels-main: published_but_unavailable",
+          "ah-legacy-labels-simple: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "splitter:revised:qwen3.5-122b-a10b",
+      "title": "Revised splitter Qwen 3.5 122B-A10B, 8 verdicts per item",
+      "kind": "splitter_revised",
+      "judge_config": "opencode:qwen3.5-122b-a10b:splitter:revised",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "full",
+          "manifest_kind": "full-release",
+          "reference": null
+        }
+      ],
+      "trials": 8,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media"
+      ],
+      "analyses": [
+        "revised_partition_reconstruction"
+      ],
+      "notes": "One of three revised splitters (MP §2); harness and identifiers for Inkling and Kimi K2.7 Code are unknown.",
+      "status": {
+        "experiment_id": "splitter:revised:qwen3.5-122b-a10b",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "splitter:revised:inkling",
+      "title": "Revised splitter Inkling, 8 verdicts per item",
+      "kind": "splitter_revised",
+      "judge_config": "opencode:inkling:splitter:revised",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "full",
+          "manifest_kind": "full-release",
+          "reference": null
+        }
+      ],
+      "trials": 8,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media"
+      ],
+      "analyses": [
+        "revised_partition_reconstruction"
+      ],
+      "notes": "One of three revised splitters (MP §2); harness and identifiers for Inkling and Kimi K2.7 Code are unknown.",
+      "status": {
+        "experiment_id": "splitter:revised:inkling",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "no released artifact states the provider model identifier",
+          "serving route not stated by any accessible source"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "no released artifact states the provider model identifier",
+          "serving route not stated by any accessible source"
+        ]
+      }
+    },
+    {
+      "experiment_id": "splitter:revised:kimi-k2.7-code",
+      "title": "Revised splitter Kimi K2.7 Code, 8 verdicts per item",
+      "kind": "splitter_revised",
+      "judge_config": "opencode:kimi-k2.7-code:splitter:revised",
+      "selection": "full-release",
+      "reports": [
+        {
+          "report_id": "full",
+          "manifest_kind": "full-release",
+          "reference": null
+        }
+      ],
+      "trials": 8,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media"
+      ],
+      "analyses": [
+        "revised_partition_reconstruction"
+      ],
+      "notes": "One of three revised splitters (MP §2); harness and identifiers for Inkling and Kimi K2.7 Code are unknown.",
+      "status": {
+        "experiment_id": "splitter:revised:kimi-k2.7-code",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "no released artifact states the provider model identifier",
+          "serving route not stated by any accessible source"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable"
+        ],
+        "config_blockers": [
+          "no released artifact states the provider model identifier",
+          "serving route not stated by any accessible source"
+        ]
+      }
+    },
+    {
+      "experiment_id": "revised:codex:gpt-5.5",
+      "title": "GPT-5.5 · Codex on revised AH / AH-S",
+      "kind": "revised_main",
+      "judge_config": "codex:gpt-5.5",
+      "selection": "revised-full",
+      "reports": [
+        {
+          "report_id": "AH",
+          "manifest_kind": "revised-AH",
+          "reference": null
+        },
+        {
+          "report_id": "AH-S",
+          "manifest_kind": "revised-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-revised-manifests",
+        "ah-paper"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Headline paper rows; the revised membership and the paper's table are both unavailable.",
+      "status": {
+        "experiment_id": "revised:codex:gpt-5.5",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located",
+          "no released artifact states the provider model identifier",
+          "credentials missing: CODEX_AUTH_JSON",
+          "route host unreachable from this environment (egress_denied)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located"
+        ],
+        "config_blockers": [
+          "no released artifact states the provider model identifier",
+          "credentials missing: CODEX_AUTH_JSON",
+          "route host unreachable from this environment (egress_denied)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "revised:gemini_cli:gemini-3.1-pro",
+      "title": "Gemini 3.1 Pro · Gemini CLI on revised AH / AH-S",
+      "kind": "revised_main",
+      "judge_config": "gemini_cli:gemini-3.1-pro",
+      "selection": "revised-full",
+      "reports": [
+        {
+          "report_id": "AH",
+          "manifest_kind": "revised-AH",
+          "reference": null
+        },
+        {
+          "report_id": "AH-S",
+          "manifest_kind": "revised-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-revised-manifests",
+        "ah-paper"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Headline paper rows; the revised membership and the paper's table are both unavailable.",
+      "status": {
+        "experiment_id": "revised:gemini_cli:gemini-3.1-pro",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located",
+          "credentials missing: GEMINI_API_KEY"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located"
+        ],
+        "config_blockers": [
+          "credentials missing: GEMINI_API_KEY"
+        ]
+      }
+    },
+    {
+      "experiment_id": "revised:claude_code:claude-opus-4.7",
+      "title": "Claude Opus 4.7 · Claude Code on revised AH / AH-S",
+      "kind": "revised_main",
+      "judge_config": "claude_code:claude-opus-4.7",
+      "selection": "revised-full",
+      "reports": [
+        {
+          "report_id": "AH",
+          "manifest_kind": "revised-AH",
+          "reference": null
+        },
+        {
+          "report_id": "AH-S",
+          "manifest_kind": "revised-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-revised-manifests",
+        "ah-paper"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Headline paper rows; the revised membership and the paper's table are both unavailable.",
+      "status": {
+        "experiment_id": "revised:claude_code:claude-opus-4.7",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located",
+          "credentials missing: ANTHROPIC_API_KEY"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located"
+        ],
+        "config_blockers": [
+          "credentials missing: ANTHROPIC_API_KEY"
+        ]
+      }
+    },
+    {
+      "experiment_id": "revised:opencode:qwen3.6-27b",
+      "title": "Qwen 3.6 27B · OpenCode on revised AH / AH-S",
+      "kind": "revised_main",
+      "judge_config": "opencode:qwen3.6-27b",
+      "selection": "revised-full",
+      "reports": [
+        {
+          "report_id": "AH",
+          "manifest_kind": "revised-AH",
+          "reference": null
+        },
+        {
+          "report_id": "AH-S",
+          "manifest_kind": "revised-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-revised-manifests",
+        "ah-paper"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Headline paper rows; the revised membership and the paper's table are both unavailable.",
+      "status": {
+        "experiment_id": "revised:opencode:qwen3.6-27b",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located",
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located"
+        ],
+        "config_blockers": [
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "revised:codex:gpt-5.4-mini",
+      "title": "GPT-5.4 mini · Codex on revised AH / AH-S",
+      "kind": "revised_main",
+      "judge_config": "codex:gpt-5.4-mini",
+      "selection": "revised-full",
+      "reports": [
+        {
+          "report_id": "AH",
+          "manifest_kind": "revised-AH",
+          "reference": null
+        },
+        {
+          "report_id": "AH-S",
+          "manifest_kind": "revised-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-revised-manifests",
+        "ah-paper"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Headline paper rows; the revised membership and the paper's table are both unavailable.",
+      "status": {
+        "experiment_id": "revised:codex:gpt-5.4-mini",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located",
+          "no released artifact states the provider model identifier",
+          "credentials missing: CODEX_AUTH_JSON",
+          "route host unreachable from this environment (egress_denied)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located"
+        ],
+        "config_blockers": [
+          "no released artifact states the provider model identifier",
+          "credentials missing: CODEX_AUTH_JSON",
+          "route host unreachable from this environment (egress_denied)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "revised:opencode:qwen3.6-35b-a3b",
+      "title": "Qwen 3.6 35B-A3B · OpenCode on revised AH / AH-S",
+      "kind": "revised_main",
+      "judge_config": "opencode:qwen3.6-35b-a3b",
+      "selection": "revised-full",
+      "reports": [
+        {
+          "report_id": "AH",
+          "manifest_kind": "revised-AH",
+          "reference": null
+        },
+        {
+          "report_id": "AH-S",
+          "manifest_kind": "revised-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-revised-manifests",
+        "ah-paper"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Headline paper rows; the revised membership and the paper's table are both unavailable.",
+      "status": {
+        "experiment_id": "revised:opencode:qwen3.6-35b-a3b",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located",
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located"
+        ],
+        "config_blockers": [
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "revised:openhands:qwen3.6-27b",
+      "title": "Qwen 3.6 27B · OpenHands on revised AH / AH-S",
+      "kind": "revised_main",
+      "judge_config": "openhands:qwen3.6-27b",
+      "selection": "revised-full",
+      "reports": [
+        {
+          "report_id": "AH",
+          "manifest_kind": "revised-AH",
+          "reference": null
+        },
+        {
+          "report_id": "AH-S",
+          "manifest_kind": "revised-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-revised-manifests",
+        "ah-paper"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Headline paper rows; the revised membership and the paper's table are both unavailable.",
+      "status": {
+        "experiment_id": "revised:openhands:qwen3.6-27b",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located",
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located"
+        ],
+        "config_blockers": [
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "revised:claude_code:claude-haiku-4.5",
+      "title": "Claude Haiku 4.5 · Claude Code on revised AH / AH-S",
+      "kind": "revised_main",
+      "judge_config": "claude_code:claude-haiku-4.5",
+      "selection": "revised-full",
+      "reports": [
+        {
+          "report_id": "AH",
+          "manifest_kind": "revised-AH",
+          "reference": null
+        },
+        {
+          "report_id": "AH-S",
+          "manifest_kind": "revised-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-revised-manifests",
+        "ah-paper"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Headline paper rows; the revised membership and the paper's table are both unavailable.",
+      "status": {
+        "experiment_id": "revised:claude_code:claude-haiku-4.5",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located",
+          "credentials missing: ANTHROPIC_API_KEY"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located"
+        ],
+        "config_blockers": [
+          "credentials missing: ANTHROPIC_API_KEY"
+        ]
+      }
+    },
+    {
+      "experiment_id": "revised:opencode:gemini-3.1-flash-lite",
+      "title": "Gemini 3.1 Flash Lite · OpenCode on revised AH / AH-S",
+      "kind": "revised_main",
+      "judge_config": "opencode:gemini-3.1-flash-lite",
+      "selection": "revised-full",
+      "reports": [
+        {
+          "report_id": "AH",
+          "manifest_kind": "revised-AH",
+          "reference": null
+        },
+        {
+          "report_id": "AH-S",
+          "manifest_kind": "revised-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-revised-manifests",
+        "ah-paper"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Headline paper rows; the revised membership and the paper's table are both unavailable.",
+      "status": {
+        "experiment_id": "revised:opencode:gemini-3.1-flash-lite",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located",
+          "no released artifact states the provider model identifier",
+          "serving route not stated by any accessible source"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located"
+        ],
+        "config_blockers": [
+          "no released artifact states the provider model identifier",
+          "serving route not stated by any accessible source"
+        ]
+      }
+    },
+    {
+      "experiment_id": "revised:gemini_cli:gemini-3.1-flash-lite",
+      "title": "Gemini 3.1 Flash Lite · Gemini CLI on revised AH / AH-S",
+      "kind": "revised_main",
+      "judge_config": "gemini_cli:gemini-3.1-flash-lite",
+      "selection": "revised-full",
+      "reports": [
+        {
+          "report_id": "AH",
+          "manifest_kind": "revised-AH",
+          "reference": null
+        },
+        {
+          "report_id": "AH-S",
+          "manifest_kind": "revised-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-revised-manifests",
+        "ah-paper"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Headline paper rows; the revised membership and the paper's table are both unavailable.",
+      "status": {
+        "experiment_id": "revised:gemini_cli:gemini-3.1-flash-lite",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located",
+          "credentials missing: GEMINI_API_KEY"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located"
+        ],
+        "config_blockers": [
+          "credentials missing: GEMINI_API_KEY"
+        ]
+      }
+    },
+    {
+      "experiment_id": "revised:openhands:gemini-3.1-flash-lite",
+      "title": "Gemini 3.1 Flash Lite · OpenHands on revised AH / AH-S",
+      "kind": "revised_main",
+      "judge_config": "openhands:gemini-3.1-flash-lite",
+      "selection": "revised-full",
+      "reports": [
+        {
+          "report_id": "AH",
+          "manifest_kind": "revised-AH",
+          "reference": null
+        },
+        {
+          "report_id": "AH-S",
+          "manifest_kind": "revised-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-revised-manifests",
+        "ah-paper"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Headline paper rows; the revised membership and the paper's table are both unavailable.",
+      "status": {
+        "experiment_id": "revised:openhands:gemini-3.1-flash-lite",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located",
+          "credentials missing: GEMINI_API_KEY"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located"
+        ],
+        "config_blockers": [
+          "credentials missing: GEMINI_API_KEY"
+        ]
+      }
+    },
+    {
+      "experiment_id": "revised:opencode:gemma-4-26b-a4b",
+      "title": "Gemma 4 26B-A4B · OpenCode on revised AH / AH-S",
+      "kind": "revised_main",
+      "judge_config": "opencode:gemma-4-26b-a4b",
+      "selection": "revised-full",
+      "reports": [
+        {
+          "report_id": "AH",
+          "manifest_kind": "revised-AH",
+          "reference": null
+        },
+        {
+          "report_id": "AH-S",
+          "manifest_kind": "revised-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-revised-manifests",
+        "ah-paper"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Headline paper rows; the revised membership and the paper's table are both unavailable.",
+      "status": {
+        "experiment_id": "revised:opencode:gemma-4-26b-a4b",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located",
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located"
+        ],
+        "config_blockers": [
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "revised:codex:gemini-3.1-flash-lite",
+      "title": "Gemini 3.1 Flash Lite · Codex on revised AH / AH-S",
+      "kind": "revised_main",
+      "judge_config": "codex:gemini-3.1-flash-lite",
+      "selection": "revised-full",
+      "reports": [
+        {
+          "report_id": "AH",
+          "manifest_kind": "revised-AH",
+          "reference": null
+        },
+        {
+          "report_id": "AH-S",
+          "manifest_kind": "revised-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-revised-manifests",
+        "ah-paper"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Headline paper rows; the revised membership and the paper's table are both unavailable.",
+      "status": {
+        "experiment_id": "revised:codex:gemini-3.1-flash-lite",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located",
+          "credentials missing: OPENROUTER_API_KEY",
+          "route host unreachable from this environment (egress_denied)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located"
+        ],
+        "config_blockers": [
+          "credentials missing: OPENROUTER_API_KEY",
+          "route host unreachable from this environment (egress_denied)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "revised:opencode:gemma-4-31b",
+      "title": "Gemma 4 31B · OpenCode on revised AH / AH-S",
+      "kind": "revised_main",
+      "judge_config": "opencode:gemma-4-31b",
+      "selection": "revised-full",
+      "reports": [
+        {
+          "report_id": "AH",
+          "manifest_kind": "revised-AH",
+          "reference": null
+        },
+        {
+          "report_id": "AH-S",
+          "manifest_kind": "revised-AH-S",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-revised-manifests",
+        "ah-paper"
+      ],
+      "analyses": [
+        "slices",
+        "resources"
+      ],
+      "notes": "Headline paper rows; the revised membership and the paper's table are both unavailable.",
+      "status": {
+        "experiment_id": "revised:opencode:gemma-4-31b",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located",
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located"
+        ],
+        "config_blockers": [
+          "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+        ]
+      }
+    },
+    {
+      "experiment_id": "development:AH-D",
+      "title": "AH-D development reports (separate from held-out evaluation)",
+      "kind": "development",
+      "judge_config": null,
+      "selection": "revised-AH-D",
+      "reports": [
+        {
+          "report_id": "AH-D",
+          "manifest_kind": "revised-AH-D",
+          "reference": null
+        }
+      ],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-revised-manifests"
+      ],
+      "analyses": [],
+      "notes": "Development membership not located; an engineering smoke selection is never relabelled as AH-D.",
+      "status": {
+        "experiment_id": "development:AH-D",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "selection/membership not located",
+          "judge configurations for this experiment are not stated in accessible sources"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-revised-manifests: not_located",
+          "selection/membership not located"
+        ],
+        "config_blockers": [
+          "judge configurations for this experiment are not stated in accessible sources"
+        ]
+      }
+    },
+    {
+      "experiment_id": "ablation:input-removal",
+      "title": "Input-removal ablations on their stated examples",
+      "kind": "ablation",
+      "judge_config": null,
+      "selection": "unknown",
+      "reports": [],
+      "trials": 1,
+      "requires": [
+        "ah-markdowns",
+        "ah-jsons",
+        "ah-media",
+        "ah-ablation-membership",
+        "ah-paper"
+      ],
+      "analyses": [],
+      "notes": "Ablation membership and the exact removed fields are not located; headline denominators are not reused.",
+      "status": {
+        "experiment_id": "ablation:input-removal",
+        "status": "blocked",
+        "blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-ablation-membership: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located",
+          "judge configurations for this experiment are not stated in accessible sources"
+        ],
+        "data_blockers": [
+          "ah-markdowns: published_but_unavailable",
+          "ah-jsons: published_but_unavailable",
+          "ah-media: published_but_unavailable",
+          "ah-ablation-membership: not_located",
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located"
+        ],
+        "config_blockers": [
+          "judge configurations for this experiment are not stated in accessible sources"
+        ]
+      }
+    },
+    {
+      "experiment_id": "trials:repeated",
+      "title": "Repeated-trial variance (if the paper reports it)",
+      "kind": "trials",
+      "judge_config": null,
+      "selection": "unknown",
+      "reports": [],
+      "trials": 1,
+      "requires": [
+        "ah-paper"
+      ],
+      "analyses": [],
+      "notes": "Whether and how repeated trials were reported cannot be determined from accessible sources.",
+      "status": {
+        "experiment_id": "trials:repeated",
+        "status": "blocked",
+        "blockers": [
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located",
+          "judge configurations for this experiment are not stated in accessible sources"
+        ],
+        "data_blockers": [
+          "ah-paper: published_but_unavailable",
+          "selection/membership not located"
+        ],
+        "config_blockers": [
+          "judge configurations for this experiment are not stated in accessible sources"
+        ]
+      }
+    }
+  ]
+}
