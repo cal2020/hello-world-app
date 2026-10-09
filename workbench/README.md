@@ -50,6 +50,7 @@ Reset means stopping `run.py` and starting it again with `--reset`. Local state 
 | `fixtures/` | Synthetic model exports A–E and edge cases, CMMS records, projections, scripted model outputs, gold labels |
 | `examples/` | Generated OpenAPI contract, release manifest, blocked-release view, response sample, recorded demo transcript, screenshots |
 | `tests/` | Integration cases (`test_integration.py`, IC-xx), the access gate (`test_deploy.py`), and regression tests for review findings (`test_fix_*.py`) |
+| `OVERVIEW.md` | What was built, how it works, what is real vs. simulated, limitations, and a roadmap to a SaaS product |
 | `ARCHITECTURE.md` | Design note, including version dimensions, authority boundaries, known semantic loss and deployment assumptions |
 | `DEMO_SCRIPT.md` | Five-minute interview script |
 | `DEPLOY.md` | Container, access gate, environment variables and platform steps |
