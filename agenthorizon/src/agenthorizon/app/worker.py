@@ -241,18 +241,19 @@ def process_one(ctx: WorkerContext, queue: str, *, lease_s: float = 60.0) -> dic
 
 
 def presence_info(queue: str, environ: dict | None = None) -> dict:
-    """What a worker can do — credential NAMES only (never values), harness versions, isolation."""
+    """What a worker can do — credential NAMES only (never values), harness identities, isolation. Planning in the API
+    takes the harness identity of a run from here: the API image has no harness binaries."""
     if queue != "judge":
         return {}
     from agenthorizon.judging.harnesses import ADAPTERS
     from agenthorizon.judging.isolation.sandbox import isolation_available
-    from agenthorizon.runs.judges import ROUTE_SECRETS, load_secrets
+    from agenthorizon.runs.judges import ROUTE_SECRETS, binary_identity, load_secrets
 
     names = sorted({n for ns in ROUTE_SECRETS.values() for n in ns})
     present, _ = load_secrets(names, environ)
     iso_ok, iso_detail = isolation_available()
     return {"credentials": sorted(k for k in present if k in names),
-            "harness": {k: {"version": a.version()} for k, a in ADAPTERS.items()},
+            "harness": {k: {"version": a.version(), **binary_identity(a.binary_path())} for k, a in ADAPTERS.items()},
             "isolation": {"ok": iso_ok, "detail": iso_detail}}
 
 

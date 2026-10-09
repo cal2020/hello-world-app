@@ -102,3 +102,7 @@ def test_adapter_end_to_end_with_replay(env, tmp_path, adapter_cls, kind, route,
         for v in secrets.values():
             assert v not in text, ref.path
     assert out.lineage["staging_manifest_digest"] == staged.manifest_digest
+    # every attempt records the harness it ran and whether that is the release its invocation was verified against
+    assert out.lineage["harness_version"] == "replay-harness 0.0.0 (TEST ONLY)"
+    assert out.lineage["harness_verified_version"] == adapter.verified_version
+    assert out.lineage["harness_version_matches_verified"] is False

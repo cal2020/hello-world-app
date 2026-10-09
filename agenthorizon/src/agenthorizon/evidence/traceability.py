@@ -226,6 +226,14 @@ REQUIREMENTS: tuple[Req, ...] = (
     R("R7.5", "Repeated trials and alternative harnesses are separate experiment identities", "MP §7", CORE,
       [P + "runs/identity.py:RunDefinition"], ["tests/test_experiments.py::test_trials_are_separate_run_identities"],
       VERIFIED),
+    R("R7.6", "A run records the harness that executes it (the judge workers' report when planned in the API); a "
+      "harness other than the release its invocation was verified against is recorded and never paper-compatible",
+      "MP §7, §9", CORE, [P + "runs/plan.py:_harness_identity", P + "judging/harnesses.py:HarnessAdapter",
+                          P + "judging/agentic.py:run_agentic_attempt"],
+      ["tests/test_runs.py::test_application_mode_plans_with_the_judge_workers_harness",
+       "tests/test_doctor.py::test_version_match_is_exact_on_release_boundaries",
+       "tests/test_doctor.py::test_report_runs_each_version_once_and_flags_a_harness_off_the_verified_release",
+       "tests/test_agentic_replay.py::test_adapter_end_to_end_with_replay", "docker/smoke.py"], VERIFIED),
     # ---- 8 scoring
     R("R8.1", "Fixed denominators; missing/invalid incorrect and reported separately; exact fractions",
       "MP §8, S5", CORE, [P + "scoring/protocol.py:score"],

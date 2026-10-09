@@ -98,15 +98,16 @@ def _resolve(request: Request, cfg: RunConfigIn, budget: float | None, price: Pr
     from agenthorizon.sources.cache import PinnedFileError
     from agenthorizon.sources.gitsource import GitSourceError
 
+    caps = worker_caps(eng(request))
     try:
-        definition, info = resolve(s, rc)
+        definition, info = resolve(s, rc, worker_harness=caps["harness"])
     except (PlanError, DatasetNotFound, KeyError, ValueError) as exc:
         raise err(422, "invalid_config", str(exc)) from exc
     except (PinnedFileError, GitSourceError) as exc:  # e.g. the pinned authors' repository is not checked out
         raise err(409, "source_unavailable", str(exc)) from exc
     override = price.model_dump() if price else None
     plan = preflight(s, definition, info["dataset_version"], info["problems"], budget_usd=budget, price_override=override,
-                     worker_caps=worker_caps(eng(request)))
+                     worker_caps=caps)
     return definition, plan, override
 
 

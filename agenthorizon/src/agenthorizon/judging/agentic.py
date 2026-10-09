@@ -74,8 +74,11 @@ def run_agentic_attempt(
                        readonly_inputs=[r for r in READONLY_INPUTS if (staged.workspace / r).exists() or (staged.workspace / r).is_symlink()],
                        tool_dirs=tool_dirs() + list(extra_tool_dirs or []), timeout_s=timeout_s, stdin=inv.stdin,
                        upstream_proxy=default_upstream_proxy(), ca_bundle=ca, direct_endpoints=endpoint_of(run.base_url))
+    harness_version = adapter.version()
     lineage = {
-        "interface": adapter.interface, "harness_binary": inv.argv[0], "harness_version": adapter.version(),
+        "interface": adapter.interface, "harness_binary": inv.argv[0], "harness_version": harness_version,
+        "harness_verified_version": adapter.verified_version or None,
+        "harness_version_matches_verified": adapter.version_matches(harness_version),
         "model_requested": run.model, "route": run.route, "effort": run.effort, "isolation": isolation,
         "allowed_hosts": sorted(inv.allowed_hosts),
         "self_hosted_endpoints": sorted(f"{h}:{p}" for h, p in endpoint_of(run.base_url)), "staging_mode": staged.mode, "staging_manifest_digest": staged.manifest_digest,

@@ -1,6 +1,6 @@
 """Container packaging keeps the trust boundaries (static checks on the resolved compose model and the seccomp file).
 
-The running stack is exercised separately by docker/smoke.sh (images, migrations, workers, a run, scoring, export).
+The running stack is exercised separately by docker/smoke.py (images, migrations, workers, a run, scoring, export).
 """
 
 from __future__ import annotations
@@ -72,6 +72,26 @@ def test_compose_trust_boundaries():
     assert cfg["networks"]["backend"]["internal"] is True
     assert set(sv["postgres"]["networks"]) == {"backend"}
     assert sv["worker-trusted"]["environment"]["AH_SCORER_DATABASE_URL"].startswith("postgresql+psycopg://ah_scorer:")
+
+
+@pytest.mark.skipif(not (ROOT / "docker" / "harnesses" / "package.json").is_file(),
+                    reason="needs the repository checkout (images carry src/ and tests/ only)")
+def test_harness_pins_agree_everywhere():
+    """The adapters' verified releases are what the judge image installs and checks, with recorded --help evidence."""
+    from agenthorizon.judging.harnesses import ADAPTERS
+
+    pins = {k: a.verified_version for k, a in ADAPTERS.items()}
+    h = ROOT / "docker" / "harnesses"
+    deps = json.loads((h / "package.json").read_text())["dependencies"]
+    assert {a.package: pins[k] for k, a in ADAPTERS.items() if a.package in deps} == deps and len(deps) == 4
+    lock = json.loads((h / "package-lock.json").read_text())["packages"]
+    assert {p: lock[f"node_modules/{p}"]["version"] for p in deps} == deps
+    assert f"openhands=={pins['openhands']}" in (h / "openhands-constraints.txt").read_text().splitlines()
+    dockerfile = (ROOT / "docker" / "Dockerfile").read_text()
+    help_files = " ".join(f.name for f in (ROOT / "evidence" / "harness_cli").iterdir())
+    for k, v in pins.items():
+        assert v.replace(".", "\\.") in dockerfile, (k, v)  # the build fails unless --version reports the pin
+        assert f"-{v}-" in help_files, (k, v)
 
 
 @pytest.mark.skipif(not (ROOT / "docker" / "seccomp-judge.json").is_file(),

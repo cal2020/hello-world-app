@@ -9,6 +9,9 @@ import sys
 
 kind = os.environ.get("AH_REPLAY_KIND", "claude")
 args = sys.argv[1:]
+if args == ["--version"]:  # never one of the verified releases: lineage must say so
+    print("replay-harness 0.0.0 (TEST ONLY)")
+    sys.exit(0)
 stdin = sys.stdin.read() if not sys.stdin.isatty() else ""
 blob = " ".join(args) + "\n" + stdin
 m = re.search(r"Trajectory ID: `([0-9a-f-]{36})`", blob)

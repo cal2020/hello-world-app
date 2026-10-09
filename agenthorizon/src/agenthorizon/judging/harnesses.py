@@ -12,6 +12,7 @@ files in the task's private HOME — never inherited from the worker's environme
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 import uuid
@@ -114,6 +115,8 @@ class HarnessAdapter:
     interface: str = ""
     binary: str = ""
     package: str = ""
+    # the release whose --help the invocation flags were checked against (evidence/harness_cli/, docker/harnesses/)
+    verified_version: str = ""
     reference_parser: str = ""
 
     def __init__(self, binary_override: str | None = None):
@@ -125,6 +128,12 @@ class HarnessAdapter:
     def version(self) -> str | None:
         p = self.binary_path()
         return _version([p, "--version"]) if p else None
+
+    def version_matches(self, version: str | None) -> bool | None:
+        """Does a ``--version`` string name the verified release? None when either side is unknown."""
+        if not version or not self.verified_version:
+            return None
+        return re.search(rf"(?<![\d.]){re.escape(self.verified_version)}(?![\d.])", version) is not None
 
     def required_secrets(self, route: str | None) -> list[str]:
         raise NotImplementedError
@@ -144,6 +153,7 @@ class ClaudeCodeAdapter(HarnessAdapter):
     interface = "claude_code"
     binary = "claude"
     package = "@anthropic-ai/claude-code"
+    verified_version = "2.1.295"
     reference_parser = "claude --output-format json -> .result (evaluate_trajectories.py)"
 
     def required_secrets(self, route):
@@ -266,6 +276,7 @@ class CodexAdapter(HarnessAdapter):
     interface = "codex"
     binary = "codex"
     package = "@openai/codex"
+    verified_version = "0.162.1"
     reference_parser = "parse_codex_output (verbatim)"
 
     def required_secrets(self, route):
@@ -332,6 +343,7 @@ class GeminiCliAdapter(HarnessAdapter):
     interface = "gemini_cli"
     binary = "gemini"
     package = "@google/gemini-cli"
+    verified_version = "0.63.0"
     reference_parser = "gemini --output-format json -> .response (+ session-file fallback)"
 
     def required_secrets(self, route):
@@ -476,6 +488,7 @@ class OpenCodeAdapter(HarnessAdapter):
     interface = "opencode"
     binary = "opencode"
     package = "opencode-ai"
+    verified_version = "1.18.35"
     reference_parser = "parse_opencode_output (verbatim)"
 
     def required_secrets(self, route):
@@ -585,6 +598,7 @@ class OpenHandsAdapter(HarnessAdapter):
     interface = "openhands"
     binary = "openhands"
     package = "openhands (PyPI, CLI)"
+    verified_version = "1.16.0"
     reference_parser = "parse_openhands_output (ported; token estimate dropped)"
 
     def required_secrets(self, route):

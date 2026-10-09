@@ -388,6 +388,33 @@ def test_dry_run_plan_is_honest_about_blocks_cost_and_classification(ingested):
     assert any("model identifier" in p for p in info4["problems"])
 
 
+@pytest.mark.reference
+def test_application_mode_plans_with_the_judge_workers_harness(ingested, monkeypatch):
+    """The API image has no harness binaries: the definition records what the judge workers will execute, and a
+    harness other than the verified release is never paper-compatible."""
+    from agenthorizon.judging.harnesses import ADAPTERS
+
+    s, dv = ingested
+    full = next(m for m in dv.manifests() if m.partition == "full-release")
+    cfg = RunConfig(dataset_version=dv.id, judge_config="claude_code:claude-opus-4.7", manifest=full.manifest_id, smoke_n=2)
+    monkeypatch.setattr(ADAPTERS["claude_code"], "binary_path", lambda: None)  # like the API process in the Compose stack
+    worker = {"version": "2.1.295 (Claude Code)", "path": "/app/var/tools/npm/cli.js", "sha256": "ab" * 32}
+    caps = {"workers": ["judge@t"], "credentials": ["ANTHROPIC_API_KEY"], "isolation": {"ok": True, "detail": "test"},
+            "harness": {"claude_code": worker}}
+    d, info = resolve(s, cfg, worker_harness=caps["harness"])
+    assert {k: d.judge["harness"][k] for k in worker} == worker
+    assert not any("verified against" in r for r in d.classification["reasons"])
+    plan = preflight(s, d, dv, info["problems"], budget_usd=None, worker_caps=caps)
+    assert plan["checks"]["harness"]["ok"] and plan["checks"]["harness"]["matches_definition"]
+    assert not any("judge worker has" in b or "not installed" in b for b in plan["blocked"])
+    d2, _ = resolve(s, cfg, worker_harness={"claude_code": {**worker, "version": "2.1.296 (Claude Code)"}})
+    assert d2.run_id != d.run_id and d2.classification["result_kind"] != "new_paper_compatible"
+    assert any("verified against 2.1.295" in r for r in d2.classification["reasons"])
+    d3, info3 = resolve(s, cfg, worker_harness={})  # no judge worker reports this harness
+    assert any("not installed" in b for b in preflight(s, d3, dv, info3["problems"], budget_usd=None,
+                                                       worker_caps={**caps, "harness": {}})["blocked"])
+
+
 # ---- 4. end to end through the real adapters, scored ---------------------------------------------------------
 REPLAY = ROOT / "src" / "agenthorizon" / "testing" / "replay_harness.py"
 

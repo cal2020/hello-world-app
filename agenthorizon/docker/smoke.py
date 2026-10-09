@@ -131,6 +131,18 @@ class Smoke:
         assert status == 409 and err.get("code") == "source_unavailable", (status, body[:300])
         self.step("plan_without_pinned_source", {"status": status, "code": err["code"], "message": err["message"]})
         self._copy_pinned_checkout("agenthorizon-repo")
+        # harness runs are planned in the API, which has no harness binaries: the definition must carry the judge
+        # workers' harness identity, and the image's harnesses must be the releases the invocations were verified on
+        agentic = {}
+        for iface, cid in HARNESS_CONFIGS.items():
+            p = self.jpost("/api/runs/plan", {"config": {"dataset_version": dv, "judge_config": cid,
+                                                         "manifest": f"{dv}:full-release", "smoke_n": 1}})
+            h = p["checks"].get("harness") or {}
+            harness_blocks = [b for b in p["blocked"] if "harness" in b or "judge worker has" in b]
+            assert h.get("ok") and h.get("matches_definition") and not harness_blocks, (cid, h, harness_blocks)
+            assert not any("verified against" in r for r in p["classification"]["reasons"]), (cid, p["classification"])
+            agentic[iface] = {"config": cid, "harness_version": h.get("worker_version"), "other_blocks": len(p["blocked"])}
+        self.step("agentic_plans", agentic)
         plan = self.jpost("/api/runs/plan", {"config": cfg})
         assert plan["ready_for_live_run"], plan.get("blocked")
         run = self.jpost("/api/runs", {"config": cfg, "concurrency": 2}, headers={"Idempotency-Key": secrets.token_hex(8)})

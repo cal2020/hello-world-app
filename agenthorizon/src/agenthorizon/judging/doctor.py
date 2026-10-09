@@ -84,8 +84,18 @@ def live_direct_probe(cfg: JudgeConfig, secrets: dict, base_url: str | None = No
             "at": utcnow_iso()}
 
 
+def _version_of(a, memo: dict | None) -> str | None:
+    """``--version`` of an adapter's binary, run at most once per binary within one capability report."""
+    if memo is None:
+        return a.version()
+    key = a.binary_path()
+    if key not in memo:
+        memo[key] = a.version()
+    return memo[key]
+
+
 def diagnose(cfg: JudgeConfig, *, environ: dict | None = None, probe_network: bool = True, live: bool = False,
-             base_urls: dict | None = None) -> CapabilityReport:
+             base_urls: dict | None = None, versions: dict | None = None) -> CapabilityReport:
     from agenthorizon.runs.judges import load_secrets, required_secret_names
 
     m = MODELS_BY_KEY[cfg.model_key]
@@ -99,14 +109,18 @@ def diagnose(cfg: JudgeConfig, *, environ: dict | None = None, probe_network: bo
     if cfg.interface == "direct":
         if cfg.route == "chatgpt_subscription":
             a = ADAPTERS["codex"]
-            checks["installation"] = {"ok": bool(a.binary_path()), "binary": a.binary_path(), "version": a.version()}
+            v = _version_of(a, versions)
+            checks["installation"] = {"ok": bool(a.binary_path()), "binary": a.binary_path(), "version": v,
+                                      "verified_version": a.verified_version, "matches_verified": a.version_matches(v)}
         else:
             mod = DIRECT_SDK.get(cfg.route or "", "httpx")
             checks["installation"] = {"ok": importlib.util.find_spec(mod) is not None, "sdk": mod}
     else:
         a = ADAPTERS[cfg.interface]
-        checks["installation"] = {"ok": bool(a.binary_path() and a.version()), "binary": a.binary_path(),
-                                  "version": a.version(), "package": a.package}
+        v = _version_of(a, versions)
+        checks["installation"] = {"ok": bool(a.binary_path() and v), "binary": a.binary_path(), "version": v,
+                                  "verified_version": a.verified_version, "matches_verified": a.version_matches(v),
+                                  "package": a.package}
         iso_ok, iso_detail = isolation_available()
         checks["isolation"] = {"ok": iso_ok, "detail": iso_detail}
         checks["paper_mode_instructions"] = {"ok": False, "detail": "official AGENTS.md not located in the release; "
@@ -125,6 +139,9 @@ def diagnose(cfg: JudgeConfig, *, environ: dict | None = None, probe_network: bo
         reasons.append("serving route not stated by any accessible source")
     if not checks["installation"]["ok"]:
         reasons.append("harness/SDK not installed")
+    elif checks["installation"].get("matches_verified") is False:
+        reasons.append(f"installed {checks['installation']['version']!r} is not the verified release "
+                       f"{checks['installation']['verified_version']} (runs are extension-class)")
     if checks.get("isolation") and not checks["isolation"]["ok"]:
         reasons.append("isolation backend unavailable")
     if missing:
@@ -155,7 +172,9 @@ def diagnose(cfg: JudgeConfig, *, environ: dict | None = None, probe_network: bo
 
 def doctor(*, environ: dict | None = None, probe_network: bool = True, live: bool = False,
            base_urls: dict | None = None) -> dict:
-    reports = [diagnose(c, environ=environ, probe_network=probe_network, live=live, base_urls=base_urls) for c in CONFIGS]
+    versions: dict = {}  # one --version per binary for the whole report
+    reports = [diagnose(c, environ=environ, probe_network=probe_network, live=live, base_urls=base_urls, versions=versions)
+               for c in CONFIGS]
     counts: dict[str, int] = {}
     for r in reports:
         counts[r.status] = counts.get(r.status, 0) + 1

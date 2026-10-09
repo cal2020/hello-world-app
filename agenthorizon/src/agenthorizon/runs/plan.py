@@ -105,7 +105,18 @@ def _selection(dv: DatasetVersion, cfg: RunConfig) -> dict:
             "partition": m.partition, "role": m.role, "example_ids": sorted(m.example_ids)}
 
 
-def resolve(settings: Settings, cfg: RunConfig) -> tuple[RunDefinition, dict]:
+def _harness_identity(interface: str, worker_harness: dict | None) -> dict:
+    """The harness that will execute the run. In application mode that is what the judge workers report (the API
+    process has no harness binaries); otherwise it is this process's own binary (CLI mode)."""
+    if worker_harness is not None:
+        w = worker_harness.get(interface) or {}
+        return {"interface": interface, "version": w.get("version"), "path": w.get("path"), "sha256": w.get("sha256")}
+    a = ADAPTERS[interface]
+    return {"interface": interface, "version": a.version(), **binary_identity(a.binary_path())}
+
+
+def resolve(settings: Settings, cfg: RunConfig, *, worker_harness: dict | None = None) -> tuple[RunDefinition, dict]:
+    """``worker_harness`` (application mode): the live judge workers' harness report, per interface."""
     dv = DatasetVersion(settings.datasets_dir / cfg.dataset_version)
     c = get_config(cfg.judge_config)
     interface = c.interface
@@ -137,8 +148,7 @@ def resolve(settings: Settings, cfg: RunConfig) -> tuple[RunDefinition, dict]:
                          "paper_mode": pre_id in PAPER_PREPROCESSING,
                          "released_code_mode": pre_id.startswith(RELEASED_PREPROCESSING_PREFIXES) or pre_id == "native-512x332"}
         if route == "chatgpt_subscription":
-            a = ADAPTERS["codex"]
-            harness = {"interface": "codex", "version": a.version(), **binary_identity(a.binary_path())}
+            harness = _harness_identity("codex", worker_harness)
     else:
         prompt = official_agentic_prompt()
         if cfg.instructions == "rubric-extension":
@@ -151,8 +161,7 @@ def resolve(settings: Settings, cfg: RunConfig) -> tuple[RunDefinition, dict]:
             if instr is None:
                 raise PlanError(f"instruction file {cfg.instructions} not readable")
         preprocessing = None
-        a = ADAPTERS[interface]
-        harness = {"interface": interface, "version": a.version(), **binary_identity(a.binary_path())}
+        harness = _harness_identity(interface, worker_harness)
         if model_id:
             harness_model, notes = harness_model_string(interface, route, model_id)
             if notes:
@@ -178,6 +187,12 @@ def resolve(settings: Settings, cfg: RunConfig) -> tuple[RunDefinition, dict]:
         synthetic_data=dv.synthetic, official_selection=bool(selection.get("official")))
     if execution["isolation"] != "unshare":
         classification["reasons"].append("judge isolation disabled (development backend)")
+        if classification["result_kind"] == "new_paper_compatible":
+            classification["result_kind"] = "extension"
+    ha = ADAPTERS[harness["interface"]] if harness else None
+    if ha and ha.version_matches(harness["version"]) is False:
+        classification["reasons"].append(f"harness {harness['interface']} reports {harness['version']!r}; its invocation was "
+                                         f"verified against {ha.verified_version}")
         if classification["result_kind"] == "new_paper_compatible":
             classification["result_kind"] = "extension"
     definition = RunDefinition(
