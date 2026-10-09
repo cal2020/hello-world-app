@@ -187,20 +187,20 @@ Checked against upstream sources: Ollama `docs/api.md`, `docs/faq.mdx`, `api/typ
 
 ```mermaid
 sequenceDiagram
-  participant App as App (model gateway)
-  participant TS as Tailnet (WireGuard)
-  participant Serve as Laptop tailscale serve (HTTPS 443)
-  participant Relay as Relay (loopback port 11500)
-  participant O as Ollama (loopback port 11434)
-  App->>App: policy check, model pin, context budget, breaker, limiter
-  App->>TS: HTTPS POST /api/chat with bearer token to the model-host MagicDNS name
+  participant App as App<br>(model gateway)
+  participant TS as Tailnet<br>(WireGuard)
+  participant Serve as Laptop tailscale serve<br>(HTTPS 443)
+  participant Relay as Relay<br>(loopback port 11500)
+  participant O as Ollama<br>(loopback port 11434)
+  Note right of App: policy check, model pin,<br>context budget,<br>breaker, limiter
+  App->>TS: HTTPS POST /api/chat<br>with bearer token to the<br>model-host MagicDNS name
   TS->>Serve: encrypted tailnet traffic
-  Serve->>Relay: HTTP, X-Forwarded-For set to the caller tailnet IP
-  Relay->>Relay: whois(caller), token, endpoint and model allowlist, limits
-  Relay->>O: POST /api/chat, Host rewritten to localhost, Origin stripped, truncate and shift false
-  O-->>Relay: JSON (message.content, done_reason, counts, durations in ns)
+  Serve->>Relay: HTTP, X-Forwarded-For set<br>to the caller tailnet IP
+  Note right of Relay: whois(caller), token,<br>endpoint and model<br>allowlist, limits
+  Relay->>O: POST /api/chat, Host rewritten<br>to localhost, Origin stripped,<br>truncate and shift false
+  O-->>Relay: JSON (message.content,<br>done_reason, counts,<br>durations in ns)
   Relay-->>App: same body plus relay headers (relay version, model digest)
-  App->>App: reject remote, schema-validate, normalize, run checks, persist attempt and version
+  Note right of App: reject remote,<br>validate schema,<br>normalize, run checks,<br>persist attempt<br>and version
 ```
 
 ### 5.4 Gateway requirements (app side)
