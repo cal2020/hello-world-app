@@ -12,6 +12,10 @@ from agenthorizon.util.io import utcnow_iso
 EVIDENCE = PROJECT_ROOT / "evidence"
 
 
+def _counts(d: dict) -> str:
+    return ", ".join(f"{k}: {n}" for k, n in d.items()) or "none"
+
+
 def _load(name: str) -> dict:
     p = EVIDENCE / name
     return json.loads(p.read_text()) if p.is_file() else {}
@@ -77,7 +81,7 @@ def reproduction_report(settings: Settings) -> str:
         "in a separate reference column.", "",
         "## Sources", "", "| Source | Status | Revision |", "| --- | --- | --- |", *src_rows, "",
         "## Data acquired", "",
-        f"Official AgentHorizon artifacts (`DATA_AVAILABILITY.json`): {dict(art)}.", "",
+        f"Official AgentHorizon artifacts (`DATA_AVAILABILITY.json`): {_counts(art)}.", "",
         "| Artifact | Status | Basis |", "| --- | --- | --- |",
         *[f"| {a['name'][:90]} | {a['status']} | {a.get('basis', '')[:90]} |" for a in key_art], "",
         "Supplemental sources (real data, kept out of every AgentHorizon denominator):", "",
@@ -106,7 +110,7 @@ def reproduction_report(settings: Settings) -> str:
         "Unresolved (`PAPER_SPEC.json → unresolved`):", "",
         *[f"- **{u['item']}**: {u['detail']}" for u in spec.get("unresolved", [])], "",
         "## Models and harnesses", "",
-        f"Registered judge configurations: {len(caps.get('configurations', []))}; capability status: {cap_counts}. "
+        f"Registered judge configurations: {len(caps.get('configurations', []))}; capability status: {_counts(cap_counts)}. "
         "Most frequent reasons:", "",
         *[f"- {r} ({n})" for r, n in cap_reasons.most_common(8)], "",
         "Executed live: **none**. The five harness adapters ran end to end inside the real sandbox with replayed "
@@ -119,7 +123,7 @@ def reproduction_report(settings: Settings) -> str:
         "## Experiments", "",
         f"{len(exp)} experiments are registered with executable definitions (`agenthorizon experiments list`):", "",
         "| Kind | Status counts |", "| --- | --- |",
-        *[f"| {k} | {dict(c)} |" for k, c in sorted(by_kind.items())], "",
+        *[f"| {k} | {_counts(c)} |" for k, c in sorted(by_kind.items())], "",
         "Most frequent blockers:", "", *[f"- {b} ({n})" for b, n in blockers.most_common(10)], "",
         "## Deterministic checks on the reference data", "",
         f"- Construction accounting arithmetic: {sum(1 for a in arith if a.get('ok'))}/{len(arith)} identities hold.",

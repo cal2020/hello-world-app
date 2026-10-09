@@ -1,0 +1,119 @@
+{
+ "warning": "TEST ONLY: synthetic fixture and a fake model endpoint; not benchmark results",
+ "project": "ahsmoke8ae2c9",
+ "steps": {
+  "stack_up_s": 10.6,
+  "operator": {
+   "user": "smoke-operator",
+   "role": "operator",
+   "mode": "hosted"
+  },
+  "ingest": {
+   "dataset_version_id": "fixture-synthetic@local-12e2b585e02e+n1",
+   "status": "ingested",
+   "indexed": {
+    "steps": 718,
+    "assets": 718,
+    "examples": 15,
+    "manifests": 3,
+    "gold_labels": 15,
+    "grouping_rows": 15,
+    "dataset_version_id": "fixture-synthetic@local-12e2b585e02e+n1"
+   }
+  },
+  "judge_worker_presence": {
+   "worker_id": "judge@7003d7925e42:7",
+   "isolation": {
+    "ok": true,
+    "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+   },
+   "credentials": [
+    "ANTHROPIC_API_KEY"
+   ],
+   "harness": {
+    "codex": "codex-cli 0.162.1",
+    "opencode": "1.18.35",
+    "openhands": "OpenHands CLI 1.16.0",
+    "gemini_cli": "0.63.0",
+    "claude_code": "2.1.295 (Claude Code)"
+   }
+  },
+  "plan_without_pinned_source": {
+   "status": 409,
+   "code": "source_unavailable",
+   "message": "pinned source agenthorizon-repo@8584a347370a is not checked out in /data/sources; run `agenthorizon sources checkout agenthorizon-repo` (admin/trusted side)"
+  },
+  "pinned_source_copied": {
+   "source_id": "agenthorizon-repo",
+   "revision": "8584a347370ab1d92b908732cfabe72b3a23486d"
+  },
+  "run": {
+   "run_id": "run-58043e3592aa742f5cc5",
+   "status": "completed",
+   "task_states": {
+    "completed": 4
+   },
+   "classification": "test_fixture"
+  },
+  "score": {
+   "score_id": 1,
+   "manifest_id": "fixture-synthetic@local-12e2b585e02e+n1:full-release"
+  },
+  "export": {
+   "sha256": "8743e180daeca348cdaea3113c9a5c820c5c7baeaddd204e9bb089c9d9c9bc66",
+   "files": 11,
+   "secret_values_found": []
+  },
+  "capability_probe": {
+   "source": "judge worker",
+   "measured_by": "judge@7003d7925e42:7",
+   "harness": {
+    "claude_code": {
+     "config": "claude_code:claude-opus-4.7",
+     "installed": true,
+     "version": "2.1.295 (Claude Code)",
+     "isolation": true
+    },
+    "codex": {
+     "config": "codex:gpt-5.5",
+     "installed": true,
+     "version": "codex-cli 0.162.1",
+     "isolation": true
+    },
+    "gemini_cli": {
+     "config": "gemini_cli:gemini-3.1-pro",
+     "installed": true,
+     "version": "0.63.0",
+     "isolation": true
+    },
+    "opencode": {
+     "config": "opencode:qwen3.6-27b",
+     "installed": true,
+     "version": "1.18.35",
+     "isolation": true
+    },
+    "openhands": {
+     "config": "openhands:qwen3.6-27b",
+     "installed": true,
+     "version": "OpenHands CLI 1.16.0",
+     "isolation": true
+    }
+   },
+   "anthropic_credential_missing": []
+  },
+  "boundaries": {
+   "judge_private_entries": 0,
+   "trusted_private_entries": 1,
+   "judge_db_private_read": "denied",
+   "judge_cap_eff": "0000000000000000",
+   "judge_docker_socket": "absent",
+   "anthropic_key_present": {
+    "worker-judge": "1",
+    "worker-trusted": "0",
+    "api": "0"
+   }
+  }
+ },
+ "passed": true,
+ "generated_at": "2026-10-09T22:52:34Z"
+}
