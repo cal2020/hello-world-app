@@ -114,13 +114,13 @@ def add_user(body: UserIn, request: Request, p: Principal = Depends(require("use
     return {"user_id": body.user_id, "role": body.role, "token": tok, "note": "shown once; store it securely"}
 
 
-@router.post("/judges/doctor")
+@router.post("/judges/doctor", status_code=202)
 def refresh_capabilities(request: Request, p: Principal = Depends(require("judges.refresh"))):
-    from agenthorizon.app.api.catalog import EVIDENCE
-    from agenthorizon.judging.doctor import doctor
-    from agenthorizon.util.io import atomic_write_json
+    """Queue a capability probe on a judge worker (the API never probes its own environment, which holds neither
+    harnesses nor provider credentials). The report lands in the job result and backs GET /api/judges."""
+    from agenthorizon.app.jobs import enqueue
 
-    rep = doctor(probe_network=True, live=False)
-    atomic_write_json(EVIDENCE / "MODEL_CAPABILITIES.json", rep)
-    audit(eng(request), p, "judges.doctor", None, rep["counts"], request.state.request_id)
-    return rep
+    jid, created = enqueue(eng(request), "doctor", {"network": True}, created_by=p.user_id, dedupe_key="judges-doctor",
+                           max_attempts=1)
+    audit(eng(request), p, "judges.doctor", str(jid), {"created": created}, request.state.request_id)
+    return {"job_id": jid, "created": created, "status": "queued"}

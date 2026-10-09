@@ -1,0 +1,11 @@
+{
+  "name": "agenthorizon-judge-harnesses",
+  "private": true,
+  "description": "Exact harness CLI versions verified against their --help output (evidence/harness_cli/).",
+  "dependencies": {
+    "@anthropic-ai/claude-code": "2.1.295",
+    "@google/gemini-cli": "0.63.0",
+    "@openai/codex": "0.162.1",
+    "opencode-ai": "1.18.35"
+  }
+}

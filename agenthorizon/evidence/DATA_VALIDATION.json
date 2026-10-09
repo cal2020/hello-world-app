@@ -1,0 +1,624 @@
+{
+  "generated_at": "2026-10-09T22:26:44Z",
+  "official_release": {
+    "dataset": "ServiceNow/AgentHorizon (S3)",
+    "status": "not ingested",
+    "reason": "source lock status: inaccessible",
+    "access_attempts": [
+      {
+        "url": "https://huggingface.co/api/datasets/ServiceNow/AgentHorizon",
+        "at": "2026-10-09T19:43:41Z",
+        "outcome": "egress_denied",
+        "detail": "proxy refused CONNECT: 403 Forbidden; proxy status: gateway answered 403 to CONNECT (policy denial or upstream failure)"
+      }
+    ],
+    "checks_to_run": [
+      {
+        "check": "markdown_json_pairing",
+        "severity": "error",
+        "detail": "15 Markdown vs 15 JSON trajectory files"
+      },
+      {
+        "check": "opaque_uuid4_ids",
+        "severity": "warning",
+        "detail": "trajectory ids should be opaque UUID v4"
+      },
+      {
+        "check": "quarantine",
+        "severity": "error",
+        "detail": "records failing schema/JSON validation (kept in quarantine/)"
+      },
+      {
+        "check": "label_join_coverage",
+        "severity": "error",
+        "detail": "15/15 examples have gold labels"
+      },
+      {
+        "check": "orphan_labels",
+        "severity": "error",
+        "detail": "label rows without a trajectory"
+      },
+      {
+        "check": "label_file_conflicts",
+        "severity": "error",
+        "detail": "examples listed in more than one label file"
+      },
+      {
+        "check": "judge_view_label_correlated_fields",
+        "severity": "error",
+        "detail": "judge-visible JSON must not carry label/pairing fields (milestones, metadata, source ids)"
+      },
+      {
+        "check": "schema_version_observed",
+        "severity": "info",
+        "detail": "record version field as released"
+      },
+      {
+        "check": "step_order_and_ids",
+        "severity": "error",
+        "detail": "native step_id must be 0..n-1 in released order without duplicates"
+      },
+      {
+        "check": "timestamps_monotonic_us",
+        "severity": "warning",
+        "detail": "timestamp_us (microseconds from start) non-decreasing"
+      },
+      {
+        "check": "action_types",
+        "severity": "warning",
+        "detail": "unrecognised action types are preserved verbatim"
+      },
+      {
+        "check": "screenshot_links_resolvable",
+        "severity": "error",
+        "detail": "every screenshot reference is a safe working-directory-relative path present in the release listing"
+      },
+      {
+        "check": "images_readable",
+        "severity": "error",
+        "detail": "718 materialized images decoded"
+      },
+      {
+        "check": "media_hash_integrity",
+        "severity": "error",
+        "detail": "materialized bytes match the release listing digests"
+      },
+      {
+        "check": "image_dimensions",
+        "severity": "info",
+        "detail": "dimension distribution of materialized screenshots"
+      },
+      {
+        "check": "markdown_regenerates_byte_identical",
+        "severity": "warning",
+        "detail": "re-rendering the JSON with the authors' renderer reproduces the released Markdown (15/15)"
+      },
+      {
+        "check": "instruction_text_fidelity",
+        "severity": "error",
+        "detail": "Markdown goal equals JSON instruction (stripped)"
+      },
+      {
+        "check": "recording_reuse_pattern",
+        "severity": "warning",
+        "detail": "a recording is expected to serve at most one positive and its swapped negative(s)"
+      },
+      {
+        "check": "leakage_paired_id_in_judge_inputs",
+        "severity": "error",
+        "detail": "the paired (instruction-source) deliverable id must not appear in judge-visible files"
+      },
+      {
+        "check": "leakage_other_example_ids_in_judge_inputs",
+        "severity": "error",
+        "detail": "judge-visible files must not reference other examples"
+      },
+      {
+        "check": "recording_owner_id_in_media_paths",
+        "severity": "info",
+        "detail": "count of examples whose judge-visible media paths contain the recording owner's deliverable id. Expected under the released layout; both examples sharing a recording carry the same id, so it does not reveal the label in single-task isolation. Use opaque-paths staging to remove it."
+      }
+    ],
+    "release_reconciliation_targets": "evidence/RELEASE_RECONCILIATION.md (legacy 605/768 composition; revised check table)",
+    "commands": [
+      "agenthorizon data ingest --source hf --revision <pinned revision from `agenthorizon sources lock`>",
+      "agenthorizon data validate --dataset-version <dataset version id printed by the ingest>"
+    ]
+  },
+  "synthetic_fixture": {
+    "warning": "SYNTHETIC test fixture: its records, labels and counts are test data, never AgentHorizon content",
+    "dataset_version_id": "fixture-synthetic@local-12e2b585e02e+n1",
+    "ingest_status": "ingested",
+    "validation": {
+      "checks": [
+        {
+          "check": "markdown_json_pairing",
+          "severity": "error",
+          "status": "pass",
+          "detail": "15 Markdown vs 15 JSON trajectory files",
+          "count": 0,
+          "examples": [],
+          "data": {}
+        },
+        {
+          "check": "opaque_uuid4_ids",
+          "severity": "warning",
+          "status": "pass",
+          "detail": "trajectory ids should be opaque UUID v4",
+          "count": 0,
+          "examples": [],
+          "data": {}
+        },
+        {
+          "check": "quarantine",
+          "severity": "error",
+          "status": "pass",
+          "detail": "records failing schema/JSON validation (kept in quarantine/)",
+          "count": 0,
+          "examples": [],
+          "data": {}
+        },
+        {
+          "check": "label_join_coverage",
+          "severity": "error",
+          "status": "pass",
+          "detail": "15/15 examples have gold labels",
+          "count": 0,
+          "examples": [],
+          "data": {}
+        },
+        {
+          "check": "orphan_labels",
+          "severity": "error",
+          "status": "pass",
+          "detail": "label rows without a trajectory",
+          "count": 0,
+          "examples": [],
+          "data": {}
+        },
+        {
+          "check": "label_file_conflicts",
+          "severity": "error",
+          "status": "pass",
+          "detail": "examples listed in more than one label file",
+          "count": 0,
+          "examples": [],
+          "data": {}
+        },
+        {
+          "check": "judge_view_label_correlated_fields",
+          "severity": "error",
+          "status": "pass",
+          "detail": "judge-visible JSON must not carry label/pairing fields (milestones, metadata, source ids)",
+          "count": 0,
+          "examples": [],
+          "data": {
+            "by_field": {}
+          }
+        },
+        {
+          "check": "schema_version_observed",
+          "severity": "info",
+          "status": "pass",
+          "detail": "record version field as released",
+          "count": null,
+          "examples": [],
+          "data": {
+            "versions": {
+              "null": 15
+            },
+            "shapes": {
+              "render-json": 15
+            }
+          }
+        },
+        {
+          "check": "step_order_and_ids",
+          "severity": "error",
+          "status": "pass",
+          "detail": "native step_id must be 0..n-1 in released order without duplicates",
+          "count": 0,
+          "examples": [],
+          "data": {}
+        },
+        {
+          "check": "timestamps_monotonic_us",
+          "severity": "warning",
+          "status": "pass",
+          "detail": "timestamp_us (microseconds from start) non-decreasing",
+          "count": 0,
+          "examples": [],
+          "data": {}
+        },
+        {
+          "check": "action_types",
+          "severity": "warning",
+          "status": "warn",
+          "detail": "unrecognised action types are preserved verbatim",
+          "count": 8,
+          "examples": [],
+          "data": {
+            "counts": {
+              "click": 136,
+              "type": 66,
+              "press": 66,
+              "hotkey": 66,
+              "scroll": 66,
+              "synthetic_gesture": 8,
+              "move": 64,
+              "key_down": 64,
+              "key_up": 62,
+              "wait": 62,
+              "drag": 58
+            },
+            "unrecognised": {
+              "synthetic_gesture": 8
+            },
+            "param_issues": {}
+          }
+        },
+        {
+          "check": "screenshot_links_resolvable",
+          "severity": "error",
+          "status": "pass",
+          "detail": "every screenshot reference is a safe working-directory-relative path present in the release listing",
+          "count": 0,
+          "examples": [],
+          "data": {}
+        },
+        {
+          "check": "images_readable",
+          "severity": "error",
+          "status": "pass",
+          "detail": "718 materialized images decoded",
+          "count": 0,
+          "examples": [],
+          "data": {}
+        },
+        {
+          "check": "media_hash_integrity",
+          "severity": "error",
+          "status": "pass",
+          "detail": "materialized bytes match the release listing digests",
+          "count": 0,
+          "examples": [],
+          "data": {}
+        },
+        {
+          "check": "image_dimensions",
+          "severity": "info",
+          "status": "pass",
+          "detail": "dimension distribution of materialized screenshots",
+          "count": null,
+          "examples": [],
+          "data": {
+            "top": [
+              {
+                "w": 342,
+                "h": 222,
+                "n": 694
+              },
+              {
+                "w": 1710,
+                "h": 1112,
+                "n": 24
+              }
+            ]
+          }
+        },
+        {
+          "check": "markdown_regenerates_byte_identical",
+          "severity": "warning",
+          "status": "pass",
+          "detail": "re-rendering the JSON with the authors' renderer reproduces the released Markdown (15/15)",
+          "count": 0,
+          "examples": [],
+          "data": {}
+        },
+        {
+          "check": "instruction_text_fidelity",
+          "severity": "error",
+          "status": "pass",
+          "detail": "Markdown goal equals JSON instruction (stripped)",
+          "count": 0,
+          "examples": [],
+          "data": {}
+        },
+        {
+          "check": "recording_reuse_pattern",
+          "severity": "warning",
+          "status": "pass",
+          "detail": "a recording is expected to serve at most one positive and its swapped negative(s)",
+          "count": 0,
+          "examples": [],
+          "data": {
+            "examples_per_recording": {
+              "1": 1,
+              "2": 7
+            },
+            "examples_per_instruction_text": {
+              "1": 1,
+              "2": 7
+            }
+          }
+        },
+        {
+          "check": "leakage_paired_id_in_judge_inputs",
+          "severity": "error",
+          "status": "pass",
+          "detail": "the paired (instruction-source) deliverable id must not appear in judge-visible files",
+          "count": 0,
+          "examples": [],
+          "data": {}
+        },
+        {
+          "check": "leakage_other_example_ids_in_judge_inputs",
+          "severity": "error",
+          "status": "pass",
+          "detail": "judge-visible files must not reference other examples",
+          "count": 0,
+          "examples": [],
+          "data": {}
+        },
+        {
+          "check": "recording_owner_id_in_media_paths",
+          "severity": "info",
+          "status": "pass",
+          "detail": "count of examples whose judge-visible media paths contain the recording owner's deliverable id. Expected under the released layout; both examples sharing a recording carry the same id, so it does not reveal the label in single-task isolation. Use opaque-paths staging to remove it.",
+          "count": 15,
+          "examples": [],
+          "data": {}
+        }
+      ],
+      "counts": {
+        "examples": 15,
+        "by_label": {
+          "negative": 8,
+          "positive": 7
+        },
+        "by_failure_category_status": {
+          "critical_mistake": 3,
+          "(absent)": 1,
+          "bad_side_effect": 1,
+          "misunderstanding_of_the_instruction": 3
+        },
+        "by_os": {
+          "windows": 7,
+          "macos": 4,
+          "linux": 4
+        },
+        "by_domain": {
+          "CREATIVITY": 3,
+          "GENERAL": 4,
+          "DEVELOPMENT": 4,
+          "PRODUCTIVITY": 4
+        },
+        "by_length_bin": {
+          "1-50": 11,
+          "301+": 4
+        },
+        "applications_top": [
+          [
+            "Calendar",
+            4
+          ],
+          [
+            "Browser",
+            4
+          ],
+          [
+            "Explorer",
+            4
+          ],
+          [
+            "IDE",
+            4
+          ],
+          [
+            "Files",
+            4
+          ],
+          [
+            "Slides",
+            3
+          ],
+          [
+            "Mail",
+            3
+          ]
+        ],
+        "distinct_application_sets": 4,
+        "steps": {
+          "total": 1418,
+          "max": 320,
+          "mean": 94.53,
+          "over_300": 4
+        },
+        "label_files": {
+          "AgentHorizon-Simple.jsonl": {
+            "rows": 7,
+            "joined": 7
+          },
+          "AgentHorizon.jsonl": {
+            "rows": 8,
+            "joined": 8
+          }
+        }
+      },
+      "error_count": 0,
+      "warning_count": 1,
+      "not_evaluable": 0
+    },
+    "reconciliation": {
+      "checks": [
+        {
+          "check": "release_totals",
+          "status": "not_applicable",
+          "detail": "synthetic fixture"
+        },
+        {
+          "check": "revised_partition_counts",
+          "status": "not_applicable",
+          "detail": "revised AH-D/AH/AH-S manifests not located; check table recorded in REFERENCE_DATA.json",
+          "target": {
+            "AH-D": [
+              162,
+              62,
+              100,
+              32,
+              26,
+              41,
+              1
+            ],
+            "AH": [
+              528,
+              227,
+              301,
+              48,
+              107,
+              142,
+              4
+            ],
+            "AH-S": [
+              683,
+              234,
+              449,
+              193,
+              99,
+              156,
+              1
+            ],
+            "TOTAL": [
+              1373,
+              523,
+              850,
+              273,
+              232,
+              339,
+              6
+            ]
+          }
+        },
+        {
+          "check": "croissant_declared_label_digest",
+          "status": "not_applicable",
+          "detail": "no released label file has the Croissant-declared digest (different file set)"
+        }
+      ],
+      "failures": 0
+    }
+  },
+  "supplemental_sources": [
+    {
+      "store": "agentrewardbench@05899fcfe52c",
+      "source_id": "agentrewardbench",
+      "revision": "05899fcfe52c925978944a23920373b7a9c63740",
+      "records": 1302,
+      "records_sha256": "e3ad5429a147b68fa6b543ece161a79078e8a8542cb93fbd08471dd254f989cd",
+      "license": "absent",
+      "coverage": {
+        "records": 1302,
+        "by_kind": {
+          "annotation_only": 1302
+        },
+        "field_coverage": {
+          "expert_success_label": 1.0,
+          "task_metadata": 1.0
+        },
+        "missing_material": {
+          "goal text": 1302,
+          "actions": 1302,
+          "screenshots": 1302,
+          "accessibility trees": 1302
+        },
+        "label_kinds": {
+          "expert_annotation": 5632
+        },
+        "records_with_compatible_binary_label": 1301,
+        "note": "Coverage is the fraction of records carrying each field; missing material lists what the release does not provide here (or what was unreachable). Usable binary labels follow the gold rule (primary annotation only)."
+      },
+      "summary": {
+        "annotation_rows": 1408,
+        "trajectories": 1302,
+        "multi_annotated": 106,
+        "split_unmapped": 0,
+        "alias_files": [
+          {
+            "path": "apps/annotations.csv",
+            "sha256": "155be0e6530d190c14a056f0195aaafa081c2a45a36e8f72b922c9fdc6838367",
+            "identical_to_primary_copy": true
+          }
+        ],
+        "benchmarks": {
+          "webarena": 398,
+          "workarena": 472,
+          "visualwebarena": 300,
+          "assistantbench": 132
+        },
+        "agents": {
+          "GenericAgent-Qwen_Qwen2.5-VL-72B-Instruct": 351,
+          "GenericAgent-gpt-4o-2024-11-20": 351,
+          "GenericAgent-meta-llama_Llama-3.3-70B-Instruct": 249,
+          "GenericAgent-anthropic_claude-3.7-sonnet": 351
+        }
+      },
+      "trajectories": {
+        "files_matched": 0,
+        "note": "trajectories not imported: the dataset (https://huggingface.co/datasets/McGill-NLP/agent-reward-bench) was not supplied"
+      },
+      "compatibility": {
+        "binary_success": "expert trajectory_success (primary, Unsure excluded)",
+        "failure_categories": "unavailable: ARB annotates side effects, optimality and looping under its own rubric"
+      }
+    },
+    {
+      "store": "osworld@b138d3482560",
+      "source_id": "osworld",
+      "revision": "b138d348256078fa634fc3b73567a7337c793e6b",
+      "records": 418,
+      "records_sha256": "f493ed7ebe44f32fa77b814e05a2aecf0fedbf317e0717a4e187e43290b0517f",
+      "license": "Apache-2.0",
+      "coverage": {
+        "records": 418,
+        "by_kind": {
+          "task_definition": 418
+        },
+        "field_coverage": {
+          "evaluator_spec": 1.0,
+          "instruction": 1.0,
+          "setup_config": 0.9712918660287081
+        },
+        "missing_material": {
+          "trajectory (task definitions are not trajectories)": 418,
+          "label": 418,
+          "split membership (no split file covers examples_windows)": 49
+        },
+        "label_kinds": {},
+        "records_with_compatible_binary_label": 0,
+        "note": "Coverage is the fraction of records carrying each field; missing material lists what the release does not provide here (or what was unreachable). Usable binary labels follow the gold rule (primary annotation only)."
+      },
+      "summary": {
+        "task_definitions": 418,
+        "by_platform": {
+          "ubuntu": 369,
+          "windows": 49
+        },
+        "split_files": {
+          "test_all.json": 369,
+          "test_small.json": 39,
+          "test_nogdrive.json": 361,
+          "test_infeasible.json": 26
+        },
+        "infeasible": 28
+      },
+      "trajectories": {
+        "traces": 0,
+        "note": "no trace export supplied (none is linked from the pinned repository)"
+      },
+      "compatibility": {
+        "binary_success": "machine evaluator score only (flagged; never official)",
+        "failure_categories": "unavailable"
+      }
+    }
+  ]
+}

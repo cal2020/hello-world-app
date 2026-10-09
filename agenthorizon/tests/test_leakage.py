@@ -110,3 +110,23 @@ def test_harness_environment_carries_only_route_credentials(interface, route, mo
     assert all(h for h in inv.allowed_hosts)
     blob = json.dumps(inv.env)
     assert "scorer:secret" not in blob
+
+
+SHELL_CALLS = {("os", "system"), ("os", "popen"), ("subprocess", "getoutput"), ("subprocess", "getstatusoutput")}
+
+
+def test_no_shell_execution_anywhere():
+    """Recorded actions and dataset strings are data: nothing in the package hands a string to a shell (MP §7, §12).
+    Subprocesses take argument vectors; ``shell=True`` and the shell-only helpers are absent everywhere."""
+    hits = []
+    for path in sorted(PKG.rglob("*.py")):
+        for node in ast.walk(ast.parse(path.read_text())):
+            if not isinstance(node, ast.Call):
+                continue
+            f = node.func
+            if isinstance(f, ast.Attribute) and isinstance(f.value, ast.Name) and (f.value.id, f.attr) in SHELL_CALLS:
+                hits.append(f"{path.relative_to(PKG)}:{node.lineno} {f.value.id}.{f.attr}")
+            for kw in node.keywords:
+                if kw.arg == "shell" and not (isinstance(kw.value, ast.Constant) and kw.value.value is False):
+                    hits.append(f"{path.relative_to(PKG)}:{node.lineno} shell=")
+    assert hits == []

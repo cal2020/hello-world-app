@@ -19,7 +19,7 @@ from pathlib import Path
 from agenthorizon.config import PROJECT_ROOT
 from agenthorizon.judging.contract import ArtifactRef, AttemptOutcome, Telemetry, redact
 from agenthorizon.judging.harnesses import GeminiCliAdapter, HarnessAdapter, HarnessRun
-from agenthorizon.judging.isolation.egress import default_upstream_proxy
+from agenthorizon.judging.isolation.egress import default_upstream_proxy, endpoint_of
 from agenthorizon.judging.isolation.sandbox import SandboxSpec, run_in_sandbox, run_unisolated
 from agenthorizon.judging.parsing import parse_agentic
 from agenthorizon.judging.workspace import READONLY_INPUTS, StagedWorkspace
@@ -73,11 +73,12 @@ def run_agentic_attempt(
     spec = SandboxSpec(task_dir=task_dir, argv=inv.argv, env=inv.env, allowed_hosts=inv.allowed_hosts,
                        readonly_inputs=[r for r in READONLY_INPUTS if (staged.workspace / r).exists() or (staged.workspace / r).is_symlink()],
                        tool_dirs=tool_dirs() + list(extra_tool_dirs or []), timeout_s=timeout_s, stdin=inv.stdin,
-                       upstream_proxy=default_upstream_proxy(), ca_bundle=ca)
+                       upstream_proxy=default_upstream_proxy(), ca_bundle=ca, direct_endpoints=endpoint_of(run.base_url))
     lineage = {
         "interface": adapter.interface, "harness_binary": inv.argv[0], "harness_version": adapter.version(),
         "model_requested": run.model, "route": run.route, "effort": run.effort, "isolation": isolation,
-        "allowed_hosts": sorted(inv.allowed_hosts), "staging_mode": staged.mode, "staging_manifest_digest": staged.manifest_digest,
+        "allowed_hosts": sorted(inv.allowed_hosts),
+        "self_hosted_endpoints": sorted(f"{h}:{p}" for h, p in endpoint_of(run.base_url)), "staging_mode": staged.mode, "staging_manifest_digest": staged.manifest_digest,
         "reference_parser": adapter.reference_parser, "deviations": inv.deviations + staged.deviations,
         "argv_redacted": [f"<prompt sha256={sha256_text(a)[:16]}>" if a == run.prompt_text else redact(a, secrets)
                           for a in inv.argv],

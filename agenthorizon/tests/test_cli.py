@@ -20,6 +20,15 @@ VALID = json.dumps({"success": True, "reasoning": "r", "confidence": "high", "mi
 
 @pytest.fixture()
 def cli(tmp_path, monkeypatch):
+    # Reuse the pinned checkouts (prompts are read from them) instead of cloning inside the test.
+    from agenthorizon.config import Settings
+    from agenthorizon.sources.cache import locked_revision
+
+    pinned = Settings().sources_dir
+    if not (pinned / f"ServiceNow__agenthorizon@{locked_revision('agenthorizon-repo')}" / ".git").exists():
+        pytest.skip("pinned authors' checkout unavailable (agenthorizon sources checkout agenthorizon-repo)")
+    (tmp_path / "var").mkdir()
+    (tmp_path / "var" / "sources").symlink_to(pinned, target_is_directory=True)
     monkeypatch.setenv("AH_VAR_DIR", str(tmp_path / "var"))
     for k in ("ANTHROPIC_API_KEY", "GEMINI_API_KEY", "OPENROUTER_API_KEY", "VLLM_API_KEY"):
         monkeypatch.delenv(k, raising=False)

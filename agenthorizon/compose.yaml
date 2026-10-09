@@ -1,0 +1,219 @@
+# AgentHorizon workbench: PostgreSQL, the API + UI, a trusted worker, and a judge worker. OPERATIONS.md has details.
+#
+#   cp .env.example .env                 # set the four database passwords; provider credentials are optional
+#   docker compose up -d --build --wait
+#   docker compose run --rm admin users add alice --role operator      # prints a login token once
+#   open http://127.0.0.1:8765/
+#
+# Trust boundaries
+#   * judge worker: connects as ah_worker (no access to the private schema), never mounts the private volume, holds
+#     no capabilities, has no Docker socket, and runs every attempt in a per-task namespace sandbox (unshare +
+#     pivot_root; docker/seccomp-judge.json adds exactly those syscalls). Provider credentials go to it only.
+#   * trusted worker: ingest, index, materialize, score, export as ah_scorer; reads the private (label) volume;
+#     never receives provider credentials.
+#   * API: ah_api; read-only data volumes; published on loopback by default (put TLS in front for remote access).
+
+name: agenthorizon
+
+x-hardening: &hardening
+  init: true
+  restart: unless-stopped
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  logging:
+    driver: json-file
+    options: {max-size: "20m", max-file: "5"}
+
+x-app-image: &app-image
+  image: ${AH_IMAGE_PREFIX:-agenthorizon}-app:${AH_IMAGE_TAG:-local}
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+    target: app
+    args:
+      AH_BUILD_GIT_COMMIT: ${AH_BUILD_GIT_COMMIT:-}
+
+services:
+  postgres:
+    image: postgres:16-bookworm@sha256:0ea6700a3b4f0ae6ce746519073558aed4d88a79d8d07622a9a644946c7319c4
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: agenthorizon
+      POSTGRES_DB: agenthorizon
+      POSTGRES_PASSWORD: ${AH_OWNER_DB_PASSWORD:?set AH_OWNER_DB_PASSWORD in .env}
+      AH_API_DB_PASSWORD: ${AH_API_DB_PASSWORD:?set AH_API_DB_PASSWORD in .env}
+      AH_WORKER_DB_PASSWORD: ${AH_WORKER_DB_PASSWORD:?set AH_WORKER_DB_PASSWORD in .env}
+      AH_SCORER_DB_PASSWORD: ${AH_SCORER_DB_PASSWORD:?set AH_SCORER_DB_PASSWORD in .env}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./docker/postgres/10-agenthorizon-roles.sh:/docker-entrypoint-initdb.d/10-agenthorizon-roles.sh:ro
+    shm_size: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agenthorizon -d agenthorizon"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    networks: [backend]
+
+  migrate:
+    <<: [*hardening, *app-image]
+    restart: "no"
+    command: ["db", "migrate"]
+    environment:
+      AH_DATABASE_URL: postgresql+psycopg://agenthorizon:${AH_OWNER_DB_PASSWORD}@postgres:5432/agenthorizon
+    depends_on:
+      postgres: {condition: service_healthy}
+    networks: [backend]
+
+  api:
+    <<: [*hardening, *app-image]
+    command: ["api", "--host", "0.0.0.0", "--port", "8765"]
+    environment:
+      AH_API_DATABASE_URL: postgresql+psycopg://ah_api:${AH_API_DB_PASSWORD}@postgres:5432/agenthorizon
+      AH_SESSION_TTL_HOURS: ${AH_SESSION_TTL_HOURS:-12}
+    ports:
+      - "${AH_API_BIND:-127.0.0.1}:${AH_API_PORT:-8765}:8765"
+    volumes:
+      - sources:/data/sources:ro
+      - datasets:/data/datasets:ro
+      - media:/data/media:ro
+      - runs:/data/runs:ro
+      - exports:/data/exports:ro
+      - supplemental:/data/supplemental:ro
+      - reports:/data/reports:ro
+      - cache:/data/cache
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    healthcheck:
+      test: ["CMD", "/opt/venv/bin/python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/api/health', timeout=5)"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    networks: [backend, edge]
+
+  worker-trusted:
+    <<: [*hardening, *app-image]
+    command: ["worker", "--queue", "trusted"]
+    environment:
+      AH_SCORER_DATABASE_URL: postgresql+psycopg://ah_scorer:${AH_SCORER_DB_PASSWORD}@postgres:5432/agenthorizon
+      AH_HF_TOKEN: ${AH_HF_TOKEN:-}
+      HTTPS_PROXY: ${AH_EGRESS_PROXY:-}
+    volumes:
+      - sources:/data/sources
+      - datasets:/data/datasets
+      - media:/data/media
+      - runs:/data/runs
+      - exports:/data/exports
+      - supplemental:/data/supplemental
+      - reports:/data/reports
+      - private:/data/private
+      - imports:/data/imports:ro   # offline mirrors for `source: local` ingestion (OPERATIONS.md)
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    networks: [backend, egress]
+
+  worker-judge:
+    <<: *hardening
+    image: ${AH_IMAGE_PREFIX:-agenthorizon}-judge:${AH_IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: judge
+      args:
+        AH_BUILD_GIT_COMMIT: ${AH_BUILD_GIT_COMMIT:-}
+    command: ["worker", "--queue", "judge"]
+    security_opt:
+      - no-new-privileges:true
+      - seccomp=./docker/seccomp-judge.json
+      - systempaths=unconfined  # the per-attempt sandbox mounts its own /proc (see OPERATIONS.md)
+    environment:
+      AH_WORKER_DATABASE_URL: postgresql+psycopg://ah_worker:${AH_WORKER_DB_PASSWORD}@postgres:5432/agenthorizon
+      # Provider credentials: this service only. Empty means "not configured"; runs needing it are blocked.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      VLLM_API_KEY: ${VLLM_API_KEY:-}
+      CODEX_AUTH_JSON: ${CODEX_AUTH_JSON:-}
+      HTTPS_PROXY: ${AH_EGRESS_PROXY:-}
+    volumes:
+      - sources:/data/sources:ro
+      - datasets:/data/datasets:ro
+      - media:/data/media:ro
+      - runs:/data/runs
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    networks: [backend, egress]
+
+  # One-off administration (owner identity): users, source checkouts, ingestion and reports from the command line.
+  #   docker compose run --rm admin users add alice --role operator
+  admin:
+    <<: [*hardening, *app-image]
+    profiles: [tools]
+    restart: "no"
+    command: ["--help"]
+    environment:
+      AH_DATABASE_URL: postgresql+psycopg://agenthorizon:${AH_OWNER_DB_PASSWORD}@postgres:5432/agenthorizon
+      AH_SCORER_DATABASE_URL: postgresql+psycopg://ah_scorer:${AH_SCORER_DB_PASSWORD}@postgres:5432/agenthorizon
+      AH_HF_TOKEN: ${AH_HF_TOKEN:-}
+      HTTPS_PROXY: ${AH_EGRESS_PROXY:-}
+    volumes:
+      - sources:/data/sources
+      - datasets:/data/datasets
+      - media:/data/media
+      - runs:/data/runs
+      - exports:/data/exports
+      - supplemental:/data/supplemental
+      - reports:/data/reports
+      - private:/data/private
+      - imports:/data/imports
+    networks: [backend, egress]
+
+  # Optional self-hosted model server (GPU host; profile "vllm"). The authors' serving flags are not released: the
+  # model and any extra flags are operator inputs and are recorded with each run. Use base URL http://vllm:8000/v1.
+  vllm:
+    profiles: [vllm]
+    image: ${VLLM_IMAGE:-vllm/vllm-openai:v0.30.0@sha256:8a69ffad015f138d7170c4ddc429e230a3bc1c1719f67e14324749df200a4b90}
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        [ -n "$$VLLM_API_KEY" ] || { echo "set VLLM_API_KEY in .env" >&2; exit 1; };
+        exec vllm serve "$$VLLM_MODEL" --served-model-name "$$VLLM_MODEL" --host 0.0.0.0 --port 8000
+        --api-key "$$VLLM_API_KEY" $$VLLM_EXTRA_ARGS
+    environment:
+      VLLM_MODEL: ${VLLM_MODEL:-Qwen/Qwen3.6-27B}
+      VLLM_API_KEY: ${VLLM_API_KEY:-}
+      VLLM_EXTRA_ARGS: ${VLLM_EXTRA_ARGS:-}
+      HF_TOKEN: ${AH_HF_TOKEN:-}
+    volumes:
+      - hf-cache:/root/.cache/huggingface
+    ipc: host
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, count: all, capabilities: [gpu]}]
+    networks: [backend, egress]
+
+networks:
+  backend:
+    internal: true  # postgres and service-to-service traffic: no route out
+  edge: {}          # the API's published port
+  egress: {}        # workers: model providers, Hugging Face, GitHub
+
+volumes:
+  pg-data: {}
+  sources: {}
+  datasets: {}
+  media: {}
+  runs: {}
+  exports: {}
+  supplemental: {}
+  reports: {}
+  cache: {}
+  private: {}
+  imports: {}
+  hf-cache: {}

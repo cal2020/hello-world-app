@@ -1,8 +1,10 @@
 """Host-side allowlisting egress proxy exposed to a sandbox only through a Unix socket.
 
 The sandbox has its own network namespace with nothing but loopback; the only way out is this proxy. It accepts
-``CONNECT host:443`` for allowlisted hosts and nothing else (no plain HTTP, no other ports), optionally chaining
-through an upstream HTTPS proxy, and records every decision for the run's audit trail.
+``CONNECT host:443`` for allowlisted hosts, optionally chaining through an upstream HTTPS proxy, and records every
+decision for the run's audit trail. The one exception is an operator-configured self-hosted model endpoint (a vLLM
+``base_url``): that exact ``host:port`` is reachable by CONNECT or by plain-HTTP forwarding, directly rather than
+through the upstream internet proxy. No other port, host, or plain-HTTP target is ever forwarded.
 """
 
 from __future__ import annotations
@@ -12,7 +14,7 @@ import socket
 import threading
 import time
 from dataclasses import asdict, dataclass, field
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlsplit
 
 
 @dataclass
@@ -31,9 +33,16 @@ class EgressPolicy:
     allowed_hosts: set[str]
     allowed_ports: set[int] = field(default_factory=lambda: {443})
     upstream_proxy: str | None = None  # http://host:port of an outer HTTPS proxy, if the host requires one
+    # exact (host, port) of self-hosted endpoints from the run definition; connected directly, plain HTTP allowed
+    direct_endpoints: set[tuple[str, int]] = field(default_factory=set)
+
+    def is_direct(self, host: str, port: int) -> bool:
+        return (host.lower().rstrip("."), port) in self.direct_endpoints
 
     def allows(self, host: str, port: int) -> tuple[bool, str]:
         h = host.lower().rstrip(".")
+        if self.is_direct(h, port):
+            return True, "self-hosted endpoint"
         if port not in self.allowed_ports:
             return False, f"port {port} not allowed"
         if h in self.allowed_hosts:
@@ -135,12 +144,16 @@ class EgressProxy:
             head = _read_head(conn)
             line = head.split(b"\r\n", 1)[0].decode("latin-1", errors="replace")
             parts = line.split()
+            if len(parts) >= 3 and parts[0].upper() != "CONNECT" and parts[1].lower().startswith("http://"):
+                self._forward_plain_http(conn, head, parts)
+                return
             if len(parts) < 2 or parts[0].upper() != "CONNECT":
                 self._record(EgressDecision(time.time(), parts[1] if len(parts) > 1 else "?", 0, False,
                                             f"method {parts[0] if parts else '?'} refused (CONNECT only)"))
                 conn.sendall(b"HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\n\r\n")
                 return
             host, _, port_s = parts[1].rpartition(":")
+            host = host.strip("[]")
             port = int(port_s) if port_s.isdigit() else 0
             ok, reason = self.policy.allows(host, port)
             dec = EgressDecision(time.time(), host, port, ok, reason)
@@ -149,7 +162,7 @@ class EgressProxy:
                 conn.sendall(b"HTTP/1.1 403 Forbidden\r\nX-AH-Egress: denied\r\nContent-Length: 0\r\n\r\n")
                 return
             try:
-                up = _connect_upstream(host, port, self.policy.upstream_proxy)
+                up = _connect_upstream(host, port, None if self.policy.is_direct(host, port) else self.policy.upstream_proxy)
             except OSError as exc:
                 dec.allowed, dec.reason = False, f"upstream connect failed: {exc}"[:200]
                 self._record(dec)
@@ -174,6 +187,53 @@ class EgressProxy:
             except OSError:
                 pass
 
+    def _forward_plain_http(self, conn: socket.socket, head: bytes, parts: list[str]) -> None:
+        """Forward one absolute-form plain-HTTP request, only to a configured self-hosted endpoint."""
+        u = urlsplit(parts[1])
+        host = (u.hostname or "?").lower()
+        try:
+            port = u.port or 80
+        except ValueError:
+            port = 0
+        dec = EgressDecision(time.time(), host, port, False, "plain HTTP refused (only a self-hosted endpoint)")
+        if not self.policy.is_direct(host, port):
+            self._record(dec)
+            conn.sendall(b"HTTP/1.1 403 Forbidden\r\nX-AH-Egress: denied\r\nContent-Length: 0\r\n\r\n")
+            return
+        hdr, sep, rest = head.partition(b"\r\n\r\n")
+        if not sep:
+            self._record(dec)
+            conn.sendall(b"HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n")
+            return
+        target = (u.path or "/") + (f"?{u.query}" if u.query else "")
+        lines = [f"{parts[0]} {target} {parts[2]}".encode("latin-1")]
+        for h in hdr.split(b"\r\n")[1:]:
+            name = h.split(b":", 1)[0].strip().lower()
+            if name in (b"proxy-connection", b"proxy-authorization", b"connection", b"keep-alive"):
+                continue
+            lines.append(h)
+        lines.append(b"Connection: close")  # one request per proxied connection: the next one is checked again
+        try:
+            up = socket.create_connection((host, port), timeout=20)
+        except OSError as exc:
+            dec.reason = f"upstream connect failed: {exc}"[:200]
+            self._record(dec)
+            conn.sendall(b"HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n")
+            return
+        dec.allowed, dec.reason = True, "self-hosted endpoint (plain HTTP)"
+        up.settimeout(None)
+        up.sendall(b"\r\n".join(lines) + b"\r\n\r\n" + rest)
+        conn.settimeout(None)
+        counter = [len(rest), 0]
+        t1 = threading.Thread(target=_pump, args=(conn, up, counter, 0), daemon=True)
+        t2 = threading.Thread(target=_pump, args=(up, conn, counter, 1), daemon=True)
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+        dec.bytes_up, dec.bytes_down = counter
+        self._record(dec)
+
     def stop(self) -> None:
         self._stop.set()
         if self._sock:
@@ -194,3 +254,13 @@ class EgressProxy:
 
 def default_upstream_proxy() -> str | None:
     return os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy") or None
+
+
+def endpoint_of(base_url: str | None) -> set[tuple[str, int]]:
+    """The exact (host, port) of a self-hosted endpoint URL, for :attr:`EgressPolicy.direct_endpoints`."""
+    if not base_url:
+        return set()
+    u = urlsplit(base_url)
+    if not u.hostname or u.scheme not in ("http", "https"):
+        return set()
+    return {(u.hostname.lower(), u.port or (443 if u.scheme == "https" else 80))}

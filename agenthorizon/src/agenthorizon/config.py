@@ -79,6 +79,11 @@ class Settings(BaseSettings):
         return self.var_dir / "private"
 
     @property
+    def reports_dir(self) -> Path:
+        """Reports generated at runtime (capabilities, audits, inventories); preferred over the committed evidence/."""
+        return self.var_dir / "reports"
+
+    @property
     def tools_dir(self) -> Path:
         return self.var_dir / "tools"
 

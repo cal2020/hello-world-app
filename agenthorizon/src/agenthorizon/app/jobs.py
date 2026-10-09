@@ -17,8 +17,8 @@ from sqlalchemy.exc import IntegrityError
 
 from agenthorizon.app.schema import jobs
 
-QUEUE_FOR_KIND = {"run": "judge", "ingest": "trusted", "index": "trusted", "materialize": "trusted", "score": "trusted",
-                  "export": "trusted"}
+QUEUE_FOR_KIND = {"run": "judge", "doctor": "judge", "ingest": "trusted", "index": "trusted", "materialize": "trusted",
+                  "score": "trusted", "export": "trusted"}
 
 
 def enqueue(engine: Engine, kind: str, payload: dict, *, created_by: str | None, dedupe_key: str | None = None,

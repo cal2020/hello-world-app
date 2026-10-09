@@ -12,7 +12,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
 class FakeLLMServer:
-    def __init__(self) -> None:
+    def __init__(self, host: str = "127.0.0.1", port: int = 0) -> None:
         self.requests: list[dict] = []
         self.script: list[tuple[int, dict, dict]] = []  # (status, headers, json body) consumed in order
         self.default: tuple[int, dict, dict] | None = None
@@ -40,7 +40,7 @@ class FakeLLMServer:
                 self.end_headers()
                 self.wfile.write(data)
 
-        self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self.httpd = ThreadingHTTPServer((host, port), Handler)
         self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
 
     @property
@@ -71,3 +71,24 @@ def openai_response(text: str, model: str = "test-model") -> dict:
     return {"id": "x", "model": model, "choices": [{"index": 0, "message": {"role": "assistant", "content": text},
                                                     "finish_reason": "stop"}],
             "usage": {"prompt_tokens": 1800, "completion_tokens": 35}}
+
+
+def main() -> None:  # pragma: no cover - container smoke tests (docker/smoke.sh)
+    """Serve one fixed OpenAI-compatible verdict for every request. TEST ONLY: no model is involved."""
+    import argparse
+
+    ap = argparse.ArgumentParser(description=main.__doc__)
+    ap.add_argument("--host", default="127.0.0.1")
+    ap.add_argument("--port", type=int, default=8080)
+    ap.add_argument("--model", default="test-model")
+    ap.add_argument("--verdict", default=json.dumps({"success": True, "reasoning": "SYNTHETIC test verdict",
+                                                       "confidence": "high", "mistake_type": None}))
+    a = ap.parse_args()
+    srv = FakeLLMServer(a.host, a.port)
+    srv.default = (200, {}, openai_response(a.verdict, model=a.model))
+    print(f"fake OpenAI-compatible endpoint (TEST ONLY) on {a.host}:{a.port}", flush=True)
+    srv.httpd.serve_forever()
+
+
+if __name__ == "__main__":  # pragma: no cover
+    main()

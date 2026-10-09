@@ -13,6 +13,7 @@ run; resuming is allowed only for an identical definition. Repeated trials are s
 
 from __future__ import annotations
 
+import os
 import subprocess
 from dataclasses import asdict, dataclass, field
 from importlib.metadata import PackageNotFoundError, version
@@ -94,6 +95,8 @@ def git_state() -> dict:
                                     text=True, timeout=10, check=False).stdout.strip())
     except (OSError, subprocess.TimeoutExpired):
         commit, dirty = None, None
+    if commit is None and os.environ.get("AH_BUILD_GIT_COMMIT"):  # container images carry no .git
+        return {"git_commit": os.environ["AH_BUILD_GIT_COMMIT"], "git_dirty_src": None, "git_source": "image build arg"}
     return {"git_commit": commit, "git_dirty_src": dirty}
 
 

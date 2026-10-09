@@ -1,0 +1,12 @@
+# TEST ONLY (docker/smoke.py): a fake OpenAI-compatible endpoint that returns one fixed verdict. No model is involved;
+# nothing produced with it is a benchmark result. Never include this file in a deployment.
+services:
+  fake-llm:
+    image: ${AH_IMAGE_PREFIX:-agenthorizon}-app:${AH_IMAGE_TAG:-local}
+    entrypoint: ["python", "-m", "agenthorizon.testing.fake_llm"]
+    command: ["--host", "0.0.0.0", "--port", "8080", "--model", "Qwen/Qwen3.6-27B"]
+    init: true
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [backend]

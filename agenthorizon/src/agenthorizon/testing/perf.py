@@ -99,7 +99,7 @@ def main() -> int:
         scale = build_catalogue(owner, "perf-synthetic@1")
         build_s = time.perf_counter() - t0
         tok = create_user(owner, "perf", "viewer")
-        s = Settings(var_dir=root / "var", database_url=cluster.url(), api_port=port)
+        s = Settings(mode="local", var_dir=root / "var", database_url=cluster.url(), api_port=port)
         server = uvicorn.Server(uvicorn.Config(create_app(s), host="127.0.0.1", port=port, log_level="warning"))
         th = threading.Thread(target=server.run, daemon=True)
         th.start()
@@ -142,6 +142,7 @@ def main() -> int:
             "generated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "warning": "SYNTHETIC catalogue rows at release scale; latency measurements only — not benchmark data",
             "scale": scale, "catalogue_build_s": round(build_s, 1),
+            "database_size_bytes": owner.connect().exec_driver_sql("SELECT pg_database_size(current_database())").scalar(),
             "environment": {"cpu": cpu, "cores": os.cpu_count(), "python": platform.python_version(),
                             "postgres": owner.connect().exec_driver_sql("show server_version").scalar(),
                             "client": "httpx on the same host (loopback), sequential requests, warm caches"},

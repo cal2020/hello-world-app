@@ -186,3 +186,98 @@ def test_tool_dirs_are_visible_read_only(tmp_path, available):
                                    tool_dirs=[str(tools)], timeout_s=30))
     assert r.exit_code == 0 and r.stdout().strip() == "hello-from-tool"
     assert Path(tools / "hello.sh").read_text().startswith("#!/bin/sh")
+
+
+ENDPOINT_PROBE = r'''
+import json, socket, sys, urllib.error, urllib.request
+cfg = json.load(open("/workspace/probe/cfg.json"))
+opener = urllib.request.build_opener(urllib.request.ProxyHandler({"http": "http://127.0.0.1:3128"}))
+out = {}
+def get(url, data=None):
+    try:
+        r = opener.open(urllib.request.Request(url, data=data), timeout=10)
+        return {"status": r.status, "body": r.read().decode()}
+    except urllib.error.HTTPError as e:
+        return {"status": e.code}
+    except Exception as e:
+        return {"error": type(e).__name__}
+ep = f"http://127.0.0.1:{cfg['port']}"
+out["plain_get"] = get(ep + "/v1/models?x=1")
+out["plain_post"] = get(ep + "/v1/chat/completions", data=b"x" * 70000)  # body larger than the proxy's head read
+out["other_port"] = get(f"http://127.0.0.1:{cfg['other_port']}/v1/models")
+out["other_host"] = get("http://example.com/")
+s = socket.create_connection(("127.0.0.1", 3128), timeout=10)
+s.sendall(f"CONNECT 127.0.0.1:{cfg['port']} HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n".encode())
+head = s.recv(4096).decode()
+s.sendall(b"GET /v1/models HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n")
+buf = b""
+while True:
+    c = s.recv(4096)
+    if not c:
+        break
+    buf += c
+out["connect_tunnel"] = {"head": head.split("\r\n")[0], "body": buf.decode(errors="replace").split("\r\n\r\n", 1)[-1]}
+s2 = socket.create_connection(("127.0.0.1", 3128), timeout=10)
+s2.sendall(f"CONNECT 127.0.0.1:{cfg['other_port']} HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n".encode())
+out["connect_other_port"] = s2.recv(4096).decode().split("\r\n")[0]
+print(json.dumps(out))
+'''
+
+
+def test_self_hosted_endpoint_reachable_only_at_its_host_and_port(tmp_path, available):
+    """A vLLM-style base_url (plain HTTP, non-443 port) is reachable from the sandbox; nothing else on that host is."""
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+    from agenthorizon.judging.isolation.egress import endpoint_of
+
+    seen: list[tuple[str, str, int]] = []
+
+    class H(BaseHTTPRequestHandler):
+        def _reply(self, body: bytes):
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def do_GET(self):  # noqa: N802
+            seen.append(("GET", self.path, 0))
+            self._reply(b"ok-models")
+
+        def do_POST(self):  # noqa: N802
+            n = int(self.headers.get("Content-Length", 0))
+            data = self.rfile.read(n)
+            seen.append(("POST", self.path, len(data)))
+            self._reply(f"got {len(data)}".encode())
+
+        def log_message(self, *a):
+            pass
+
+    servers = [ThreadingHTTPServer(("127.0.0.1", 0), H) for _ in range(2)]
+    for s in servers:
+        threading.Thread(target=s.serve_forever, daemon=True).start()
+    port, other = (s.server_address[1] for s in servers)
+    task = tmp_path / "ep"
+    (task / "workspace" / "probe").mkdir(parents=True)
+    (task / "workspace" / "probe" / "probe.py").write_text(ENDPOINT_PROBE)
+    (task / "workspace" / "probe" / "cfg.json").write_text(json.dumps({"port": port, "other_port": other}))
+    spec = SandboxSpec(task_dir=task, argv=["/usr/bin/python3", "-I", "/workspace/probe/probe.py"],
+                       env={"PATH": "/usr/bin:/bin", "HOME": "/home/judge", "LANG": "C.UTF-8"},
+                       allowed_hosts=set(), direct_endpoints=endpoint_of(f"http://127.0.0.1:{port}/v1"),
+                       readonly_inputs=["probe"], timeout_s=60)
+    try:
+        r = run_in_sandbox(spec)
+    finally:
+        for s in servers:
+            s.shutdown()
+    assert r.exit_code == 0, (r.init_log, r.stderr())
+    out = json.loads(r.stdout())
+    assert out["plain_get"] == {"status": 200, "body": "ok-models"}
+    assert out["plain_post"] == {"status": 200, "body": "got 70000"}
+    assert out["connect_tunnel"]["head"].startswith("HTTP/1.1 200") and out["connect_tunnel"]["body"] == "ok-models"
+    assert out["other_port"] == {"status": 403} and out["other_host"] == {"status": 403}
+    assert out["connect_other_port"].startswith("HTTP/1.1 403")
+    assert ("GET", "/v1/models?x=1", 0) in seen and ("POST", "/v1/chat/completions", 70000) in seen
+    audit = {(d["host"], d["port"], d["allowed"]) for d in r.egress_audit}
+    assert {("127.0.0.1", port, True), ("127.0.0.1", other, False), ("example.com", 80, False)} <= audit
+    assert endpoint_of("https://gpu-host.internal/v1") == {("gpu-host.internal", 443)}
+    assert endpoint_of(None) == set() and endpoint_of("ftp://x/") == set()

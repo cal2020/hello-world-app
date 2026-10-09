@@ -47,7 +47,7 @@ def main() -> int:
     cluster = LocalCluster(root / "pg", port=a.port + 1000).ensure()
     owner_url = cluster.url()
     migrate(url=owner_url)
-    s = Settings(var_dir=root / "var", database_url=owner_url, api_port=a.port)
+    s = Settings(mode="local", var_dir=root / "var", database_url=owner_url, api_port=a.port)
     build_fixture(root / "fx")
     r = ingest(s, IngestOptions(source="local", local_dir=root / "fx", media="all"))
     dv = DatasetVersion(Path(r.root))

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import typer
@@ -14,6 +15,19 @@ sources_app = typer.Typer(no_args_is_help=True, help="Source discovery, pinning,
 app.add_typer(sources_app, name="sources")
 
 EVIDENCE_DIR = PROJECT_ROOT / "evidence"
+REPORT_HELP = "Report path (default: evidence/<name> in a writable checkout, else <var>/reports/<name>)"
+
+
+def _report_path(output: Path | None, name: str) -> Path:
+    """evidence/ in a development checkout; <var>/reports where evidence/ is read-only (container images). The API
+    prefers <var>/reports, so a report regenerated in a deployment replaces the committed copy there."""
+    if output is not None:
+        return output
+    if os.access(EVIDENCE_DIR, os.W_OK):
+        return EVIDENCE_DIR / name
+    d = get_settings().reports_dir
+    d.mkdir(parents=True, exist_ok=True)
+    return d / name
 
 
 @sources_app.command("lock")
@@ -66,8 +80,9 @@ app.add_typer(evidence_app, name="evidence")
 
 
 @evidence_app.command("reference")
-def evidence_reference(output: Path = typer.Option(EVIDENCE_DIR / "REFERENCE_DATA.json")) -> None:
+def evidence_reference(output: Path | None = typer.Option(None, help=REPORT_HELP)) -> None:
     """Capture author-reported aggregates with provenance, plus consistency analyses over them."""
+    output = _report_path(output, "REFERENCE_DATA.json")
     from agenthorizon.reference.analysis import (
         REVISED_CHECK_TABLE,
         check_table_identities,
@@ -100,8 +115,9 @@ def evidence_reference(output: Path = typer.Option(EVIDENCE_DIR / "REFERENCE_DAT
 
 
 @evidence_app.command("availability")
-def evidence_availability(output: Path = typer.Option(EVIDENCE_DIR / "DATA_AVAILABILITY.json")) -> None:
+def evidence_availability(output: Path | None = typer.Option(None, help=REPORT_HELP)) -> None:
     """Classify every referenced artifact as acquired / published-but-unavailable / not-located / not-applicable."""
+    output = _report_path(output, "DATA_AVAILABILITY.json")
     from agenthorizon.sources.availability import availability_report
     from agenthorizon.sources.cache import load_lock
     from agenthorizon.util.io import atomic_write_json
@@ -112,8 +128,9 @@ def evidence_availability(output: Path = typer.Option(EVIDENCE_DIR / "DATA_AVAIL
 
 
 @evidence_app.command("inventory")
-def evidence_inventory(output: Path = typer.Option(EVIDENCE_DIR / "EXPERIMENT_INVENTORY.json")) -> None:
+def evidence_inventory(output: Path | None = typer.Option(None, help=REPORT_HELP)) -> None:
     """Models, judge configurations, and every experiment row evidenced by accessible tables."""
+    output = _report_path(output, "EXPERIMENT_INVENTORY.json")
     from agenthorizon.reference.inventory import inventory
     from agenthorizon.reference.tables import supplementary_tables
     from agenthorizon.util.io import atomic_write_json
@@ -123,6 +140,93 @@ def evidence_inventory(output: Path = typer.Option(EVIDENCE_DIR / "EXPERIMENT_IN
     unmatched = [e for e in inv["experiments_from_reference_tables"] if not e["config_id"]]
     typer.echo(f"wrote {output}: {len(inv['configurations'])} configs, "
                f"{len(inv['experiments_from_reference_tables'])} table-row experiments ({len(unmatched)} unmatched)")
+
+
+@evidence_app.command("spec")
+def evidence_spec(output: Path | None = typer.Option(None, help=REPORT_HELP)) -> None:
+    """The executable paper specification, assembled from the constants the code runs with."""
+    output = _report_path(output, "PAPER_SPEC.json")
+    from agenthorizon.evidence.spec import paper_spec
+    from agenthorizon.util.io import atomic_write_json
+
+    spec = paper_spec()
+    atomic_write_json(output, spec)
+    typer.echo(f"wrote {output}: {len(spec['judge_configurations'])} configurations, {len(spec['unresolved'])} unresolved items")
+
+
+@evidence_app.command("traceability")
+def evidence_traceability(output: Path | None = typer.Option(None, help=REPORT_HELP)) -> None:
+    """Requirement -> source, implementation, verification, status; fails if any reference does not resolve."""
+    output = _report_path(output, "TRACEABILITY.csv")
+    from agenthorizon.evidence.traceability import REQUIREMENTS, check, render_csv
+
+    output.write_text(render_csv())
+    problems = check()
+    for p in problems:
+        typer.echo(f"unresolved reference: {p}", err=True)
+    typer.echo(f"wrote {output}: {len(REQUIREMENTS)} requirements, {len(problems)} unresolved references")
+    if problems:
+        raise typer.Exit(1)
+
+
+@evidence_app.command("tests")
+def evidence_tests(
+    pytest_junit: Path = typer.Option(..., "--pytest-junit", help="JUnit XML of the host pytest run"),
+    image_junit: Path | None = typer.Option(None, "--image-junit", help="JUnit XML of the suite run inside the test image"),
+    playwright_junit: Path | None = typer.Option(None, "--playwright-junit", help="Playwright JUnit XML"),
+    output: Path | None = typer.Option(None, help=REPORT_HELP),
+) -> None:
+    """TEST_REPORT.md from recorded results: suites, MP §13 check coverage, skips, failures, smoke run, performance."""
+    import platform
+    import subprocess
+
+    from agenthorizon.app.pgcluster import pg_bindir
+    from agenthorizon.evidence.testreport import read_junit, render
+
+    output = _report_path(output, "TEST_REPORT.md")
+    b = pg_bindir()
+    pg = subprocess.run([str(b / "postgres"), "--version"], capture_output=True, text=True, check=False).stdout.strip() if b else "?"
+    suites = {"host pytest": (f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {pg}",
+                              read_junit(pytest_junit))}
+    if image_junit:
+        suites["pytest in the test image"] = ("agenthorizon-test image (Ubuntu 24.04, Python 3.12, PostgreSQL 16) as uid "
+                                              "10001 with the judge worker's restrictions: cap_drop ALL, judge seccomp "
+                                              "profile, systempaths=unconfined, no-new-privileges", read_junit(image_junit))
+    if playwright_junit:
+        suites["Playwright (UI)"] = ("Chromium, desktop 1440x900 and Pixel 7 projects, against the e2e server "
+                                     "(synthetic fixture, fake endpoint, real supplemental imports)", read_junit(playwright_junit))
+
+    def _load(name: str) -> dict | None:
+        p = EVIDENCE_DIR / name
+        return json.loads(p.read_text()) if p.is_file() else None
+
+    timing = {k: v for k in ("desktop", "mobile") if (v := _load(f"timing-{k}.json"))}
+    output.write_text(render(suites, _load("STACK_SMOKE.json"), _load("PERFORMANCE.json"), timing))
+    typer.echo(f"wrote {output}")
+
+
+@evidence_app.command("reproduction")
+def evidence_reproduction(output: Path | None = typer.Option(None, help=REPORT_HELP)) -> None:
+    """REPRODUCTION_REPORT.md: verdict, comparison scope, data, conflicts, models, experiments, blocks to lift."""
+    output = _report_path(output, "REPRODUCTION_REPORT.md")
+    from agenthorizon.evidence.reproduction import reproduction_report
+
+    output.write_text(reproduction_report(get_settings()))
+    typer.echo(f"wrote {output}")
+
+
+@evidence_app.command("validation")
+def evidence_validation(output: Path | None = typer.Option(None, help=REPORT_HELP)) -> None:
+    """Validation outcomes: the official release (pending access), the synthetic fixture, supplemental imports."""
+    output = _report_path(output, "DATA_VALIDATION.json")
+    from agenthorizon.evidence.validation import data_validation_report
+    from agenthorizon.util.io import atomic_write_json
+
+    rep = data_validation_report(get_settings())
+    atomic_write_json(output, rep)
+    fx = rep["synthetic_fixture"]["validation"]
+    typer.echo(f"wrote {output}: official release {rep['official_release']['status']}; fixture errors={fx['error_count']} "
+               f"warnings={fx['warning_count']}; supplemental stores={len(rep['supplemental_sources'])}")
 
 
 data_app = typer.Typer(no_args_is_help=True, help="Ingest, validate, and inspect dataset versions")
@@ -298,7 +402,7 @@ def judges_list() -> None:
 
 @judges_app.command("doctor")
 def judges_doctor(
-    output: Path = typer.Option(EVIDENCE_DIR / "MODEL_CAPABILITIES.json", help="Where to write the report"),
+    output: Path | None = typer.Option(None, help=REPORT_HELP),
     live: bool = typer.Option(False, "--live", help="Send one tiny multimodal probe per runnable direct config (costs tokens)"),
     network: bool = typer.Option(True, "--network/--no-network", help="Probe route reachability (no credentials sent)"),
 ) -> None:
@@ -307,6 +411,7 @@ def judges_doctor(
     from agenthorizon.util.io import atomic_write_json
 
     rep = doctor(probe_network=network, live=live)
+    output = _report_path(output, "MODEL_CAPABILITIES.json")
     atomic_write_json(output, rep)
     for r in rep["configurations"]:
         typer.echo(f"{r['status']:<12} {r['config_id']:<52} {'; '.join(r['reasons'])[:150]}")
@@ -589,9 +694,10 @@ def experiments_report(experiment_id: str, runs: str = typer.Option(..., "--runs
 
 
 @evidence_app.command("experiments")
-def evidence_experiments(output: Path = typer.Option(EVIDENCE_DIR / "EXPERIMENT_REGISTRY.json"),
+def evidence_experiments(output: Path | None = typer.Option(None, help=REPORT_HELP),
                          dataset_version: str | None = typer.Option(None, "--dataset-version")) -> None:
     """Every registered experiment with its status and blockers in this environment."""
+    output = _report_path(output, "EXPERIMENT_REGISTRY.json")
     from agenthorizon.experiments.registry import experiments, status
     from agenthorizon.util.io import atomic_write_json, utcnow_iso
 
@@ -631,8 +737,9 @@ def supplemental_import(
 
 
 @supp_app.command("audit")
-def supplemental_audit(output: Path = typer.Option(EVIDENCE_DIR / "DEDUP_AUDIT.json")) -> None:
+def supplemental_audit(output: Path | None = typer.Option(None, help=REPORT_HELP)) -> None:
     """Exact/possible duplicates, aliases, intentional sharing, and AgentHorizon-overlap flags across all sources."""
+    output = _report_path(output, "DEDUP_AUDIT.json")
     from agenthorizon.supplemental.pipeline import run_audit
 
     rep = run_audit(get_settings(), output)

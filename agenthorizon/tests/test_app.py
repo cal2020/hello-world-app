@@ -45,7 +45,7 @@ def env(pg_cluster, tmp_path_factory):
     base = tmp_path_factory.mktemp("app")
     fx = base / "fx"
     build_fixture(fx)
-    s = Settings(var_dir=base / "var", database_url=owner_url)
+    s = Settings(mode="local", var_dir=base / "var", database_url=owner_url)  # never the ambient AH_MODE
     r = ingest(s, IngestOptions(source="local", local_dir=fx, media="all"))
     dv = DatasetVersion(Path(r.root))
     scorer = create_engine(pg_cluster.url("ah_scorer", db=db))
@@ -293,3 +293,27 @@ def test_job_lease_expiry_reclaim_and_owner_checks(env):
     assert not J.complete(e, jid, "worker-A", {"x": 1})  # the stale owner cannot finalize it
     assert J.complete(e, jid, "worker-B", {"x": 2})
     assert J.get(e, jid)["status"] == "succeeded"
+
+
+def test_capability_probe_runs_on_a_judge_worker_and_never_carries_secret_values(env):
+    """The admin probe is a judge-queue job: it measures the worker that executes runs (harnesses, isolation,
+    credential names), not the API process; the report never contains a credential value."""
+    op = client(env, "operator")
+    assert client(env, "viewer").post("/api/admin/judges/doctor", headers=CSRF).status_code == 403
+    r = op.post("/api/admin/judges/doctor", headers=CSRF)
+    assert r.status_code == 202, r.text
+    jid = r.json()["job_id"]
+    assert op.post("/api/admin/judges/doctor", headers=CSRF).json()["job_id"] == jid  # deduplicated while queued
+    assert J.get(env["owner"], jid)["queue"] == "judge"
+    secret = "sk-ant-TEST-" + secrets.token_hex(8)
+    ctx = WorkerContext(env["s"], env["worker"], "judge@doctor-test", secrets_env={"ANTHROPIC_API_KEY": secret})
+    out = process_one(ctx, "judge", lease_s=30)
+    assert out["status"] == "succeeded", out
+    job = op.get(f"/api/jobs/{jid}").json()
+    assert job["result"]["measured_by"] == "judge@doctor-test" and secret not in json.dumps(job)
+    body = op.get("/api/judges").json()
+    assert body["source"] == "judge worker" and body["measured_by"] == "judge@doctor-test"
+    assert secret not in json.dumps(body)
+    claude = next(c for c in body["configs"] if c["config_id"] == "claude_code:claude-opus-4.7")
+    cred = claude["capability"]["checks"]["credentials"]
+    assert cred["required"] == ["ANTHROPIC_API_KEY"] and cred["missing"] == []  # the worker's credential, by name

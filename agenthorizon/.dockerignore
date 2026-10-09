@@ -1,0 +1,16 @@
+# Build context: only what the images need. Data, credentials and local state never enter an image.
+.git
+.venv
+.env
+.env.*
+!.env.example
+var/
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.ruff_cache
+frontend/node_modules
+frontend/dist
+frontend/test-results
+frontend/playwright-report
+evidence/screenshots

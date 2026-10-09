@@ -1,0 +1,961 @@
+{
+  "spec_version": "ah-paper-spec/1",
+  "generated_at": "2026-10-09T22:45:22Z",
+  "paper": {
+    "id": "arXiv:2610.11050v1",
+    "title": "AgentHorizon: Evaluating Agentic Judges for Long-Horizon Computer-Use Tasks",
+    "lock_status": "inaccessible",
+    "access_attempts": [
+      {
+        "url": "https://arxiv.org/abs/2610.11050",
+        "at": "2026-10-09T19:43:38Z",
+        "outcome": "egress_denied"
+      },
+      {
+        "url": "https://export.arxiv.org/abs/2610.11050",
+        "at": "2026-10-09T19:43:39Z",
+        "outcome": "egress_denied"
+      }
+    ],
+    "how_cited": "values marked 'paper (quoted in MP ...)' come from the master prompt's quotations of the paper; they are reconciliation targets, never used to modify labels"
+  },
+  "sources": [
+    {
+      "source_id": "agenthorizon-paper",
+      "status": "inaccessible",
+      "revision": null,
+      "kind": "paper"
+    },
+    {
+      "source_id": "agenthorizon-repo",
+      "status": "downloaded",
+      "revision": "8584a347370ab1d92b908732cfabe72b3a23486d",
+      "kind": "git"
+    },
+    {
+      "source_id": "agenthorizon-dataset",
+      "status": "inaccessible",
+      "revision": null,
+      "kind": "hf_dataset"
+    },
+    {
+      "source_id": "agenthorizon-standard",
+      "status": "downloaded",
+      "revision": "8584a347370ab1d92b908732cfabe72b3a23486d",
+      "kind": "repo_document"
+    },
+    {
+      "source_id": "agenthorizon-eval-protocol",
+      "status": "downloaded",
+      "revision": "8584a347370ab1d92b908732cfabe72b3a23486d",
+      "kind": "repo_document"
+    },
+    {
+      "source_id": "agenthorizon-construction",
+      "status": "downloaded",
+      "revision": "8584a347370ab1d92b908732cfabe72b3a23486d",
+      "kind": "repo_document"
+    },
+    {
+      "source_id": "agenthorizon-taxonomy",
+      "status": "downloaded",
+      "revision": "8584a347370ab1d92b908732cfabe72b3a23486d",
+      "kind": "repo_document"
+    },
+    {
+      "source_id": "agenthorizon-supplementary",
+      "status": "downloaded",
+      "revision": "8584a347370ab1d92b908732cfabe72b3a23486d",
+      "kind": "repo_document"
+    },
+    {
+      "source_id": "agenthorizon-dataverse",
+      "status": "inaccessible",
+      "revision": null,
+      "kind": "dataverse"
+    },
+    {
+      "source_id": "agentrewardbench-repo",
+      "status": "downloaded",
+      "revision": "05899fcfe52c925978944a23920373b7a9c63740",
+      "kind": "git"
+    },
+    {
+      "source_id": "agentrewardbench-dataset",
+      "status": "inaccessible",
+      "revision": null,
+      "kind": "hf_dataset"
+    },
+    {
+      "source_id": "osworld-repo",
+      "status": "downloaded",
+      "revision": "b138d348256078fa634fc3b73567a7337c793e6b",
+      "kind": "git"
+    },
+    {
+      "source_id": "master-prompt",
+      "status": "downloaded",
+      "revision": null,
+      "kind": "instruction_document"
+    }
+  ],
+  "subsets": {
+    "revised": {
+      "names": [
+        "AH-D",
+        "AH",
+        "AH-S"
+      ],
+      "check_table": {
+        "provenance": {
+          "source_id": "master-prompt",
+          "citation": "MP §2 (attributes the table to S1)",
+          "status": "described_only"
+        },
+        "columns": [
+          "total",
+          "positive",
+          "negative",
+          "critical",
+          "side_effect",
+          "misunderstanding",
+          "untyped"
+        ],
+        "rows": {
+          "AH-D": [
+            162,
+            62,
+            100,
+            32,
+            26,
+            41,
+            1
+          ],
+          "AH": [
+            528,
+            227,
+            301,
+            48,
+            107,
+            142,
+            4
+          ],
+          "AH-S": [
+            683,
+            234,
+            449,
+            193,
+            99,
+            156,
+            1
+          ],
+          "TOTAL": [
+            1373,
+            523,
+            850,
+            273,
+            232,
+            339,
+            6
+          ]
+        }
+      },
+      "membership_status": "not located",
+      "source": "paper (quoted in MP §2)",
+      "roles": {
+        "AH-D": "development (never in held-out scores)",
+        "AH": "evaluation (challenging)",
+        "AH-S": "evaluation (simple)"
+      }
+    },
+    "legacy": {
+      "label_files": {
+        "AgentHorizon.jsonl": {
+          "manifest": "legacy-AH",
+          "name": "AgentHorizon (legacy submitted partition, challenging)"
+        },
+        "AgentHorizon-Simple.jsonl": {
+          "manifest": "legacy-AH-S",
+          "name": "AgentHorizon-Simple (legacy submitted partition)"
+        }
+      },
+      "documented_totals": {
+        "legacy-AH": 605,
+        "legacy-AH-S": 768
+      },
+      "source": "github.com/ServiceNow/agenthorizon@8584a347370a:README.md and dataset card (quoted in MP §1); docs/supplementary-results.md calls it the legacy partition",
+      "implementation": "agenthorizon.data.splits:Manifest"
+    }
+  },
+  "partition_procedures": {
+    "revised": {
+      "splitter_models": [
+        "qwen3.5-122b-a10b",
+        "inkling",
+        "kimi-k2.7-code"
+      ],
+      "verdicts_per_model": 8,
+      "verdicts_total": 24,
+      "rule": "<= 18 correct -> AH; more -> AH-S; invalid verdicts are not correct",
+      "source": "paper (quoted in MP §2)",
+      "implementation": "agenthorizon.data.splits:revised_bucket",
+      "status": "implemented and boundary-tested; inputs (24 verdicts per item) not released"
+    },
+    "legacy": {
+      "k": 8,
+      "easy_threshold": 7,
+      "source": "github.com/ServiceNow/agenthorizon@8584a347370a:scripts/aggregate_difficulty.py",
+      "implementation": "agenthorizon.data.splits:legacy_difficulty"
+    },
+    "reconstructions": "a recomputed partition always gets its own identity (official=False) and lineage"
+  },
+  "trajectory_standard": {
+    "adapter": "ah-standard-adapter/1",
+    "versions_accepted": [
+      "1.0",
+      "1.1"
+    ],
+    "action_types": [
+      "click",
+      "drag",
+      "hotkey",
+      "key_down",
+      "key_up",
+      "move",
+      "press",
+      "scroll",
+      "type",
+      "wait"
+    ],
+    "observation_timing": "pre_action (screenshot precedes the action in the same step)",
+    "judge_view_excludes": [
+      "instruction_original",
+      "label",
+      "metadata",
+      "milestones",
+      "original_file",
+      "original_id"
+    ],
+    "source": "github.com/ServiceNow/agenthorizon@8584a347370a:STANDARD.md (S4); converter writes version 1.1"
+  },
+  "judge_output_contract": {
+    "fields": [
+      "success",
+      "reasoning",
+      "confidence",
+      "mistake_type"
+    ],
+    "success": "JSON Boolean; strings, numbers, null and absence are invalid",
+    "confidence": [
+      "low",
+      "medium",
+      "high"
+    ],
+    "mistake_type_on_success": null,
+    "native_mistake_types": [
+      "Critical Mistake",
+      "Bad Side Effect",
+      "Misunderstanding of the Instruction"
+    ],
+    "category_map": {
+      "version": "ah-categories-v1",
+      "native_to_enum": {
+        "Critical Mistake": "critical_mistake",
+        "Bad Side Effect": "bad_side_effect",
+        "Misunderstanding of the Instruction": "misunderstanding_of_the_instruction",
+        "Misunderstanding of the Instructions": "misunderstanding_of_the_instruction"
+      }
+    },
+    "source": "paper (quoted in MP §5); github.com/ServiceNow/agenthorizon@8584a347370a:docs/mistake-taxonomy.md (S7)"
+  },
+  "scoring": {
+    "scorer_id": "ah-protocol-scorer/1",
+    "reference_scorer": "ah-reference-analyze_eval_results@8584a347",
+    "definitions": {
+      "P": "gold positives in the complete manifest",
+      "N": "gold negatives in the complete manifest",
+      "TP": "gold positives with a valid Boolean success=true",
+      "TN": "gold negatives with a valid Boolean success=false",
+      "balanced_accuracy": "(TP/P + TN/N) / 2"
+    },
+    "missing_and_invalid": "incorrect for their gold class; never shrink P or N; reported separately",
+    "categories": "exact recall needs a valid failure verdict and the matching category; typed denominators exclude untyped negatives, binary denominators never do",
+    "aggregate_mt": "exact matches / typed negatives (micro-average)",
+    "source": "paper (quoted in MP §8); github.com/ServiceNow/agenthorizon@8584a347370a:docs/evaluation-protocol.md (S5)",
+    "implementation": "agenthorizon.scoring.protocol:score"
+  },
+  "attempt_policies": {
+    "ah-reference-agentic/1": {
+      "policy_id": "ah-reference-agentic/1",
+      "family": "agentic",
+      "max_attempts": 3,
+      "retry_on": [
+        "unparseable"
+      ],
+      "short_truncation_guard": true,
+      "rate_limit_resends_per_attempt": 10,
+      "rate_limit_wait_s": 300.0,
+      "selection_rule": "final-attempt/1",
+      "error_redispatch_passes": 1,
+      "source": "scripts/evaluate_trajectories.py:evaluate_one @8584a347",
+      "selection": "the last counted attempt is scored; no response -> missing (incorrect)"
+    },
+    "ah-reference-direct/1": {
+      "policy_id": "ah-reference-direct/1",
+      "family": "direct",
+      "max_attempts": 3,
+      "retry_on": [
+        "unparseable",
+        "transport_failed"
+      ],
+      "short_truncation_guard": false,
+      "rate_limit_resends_per_attempt": 4,
+      "rate_limit_wait_s": null,
+      "selection_rule": "final-attempt/1",
+      "error_redispatch_passes": 1,
+      "source": "llm_judges/evaluate.py:evaluate_one @8584a347",
+      "selection": "the last counted attempt is scored; no response -> missing (incorrect)"
+    }
+  },
+  "attempt_selection_implementation": "agenthorizon.runs.policy:select",
+  "prompts": {
+    "ah-official-agentic@8584a347": {
+      "paper_mode": true,
+      "source": {
+        "source_id": "agenthorizon-repo",
+        "revision": "8584a347370ab1d92b908732cfabe72b3a23486d",
+        "path": "prompts/evaluate_trajectory.txt",
+        "file_sha256": "8258140dad02876fd42193c6ab52dc06ae44fd917fed67d359b29aa99605079b",
+        "transform": "str.strip() as in scripts/evaluate_trajectories.py:run"
+      },
+      "template_vars": [
+        "TRAJECTORY_ID"
+      ],
+      "notes": [
+        "Requires AGENTS.md/CLAUDE.md/GEMINI.md in the working directory (not located in the release).",
+        "Paper prompt-figure comparison blocked: S1 inaccessible."
+      ]
+    },
+    "ah-official-direct@8584a347": {
+      "paper_mode": true,
+      "source": {
+        "source_id": "agenthorizon-repo",
+        "revision": "8584a347370ab1d92b908732cfabe72b3a23486d",
+        "path": "llm_judges/preprocess_compress.py",
+        "symbol": "EVAL_PROMPT",
+        "file_sha256": "7593914710cfc88233b1e92939adb5014394bd36f1df66b412793d64394a0fe8",
+        "extraction": "ast.literal_eval of the module-level assignment (no code executed)"
+      },
+      "template_vars": [],
+      "notes": [
+        "Identical EVAL_PROMPT in preprocess_filter.py",
+        "Paper prompt-figure comparison blocked: S1 inaccessible."
+      ]
+    },
+    "ext-rubric-as-agents-md@8584a347": {
+      "paper_mode": false,
+      "source": {
+        "source_id": "agenthorizon-repo",
+        "revision": "8584a347370ab1d92b908732cfabe72b3a23486d",
+        "path": "docs/mistake-taxonomy.md",
+        "file_sha256": "48511eba4a2342e9aa5cdd40451b3c4f09426eb1acb9c0902b9bde24819dfc44"
+      },
+      "template_vars": [],
+      "notes": [
+        "Extension: substitutes the public rubric for the unreleased AGENTS.md. Never a paper-mode run."
+      ]
+    }
+  },
+  "direct_preprocessing": {
+    "native-512x332": "S5: every screenshot fit into 512x332 (released maximum size)",
+    "released-auto@<budget>": "released auto-resolution: largest width in [64, 512] (aspect 1710:1112) within the image-token budget",
+    "released-1126x730": "released fixed-size variant",
+    "mosaic-2x2-1024x664": {
+      "cell_box": [
+        512,
+        332
+      ],
+      "canvas": [
+        1024,
+        664
+      ],
+      "placement": "each frame thumbnailed (LANCZOS) into its 512x332 cell, centred, black background",
+      "order": "row-major: top-left, top-right, bottom-left, bottom-right",
+      "incomplete_final_grid": "unused cells left black; caption lists only the steps present",
+      "caption": "text block before each mosaic naming its steps and the reading order",
+      "interleaving": "the four step texts, then the caption, then the mosaic image",
+      "encoding": "JPEG quality 60, optimize=True (same encoder settings as the released compression)",
+      "status": "engineering choice: S5 describes the mosaic but the release contains no implementation"
+    },
+    "never": "no truncation, keyframe selection, OCR or summaries in paper mode; a request a provider cannot take whole is a serving incompatibility",
+    "implementation": "agenthorizon.judging.direct.packaging:build_payload"
+  },
+  "interfaces": {
+    "codex": "Codex",
+    "claude_code": "Claude Code",
+    "gemini_cli": "Gemini CLI",
+    "opencode": "OpenCode",
+    "openhands": "OpenHands",
+    "direct": "Direct API"
+  },
+  "models": [
+    {
+      "model_key": "gpt-5.5",
+      "display_name": "GPT-5.5",
+      "vendor": "OpenAI",
+      "known_ids": {},
+      "id_evidence": {}
+    },
+    {
+      "model_key": "gpt-5.4-mini",
+      "display_name": "GPT-5.4 mini",
+      "vendor": "OpenAI",
+      "known_ids": {},
+      "id_evidence": {}
+    },
+    {
+      "model_key": "claude-opus-4.7",
+      "display_name": "Claude Opus 4.7",
+      "vendor": "Anthropic",
+      "known_ids": {
+        "anthropic": "claude-opus-4-7"
+      },
+      "id_evidence": {
+        "anthropic": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py usage docstring (`--model claude-opus-4-7 --effort xhigh`)"
+      }
+    },
+    {
+      "model_key": "claude-haiku-4.5",
+      "display_name": "Claude Haiku 4.5",
+      "vendor": "Anthropic",
+      "known_ids": {
+        "anthropic": "claude-haiku-4-5"
+      },
+      "id_evidence": {
+        "anthropic": "agenthorizon-repo@8584a347:scripts/compare_runs.py PRICE table key"
+      }
+    },
+    {
+      "model_key": "gemini-3.1-pro",
+      "display_name": "Gemini 3.1 Pro",
+      "vendor": "Google",
+      "known_ids": {
+        "google": "gemini-3.1-pro-preview",
+        "openrouter": "google/gemini-3.1-pro-preview"
+      },
+      "id_evidence": {
+        "google": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py usage docstring",
+        "openrouter": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py _model_slug PRESET_TO_MODEL"
+      }
+    },
+    {
+      "model_key": "gemini-3.1-flash-lite",
+      "display_name": "Gemini 3.1 Flash Lite",
+      "vendor": "Google",
+      "known_ids": {
+        "google": "gemini-3.1-flash-lite-preview",
+        "openrouter": "google/gemini-3.1-flash-lite-preview"
+      },
+      "id_evidence": {
+        "google": "agenthorizon-repo@8584a347:llm_judges/README.md (evaluate.py --model gemini-3.1-flash-lite-preview)",
+        "openrouter": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py _model_slug PRESET_TO_MODEL"
+      }
+    },
+    {
+      "model_key": "qwen3.6-27b",
+      "display_name": "Qwen 3.6 27B",
+      "vendor": "Qwen",
+      "known_ids": {
+        "vllm": "Qwen/Qwen3.6-27B",
+        "opencode": "qwen36_vllm/Qwen/Qwen3.6-27B"
+      },
+      "id_evidence": {
+        "vllm": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table",
+        "opencode": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py usage docstring (provider prefix is a local OpenCode config name)"
+      }
+    },
+    {
+      "model_key": "qwen3.6-35b-a3b",
+      "display_name": "Qwen 3.6 35B-A3B",
+      "vendor": "Qwen",
+      "known_ids": {
+        "vllm": "Qwen/Qwen3.6-35B-A3B"
+      },
+      "id_evidence": {
+        "vllm": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table"
+      }
+    },
+    {
+      "model_key": "qwen3.5-122b-a10b",
+      "display_name": "Qwen 3.5 122B-A10B",
+      "vendor": "Qwen",
+      "known_ids": {
+        "vllm": "Qwen/Qwen3.5-122B-A10B"
+      },
+      "id_evidence": {
+        "vllm": "agenthorizon-repo@8584a347:scripts/aggregate_difficulty.py SPLITTER_MODEL"
+      }
+    },
+    {
+      "model_key": "qwen3.5-9b",
+      "display_name": "Qwen 3.5 9B",
+      "vendor": "Qwen",
+      "known_ids": {
+        "vllm": "Qwen/Qwen3.5-9B",
+        "openrouter": "qwen/qwen3.5-9b"
+      },
+      "id_evidence": {
+        "vllm": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table",
+        "openrouter": "agenthorizon-repo@8584a347:llm_judges/evaluate.py usage docstring"
+      }
+    },
+    {
+      "model_key": "gemma-4-31b",
+      "display_name": "Gemma 4 31B",
+      "vendor": "Google",
+      "known_ids": {
+        "vllm": "google/gemma-4-31B-it"
+      },
+      "id_evidence": {
+        "vllm": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table"
+      }
+    },
+    {
+      "model_key": "gemma-4-26b-a4b",
+      "display_name": "Gemma 4 26B-A4B",
+      "vendor": "Google",
+      "known_ids": {
+        "vllm": "google/gemma-4-26B-A4B-it"
+      },
+      "id_evidence": {
+        "vllm": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table"
+      }
+    },
+    {
+      "model_key": "inkling",
+      "display_name": "Inkling",
+      "vendor": "unknown",
+      "known_ids": {},
+      "id_evidence": {}
+    },
+    {
+      "model_key": "kimi-k2.7-code",
+      "display_name": "Kimi K2.7 Code",
+      "vendor": "Moonshot (presumed from name; unverified)",
+      "known_ids": {},
+      "id_evidence": {}
+    }
+  ],
+  "judge_configurations": [
+    {
+      "config_id": "codex:gpt-5.5",
+      "model_key": "gpt-5.5",
+      "interface": "codex",
+      "route": "chatgpt_subscription",
+      "provider_model_id": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[GPT-5.5|Codex]",
+        "S8.T2[GPT-5.5|Codex]",
+        "S8.T3[GPT-5.5|Codex]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row"
+    },
+    {
+      "config_id": "gemini_cli:gemini-3.1-pro",
+      "model_key": "gemini-3.1-pro",
+      "interface": "gemini_cli",
+      "route": "google",
+      "provider_model_id": "gemini-3.1-pro-preview",
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Gemini 3.1 Pro|Gemini CLI]",
+        "S8.T2[Gemini 3.1 Pro|Gemini CLI]",
+        "S8.T3[Gemini 3.1 Pro|Gemini CLI]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row"
+    },
+    {
+      "config_id": "claude_code:claude-opus-4.7",
+      "model_key": "claude-opus-4.7",
+      "interface": "claude_code",
+      "route": "anthropic",
+      "provider_model_id": "claude-opus-4-7",
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Claude Opus 4.7|Claude Code]",
+        "S8.T2[Claude Opus 4.7|Claude Code]",
+        "S8.T3[Claude Opus 4.7|Claude Code]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row"
+    },
+    {
+      "config_id": "opencode:qwen3.6-27b",
+      "model_key": "qwen3.6-27b",
+      "interface": "opencode",
+      "route": "vllm",
+      "provider_model_id": "qwen36_vllm/Qwen/Qwen3.6-27B",
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Qwen 3.6 27B|OpenCode]",
+        "S8.T2[Qwen 3.6 27B|OpenCode]",
+        "S8.T3[Qwen 3.6 27B|OpenCode]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row"
+    },
+    {
+      "config_id": "codex:gpt-5.4-mini",
+      "model_key": "gpt-5.4-mini",
+      "interface": "codex",
+      "route": "chatgpt_subscription",
+      "provider_model_id": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[GPT-5.4 mini|Codex]",
+        "S8.T2[GPT-5.4 mini|Codex]",
+        "S8.T3[GPT-5.4 mini|Codex]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row"
+    },
+    {
+      "config_id": "opencode:qwen3.6-35b-a3b",
+      "model_key": "qwen3.6-35b-a3b",
+      "interface": "opencode",
+      "route": "vllm",
+      "provider_model_id": "Qwen/Qwen3.6-35B-A3B",
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Qwen 3.6 35B-A3B|OpenCode]",
+        "S8.T2[Qwen 3.6 35B-A3B|OpenCode]",
+        "S8.T3[Qwen 3.6 35B-A3B|OpenCode]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row"
+    },
+    {
+      "config_id": "openhands:qwen3.6-27b",
+      "model_key": "qwen3.6-27b",
+      "interface": "openhands",
+      "route": "vllm",
+      "provider_model_id": "Qwen/Qwen3.6-27B",
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Qwen 3.6 27B|OpenHands]",
+        "S8.T2[Qwen 3.6 27B|OpenHands]",
+        "S8.T3[Qwen 3.6 27B|OpenHands]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row"
+    },
+    {
+      "config_id": "claude_code:claude-haiku-4.5",
+      "model_key": "claude-haiku-4.5",
+      "interface": "claude_code",
+      "route": "anthropic",
+      "provider_model_id": "claude-haiku-4-5",
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Claude Haiku 4.5|Claude Code]",
+        "S8.T2[Claude Haiku 4.5|Claude Code]",
+        "S8.T3[Claude Haiku 4.5|Claude Code]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row"
+    },
+    {
+      "config_id": "opencode:gemini-3.1-flash-lite",
+      "model_key": "gemini-3.1-flash-lite",
+      "interface": "opencode",
+      "route": null,
+      "provider_model_id": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Gemini 3.1 Flash Lite|OpenCode]",
+        "S8.T2[Gemini 3.1 Flash Lite|OpenCode]",
+        "S8.T3[Gemini 3.1 Flash Lite|OpenCode]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row"
+    },
+    {
+      "config_id": "gemini_cli:gemini-3.1-flash-lite",
+      "model_key": "gemini-3.1-flash-lite",
+      "interface": "gemini_cli",
+      "route": "google",
+      "provider_model_id": "gemini-3.1-flash-lite-preview",
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Gemini 3.1 Flash Lite|Gemini CLI]",
+        "S8.T2[Gemini 3.1 Flash Lite|Gemini CLI]",
+        "S8.T3[Gemini 3.1 Flash Lite|Gemini CLI]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row"
+    },
+    {
+      "config_id": "openhands:gemini-3.1-flash-lite",
+      "model_key": "gemini-3.1-flash-lite",
+      "interface": "openhands",
+      "route": "google",
+      "provider_model_id": "gemini-3.1-flash-lite-preview",
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Gemini 3.1 Flash Lite|OpenHands]",
+        "S8.T2[Gemini 3.1 Flash Lite|OpenHands]",
+        "S8.T3[Gemini 3.1 Flash Lite|OpenHands]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row"
+    },
+    {
+      "config_id": "opencode:gemma-4-26b-a4b",
+      "model_key": "gemma-4-26b-a4b",
+      "interface": "opencode",
+      "route": "vllm",
+      "provider_model_id": "google/gemma-4-26B-A4B-it",
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Gemma 4 26B-A4B|OpenCode]",
+        "S8.T2[Gemma 4 26B-A4B|OpenCode]",
+        "S8.T3[Gemma 4 26B-A4B|OpenCode]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row"
+    },
+    {
+      "config_id": "codex:gemini-3.1-flash-lite",
+      "model_key": "gemini-3.1-flash-lite",
+      "interface": "codex",
+      "route": "openrouter",
+      "provider_model_id": "google/gemini-3.1-flash-lite-preview",
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Gemini 3.1 Flash Lite|Codex]",
+        "S8.T2[Gemini 3.1 Flash Lite|Codex]",
+        "S8.T3[Gemini 3.1 Flash Lite|Codex]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row"
+    },
+    {
+      "config_id": "opencode:gemma-4-31b",
+      "model_key": "gemma-4-31b",
+      "interface": "opencode",
+      "route": "vllm",
+      "provider_model_id": "google/gemma-4-31B-it",
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Gemma 4 31B|OpenCode]",
+        "S8.T2[Gemma 4 31B|OpenCode]",
+        "S8.T3[Gemma 4 31B|OpenCode]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row"
+    },
+    {
+      "config_id": "opencode:qwen3.5-122b-a10b:splitter",
+      "model_key": "qwen3.5-122b-a10b",
+      "interface": "opencode",
+      "route": "vllm",
+      "provider_model_id": "Qwen/Qwen3.5-122B-A10B",
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Qwen 3.5 122B-A10B|OpenCode]",
+        "S8.T2[Qwen 3.5 122B-A10B|OpenCode]",
+        "S8.T3[Qwen 3.5 122B-A10B|OpenCode]"
+      ],
+      "role": "splitter",
+      "evidence_class": "paper_row"
+    },
+    {
+      "config_id": "opencode:qwen3.5-122b-a10b:splitter:revised",
+      "model_key": "qwen3.5-122b-a10b",
+      "interface": "opencode",
+      "route": "vllm",
+      "provider_model_id": "Qwen/Qwen3.5-122B-A10B",
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "MP §2"
+      ],
+      "role": "splitter",
+      "evidence_class": "brief_only"
+    },
+    {
+      "config_id": "opencode:inkling:splitter:revised",
+      "model_key": "inkling",
+      "interface": "opencode",
+      "route": null,
+      "provider_model_id": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "MP §2"
+      ],
+      "role": "splitter",
+      "evidence_class": "brief_only"
+    },
+    {
+      "config_id": "opencode:kimi-k2.7-code:splitter:revised",
+      "model_key": "kimi-k2.7-code",
+      "interface": "opencode",
+      "route": null,
+      "provider_model_id": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "MP §2"
+      ],
+      "role": "splitter",
+      "evidence_class": "brief_only"
+    },
+    {
+      "config_id": "direct:qwen3.5-9b:native-512x332",
+      "model_key": "qwen3.5-9b",
+      "interface": "direct",
+      "route": "vllm",
+      "provider_model_id": "Qwen/Qwen3.5-9B",
+      "preprocessing": "native-512x332",
+      "prompt_revision": "ah-official-direct@8584a347",
+      "paper_rows": [
+        "MP §7"
+      ],
+      "role": "judge",
+      "evidence_class": "brief_only"
+    },
+    {
+      "config_id": "direct:gemini-3.1-flash-lite:native-512x332",
+      "model_key": "gemini-3.1-flash-lite",
+      "interface": "direct",
+      "route": "google",
+      "provider_model_id": "gemini-3.1-flash-lite-preview",
+      "preprocessing": "native-512x332",
+      "prompt_revision": "ah-official-direct@8584a347",
+      "paper_rows": [
+        "agenthorizon-repo@8584a347:llm_judges/README.md quick start"
+      ],
+      "role": "judge",
+      "evidence_class": "released_example"
+    },
+    {
+      "config_id": "direct:gemini-3.1-pro:native-512x332",
+      "model_key": "gemini-3.1-pro",
+      "interface": "direct",
+      "route": "google",
+      "provider_model_id": "gemini-3.1-pro-preview",
+      "preprocessing": "native-512x332",
+      "prompt_revision": "ah-official-direct@8584a347",
+      "paper_rows": [
+        "agenthorizon-repo@8584a347:llm_judges/README.md quick start"
+      ],
+      "role": "judge",
+      "evidence_class": "released_example"
+    },
+    {
+      "config_id": "direct:qwen3.6-27b:native-512x332",
+      "model_key": "qwen3.6-27b",
+      "interface": "direct",
+      "route": "vllm",
+      "provider_model_id": "Qwen/Qwen3.6-27B",
+      "preprocessing": "native-512x332",
+      "prompt_revision": "ah-official-direct@8584a347",
+      "paper_rows": [
+        "agenthorizon-repo@8584a347:llm_judges/README.md quick start"
+      ],
+      "role": "judge",
+      "evidence_class": "released_example"
+    },
+    {
+      "config_id": "direct:gemma-4-31b:native-512x332",
+      "model_key": "gemma-4-31b",
+      "interface": "direct",
+      "route": "vllm",
+      "provider_model_id": "google/gemma-4-31B-it",
+      "preprocessing": "native-512x332",
+      "prompt_revision": "ah-official-direct@8584a347",
+      "paper_rows": [
+        "agenthorizon-repo@8584a347:llm_judges/README.md quick start"
+      ],
+      "role": "judge",
+      "evidence_class": "released_example"
+    }
+  ],
+  "experiments": {
+    "registered": 41,
+    "by_kind": {
+      "reference_grid": 15,
+      "direct": 5,
+      "splitter_legacy": 1,
+      "splitter_revised": 3,
+      "revised_main": 14,
+      "development": 1,
+      "ablation": 1,
+      "trials": 1
+    },
+    "see": "evidence/EXPERIMENT_REGISTRY.json"
+  },
+  "unresolved": [
+    {
+      "id": "U1",
+      "item": "revised AH-D / AH / AH-S membership",
+      "detail": "not located at the locked commit (all refs probed) and the dataset host is unreachable here; legacy membership is registered separately and never relabelled",
+      "see": "evidence/DATA_AVAILABILITY.json"
+    },
+    {
+      "id": "U2",
+      "item": "paper text, figures and appendix prompt figure",
+      "detail": "arxiv.org blocked; paper facts are the master prompt's quotations, cross-checked against the repository where it states the same fact",
+      "see": "evidence/SOURCE_LOCK.json"
+    },
+    {
+      "id": "U3",
+      "item": "harness instruction file (AGENTS.md) used in the paper runs",
+      "detail": "not in the release; paper-mode agentic runs need the operator to register it, extension runs stage the public rubric",
+      "see": "agenthorizon.judging.prompts:harness_instructions"
+    },
+    {
+      "id": "U4",
+      "item": "provider identifiers for Inkling and Kimi K2.7 Code (revised splitters)",
+      "detail": "named only in the brief; no released artifact gives vendor, identifier or route",
+      "see": "evidence/MODEL_CAPABILITIES.json"
+    },
+    {
+      "id": "U5",
+      "item": "sampling settings, serving flags and GPU configuration of the self-hosted runs",
+      "detail": "unpublished; recorded as null (unknown), never defaulted",
+      "see": "agenthorizon.judging.registry:CONFIGS"
+    },
+    {
+      "id": "U6",
+      "item": "author per-item predictions and telemetry",
+      "detail": "not released; aggregates are kept as reference data only",
+      "see": "evidence/REFERENCE_DATA.json"
+    },
+    {
+      "id": "U7",
+      "item": "2x2 mosaic implementation",
+      "detail": "engineering choice: S5 describes the mosaic but the release contains no implementation",
+      "see": "agenthorizon.judging.direct.packaging:build_payload"
+    }
+  ]
+}

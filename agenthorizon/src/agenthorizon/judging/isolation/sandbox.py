@@ -46,6 +46,7 @@ class SandboxSpec:
     env: dict[str, str]
     allowed_hosts: set[str] = field(default_factory=set)
     allowed_ports: set[int] = field(default_factory=lambda: {443})
+    direct_endpoints: set[tuple[str, int]] = field(default_factory=set)  # self-hosted model endpoint (host, port)
     readonly_inputs: list[str] = field(default_factory=list)  # paths relative to <task_dir>/workspace
     tool_dirs: list[str] = field(default_factory=list)  # host dirs bound read-only at the same path
     timeout_s: int = 1800
@@ -118,7 +119,8 @@ def run_in_sandbox(spec: SandboxSpec, cancel: threading.Event | None = None) -> 
     sock_dir = Path(tempfile.mkdtemp(prefix="ahe-"))  # AF_UNIX paths are limited to 108 bytes; run dirs can be deep
     os.chmod(sock_dir, 0o700)
     sock = sock_dir / "egress.sock"
-    proxy = EgressProxy(str(sock), EgressPolicy(set(spec.allowed_hosts), set(spec.allowed_ports), spec.upstream_proxy)).start()
+    proxy = EgressProxy(str(sock), EgressPolicy(set(spec.allowed_hosts), set(spec.allowed_ports), spec.upstream_proxy,
+                                                set(spec.direct_endpoints))).start()
     init_log = spec.task_dir / "sandbox-init.log"
     sb_spec = {
         "new_root": str(lay["root"]),

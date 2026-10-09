@@ -133,6 +133,9 @@ test("roles gate navigation and privileged views", async ({ page }, ti) => {
 test("operations console", async ({ page }, ti) => {
   await login(page);
   await page.goto("/admin");
+  // the capability probe is a judge-queue job: the worker that executes runs measures itself
+  await page.getByRole("button", { name: "Refresh capability report" }).click();
+  await expect(page.getByText(/measured by judge@e2e/)).toBeVisible({ timeout: 90_000 });
   await page.getByRole("tab", { name: "Workers" }).click();
   await expect(page.getByText("judge@e2e")).toBeVisible();
   await page.getByRole("tab", { name: "Jobs" }).click();

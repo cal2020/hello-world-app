@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -53,7 +54,13 @@ def checkout(source_id: str) -> GitCheckout:
     rev = locked_revision(source_id)
     if not rev:
         raise PinnedFileError(f"no pinned revision for {source_id}; run `agenthorizon sources lock`")
-    return ensure_checkout(spec.urls[0], rev, get_settings().sources_dir, shallow=source_id in SHALLOW_SOURCES)
+    root = get_settings().sources_dir
+    slug = spec.urls[0].rstrip("/").split("github.com/")[-1].replace("/", "__")
+    if not (root / f"{slug}@{rev}" / ".git").exists() and not os.access(root if root.exists() else root.parent, os.W_OK):
+        # read-only services (API, judge worker) never fetch: the trusted side materializes pinned sources
+        raise PinnedFileError(f"pinned source {source_id}@{rev[:12]} is not checked out in {root}; run "
+                              f"`agenthorizon sources checkout {source_id}` (admin/trusted side)")
+    return ensure_checkout(spec.urls[0], rev, root, shallow=source_id in SHALLOW_SOURCES)
 
 
 def pinned_file(source_id: str, rel: str) -> Path:

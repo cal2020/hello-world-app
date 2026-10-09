@@ -188,3 +188,23 @@ def test_storage_limit_refuses_transfer(tmp_path, fixture_dir):
     s = settings_for(tmp_path, storage_limit_bytes=10_000)
     with pytest.raises(IngestError, match="storage limit"):
         ingest(s, IngestOptions(source="local", local_dir=d, media="all"))
+
+
+def test_read_only_service_never_fetches_pinned_sources(tmp_path, monkeypatch):
+    """The API and judge worker mount sources read-only: a missing pinned checkout is an actionable error, never a
+    clone attempt (and never a 500)."""
+    import pytest
+
+    from agenthorizon.config import reset_settings_cache
+    from agenthorizon.sources import cache
+
+    monkeypatch.setenv("AH_VAR_DIR", str(tmp_path / "var"))
+    (tmp_path / "var" / "sources").mkdir(parents=True)
+    reset_settings_cache()
+    monkeypatch.setattr(cache.os, "access", lambda path, mode: False)  # as a read-only volume reports (EROFS)
+    monkeypatch.setattr(cache, "ensure_checkout", lambda *a, **k: pytest.fail("must not fetch"))
+    try:
+        with pytest.raises(cache.PinnedFileError, match="agenthorizon sources checkout agenthorizon-repo"):
+            cache.checkout("agenthorizon-repo")
+    finally:
+        reset_settings_cache()

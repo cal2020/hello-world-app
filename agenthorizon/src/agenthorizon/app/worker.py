@@ -77,6 +77,17 @@ def handle_run(job: dict, ctx: WorkerContext, cancel: threading.Event) -> dict:
     return {k: v for k, v in summary.items() if k != "tasks"}
 
 
+def handle_doctor(job: dict, ctx: WorkerContext, cancel: threading.Event) -> dict:
+    """Capability report measured in this judge worker's own environment: harness installs, isolation, credential
+    NAMES and route egress belong to the process that executes runs, not to the API. No model is called."""
+    from agenthorizon.judging.doctor import doctor
+
+    p = job["payload"]
+    rep = doctor(environ=ctx.secrets_env, probe_network=bool(p.get("network", True)), live=False,
+                 base_urls=p.get("base_urls"))
+    return {**rep, "measured_by": ctx.worker_id}
+
+
 def handle_index(job: dict, ctx: WorkerContext, cancel: threading.Event) -> dict:
     from agenthorizon.app.indexer import index_dataset_version
     from agenthorizon.data.dataset import DatasetVersion, PrivateStore
@@ -191,7 +202,7 @@ def handle_export(job: dict, ctx: WorkerContext, cancel: threading.Event) -> dic
     return {"export_id": eid, "sha256": sha, "files": len(man["files"])}
 
 
-HANDLERS: dict[str, Handler] = {"run": handle_run, "index": handle_index, "ingest": handle_ingest,
+HANDLERS: dict[str, Handler] = {"run": handle_run, "doctor": handle_doctor, "index": handle_index, "ingest": handle_ingest,
                                 "materialize": handle_materialize, "score": handle_score, "export": handle_export}
 
 

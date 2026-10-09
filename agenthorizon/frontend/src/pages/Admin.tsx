@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type DatasetSummary } from "../api";
 import { Banner, ErrorBox, Loading, StatusBadge, Tabs, useCan } from "../components/ui";
@@ -29,7 +29,16 @@ function DataOps() {
   const ingest = useMutation({ mutationFn: () => api.post<{ job_id: number }>("/api/admin/datasets/ingest", { ...src, local_dir: src.local_dir || null }), onSuccess: () => qc.invalidateQueries({ queryKey: ["jobs"] }) });
   const mat = useMutation({ mutationFn: () => api.post<{ job_id: number }>(`/api/admin/datasets/${encodeURIComponent(dv)}/materialize`, { limit: limit ? Number(limit) : null }) });
   const idx = useMutation({ mutationFn: () => api.post<{ job_id: number }>(`/api/admin/datasets/${encodeURIComponent(dv)}/index`) });
-  const doctor = useMutation({ mutationFn: () => api.post<{ counts: Record<string, number> }>("/api/admin/judges/doctor"), onSuccess: () => qc.invalidateQueries({ queryKey: ["judges"] }) });
+  const doctor = useMutation({ mutationFn: () => api.post<{ job_id: number; created: boolean }>("/api/admin/judges/doctor") });
+  const doctorJob = useQuery({
+    queryKey: ["job", doctor.data?.job_id],
+    queryFn: () => api.get<Job>(`/api/jobs/${doctor.data!.job_id}`),
+    enabled: !!doctor.data,
+    refetchInterval: (q) => (["queued", "running"].includes(q.state.data?.status ?? "queued") ? 1000 : false),
+  });
+  const doctorStatus = doctorJob.data?.status;
+  useEffect(() => { if (doctorStatus === "succeeded") void qc.invalidateQueries({ queryKey: ["judges"] }); }, [doctorStatus, qc]);
+  const doctorResult = doctorJob.data?.result as { counts?: Record<string, number>; measured_by?: string } | null | undefined;
   return (
     <div className="grid grid-2">
       <div className="card">
@@ -58,9 +67,18 @@ function DataOps() {
         {mat.isError ? <ErrorBox error={mat.error} /> : null}
         <hr className="sep" />
         <h3>Judge capabilities</h3>
-        <p className="subtle">Re-probe installation, credentials (names only), identifiers, routes, and isolation. No model is called.</p>
-        <button onClick={() => doctor.mutate()} disabled={doctor.isPending}>{doctor.isPending ? "Probing…" : "Refresh capability report"}</button>
-        {doctor.data ? <p className="subtle">{JSON.stringify(doctor.data.counts)}</p> : null}
+        <p className="subtle">A judge worker re-probes its own installation, isolation, credentials (names only), identifiers, and routes — the environment that executes runs. No model is called.</p>
+        <button onClick={() => doctor.mutate()} disabled={doctor.isPending || doctorStatus === "queued" || doctorStatus === "running"}>
+          {doctorStatus === "queued" || doctorStatus === "running" ? "Probing on a judge worker…" : "Refresh capability report"}
+        </button>
+        {doctor.data ? (
+          <p className="subtle">
+            Job #{doctor.data.job_id}: {doctorStatus ?? "queued"}
+            {doctorStatus === "succeeded" && doctorResult ? ` — measured by ${doctorResult.measured_by ?? "a judge worker"}: ${Object.entries(doctorResult.counts ?? {}).map(([k, v]) => `${v} ${k}`).join(", ")}` : ""}
+            {doctorStatus === "queued" ? " (waits for a live judge worker)" : ""}
+          </p>
+        ) : null}
+        {doctorStatus === "failed" ? <ErrorBox error={new Error(doctorJob.data?.last_error ?? "capability probe failed")} /> : null}
         {doctor.isError ? <ErrorBox error={doctor.error} /> : null}
       </div>
     </div>

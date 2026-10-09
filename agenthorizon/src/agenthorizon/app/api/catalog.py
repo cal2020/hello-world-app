@@ -16,6 +16,7 @@ from agenthorizon.app.schema import (
     assets,
     dataset_versions,
     examples,
+    jobs,
     manifest_members,
     manifests,
     run_finals,
@@ -30,15 +31,18 @@ SHA_RE = re.compile(r"^[0-9a-f]{64}$")
 THUMB_WIDTH = 480
 
 
-def _evidence(name: str) -> dict | None:
-    p = EVIDENCE / name
-    return json.loads(p.read_text()) if p.is_file() else None
+def _evidence(name: str, settings=None) -> dict | None:
+    """A report regenerated in this deployment (``<var>/reports``) wins over the copy committed in evidence/."""
+    for p in ([settings.reports_dir / name] if settings is not None else []) + [EVIDENCE / name]:
+        if p.is_file():
+            return json.loads(p.read_text())
+    return None
 
 
 @router.get("/sources")
-def sources(p: Principal = Depends(require("catalog.read"))):
-    lock = _evidence("SOURCE_LOCK.json") or {}
-    avail = _evidence("DATA_AVAILABILITY.json") or {}
+def sources(request: Request, p: Principal = Depends(require("catalog.read"))):
+    lock = _evidence("SOURCE_LOCK.json") or {}  # the lock is part of the build: never a runtime report
+    avail = _evidence("DATA_AVAILABILITY.json", request.app.state.settings) or {}
     return {
         "lock_generated_at": lock.get("generated_at"),
         "sources": [{**{k: s.get(k) for k in ("source_id", "citation", "kind", "status", "title", "role", "resolved_revision")},
@@ -77,7 +81,8 @@ def dataset_detail(dv: str, request: Request, p: Principal = Depends(require("ca
         agg = c.execute(select(func.count(), func.sum(examples.c.n_steps), func.max(examples.c.n_steps),
                                func.sum(examples.c.media_total), func.sum(examples.c.media_materialized))
                         .where(examples.c.dataset_version_id == dv)).first()
-    avail = {a["artifact_id"]: a for a in (_evidence("DATA_AVAILABILITY.json") or {}).get("artifacts", [])}
+    avail = {a["artifact_id"]: a for a in (_evidence("DATA_AVAILABILITY.json", request.app.state.settings) or {})
+             .get("artifacts", [])}
     val = r["validation"] or {}
     return {
         "dataset_version_id": dv, "benchmark": r["benchmark"], "synthetic": r["synthetic"], "info": r["info"],
@@ -274,20 +279,33 @@ def media(dv: str, sha: str, request: Request, variant: str = Query("thumb", pat
 
 
 @router.get("/reference")
-def reference(p: Principal = Depends(require("reference.read"))):
-    ref = _evidence("REFERENCE_DATA.json") or {}
-    inv = _evidence("EXPERIMENT_INVENTORY.json") or {}
+def reference(request: Request, p: Principal = Depends(require("reference.read"))):
+    ref = _evidence("REFERENCE_DATA.json", request.app.state.settings) or {}
+    inv = _evidence("EXPERIMENT_INVENTORY.json", request.app.state.settings) or {}
     return {"warning": ref.get("warning"), "tables": ref.get("supplementary_tables", []),
             "construction_accounting": ref.get("construction_accounting"),
             "aggregate_mt_definition": ref.get("analysis_aggregate_mt_definition"),
             "legacy_composition": ref.get("analysis_legacy_composition"), "inventory": inv}
 
 
+def latest_capabilities(engine, settings=None) -> dict:
+    """The newest capability report measured by a judge worker; else the evidence file from the development host."""
+    with engine.connect() as c:
+        row = c.execute(select(jobs.c.result, jobs.c.finished_at).where((jobs.c.kind == "doctor")
+                                                                        & (jobs.c.status == "succeeded"))
+                        .order_by(jobs.c.finished_at.desc()).limit(1)).first()
+    if row and row[0]:
+        return {**row[0], "source": "judge worker"}
+    rep = _evidence("MODEL_CAPABILITIES.json", settings) or {}
+    return {**rep, "source": "report file (not measured by a judge worker)"} if rep else {}
+
+
 @router.get("/judges")
-def judges(p: Principal = Depends(require("catalog.read"))):
+def judges(request: Request, p: Principal = Depends(require("catalog.read"))):
     from agenthorizon.judging.registry import CONFIGS, INTERFACE_LABELS, MODELS_BY_KEY
 
-    caps = {c["config_id"]: c for c in (_evidence("MODEL_CAPABILITIES.json") or {}).get("configurations", [])}
+    rep = latest_capabilities(eng(request), request.app.state.settings)
+    caps = {c["config_id"]: c for c in rep.get("configurations", [])}
     out = []
     for cfg in CONFIGS:
         m = MODELS_BY_KEY[cfg.model_key]
@@ -296,8 +314,8 @@ def judges(p: Principal = Depends(require("catalog.read"))):
                     "vision_input": m.vision_input, "model_notes": m.notes,
                     "capability": {"status": cap.get("status", "unverified"), "reasons": cap.get("reasons", []),
                                    "checks": cap.get("checks", {})}})
-    rep = _evidence("MODEL_CAPABILITIES.json") or {}
-    return {"generated_at": rep.get("generated_at"), "configs": out}
+    return {"generated_at": rep.get("generated_at"), "measured_by": rep.get("measured_by"), "source": rep.get("source"),
+            "configs": out}
 
 
 @router.get("/supplemental")
@@ -314,7 +332,7 @@ def supplemental(request: Request, p: Principal = Depends(require("catalog.read"
                     "summary": v.get("summary") or v.get("task_definitions"), "trajectories": v.get("trajectories") or v.get("traces"),
                     "annotation_agreement": v.get("annotation_agreement"), "compatibility": v.get("compatibility"),
                     "coverage": st.coverage(), "imported_at": v.get("imported_at")})
-    aud = _evidence("DEDUP_AUDIT.json")
+    aud = _evidence("DEDUP_AUDIT.json", request.app.state.settings)
     audit_summary = None
     if aud:
         audit_summary = {k: (len(v) if isinstance(v, list) else v) for k, v in aud.items()
