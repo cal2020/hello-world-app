@@ -1,0 +1,591 @@
+{
+  "generated_at": "2026-10-09T19:49:49Z",
+  "lock_generated_at": "2026-10-09T19:43:46Z",
+  "counts": {
+    "published_but_unavailable": 9,
+    "acquired": 6,
+    "not_located": 15,
+    "not_applicable": 1
+  },
+  "artifacts": [
+    {
+      "artifact_id": "ah-paper",
+      "name": "Paper PDF/HTML arXiv:2610.11050v1",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "MP"
+      ],
+      "location": "https://arxiv.org/pdf/2610.11050v1",
+      "depends_on_source": "agenthorizon-paper",
+      "needed_for": [
+        "specification",
+        "tables",
+        "figures",
+        "prompt figure",
+        "ablation membership"
+      ],
+      "detail": "Probe only; when reachable, retrieve and digest the versioned PDF.",
+      "local_check": null,
+      "extra": {},
+      "status": "published_but_unavailable",
+      "basis": "agenthorizon-paper inaccessible (egress_denied)"
+    },
+    {
+      "artifact_id": "ah-repo",
+      "name": "Authors' evaluation harness repository",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "MP",
+        "S3 README"
+      ],
+      "location": "https://github.com/ServiceNow/agenthorizon",
+      "depends_on_source": "agenthorizon-repo",
+      "needed_for": [
+        "executable reference",
+        "prompt",
+        "scorer cross-check"
+      ],
+      "detail": "",
+      "local_check": null,
+      "extra": {},
+      "status": "acquired",
+      "basis": "agenthorizon-repo@8584a347370a"
+    },
+    {
+      "artifact_id": "ah-legacy-labels-main",
+      "name": "AgentHorizon.jsonl (legacy AH labels, 605 items)",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S2:README.md"
+      ],
+      "location": "hf://datasets/ServiceNow/AgentHorizon/AgentHorizon.jsonl",
+      "depends_on_source": "agenthorizon-dataset",
+      "needed_for": [
+        "legacy scoring",
+        "legacy reconciliation"
+      ],
+      "detail": "",
+      "local_check": "datasets/agenthorizon",
+      "extra": {},
+      "status": "published_but_unavailable",
+      "basis": "agenthorizon-dataset inaccessible (egress_denied)"
+    },
+    {
+      "artifact_id": "ah-legacy-labels-simple",
+      "name": "AgentHorizon-Simple.jsonl (legacy AH-S labels, 768 items)",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S2:README.md"
+      ],
+      "location": "hf://datasets/ServiceNow/AgentHorizon/AgentHorizon-Simple.jsonl",
+      "depends_on_source": "agenthorizon-dataset",
+      "needed_for": [
+        "legacy scoring",
+        "legacy reconciliation"
+      ],
+      "detail": "",
+      "local_check": "datasets/agenthorizon",
+      "extra": {},
+      "status": "published_but_unavailable",
+      "basis": "agenthorizon-dataset inaccessible (egress_denied)"
+    },
+    {
+      "artifact_id": "ah-markdowns",
+      "name": "sandbox/data/markdowns/<trajectory_id>.md (judge input)",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S2:README.md"
+      ],
+      "location": "hf://datasets/ServiceNow/AgentHorizon/sandbox/data/markdowns/",
+      "depends_on_source": "agenthorizon-dataset",
+      "needed_for": [
+        "judging",
+        "exploration"
+      ],
+      "detail": "",
+      "local_check": "datasets/agenthorizon",
+      "extra": {},
+      "status": "published_but_unavailable",
+      "basis": "agenthorizon-dataset inaccessible (egress_denied)"
+    },
+    {
+      "artifact_id": "ah-jsons",
+      "name": "sandbox/data/jsons/<trajectory_id>.json (structured trajectories)",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S2:README.md"
+      ],
+      "location": "hf://datasets/ServiceNow/AgentHorizon/sandbox/data/jsons/",
+      "depends_on_source": "agenthorizon-dataset",
+      "needed_for": [
+        "normalization",
+        "exploration"
+      ],
+      "detail": "",
+      "local_check": "datasets/agenthorizon",
+      "extra": {},
+      "status": "published_but_unavailable",
+      "basis": "agenthorizon-dataset inaccessible (egress_denied)"
+    },
+    {
+      "artifact_id": "ah-media",
+      "name": "sandbox/data/media/images/<steps_id>/step_N.png (screenshots, ~43 GB advertised)",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S2:README.md",
+        "MP §3"
+      ],
+      "location": "hf://datasets/ServiceNow/AgentHorizon/sandbox/data/media/images/",
+      "depends_on_source": "agenthorizon-dataset",
+      "needed_for": [
+        "judging",
+        "inspection"
+      ],
+      "detail": "",
+      "local_check": "media",
+      "extra": {},
+      "status": "published_but_unavailable",
+      "basis": "agenthorizon-dataset inaccessible (egress_denied)"
+    },
+    {
+      "artifact_id": "ah-revised-manifests",
+      "name": "Revised AH-D / AH / AH-S membership (162 / 528 / 683)",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "MP §1-2 (attributed to S1)"
+      ],
+      "location": null,
+      "depends_on_source": null,
+      "needed_for": [
+        "revised headline reproduction"
+      ],
+      "detail": "Absent from S2 at every commit and ref (main, refs/pull/1/head). S3 unreadable here, so presence on the dataset's branches/tags/revisions is unverified, not disproven.",
+      "local_check": null,
+      "extra": {},
+      "status": "not_located",
+      "basis": "Absent from S2 at every commit and ref (main, refs/pull/1/head). S3 unreadable here, so presence on the dataset's branches/tags/revisions is unverified, not disproven."
+    },
+    {
+      "artifact_id": "ah-revised-splitter-verdicts",
+      "name": "Revised splitter verdicts (3 models x 8 verdicts per item)",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "MP §2"
+      ],
+      "location": null,
+      "depends_on_source": null,
+      "needed_for": [
+        "partition reconstruction"
+      ],
+      "detail": "",
+      "local_check": null,
+      "extra": {},
+      "status": "not_located",
+      "basis": "no public location found in accessible sources"
+    },
+    {
+      "artifact_id": "ah-legacy-splitter-runs",
+      "name": "Legacy splitter runs (experiments/.meta/runs_splitter_v2, Qwen 3.5 122B-A10B x 8)",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S2:scripts/aggregate_difficulty.py"
+      ],
+      "location": null,
+      "depends_on_source": null,
+      "needed_for": [
+        "legacy partition reconstruction"
+      ],
+      "detail": "Explicitly gitignored in S2 (experiments/.gitignore).",
+      "local_check": null,
+      "extra": {},
+      "status": "not_located",
+      "basis": "Explicitly gitignored in S2 (experiments/.gitignore)."
+    },
+    {
+      "artifact_id": "ah-full-labels",
+      "name": "Full labels file with original_id / paired_id / negative_source / mistake_type",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S2:STANDARD.md",
+        "S2:scripts/*.py (data/standard/agenthorizon_labels.jsonl)"
+      ],
+      "location": null,
+      "depends_on_source": "agenthorizon-dataset",
+      "needed_for": [
+        "pair grouping",
+        "failure-category scoring",
+        "leakage audit"
+      ],
+      "detail": "Scripts read data/standard/agenthorizon_labels.jsonl; whether the S3 label files carry these fields is unverified.",
+      "local_check": null,
+      "extra": {},
+      "status": "not_located",
+      "basis": "Scripts read data/standard/agenthorizon_labels.jsonl; whether the S3 label files carry these fields is unverified."
+    },
+    {
+      "artifact_id": "ah-standard-jsonl",
+      "name": "Standardized trajectories JSONL (data/standard/agenthorizon.jsonl)",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S2:scripts/*.py"
+      ],
+      "location": null,
+      "depends_on_source": null,
+      "needed_for": [
+        "pair recovery from screenshot directories"
+      ],
+      "detail": "",
+      "local_check": null,
+      "extra": {},
+      "status": "not_located",
+      "basis": "no public location found in accessible sources"
+    },
+    {
+      "artifact_id": "ah-dataverse-labels",
+      "name": "agenthorizon_labels_anon.jsonl (Dataverse, sha256 ec57ba3e…)",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S2:paper/croissant.json"
+      ],
+      "location": "doi:10.7910/DVN/J9KNWR",
+      "depends_on_source": "agenthorizon-dataverse",
+      "needed_for": [
+        "label digest cross-check"
+      ],
+      "detail": "Croissant URLs carry an anonymous-review access key; the persistent DOI is the public route.",
+      "local_check": null,
+      "extra": {},
+      "status": "published_but_unavailable",
+      "basis": "agenthorizon-dataverse inaccessible (egress_denied)"
+    },
+    {
+      "artifact_id": "ah-dataverse-difficulty",
+      "name": "agenthorizon_difficulty_anon.jsonl with pair_group_id (Dataverse, sha256 7a4cff47…)",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S2:paper/croissant.json"
+      ],
+      "location": "doi:10.7910/DVN/J9KNWR",
+      "depends_on_source": "agenthorizon-dataverse",
+      "needed_for": [
+        "legacy bucket import",
+        "pair grouping"
+      ],
+      "detail": "",
+      "local_check": null,
+      "extra": {},
+      "status": "published_but_unavailable",
+      "basis": "agenthorizon-dataverse inaccessible (egress_denied)"
+    },
+    {
+      "artifact_id": "ah-harness-instructions",
+      "name": "AGENTS.md / CLAUDE.md / GEMINI.md judge framework files",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S2:prompts/evaluate_trajectory.txt",
+        "S2:experiments/README.md"
+      ],
+      "location": null,
+      "depends_on_source": null,
+      "needed_for": [
+        "paper-faithful agentic judging"
+      ],
+      "detail": "The official prompt tells the judge to use these files; experiments/README.md claims they are committed under .meta/template/sandbox/, but they are absent at 8584a347. Possibly inside S3's sandbox/ (unverified).",
+      "local_check": null,
+      "extra": {},
+      "status": "not_located",
+      "basis": "The official prompt tells the judge to use these files; experiments/README.md claims they are committed under .meta/template/sandbox/, but they are absent at 8584a347. Possibly inside S3's sandbox/ (unverified)."
+    },
+    {
+      "artifact_id": "ah-run-registry",
+      "name": "experiments/.meta/exp_ids.jsonl run registry",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S2:experiments/README.md"
+      ],
+      "location": null,
+      "depends_on_source": null,
+      "needed_for": [
+        "run provenance"
+      ],
+      "detail": "README says committed; absent at 8584a347.",
+      "local_check": null,
+      "extra": {},
+      "status": "not_located",
+      "basis": "README says committed; absent at 8584a347."
+    },
+    {
+      "artifact_id": "ah-predictions",
+      "name": "Per-item predictions / run directories for reported configurations",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S2:experiments/README.md (EAI mirror)"
+      ],
+      "location": null,
+      "depends_on_source": null,
+      "needed_for": [
+        "independent rescoring of author predictions"
+      ],
+      "detail": "Kept in an internal EAI data object; not public.",
+      "local_check": null,
+      "extra": {},
+      "status": "not_located",
+      "basis": "Kept in an internal EAI data object; not public."
+    },
+    {
+      "artifact_id": "ah-committed-results",
+      "name": "results/analysis/*gemini_flash_lite* (historical construction-pool run)",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S2:llm_judges/README.md"
+      ],
+      "location": null,
+      "depends_on_source": null,
+      "needed_for": [
+        "historical comparison"
+      ],
+      "detail": "README lists them as committed; absent at 8584a347 (and outside the 1,373-item release by the README's own note).",
+      "local_check": null,
+      "extra": {},
+      "status": "not_located",
+      "basis": "README lists them as committed; absent at 8584a347 (and outside the 1,373-item release by the README's own note)."
+    },
+    {
+      "artifact_id": "ah-prompt-variants",
+      "name": "Prompt variants P0-P7, prompts/archive/evaluate_trajectory_v0.txt, prompts/meta_judge/*",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S2:scripts/compare_runs.py",
+        "S2:scripts/evaluate_trajectories.py",
+        "S2:scripts/make_clean_split.py"
+      ],
+      "location": null,
+      "depends_on_source": null,
+      "needed_for": [
+        "prompt ablations"
+      ],
+      "detail": "",
+      "local_check": null,
+      "extra": {},
+      "status": "not_located",
+      "basis": "no public location found in accessible sources"
+    },
+    {
+      "artifact_id": "ah-mosaic-code",
+      "name": "2x2 mosaic (1024x664) preprocessing implementation",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S5"
+      ],
+      "location": null,
+      "depends_on_source": null,
+      "needed_for": [
+        "direct judging beyond serving limits"
+      ],
+      "detail": "Protocol describes it; released llm_judges/ code has auto-resolution and fixed-size compression only.",
+      "local_check": null,
+      "extra": {},
+      "status": "not_located",
+      "basis": "Protocol describes it; released llm_judges/ code has auto-resolution and fixed-size compression only."
+    },
+    {
+      "artifact_id": "ah-ablation-membership",
+      "name": "Input-removal ablation membership and configurations",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "MP §9"
+      ],
+      "location": null,
+      "depends_on_source": null,
+      "needed_for": [
+        "ablation reproduction"
+      ],
+      "detail": "",
+      "local_check": null,
+      "extra": {},
+      "status": "not_located",
+      "basis": "no public location found in accessible sources"
+    },
+    {
+      "artifact_id": "ah-raw-delivery",
+      "name": "Raw delivery JSON (final_delivery_batch.json) and source recordings/videos",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S2:scripts/README.md"
+      ],
+      "location": null,
+      "depends_on_source": null,
+      "needed_for": [
+        "re-derivation from raw"
+      ],
+      "detail": "Internal annotation deliverables; not part of the public release. No video artifact is listed anywhere.",
+      "local_check": null,
+      "extra": {},
+      "status": "not_applicable",
+      "basis": "Internal annotation deliverables; not part of the public release. No video artifact is listed anywhere."
+    },
+    {
+      "artifact_id": "ah-review-records",
+      "name": "Reviewer annotations (3-reviewer diagnostic, residual model-based QA records)",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S6"
+      ],
+      "location": null,
+      "depends_on_source": null,
+      "needed_for": [
+        "agreement analysis"
+      ],
+      "detail": "",
+      "local_check": null,
+      "extra": {},
+      "status": "not_located",
+      "basis": "no public location found in accessible sources"
+    },
+    {
+      "artifact_id": "ah-preprocessed-payloads",
+      "name": "data/preprocessed/compress and compress_2_2x payloads",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S2:llm_judges/README.md"
+      ],
+      "location": null,
+      "depends_on_source": null,
+      "needed_for": [
+        "direct-judge payload digest comparison"
+      ],
+      "detail": "Generated locally by the authors; not committed.",
+      "local_check": null,
+      "extra": {},
+      "status": "not_located",
+      "basis": "Generated locally by the authors; not committed."
+    },
+    {
+      "artifact_id": "ah-docs",
+      "name": "Protocol, construction, taxonomy, supplementary, standard documents (S4-S8)",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "MP"
+      ],
+      "location": "S2 docs/",
+      "depends_on_source": "agenthorizon-repo",
+      "needed_for": [
+        "specification",
+        "reference tables"
+      ],
+      "detail": "",
+      "local_check": null,
+      "extra": {},
+      "status": "acquired",
+      "basis": "agenthorizon-repo@8584a347370a"
+    },
+    {
+      "artifact_id": "ah-croissant",
+      "name": "Croissant metadata (paper/croissant.json)",
+      "benchmark": "AgentHorizon",
+      "referenced_by": [
+        "S2:README.md"
+      ],
+      "location": "S2",
+      "depends_on_source": "agenthorizon-repo",
+      "needed_for": [
+        "provenance"
+      ],
+      "detail": "",
+      "local_check": null,
+      "extra": {},
+      "status": "acquired",
+      "basis": "agenthorizon-repo@8584a347370a"
+    },
+    {
+      "artifact_id": "arb-annotations",
+      "name": "AgentRewardBench expert annotations (annotations.csv)",
+      "benchmark": "AgentRewardBench",
+      "referenced_by": [
+        "S9"
+      ],
+      "location": "S9 repo agent_reward_bench/data/annotations.csv",
+      "depends_on_source": "agentrewardbench-repo",
+      "needed_for": [
+        "supplemental label exploration"
+      ],
+      "detail": "",
+      "local_check": null,
+      "extra": {},
+      "status": "acquired",
+      "basis": "agentrewardbench-repo@05899fcfe52c"
+    },
+    {
+      "artifact_id": "arb-splits-tasks",
+      "name": "AgentRewardBench splits.csv and per-benchmark task CSVs",
+      "benchmark": "AgentRewardBench",
+      "referenced_by": [
+        "S9"
+      ],
+      "location": "S9 repo agent_reward_bench/data/",
+      "depends_on_source": "agentrewardbench-repo",
+      "needed_for": [
+        "supplemental split preservation"
+      ],
+      "detail": "",
+      "local_check": null,
+      "extra": {},
+      "status": "acquired",
+      "basis": "agentrewardbench-repo@05899fcfe52c"
+    },
+    {
+      "artifact_id": "arb-trajectories",
+      "name": "AgentRewardBench cleaned trajectories, screenshots, judgments (HF)",
+      "benchmark": "AgentRewardBench",
+      "referenced_by": [
+        "S9"
+      ],
+      "location": "hf://datasets/McGill-NLP/agent-reward-bench",
+      "depends_on_source": "agentrewardbench-dataset",
+      "needed_for": [
+        "supplemental judging"
+      ],
+      "detail": "",
+      "local_check": null,
+      "extra": {},
+      "status": "published_but_unavailable",
+      "basis": "agentrewardbench-dataset inaccessible (egress_denied)"
+    },
+    {
+      "artifact_id": "osworld-tasks",
+      "name": "OSWorld task definitions and evaluator configs (evaluation_examples/)",
+      "benchmark": "OSWorld",
+      "referenced_by": [
+        "S10"
+      ],
+      "location": "S10 repo evaluation_examples/",
+      "depends_on_source": "osworld-repo",
+      "needed_for": [
+        "supplemental task exploration"
+      ],
+      "detail": "",
+      "local_check": null,
+      "extra": {},
+      "status": "acquired",
+      "basis": "osworld-repo@b138d3482560"
+    },
+    {
+      "artifact_id": "osworld-traces",
+      "name": "OSWorld agent trace exports (traj.jsonl + step screenshots + result.txt)",
+      "benchmark": "OSWorld",
+      "referenced_by": [
+        "S10"
+      ],
+      "location": null,
+      "depends_on_source": null,
+      "needed_for": [
+        "supplemental trace import"
+      ],
+      "detail": "The repository defines the export format but ships no traces; no verified linked trace release was located.",
+      "local_check": null,
+      "extra": {},
+      "status": "not_located",
+      "basis": "The repository defines the export format but ships no traces; no verified linked trace release was located."
+    }
+  ]
+}

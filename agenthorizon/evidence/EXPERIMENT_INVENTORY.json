@@ -1,0 +1,1866 @@
+{
+  "generated_at": "2026-10-09T19:49:49Z",
+  "models": [
+    {
+      "model_key": "gpt-5.5",
+      "display_name": "GPT-5.5",
+      "vendor": "OpenAI",
+      "open_weights": false,
+      "vision_input": true,
+      "known_ids": {},
+      "id_evidence": {},
+      "evidence": [
+        "agenthorizon-repo@8584a347:docs/supplementary-results.md"
+      ],
+      "notes": "Run through Codex. The released code shows GPT-5.x via `--platform chatgpt_subscription` but never states the exact model identifier; it must be supplied and verified by the operator."
+    },
+    {
+      "model_key": "gpt-5.4-mini",
+      "display_name": "GPT-5.4 mini",
+      "vendor": "OpenAI",
+      "open_weights": false,
+      "vision_input": true,
+      "known_ids": {},
+      "id_evidence": {},
+      "evidence": [
+        "agenthorizon-repo@8584a347:docs/supplementary-results.md",
+        "agenthorizon-repo@8584a347:scripts/generate_results_table.py (key codex_gpt54mini)"
+      ],
+      "notes": "Exact identifier not stated in released artifacts."
+    },
+    {
+      "model_key": "claude-opus-4.7",
+      "display_name": "Claude Opus 4.7",
+      "vendor": "Anthropic",
+      "open_weights": false,
+      "vision_input": true,
+      "known_ids": {
+        "anthropic": "claude-opus-4-7"
+      },
+      "id_evidence": {
+        "anthropic": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py usage docstring (`--model claude-opus-4-7 --effort xhigh`)"
+      },
+      "evidence": [
+        "agenthorizon-repo@8584a347:docs/supplementary-results.md"
+      ],
+      "notes": ""
+    },
+    {
+      "model_key": "claude-haiku-4.5",
+      "display_name": "Claude Haiku 4.5",
+      "vendor": "Anthropic",
+      "open_weights": false,
+      "vision_input": true,
+      "known_ids": {
+        "anthropic": "claude-haiku-4-5"
+      },
+      "id_evidence": {
+        "anthropic": "agenthorizon-repo@8584a347:scripts/compare_runs.py PRICE table key"
+      },
+      "evidence": [
+        "agenthorizon-repo@8584a347:docs/supplementary-results.md"
+      ],
+      "notes": ""
+    },
+    {
+      "model_key": "gemini-3.1-pro",
+      "display_name": "Gemini 3.1 Pro",
+      "vendor": "Google",
+      "open_weights": false,
+      "vision_input": true,
+      "known_ids": {
+        "google": "gemini-3.1-pro-preview",
+        "openrouter": "google/gemini-3.1-pro-preview"
+      },
+      "id_evidence": {
+        "google": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py usage docstring",
+        "openrouter": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py _model_slug PRESET_TO_MODEL"
+      },
+      "evidence": [
+        "agenthorizon-repo@8584a347:docs/supplementary-results.md"
+      ],
+      "notes": ""
+    },
+    {
+      "model_key": "gemini-3.1-flash-lite",
+      "display_name": "Gemini 3.1 Flash Lite",
+      "vendor": "Google",
+      "open_weights": false,
+      "vision_input": true,
+      "known_ids": {
+        "google": "gemini-3.1-flash-lite-preview",
+        "openrouter": "google/gemini-3.1-flash-lite-preview"
+      },
+      "id_evidence": {
+        "google": "agenthorizon-repo@8584a347:llm_judges/README.md (evaluate.py --model gemini-3.1-flash-lite-preview)",
+        "openrouter": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py _model_slug PRESET_TO_MODEL"
+      },
+      "evidence": [
+        "agenthorizon-repo@8584a347:docs/supplementary-results.md"
+      ],
+      "notes": ""
+    },
+    {
+      "model_key": "qwen3.6-27b",
+      "display_name": "Qwen 3.6 27B",
+      "vendor": "Qwen",
+      "open_weights": true,
+      "vision_input": true,
+      "known_ids": {
+        "vllm": "Qwen/Qwen3.6-27B",
+        "opencode": "qwen36_vllm/Qwen/Qwen3.6-27B"
+      },
+      "id_evidence": {
+        "vllm": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table",
+        "opencode": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py usage docstring (provider prefix is a local OpenCode config name)"
+      },
+      "evidence": [
+        "agenthorizon-repo@8584a347:docs/supplementary-results.md"
+      ],
+      "notes": ""
+    },
+    {
+      "model_key": "qwen3.6-35b-a3b",
+      "display_name": "Qwen 3.6 35B-A3B",
+      "vendor": "Qwen",
+      "open_weights": true,
+      "vision_input": true,
+      "known_ids": {
+        "vllm": "Qwen/Qwen3.6-35B-A3B"
+      },
+      "id_evidence": {
+        "vllm": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table"
+      },
+      "evidence": [
+        "agenthorizon-repo@8584a347:docs/supplementary-results.md"
+      ],
+      "notes": ""
+    },
+    {
+      "model_key": "qwen3.5-122b-a10b",
+      "display_name": "Qwen 3.5 122B-A10B",
+      "vendor": "Qwen",
+      "open_weights": true,
+      "vision_input": null,
+      "known_ids": {
+        "vllm": "Qwen/Qwen3.5-122B-A10B"
+      },
+      "id_evidence": {
+        "vllm": "agenthorizon-repo@8584a347:scripts/aggregate_difficulty.py SPLITTER_MODEL"
+      },
+      "evidence": [
+        "agenthorizon-repo@8584a347:docs/supplementary-results.md",
+        "agenthorizon-repo@8584a347:paper/croissant.json",
+        "MP §2"
+      ],
+      "notes": "Legacy splitter (OpenCode, k=8, temp 0.6 per aggregate_difficulty.py docstring); one of three revised splitters per MP."
+    },
+    {
+      "model_key": "qwen3.5-9b",
+      "display_name": "Qwen 3.5 9B",
+      "vendor": "Qwen",
+      "open_weights": true,
+      "vision_input": null,
+      "known_ids": {
+        "vllm": "Qwen/Qwen3.5-9B",
+        "openrouter": "qwen/qwen3.5-9b"
+      },
+      "id_evidence": {
+        "vllm": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table",
+        "openrouter": "agenthorizon-repo@8584a347:llm_judges/evaluate.py usage docstring"
+      },
+      "evidence": [
+        "MP §7 (direct inventory, attributed to S1)"
+      ],
+      "notes": "llm_judges/README.md calls it text-only; vision support unverified."
+    },
+    {
+      "model_key": "gemma-4-31b",
+      "display_name": "Gemma 4 31B",
+      "vendor": "Google",
+      "open_weights": true,
+      "vision_input": true,
+      "known_ids": {
+        "vllm": "google/gemma-4-31B-it"
+      },
+      "id_evidence": {
+        "vllm": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table"
+      },
+      "evidence": [
+        "agenthorizon-repo@8584a347:docs/supplementary-results.md"
+      ],
+      "notes": ""
+    },
+    {
+      "model_key": "gemma-4-26b-a4b",
+      "display_name": "Gemma 4 26B-A4B",
+      "vendor": "Google",
+      "open_weights": true,
+      "vision_input": true,
+      "known_ids": {
+        "vllm": "google/gemma-4-26B-A4B-it"
+      },
+      "id_evidence": {
+        "vllm": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table"
+      },
+      "evidence": [
+        "agenthorizon-repo@8584a347:docs/supplementary-results.md"
+      ],
+      "notes": ""
+    },
+    {
+      "model_key": "inkling",
+      "display_name": "Inkling",
+      "vendor": "unknown",
+      "open_weights": null,
+      "vision_input": null,
+      "known_ids": {},
+      "id_evidence": {},
+      "evidence": [
+        "MP §2 (revised splitter, attributed to S1)"
+      ],
+      "notes": "Named only in the brief; no released artifact gives vendor, identifier, or serving route."
+    },
+    {
+      "model_key": "kimi-k2.7-code",
+      "display_name": "Kimi K2.7 Code",
+      "vendor": "Moonshot (presumed from name; unverified)",
+      "open_weights": null,
+      "vision_input": null,
+      "known_ids": {},
+      "id_evidence": {},
+      "evidence": [
+        "MP §2 (revised splitter, attributed to S1)"
+      ],
+      "notes": "Named only in the brief; identifier and route unverified."
+    }
+  ],
+  "interfaces": {
+    "codex": "Codex",
+    "claude_code": "Claude Code",
+    "gemini_cli": "Gemini CLI",
+    "opencode": "OpenCode",
+    "openhands": "OpenHands",
+    "direct": "Direct API"
+  },
+  "configurations": [
+    {
+      "config_id": "codex:gpt-5.5",
+      "model_key": "gpt-5.5",
+      "interface": "codex",
+      "route": "chatgpt_subscription",
+      "provider_model_id": null,
+      "id_evidence": null,
+      "sampling": {
+        "temperature": null,
+        "top_p": null,
+        "max_output_tokens": null
+      },
+      "sampling_evidence": {
+        "all": "unknown (not published in accessible artifacts)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[GPT-5.5|Codex]",
+        "S8.T2[GPT-5.5|Codex]",
+        "S8.T3[GPT-5.5|Codex]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row",
+      "notes": "Route inferred from evaluate_trajectories.py (`GPT-5.x on the user's ChatGPT Plus plan`)."
+    },
+    {
+      "config_id": "gemini_cli:gemini-3.1-pro",
+      "model_key": "gemini-3.1-pro",
+      "interface": "gemini_cli",
+      "route": "google",
+      "provider_model_id": "gemini-3.1-pro-preview",
+      "id_evidence": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py usage docstring",
+      "sampling": {
+        "temperature": null,
+        "top_p": null,
+        "max_output_tokens": null
+      },
+      "sampling_evidence": {
+        "all": "unknown (not published in accessible artifacts)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Gemini 3.1 Pro|Gemini CLI]",
+        "S8.T2[Gemini 3.1 Pro|Gemini CLI]",
+        "S8.T3[Gemini 3.1 Pro|Gemini CLI]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row",
+      "notes": ""
+    },
+    {
+      "config_id": "claude_code:claude-opus-4.7",
+      "model_key": "claude-opus-4.7",
+      "interface": "claude_code",
+      "route": "anthropic",
+      "provider_model_id": "claude-opus-4-7",
+      "id_evidence": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py usage docstring (`--model claude-opus-4-7 --effort xhigh`)",
+      "sampling": {
+        "temperature": null,
+        "top_p": null,
+        "max_output_tokens": null
+      },
+      "sampling_evidence": {
+        "all": "unknown (not published in accessible artifacts)"
+      },
+      "effort": "xhigh",
+      "effort_evidence": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py usage docstring (example invocation; not confirmed for the reported row)",
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Claude Opus 4.7|Claude Code]",
+        "S8.T2[Claude Opus 4.7|Claude Code]",
+        "S8.T3[Claude Opus 4.7|Claude Code]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row",
+      "notes": ""
+    },
+    {
+      "config_id": "opencode:qwen3.6-27b",
+      "model_key": "qwen3.6-27b",
+      "interface": "opencode",
+      "route": "vllm",
+      "provider_model_id": "qwen36_vllm/Qwen/Qwen3.6-27B",
+      "id_evidence": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py usage docstring (provider prefix is a local OpenCode config name)",
+      "sampling": {
+        "temperature": null,
+        "top_p": null,
+        "max_output_tokens": null
+      },
+      "sampling_evidence": {
+        "all": "unknown (not published in accessible artifacts)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Qwen 3.6 27B|OpenCode]",
+        "S8.T2[Qwen 3.6 27B|OpenCode]",
+        "S8.T3[Qwen 3.6 27B|OpenCode]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row",
+      "notes": ""
+    },
+    {
+      "config_id": "codex:gpt-5.4-mini",
+      "model_key": "gpt-5.4-mini",
+      "interface": "codex",
+      "route": "chatgpt_subscription",
+      "provider_model_id": null,
+      "id_evidence": null,
+      "sampling": {
+        "temperature": null,
+        "top_p": null,
+        "max_output_tokens": null
+      },
+      "sampling_evidence": {
+        "all": "unknown (not published in accessible artifacts)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[GPT-5.4 mini|Codex]",
+        "S8.T2[GPT-5.4 mini|Codex]",
+        "S8.T3[GPT-5.4 mini|Codex]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row",
+      "notes": ""
+    },
+    {
+      "config_id": "opencode:qwen3.6-35b-a3b",
+      "model_key": "qwen3.6-35b-a3b",
+      "interface": "opencode",
+      "route": "vllm",
+      "provider_model_id": "Qwen/Qwen3.6-35B-A3B",
+      "id_evidence": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table",
+      "sampling": {
+        "temperature": null,
+        "top_p": null,
+        "max_output_tokens": null
+      },
+      "sampling_evidence": {
+        "all": "unknown (not published in accessible artifacts)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Qwen 3.6 35B-A3B|OpenCode]",
+        "S8.T2[Qwen 3.6 35B-A3B|OpenCode]",
+        "S8.T3[Qwen 3.6 35B-A3B|OpenCode]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row",
+      "notes": ""
+    },
+    {
+      "config_id": "openhands:qwen3.6-27b",
+      "model_key": "qwen3.6-27b",
+      "interface": "openhands",
+      "route": "vllm",
+      "provider_model_id": "Qwen/Qwen3.6-27B",
+      "id_evidence": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table",
+      "sampling": {
+        "temperature": null,
+        "top_p": null,
+        "max_output_tokens": null
+      },
+      "sampling_evidence": {
+        "all": "unknown (not published in accessible artifacts)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Qwen 3.6 27B|OpenHands]",
+        "S8.T2[Qwen 3.6 27B|OpenHands]",
+        "S8.T3[Qwen 3.6 27B|OpenHands]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row",
+      "notes": ""
+    },
+    {
+      "config_id": "claude_code:claude-haiku-4.5",
+      "model_key": "claude-haiku-4.5",
+      "interface": "claude_code",
+      "route": "anthropic",
+      "provider_model_id": "claude-haiku-4-5",
+      "id_evidence": "agenthorizon-repo@8584a347:scripts/compare_runs.py PRICE table key",
+      "sampling": {
+        "temperature": null,
+        "top_p": null,
+        "max_output_tokens": null
+      },
+      "sampling_evidence": {
+        "all": "unknown (not published in accessible artifacts)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Claude Haiku 4.5|Claude Code]",
+        "S8.T2[Claude Haiku 4.5|Claude Code]",
+        "S8.T3[Claude Haiku 4.5|Claude Code]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row",
+      "notes": ""
+    },
+    {
+      "config_id": "opencode:gemini-3.1-flash-lite",
+      "model_key": "gemini-3.1-flash-lite",
+      "interface": "opencode",
+      "route": null,
+      "provider_model_id": null,
+      "id_evidence": null,
+      "sampling": {
+        "temperature": null,
+        "top_p": null,
+        "max_output_tokens": null
+      },
+      "sampling_evidence": {
+        "all": "unknown (not published in accessible artifacts)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Gemini 3.1 Flash Lite|OpenCode]",
+        "S8.T2[Gemini 3.1 Flash Lite|OpenCode]",
+        "S8.T3[Gemini 3.1 Flash Lite|OpenCode]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row",
+      "notes": "Serving route for this pairing not stated."
+    },
+    {
+      "config_id": "gemini_cli:gemini-3.1-flash-lite",
+      "model_key": "gemini-3.1-flash-lite",
+      "interface": "gemini_cli",
+      "route": "google",
+      "provider_model_id": "gemini-3.1-flash-lite-preview",
+      "id_evidence": "agenthorizon-repo@8584a347:llm_judges/README.md (evaluate.py --model gemini-3.1-flash-lite-preview)",
+      "sampling": {
+        "temperature": null,
+        "top_p": null,
+        "max_output_tokens": null
+      },
+      "sampling_evidence": {
+        "all": "unknown (not published in accessible artifacts)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Gemini 3.1 Flash Lite|Gemini CLI]",
+        "S8.T2[Gemini 3.1 Flash Lite|Gemini CLI]",
+        "S8.T3[Gemini 3.1 Flash Lite|Gemini CLI]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row",
+      "notes": ""
+    },
+    {
+      "config_id": "openhands:gemini-3.1-flash-lite",
+      "model_key": "gemini-3.1-flash-lite",
+      "interface": "openhands",
+      "route": "google",
+      "provider_model_id": "gemini-3.1-flash-lite-preview",
+      "id_evidence": "agenthorizon-repo@8584a347:llm_judges/README.md (evaluate.py --model gemini-3.1-flash-lite-preview)",
+      "sampling": {
+        "temperature": null,
+        "top_p": null,
+        "max_output_tokens": null
+      },
+      "sampling_evidence": {
+        "all": "unknown (not published in accessible artifacts)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Gemini 3.1 Flash Lite|OpenHands]",
+        "S8.T2[Gemini 3.1 Flash Lite|OpenHands]",
+        "S8.T3[Gemini 3.1 Flash Lite|OpenHands]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row",
+      "notes": "evaluate_trajectories.py routes google/ and gemini/ models to the Gemini API via LiteLLM for OpenHands."
+    },
+    {
+      "config_id": "opencode:gemma-4-26b-a4b",
+      "model_key": "gemma-4-26b-a4b",
+      "interface": "opencode",
+      "route": "vllm",
+      "provider_model_id": "google/gemma-4-26B-A4B-it",
+      "id_evidence": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table",
+      "sampling": {
+        "temperature": null,
+        "top_p": null,
+        "max_output_tokens": null
+      },
+      "sampling_evidence": {
+        "all": "unknown (not published in accessible artifacts)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Gemma 4 26B-A4B|OpenCode]",
+        "S8.T2[Gemma 4 26B-A4B|OpenCode]",
+        "S8.T3[Gemma 4 26B-A4B|OpenCode]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row",
+      "notes": ""
+    },
+    {
+      "config_id": "codex:gemini-3.1-flash-lite",
+      "model_key": "gemini-3.1-flash-lite",
+      "interface": "codex",
+      "route": "openrouter",
+      "provider_model_id": "google/gemini-3.1-flash-lite-preview",
+      "id_evidence": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py _model_slug PRESET_TO_MODEL",
+      "sampling": {
+        "temperature": null,
+        "top_p": null,
+        "max_output_tokens": null
+      },
+      "sampling_evidence": {
+        "all": "unknown (not published in accessible artifacts)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Gemini 3.1 Flash Lite|Codex]",
+        "S8.T2[Gemini 3.1 Flash Lite|Codex]",
+        "S8.T3[Gemini 3.1 Flash Lite|Codex]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row",
+      "notes": "generate_results_table.py key codex_gemini_flash_or indicates an OpenRouter route."
+    },
+    {
+      "config_id": "opencode:gemma-4-31b",
+      "model_key": "gemma-4-31b",
+      "interface": "opencode",
+      "route": "vllm",
+      "provider_model_id": "google/gemma-4-31B-it",
+      "id_evidence": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table",
+      "sampling": {
+        "temperature": null,
+        "top_p": null,
+        "max_output_tokens": null
+      },
+      "sampling_evidence": {
+        "all": "unknown (not published in accessible artifacts)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Gemma 4 31B|OpenCode]",
+        "S8.T2[Gemma 4 31B|OpenCode]",
+        "S8.T3[Gemma 4 31B|OpenCode]"
+      ],
+      "role": "judge",
+      "evidence_class": "paper_row",
+      "notes": ""
+    },
+    {
+      "config_id": "opencode:qwen3.5-122b-a10b:splitter",
+      "model_key": "qwen3.5-122b-a10b",
+      "interface": "opencode",
+      "route": "vllm",
+      "provider_model_id": "Qwen/Qwen3.5-122B-A10B",
+      "id_evidence": "agenthorizon-repo@8584a347:scripts/aggregate_difficulty.py SPLITTER_MODEL",
+      "sampling": {
+        "temperature": 0.6,
+        "top_p": null,
+        "max_output_tokens": 65536
+      },
+      "sampling_evidence": {
+        "temperature": "agenthorizon-repo@8584a347:scripts/aggregate_difficulty.py docstring (temp=0.6)",
+        "max_output_tokens": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "S8.T1[Qwen 3.5 122B-A10B|OpenCode]",
+        "S8.T2[Qwen 3.5 122B-A10B|OpenCode]",
+        "S8.T3[Qwen 3.5 122B-A10B|OpenCode]"
+      ],
+      "role": "splitter",
+      "evidence_class": "paper_row",
+      "notes": "Legacy partition splitter: k=8 attempts, Easy iff >=7/8 correct."
+    },
+    {
+      "config_id": "opencode:qwen3.5-122b-a10b:splitter:revised",
+      "model_key": "qwen3.5-122b-a10b",
+      "interface": "opencode",
+      "route": "vllm",
+      "provider_model_id": "Qwen/Qwen3.5-122B-A10B",
+      "id_evidence": "agenthorizon-repo@8584a347:scripts/aggregate_difficulty.py SPLITTER_MODEL",
+      "sampling": {
+        "temperature": null,
+        "top_p": null,
+        "max_output_tokens": null
+      },
+      "sampling_evidence": {
+        "all": "unknown (not published in accessible artifacts)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "MP §2"
+      ],
+      "role": "splitter",
+      "evidence_class": "brief_only",
+      "notes": "Revised splitter #1 (8 verdicts/item). Harness assumed unchanged from legacy — unverified."
+    },
+    {
+      "config_id": "opencode:inkling:splitter:revised",
+      "model_key": "inkling",
+      "interface": "opencode",
+      "route": null,
+      "provider_model_id": null,
+      "id_evidence": null,
+      "sampling": {
+        "temperature": null,
+        "top_p": null,
+        "max_output_tokens": null
+      },
+      "sampling_evidence": {
+        "all": "unknown (not published in accessible artifacts)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "MP §2"
+      ],
+      "role": "splitter",
+      "evidence_class": "brief_only",
+      "notes": "Revised splitter #2; interface and identifier unknown — placeholder interface, cannot run."
+    },
+    {
+      "config_id": "opencode:kimi-k2.7-code:splitter:revised",
+      "model_key": "kimi-k2.7-code",
+      "interface": "opencode",
+      "route": null,
+      "provider_model_id": null,
+      "id_evidence": null,
+      "sampling": {
+        "temperature": null,
+        "top_p": null,
+        "max_output_tokens": null
+      },
+      "sampling_evidence": {
+        "all": "unknown (not published in accessible artifacts)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": null,
+      "prompt_revision": "ah-official-agentic@8584a347",
+      "paper_rows": [
+        "MP §2"
+      ],
+      "role": "splitter",
+      "evidence_class": "brief_only",
+      "notes": "Revised splitter #3; interface and identifier unknown — placeholder interface, cannot run."
+    },
+    {
+      "config_id": "direct:qwen3.5-9b:native-512x332",
+      "model_key": "qwen3.5-9b",
+      "interface": "direct",
+      "route": "vllm",
+      "provider_model_id": "Qwen/Qwen3.5-9B",
+      "id_evidence": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table",
+      "sampling": {
+        "temperature": 0.0,
+        "top_p": null,
+        "max_output_tokens": 2048
+      },
+      "sampling_evidence": {
+        "temperature": "agenthorizon-repo@8584a347:llm_judges/evaluate.py call_openai_compatible default",
+        "max_output_tokens": "agenthorizon-repo@8584a347:llm_judges/evaluate.py (2048 without thinking)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": "native-512x332",
+      "prompt_revision": "ah-official-direct@8584a347",
+      "paper_rows": [
+        "MP §7"
+      ],
+      "role": "judge",
+      "evidence_class": "brief_only",
+      "notes": "Direct-table membership from the brief; full direct table not accessible."
+    },
+    {
+      "config_id": "direct:gemini-3.1-flash-lite:native-512x332",
+      "model_key": "gemini-3.1-flash-lite",
+      "interface": "direct",
+      "route": "google",
+      "provider_model_id": "gemini-3.1-flash-lite-preview",
+      "id_evidence": "agenthorizon-repo@8584a347:llm_judges/README.md (evaluate.py --model gemini-3.1-flash-lite-preview)",
+      "sampling": {
+        "temperature": 0.0,
+        "top_p": null,
+        "max_output_tokens": 1024
+      },
+      "sampling_evidence": {
+        "temperature": "agenthorizon-repo@8584a347:llm_judges/evaluate.py call_gemini default",
+        "max_output_tokens": "agenthorizon-repo@8584a347:llm_judges/evaluate.py (1024 without thinking budget)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": "native-512x332",
+      "prompt_revision": "ah-official-direct@8584a347",
+      "paper_rows": [
+        "agenthorizon-repo@8584a347:llm_judges/README.md quick start"
+      ],
+      "role": "judge",
+      "evidence_class": "released_example",
+      "notes": ""
+    },
+    {
+      "config_id": "direct:gemini-3.1-pro:native-512x332",
+      "model_key": "gemini-3.1-pro",
+      "interface": "direct",
+      "route": "google",
+      "provider_model_id": "gemini-3.1-pro-preview",
+      "id_evidence": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py usage docstring",
+      "sampling": {
+        "temperature": 0.0,
+        "top_p": null,
+        "max_output_tokens": 1024
+      },
+      "sampling_evidence": {
+        "temperature": "agenthorizon-repo@8584a347:llm_judges/evaluate.py call_gemini default",
+        "max_output_tokens": "agenthorizon-repo@8584a347:llm_judges/evaluate.py (1024 without thinking budget)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": "native-512x332",
+      "prompt_revision": "ah-official-direct@8584a347",
+      "paper_rows": [
+        "agenthorizon-repo@8584a347:llm_judges/README.md quick start"
+      ],
+      "role": "judge",
+      "evidence_class": "released_example",
+      "notes": ""
+    },
+    {
+      "config_id": "direct:qwen3.6-27b:native-512x332",
+      "model_key": "qwen3.6-27b",
+      "interface": "direct",
+      "route": "vllm",
+      "provider_model_id": "Qwen/Qwen3.6-27B",
+      "id_evidence": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table",
+      "sampling": {
+        "temperature": 0.0,
+        "top_p": null,
+        "max_output_tokens": 2048
+      },
+      "sampling_evidence": {
+        "temperature": "agenthorizon-repo@8584a347:llm_judges/evaluate.py default",
+        "max_output_tokens": "agenthorizon-repo@8584a347:llm_judges/evaluate.py (2048 without thinking)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": "native-512x332",
+      "prompt_revision": "ah-official-direct@8584a347",
+      "paper_rows": [
+        "agenthorizon-repo@8584a347:llm_judges/README.md quick start"
+      ],
+      "role": "judge",
+      "evidence_class": "released_example",
+      "notes": ""
+    },
+    {
+      "config_id": "direct:gemma-4-31b:native-512x332",
+      "model_key": "gemma-4-31b",
+      "interface": "direct",
+      "route": "vllm",
+      "provider_model_id": "google/gemma-4-31B-it",
+      "id_evidence": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table",
+      "sampling": {
+        "temperature": 0.0,
+        "top_p": null,
+        "max_output_tokens": 2048
+      },
+      "sampling_evidence": {
+        "temperature": "agenthorizon-repo@8584a347:llm_judges/evaluate.py default",
+        "max_output_tokens": "agenthorizon-repo@8584a347:llm_judges/evaluate.py (2048 without thinking)"
+      },
+      "effort": null,
+      "effort_evidence": null,
+      "preprocessing": "native-512x332",
+      "prompt_revision": "ah-official-direct@8584a347",
+      "paper_rows": [
+        "agenthorizon-repo@8584a347:llm_judges/README.md quick start"
+      ],
+      "role": "judge",
+      "evidence_class": "released_example",
+      "notes": ""
+    }
+  ],
+  "experiments_from_reference_tables": [
+    {
+      "experiment_id": "AH-legacy:codex:gpt-5.5",
+      "reference_table": "S8.T1",
+      "reference_line": 18,
+      "subset": "AH-legacy",
+      "scoring_manifest": "legacy:AgentHorizon.jsonl",
+      "config_id": "codex:gpt-5.5",
+      "model": "GPT-5.5",
+      "interface": "Codex",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-legacy:gemini_cli:gemini-3.1-pro",
+      "reference_table": "S8.T1",
+      "reference_line": 19,
+      "subset": "AH-legacy",
+      "scoring_manifest": "legacy:AgentHorizon.jsonl",
+      "config_id": "gemini_cli:gemini-3.1-pro",
+      "model": "Gemini 3.1 Pro",
+      "interface": "Gemini CLI",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-legacy:claude_code:claude-opus-4.7",
+      "reference_table": "S8.T1",
+      "reference_line": 20,
+      "subset": "AH-legacy",
+      "scoring_manifest": "legacy:AgentHorizon.jsonl",
+      "config_id": "claude_code:claude-opus-4.7",
+      "model": "Claude Opus 4.7",
+      "interface": "Claude Code",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-legacy:opencode:qwen3.6-27b",
+      "reference_table": "S8.T1",
+      "reference_line": 21,
+      "subset": "AH-legacy",
+      "scoring_manifest": "legacy:AgentHorizon.jsonl",
+      "config_id": "opencode:qwen3.6-27b",
+      "model": "Qwen 3.6 27B",
+      "interface": "OpenCode",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-legacy:codex:gpt-5.4-mini",
+      "reference_table": "S8.T1",
+      "reference_line": 22,
+      "subset": "AH-legacy",
+      "scoring_manifest": "legacy:AgentHorizon.jsonl",
+      "config_id": "codex:gpt-5.4-mini",
+      "model": "GPT-5.4 mini",
+      "interface": "Codex",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-legacy:opencode:qwen3.6-35b-a3b",
+      "reference_table": "S8.T1",
+      "reference_line": 23,
+      "subset": "AH-legacy",
+      "scoring_manifest": "legacy:AgentHorizon.jsonl",
+      "config_id": "opencode:qwen3.6-35b-a3b",
+      "model": "Qwen 3.6 35B-A3B",
+      "interface": "OpenCode",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-legacy:openhands:qwen3.6-27b",
+      "reference_table": "S8.T1",
+      "reference_line": 24,
+      "subset": "AH-legacy",
+      "scoring_manifest": "legacy:AgentHorizon.jsonl",
+      "config_id": "openhands:qwen3.6-27b",
+      "model": "Qwen 3.6 27B",
+      "interface": "OpenHands",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-legacy:claude_code:claude-haiku-4.5",
+      "reference_table": "S8.T1",
+      "reference_line": 25,
+      "subset": "AH-legacy",
+      "scoring_manifest": "legacy:AgentHorizon.jsonl",
+      "config_id": "claude_code:claude-haiku-4.5",
+      "model": "Claude Haiku 4.5",
+      "interface": "Claude Code",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-legacy:opencode:gemini-3.1-flash-lite",
+      "reference_table": "S8.T1",
+      "reference_line": 26,
+      "subset": "AH-legacy",
+      "scoring_manifest": "legacy:AgentHorizon.jsonl",
+      "config_id": "opencode:gemini-3.1-flash-lite",
+      "model": "Gemini 3.1 Flash Lite",
+      "interface": "OpenCode",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-legacy:gemini_cli:gemini-3.1-flash-lite",
+      "reference_table": "S8.T1",
+      "reference_line": 27,
+      "subset": "AH-legacy",
+      "scoring_manifest": "legacy:AgentHorizon.jsonl",
+      "config_id": "gemini_cli:gemini-3.1-flash-lite",
+      "model": "Gemini 3.1 Flash Lite",
+      "interface": "Gemini CLI",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-legacy:openhands:gemini-3.1-flash-lite",
+      "reference_table": "S8.T1",
+      "reference_line": 28,
+      "subset": "AH-legacy",
+      "scoring_manifest": "legacy:AgentHorizon.jsonl",
+      "config_id": "openhands:gemini-3.1-flash-lite",
+      "model": "Gemini 3.1 Flash Lite",
+      "interface": "OpenHands",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-legacy:opencode:gemma-4-26b-a4b",
+      "reference_table": "S8.T1",
+      "reference_line": 29,
+      "subset": "AH-legacy",
+      "scoring_manifest": "legacy:AgentHorizon.jsonl",
+      "config_id": "opencode:gemma-4-26b-a4b",
+      "model": "Gemma 4 26B-A4B",
+      "interface": "OpenCode",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-legacy:codex:gemini-3.1-flash-lite",
+      "reference_table": "S8.T1",
+      "reference_line": 30,
+      "subset": "AH-legacy",
+      "scoring_manifest": "legacy:AgentHorizon.jsonl",
+      "config_id": "codex:gemini-3.1-flash-lite",
+      "model": "Gemini 3.1 Flash Lite",
+      "interface": "Codex",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-legacy:opencode:gemma-4-31b",
+      "reference_table": "S8.T1",
+      "reference_line": 31,
+      "subset": "AH-legacy",
+      "scoring_manifest": "legacy:AgentHorizon.jsonl",
+      "config_id": "opencode:gemma-4-31b",
+      "model": "Gemma 4 31B",
+      "interface": "OpenCode",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-legacy:opencode:qwen3.5-122b-a10b:splitter",
+      "reference_table": "S8.T1",
+      "reference_line": 32,
+      "subset": "AH-legacy",
+      "scoring_manifest": "legacy:AgentHorizon.jsonl",
+      "config_id": "opencode:qwen3.5-122b-a10b:splitter",
+      "model": "Qwen 3.5 122B-A10B",
+      "interface": "OpenCode",
+      "model_qualifier": "splitter",
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "not reported (—)"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-S-legacy:opencode:qwen3.5-122b-a10b:splitter",
+      "reference_table": "S8.T2",
+      "reference_line": 38,
+      "subset": "AH-S-legacy",
+      "scoring_manifest": "legacy:AgentHorizon-Simple.jsonl",
+      "config_id": "opencode:qwen3.5-122b-a10b:splitter",
+      "model": "Qwen 3.5 122B-A10B",
+      "interface": "OpenCode",
+      "model_qualifier": "splitter",
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "not reported (—)"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-S-legacy:claude_code:claude-opus-4.7",
+      "reference_table": "S8.T2",
+      "reference_line": 39,
+      "subset": "AH-S-legacy",
+      "scoring_manifest": "legacy:AgentHorizon-Simple.jsonl",
+      "config_id": "claude_code:claude-opus-4.7",
+      "model": "Claude Opus 4.7",
+      "interface": "Claude Code",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-S-legacy:opencode:qwen3.6-27b",
+      "reference_table": "S8.T2",
+      "reference_line": 40,
+      "subset": "AH-S-legacy",
+      "scoring_manifest": "legacy:AgentHorizon-Simple.jsonl",
+      "config_id": "opencode:qwen3.6-27b",
+      "model": "Qwen 3.6 27B",
+      "interface": "OpenCode",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-S-legacy:codex:gpt-5.5",
+      "reference_table": "S8.T2",
+      "reference_line": 41,
+      "subset": "AH-S-legacy",
+      "scoring_manifest": "legacy:AgentHorizon-Simple.jsonl",
+      "config_id": "codex:gpt-5.5",
+      "model": "GPT-5.5",
+      "interface": "Codex",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-S-legacy:codex:gpt-5.4-mini",
+      "reference_table": "S8.T2",
+      "reference_line": 42,
+      "subset": "AH-S-legacy",
+      "scoring_manifest": "legacy:AgentHorizon-Simple.jsonl",
+      "config_id": "codex:gpt-5.4-mini",
+      "model": "GPT-5.4 mini",
+      "interface": "Codex",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-S-legacy:opencode:gemma-4-31b",
+      "reference_table": "S8.T2",
+      "reference_line": 43,
+      "subset": "AH-S-legacy",
+      "scoring_manifest": "legacy:AgentHorizon-Simple.jsonl",
+      "config_id": "opencode:gemma-4-31b",
+      "model": "Gemma 4 31B",
+      "interface": "OpenCode",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-S-legacy:opencode:qwen3.6-35b-a3b",
+      "reference_table": "S8.T2",
+      "reference_line": 44,
+      "subset": "AH-S-legacy",
+      "scoring_manifest": "legacy:AgentHorizon-Simple.jsonl",
+      "config_id": "opencode:qwen3.6-35b-a3b",
+      "model": "Qwen 3.6 35B-A3B",
+      "interface": "OpenCode",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-S-legacy:claude_code:claude-haiku-4.5",
+      "reference_table": "S8.T2",
+      "reference_line": 45,
+      "subset": "AH-S-legacy",
+      "scoring_manifest": "legacy:AgentHorizon-Simple.jsonl",
+      "config_id": "claude_code:claude-haiku-4.5",
+      "model": "Claude Haiku 4.5",
+      "interface": "Claude Code",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-S-legacy:gemini_cli:gemini-3.1-pro",
+      "reference_table": "S8.T2",
+      "reference_line": 46,
+      "subset": "AH-S-legacy",
+      "scoring_manifest": "legacy:AgentHorizon-Simple.jsonl",
+      "config_id": "gemini_cli:gemini-3.1-pro",
+      "model": "Gemini 3.1 Pro",
+      "interface": "Gemini CLI",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-S-legacy:opencode:gemini-3.1-flash-lite",
+      "reference_table": "S8.T2",
+      "reference_line": 47,
+      "subset": "AH-S-legacy",
+      "scoring_manifest": "legacy:AgentHorizon-Simple.jsonl",
+      "config_id": "opencode:gemini-3.1-flash-lite",
+      "model": "Gemini 3.1 Flash Lite",
+      "interface": "OpenCode",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-S-legacy:openhands:qwen3.6-27b",
+      "reference_table": "S8.T2",
+      "reference_line": 48,
+      "subset": "AH-S-legacy",
+      "scoring_manifest": "legacy:AgentHorizon-Simple.jsonl",
+      "config_id": "openhands:qwen3.6-27b",
+      "model": "Qwen 3.6 27B",
+      "interface": "OpenHands",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-S-legacy:gemini_cli:gemini-3.1-flash-lite",
+      "reference_table": "S8.T2",
+      "reference_line": 49,
+      "subset": "AH-S-legacy",
+      "scoring_manifest": "legacy:AgentHorizon-Simple.jsonl",
+      "config_id": "gemini_cli:gemini-3.1-flash-lite",
+      "model": "Gemini 3.1 Flash Lite",
+      "interface": "Gemini CLI",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-S-legacy:codex:gemini-3.1-flash-lite",
+      "reference_table": "S8.T2",
+      "reference_line": 50,
+      "subset": "AH-S-legacy",
+      "scoring_manifest": "legacy:AgentHorizon-Simple.jsonl",
+      "config_id": "codex:gemini-3.1-flash-lite",
+      "model": "Gemini 3.1 Flash Lite",
+      "interface": "Codex",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-S-legacy:opencode:gemma-4-26b-a4b",
+      "reference_table": "S8.T2",
+      "reference_line": 51,
+      "subset": "AH-S-legacy",
+      "scoring_manifest": "legacy:AgentHorizon-Simple.jsonl",
+      "config_id": "opencode:gemma-4-26b-a4b",
+      "model": "Gemma 4 26B-A4B",
+      "interface": "OpenCode",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "AH-S-legacy:openhands:gemini-3.1-flash-lite",
+      "reference_table": "S8.T2",
+      "reference_line": 52,
+      "subset": "AH-S-legacy",
+      "scoring_manifest": "legacy:AgentHorizon-Simple.jsonl",
+      "config_id": "openhands:gemini-3.1-flash-lite",
+      "model": "Gemini 3.1 Flash Lite",
+      "interface": "OpenHands",
+      "model_qualifier": null,
+      "telemetry_reported": {
+        "mean_input_tokens": "reported",
+        "mean_output_tokens": "reported",
+        "mean_tool_calls": "reported",
+        "mean_images_viewed": "reported"
+      },
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "full-release-MT:gemini_cli:gemini-3.1-pro",
+      "reference_table": "S8.T3",
+      "reference_line": 63,
+      "subset": "full-release-MT",
+      "scoring_manifest": "release:all-1373",
+      "config_id": "gemini_cli:gemini-3.1-pro",
+      "model": "Gemini 3.1 Pro",
+      "interface": "Gemini CLI",
+      "model_qualifier": null,
+      "telemetry_reported": {},
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "full-release-MT:codex:gpt-5.5",
+      "reference_table": "S8.T3",
+      "reference_line": 64,
+      "subset": "full-release-MT",
+      "scoring_manifest": "release:all-1373",
+      "config_id": "codex:gpt-5.5",
+      "model": "GPT-5.5",
+      "interface": "Codex",
+      "model_qualifier": null,
+      "telemetry_reported": {},
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "full-release-MT:claude_code:claude-opus-4.7",
+      "reference_table": "S8.T3",
+      "reference_line": 65,
+      "subset": "full-release-MT",
+      "scoring_manifest": "release:all-1373",
+      "config_id": "claude_code:claude-opus-4.7",
+      "model": "Claude Opus 4.7",
+      "interface": "Claude Code",
+      "model_qualifier": null,
+      "telemetry_reported": {},
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "full-release-MT:codex:gpt-5.4-mini",
+      "reference_table": "S8.T3",
+      "reference_line": 66,
+      "subset": "full-release-MT",
+      "scoring_manifest": "release:all-1373",
+      "config_id": "codex:gpt-5.4-mini",
+      "model": "GPT-5.4 mini",
+      "interface": "Codex",
+      "model_qualifier": null,
+      "telemetry_reported": {},
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "full-release-MT:opencode:qwen3.6-27b",
+      "reference_table": "S8.T3",
+      "reference_line": 67,
+      "subset": "full-release-MT",
+      "scoring_manifest": "release:all-1373",
+      "config_id": "opencode:qwen3.6-27b",
+      "model": "Qwen 3.6 27B",
+      "interface": "OpenCode",
+      "model_qualifier": null,
+      "telemetry_reported": {},
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "full-release-MT:claude_code:claude-haiku-4.5",
+      "reference_table": "S8.T3",
+      "reference_line": 68,
+      "subset": "full-release-MT",
+      "scoring_manifest": "release:all-1373",
+      "config_id": "claude_code:claude-haiku-4.5",
+      "model": "Claude Haiku 4.5",
+      "interface": "Claude Code",
+      "model_qualifier": null,
+      "telemetry_reported": {},
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "full-release-MT:opencode:qwen3.5-122b-a10b:splitter",
+      "reference_table": "S8.T3",
+      "reference_line": 69,
+      "subset": "full-release-MT",
+      "scoring_manifest": "release:all-1373",
+      "config_id": "opencode:qwen3.5-122b-a10b:splitter",
+      "model": "Qwen 3.5 122B-A10B",
+      "interface": "OpenCode",
+      "model_qualifier": null,
+      "telemetry_reported": {},
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "full-release-MT:openhands:gemini-3.1-flash-lite",
+      "reference_table": "S8.T3",
+      "reference_line": 70,
+      "subset": "full-release-MT",
+      "scoring_manifest": "release:all-1373",
+      "config_id": "openhands:gemini-3.1-flash-lite",
+      "model": "Gemini 3.1 Flash Lite",
+      "interface": "OpenHands",
+      "model_qualifier": null,
+      "telemetry_reported": {},
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "full-release-MT:codex:gemini-3.1-flash-lite",
+      "reference_table": "S8.T3",
+      "reference_line": 71,
+      "subset": "full-release-MT",
+      "scoring_manifest": "release:all-1373",
+      "config_id": "codex:gemini-3.1-flash-lite",
+      "model": "Gemini 3.1 Flash Lite",
+      "interface": "Codex",
+      "model_qualifier": null,
+      "telemetry_reported": {},
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "full-release-MT:opencode:gemini-3.1-flash-lite",
+      "reference_table": "S8.T3",
+      "reference_line": 72,
+      "subset": "full-release-MT",
+      "scoring_manifest": "release:all-1373",
+      "config_id": "opencode:gemini-3.1-flash-lite",
+      "model": "Gemini 3.1 Flash Lite",
+      "interface": "OpenCode",
+      "model_qualifier": null,
+      "telemetry_reported": {},
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "full-release-MT:opencode:qwen3.6-35b-a3b",
+      "reference_table": "S8.T3",
+      "reference_line": 73,
+      "subset": "full-release-MT",
+      "scoring_manifest": "release:all-1373",
+      "config_id": "opencode:qwen3.6-35b-a3b",
+      "model": "Qwen 3.6 35B-A3B",
+      "interface": "OpenCode",
+      "model_qualifier": null,
+      "telemetry_reported": {},
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "full-release-MT:openhands:qwen3.6-27b",
+      "reference_table": "S8.T3",
+      "reference_line": 74,
+      "subset": "full-release-MT",
+      "scoring_manifest": "release:all-1373",
+      "config_id": "openhands:qwen3.6-27b",
+      "model": "Qwen 3.6 27B",
+      "interface": "OpenHands",
+      "model_qualifier": null,
+      "telemetry_reported": {},
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "full-release-MT:gemini_cli:gemini-3.1-flash-lite",
+      "reference_table": "S8.T3",
+      "reference_line": 75,
+      "subset": "full-release-MT",
+      "scoring_manifest": "release:all-1373",
+      "config_id": "gemini_cli:gemini-3.1-flash-lite",
+      "model": "Gemini 3.1 Flash Lite",
+      "interface": "Gemini CLI",
+      "model_qualifier": null,
+      "telemetry_reported": {},
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "full-release-MT:opencode:gemma-4-31b",
+      "reference_table": "S8.T3",
+      "reference_line": 76,
+      "subset": "full-release-MT",
+      "scoring_manifest": "release:all-1373",
+      "config_id": "opencode:gemma-4-31b",
+      "model": "Gemma 4 31B",
+      "interface": "OpenCode",
+      "model_qualifier": null,
+      "telemetry_reported": {},
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    },
+    {
+      "experiment_id": "full-release-MT:opencode:gemma-4-26b-a4b",
+      "reference_table": "S8.T3",
+      "reference_line": 77,
+      "subset": "full-release-MT",
+      "scoring_manifest": "release:all-1373",
+      "config_id": "opencode:gemma-4-26b-a4b",
+      "model": "Gemma 4 26B-A4B",
+      "interface": "OpenCode",
+      "model_qualifier": null,
+      "telemetry_reported": {},
+      "result_classes": {
+        "paper_reported_aggregate": "captured",
+        "rescored_author_predictions": "unavailable (predictions not located)",
+        "new_paper_compatible_run": "not run (blocked: data/credentials/budget)"
+      }
+    }
+  ],
+  "experiments_not_readable": [
+    {
+      "experiment_id": "paper:revised-main",
+      "description": "Revised headline results on AH and AH-S (AH-D development reported separately)",
+      "requires": [
+        "ah-paper",
+        "ah-revised-manifests",
+        "ah-markdowns",
+        "ah-media"
+      ],
+      "status": "blocked",
+      "reason": "Paper table rows unreadable (S1 inaccessible) and revised manifests not located."
+    },
+    {
+      "experiment_id": "paper:direct-table",
+      "description": "Direct multimodal (no-harness) judge table",
+      "requires": [
+        "ah-paper"
+      ],
+      "status": "blocked",
+      "reason": "Rows unknown; only Qwen 3.5 9B is named (MP §7)."
+    },
+    {
+      "experiment_id": "paper:additional-harness-table",
+      "description": "Additional model x harness pairings",
+      "requires": [
+        "ah-paper"
+      ],
+      "status": "partially_known",
+      "reason": "S8 legacy grids list 15 pairings; revised table unreadable."
+    },
+    {
+      "experiment_id": "paper:input-removal-ablations",
+      "description": "Input-removal ablations on their stated examples",
+      "requires": [
+        "ah-paper",
+        "ah-ablation-membership"
+      ],
+      "status": "blocked",
+      "reason": "Membership and removed-field controls not located."
+    },
+    {
+      "experiment_id": "paper:partition-sensitivity",
+      "description": "Legacy vs revised partition sensitivity",
+      "requires": [
+        "ah-legacy-labels-main",
+        "ah-revised-manifests",
+        "ah-revised-splitter-verdicts"
+      ],
+      "status": "blocked",
+      "reason": "Revised membership and splitter verdicts not located; legacy labels unreadable here."
+    },
+    {
+      "experiment_id": "paper:repeated-trials",
+      "description": "Repeated-trial variance (if reported)",
+      "requires": [
+        "ah-paper"
+      ],
+      "status": "unknown",
+      "reason": "Cannot determine from accessible sources."
+    }
+  ],
+  "notes": [
+    "S8 tables use the legacy submitted partition; they are reference aggregates, not revised-paper rows.",
+    "A configuration with provider_model_id=null cannot be executed until an operator supplies a verified identifier.",
+    "Running a current substitute model creates a new experiment, never the original paper row."
+  ]
+}

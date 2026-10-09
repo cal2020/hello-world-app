@@ -1,0 +1,1441 @@
+{
+  "generated_at": "2026-10-09T19:49:48Z",
+  "warning": "Reference observations only. Generated results live in separate score reports.",
+  "supplementary_tables": [
+    {
+      "table_id": "S8.T1",
+      "title": "Full model-interface grid: submitted challenging split",
+      "kind": "author_reported_aggregate",
+      "scope": {
+        "partition": "legacy-submitted",
+        "subset": "AH (legacy, 605 items)",
+        "note": "Legacy submitted Qwen-defined partition; retained by the authors as a sensitivity analysis, not the revised paper leaderboard."
+      },
+      "provenance": {
+        "source_id": "agenthorizon-repo",
+        "revision": "8584a347370ab1d92b908732cfabe72b3a23486d",
+        "path": "docs/supplementary-results.md",
+        "sha256": "3eb0f4d68e2427f0fa3bc78259665ec76ec7292a212631077393262e30e0e554",
+        "lines": [
+          16,
+          32
+        ]
+      },
+      "preamble": [
+        "`MT` is exact mistake-type recall. Token, tool, and image values are means per",
+        "trajectory. The splitter row is affected mechanically by its role in defining",
+        "this legacy partition."
+      ],
+      "columns": [
+        "model",
+        "interface",
+        "balanced_accuracy_pct",
+        "positive_accuracy_pct",
+        "negative_accuracy_pct",
+        "mistake_type_recall_pct",
+        "mean_input_tokens",
+        "mean_output_tokens",
+        "mean_tool_calls",
+        "mean_images_viewed"
+      ],
+      "rows": [
+        {
+          "line": 18,
+          "model": "GPT-5.5",
+          "interface": "Codex",
+          "balanced_accuracy_pct": 83.1,
+          "positive_accuracy_pct": 75.6,
+          "negative_accuracy_pct": 90.6,
+          "mistake_type_recall_pct": 51.1,
+          "mean_input_tokens": 513556,
+          "mean_output_tokens": 4184,
+          "mean_tool_calls": 18.6,
+          "mean_images_viewed": 11.9
+        },
+        {
+          "line": 19,
+          "model": "Gemini 3.1 Pro",
+          "interface": "Gemini CLI",
+          "balanced_accuracy_pct": 79.4,
+          "positive_accuracy_pct": 67.6,
+          "negative_accuracy_pct": 91.2,
+          "mistake_type_recall_pct": 52.1,
+          "mean_input_tokens": 1393271,
+          "mean_output_tokens": 9811,
+          "mean_tool_calls": 24.2,
+          "mean_images_viewed": 30.2
+        },
+        {
+          "line": 20,
+          "model": "Claude Opus 4.7",
+          "interface": "Claude Code",
+          "balanced_accuracy_pct": 77.6,
+          "positive_accuracy_pct": 78.4,
+          "negative_accuracy_pct": 76.7,
+          "mistake_type_recall_pct": 44.1,
+          "mean_input_tokens": 554387,
+          "mean_output_tokens": 5655,
+          "mean_tool_calls": 9.2,
+          "mean_images_viewed": 7.8
+        },
+        {
+          "line": 21,
+          "model": "Qwen 3.6 27B",
+          "interface": "OpenCode",
+          "balanced_accuracy_pct": 72.0,
+          "positive_accuracy_pct": 77.7,
+          "negative_accuracy_pct": 66.4,
+          "mistake_type_recall_pct": 36.7,
+          "mean_input_tokens": 243440,
+          "mean_output_tokens": 4405,
+          "mean_tool_calls": 8.1,
+          "mean_images_viewed": 6.0
+        },
+        {
+          "line": 22,
+          "model": "GPT-5.4 mini",
+          "interface": "Codex",
+          "balanced_accuracy_pct": 70.0,
+          "positive_accuracy_pct": 67.9,
+          "negative_accuracy_pct": 72.0,
+          "mistake_type_recall_pct": 36.4,
+          "mean_input_tokens": 323808,
+          "mean_output_tokens": 8905,
+          "mean_tool_calls": 20.0,
+          "mean_images_viewed": 8.4
+        },
+        {
+          "line": 23,
+          "model": "Qwen 3.6 35B-A3B",
+          "interface": "OpenCode",
+          "balanced_accuracy_pct": 66.1,
+          "positive_accuracy_pct": 77.7,
+          "negative_accuracy_pct": 54.4,
+          "mistake_type_recall_pct": 27.8,
+          "mean_input_tokens": 190550,
+          "mean_output_tokens": 4329,
+          "mean_tool_calls": 8.1,
+          "mean_images_viewed": 5.6
+        },
+        {
+          "line": 24,
+          "model": "Qwen 3.6 27B",
+          "interface": "OpenHands",
+          "balanced_accuracy_pct": 57.8,
+          "positive_accuracy_pct": 66.2,
+          "negative_accuracy_pct": 49.4,
+          "mistake_type_recall_pct": 24.3,
+          "mean_input_tokens": 1258306,
+          "mean_output_tokens": 8999,
+          "mean_tool_calls": 14.9,
+          "mean_images_viewed": 9.4
+        },
+        {
+          "line": 25,
+          "model": "Claude Haiku 4.5",
+          "interface": "Claude Code",
+          "balanced_accuracy_pct": 56.0,
+          "positive_accuracy_pct": 48.4,
+          "negative_accuracy_pct": 63.5,
+          "mistake_type_recall_pct": 28.1,
+          "mean_input_tokens": 452266,
+          "mean_output_tokens": 5423,
+          "mean_tool_calls": 10.6,
+          "mean_images_viewed": 8.3
+        },
+        {
+          "line": 26,
+          "model": "Gemini 3.1 Flash Lite",
+          "interface": "OpenCode",
+          "balanced_accuracy_pct": 48.8,
+          "positive_accuracy_pct": 40.1,
+          "negative_accuracy_pct": 57.5,
+          "mistake_type_recall_pct": 20.8,
+          "mean_input_tokens": 115860,
+          "mean_output_tokens": 771,
+          "mean_tool_calls": 3.4,
+          "mean_images_viewed": 1.1
+        },
+        {
+          "line": 27,
+          "model": "Gemini 3.1 Flash Lite",
+          "interface": "Gemini CLI",
+          "balanced_accuracy_pct": 48.3,
+          "positive_accuracy_pct": 55.4,
+          "negative_accuracy_pct": 41.2,
+          "mistake_type_recall_pct": 11.5,
+          "mean_input_tokens": 1041455,
+          "mean_output_tokens": 708,
+          "mean_tool_calls": 8.1,
+          "mean_images_viewed": 3.6
+        },
+        {
+          "line": 28,
+          "model": "Gemini 3.1 Flash Lite",
+          "interface": "OpenHands",
+          "balanced_accuracy_pct": 47.3,
+          "positive_accuracy_pct": 28.6,
+          "negative_accuracy_pct": 66.0,
+          "mistake_type_recall_pct": 13.7,
+          "mean_input_tokens": 175274,
+          "mean_output_tokens": 2540,
+          "mean_tool_calls": 5.7,
+          "mean_images_viewed": 0.9
+        },
+        {
+          "line": 29,
+          "model": "Gemma 4 26B-A4B",
+          "interface": "OpenCode",
+          "balanced_accuracy_pct": 47.1,
+          "positive_accuracy_pct": 69.7,
+          "negative_accuracy_pct": 24.5,
+          "mistake_type_recall_pct": 5.8,
+          "mean_input_tokens": 243892,
+          "mean_output_tokens": 909,
+          "mean_tool_calls": 3.9,
+          "mean_images_viewed": 1.2
+        },
+        {
+          "line": 30,
+          "model": "Gemini 3.1 Flash Lite",
+          "interface": "Codex",
+          "balanced_accuracy_pct": 45.3,
+          "positive_accuracy_pct": 35.9,
+          "negative_accuracy_pct": 54.7,
+          "mistake_type_recall_pct": 14.4,
+          "mean_input_tokens": 160174,
+          "mean_output_tokens": 654,
+          "mean_tool_calls": 5.7,
+          "mean_images_viewed": 1.1
+        },
+        {
+          "line": 31,
+          "model": "Gemma 4 31B",
+          "interface": "OpenCode",
+          "balanced_accuracy_pct": 44.5,
+          "positive_accuracy_pct": 60.6,
+          "negative_accuracy_pct": 28.3,
+          "mistake_type_recall_pct": 8.6,
+          "mean_input_tokens": 101528,
+          "mean_output_tokens": 372,
+          "mean_tool_calls": 2.3,
+          "mean_images_viewed": 1.0
+        },
+        {
+          "line": 32,
+          "model": "Qwen 3.5 122B-A10B",
+          "interface": "OpenCode",
+          "balanced_accuracy_pct": 38.4,
+          "positive_accuracy_pct": 40.1,
+          "negative_accuracy_pct": 36.8,
+          "mistake_type_recall_pct": 16.6,
+          "mean_input_tokens": 159688,
+          "mean_output_tokens": 994,
+          "mean_tool_calls": 3.9,
+          "mean_images_viewed": null,
+          "model_qualifier": "splitter"
+        }
+      ]
+    },
+    {
+      "table_id": "S8.T2",
+      "title": "Full model-interface grid: submitted simple split",
+      "kind": "author_reported_aggregate",
+      "scope": {
+        "partition": "legacy-submitted",
+        "subset": "AH-S (legacy, 768 items)",
+        "note": "Legacy submitted Qwen-defined partition; retained by the authors as a sensitivity analysis, not the revised paper leaderboard."
+      },
+      "provenance": {
+        "source_id": "agenthorizon-repo",
+        "revision": "8584a347370ab1d92b908732cfabe72b3a23486d",
+        "path": "docs/supplementary-results.md",
+        "sha256": "3eb0f4d68e2427f0fa3bc78259665ec76ec7292a212631077393262e30e0e554",
+        "lines": [
+          36,
+          52
+        ]
+      },
+      "preamble": [],
+      "columns": [
+        "model",
+        "interface",
+        "balanced_accuracy_pct",
+        "positive_accuracy_pct",
+        "negative_accuracy_pct",
+        "mistake_type_recall_pct",
+        "mean_input_tokens",
+        "mean_output_tokens",
+        "mean_tool_calls",
+        "mean_images_viewed"
+      ],
+      "rows": [
+        {
+          "line": 38,
+          "model": "Qwen 3.5 122B-A10B",
+          "interface": "OpenCode",
+          "balanced_accuracy_pct": 98.3,
+          "positive_accuracy_pct": 97.9,
+          "negative_accuracy_pct": 98.7,
+          "mistake_type_recall_pct": 56.4,
+          "mean_input_tokens": 159688,
+          "mean_output_tokens": 994,
+          "mean_tool_calls": 3.9,
+          "mean_images_viewed": null,
+          "model_qualifier": "splitter"
+        },
+        {
+          "line": 39,
+          "model": "Claude Opus 4.7",
+          "interface": "Claude Code",
+          "balanced_accuracy_pct": 93.2,
+          "positive_accuracy_pct": 89.4,
+          "negative_accuracy_pct": 97.0,
+          "mistake_type_recall_pct": 63.8,
+          "mean_input_tokens": 554387,
+          "mean_output_tokens": 5655,
+          "mean_tool_calls": 9.2,
+          "mean_images_viewed": 7.8
+        },
+        {
+          "line": 40,
+          "model": "Qwen 3.6 27B",
+          "interface": "OpenCode",
+          "balanced_accuracy_pct": 92.5,
+          "positive_accuracy_pct": 89.0,
+          "negative_accuracy_pct": 96.1,
+          "mistake_type_recall_pct": 59.3,
+          "mean_input_tokens": 243440,
+          "mean_output_tokens": 4405,
+          "mean_tool_calls": 8.1,
+          "mean_images_viewed": 6.0
+        },
+        {
+          "line": 41,
+          "model": "GPT-5.5",
+          "interface": "Codex",
+          "balanced_accuracy_pct": 91.1,
+          "positive_accuracy_pct": 83.5,
+          "negative_accuracy_pct": 98.7,
+          "mistake_type_recall_pct": 66.9,
+          "mean_input_tokens": 513556,
+          "mean_output_tokens": 4184,
+          "mean_tool_calls": 18.6,
+          "mean_images_viewed": 11.9
+        },
+        {
+          "line": 42,
+          "model": "GPT-5.4 mini",
+          "interface": "Codex",
+          "balanced_accuracy_pct": 90.5,
+          "positive_accuracy_pct": 85.6,
+          "negative_accuracy_pct": 95.5,
+          "mistake_type_recall_pct": 58.6,
+          "mean_input_tokens": 323808,
+          "mean_output_tokens": 8905,
+          "mean_tool_calls": 20.0,
+          "mean_images_viewed": 8.4
+        },
+        {
+          "line": 43,
+          "model": "Gemma 4 31B",
+          "interface": "OpenCode",
+          "balanced_accuracy_pct": 88.0,
+          "positive_accuracy_pct": 89.8,
+          "negative_accuracy_pct": 86.1,
+          "mistake_type_recall_pct": 50.3,
+          "mean_input_tokens": 101528,
+          "mean_output_tokens": 372,
+          "mean_tool_calls": 2.3,
+          "mean_images_viewed": 1.0
+        },
+        {
+          "line": 44,
+          "model": "Qwen 3.6 35B-A3B",
+          "interface": "OpenCode",
+          "balanced_accuracy_pct": 88.0,
+          "positive_accuracy_pct": 84.7,
+          "negative_accuracy_pct": 91.2,
+          "mistake_type_recall_pct": 52.5,
+          "mean_input_tokens": 190550,
+          "mean_output_tokens": 4329,
+          "mean_tool_calls": 8.1,
+          "mean_images_viewed": 5.6
+        },
+        {
+          "line": 45,
+          "model": "Claude Haiku 4.5",
+          "interface": "Claude Code",
+          "balanced_accuracy_pct": 86.5,
+          "positive_accuracy_pct": 77.1,
+          "negative_accuracy_pct": 95.9,
+          "mistake_type_recall_pct": 51.4,
+          "mean_input_tokens": 452266,
+          "mean_output_tokens": 5423,
+          "mean_tool_calls": 10.6,
+          "mean_images_viewed": 8.3
+        },
+        {
+          "line": 46,
+          "model": "Gemini 3.1 Pro",
+          "interface": "Gemini CLI",
+          "balanced_accuracy_pct": 84.6,
+          "positive_accuracy_pct": 70.8,
+          "negative_accuracy_pct": 98.5,
+          "mistake_type_recall_pct": 57.8,
+          "mean_input_tokens": 1393271,
+          "mean_output_tokens": 9811,
+          "mean_tool_calls": 24.2,
+          "mean_images_viewed": 30.2
+        },
+        {
+          "line": 47,
+          "model": "Gemini 3.1 Flash Lite",
+          "interface": "OpenCode",
+          "balanced_accuracy_pct": 83.6,
+          "positive_accuracy_pct": 74.6,
+          "negative_accuracy_pct": 92.7,
+          "mistake_type_recall_pct": 45.6,
+          "mean_input_tokens": 115860,
+          "mean_output_tokens": 771,
+          "mean_tool_calls": 3.4,
+          "mean_images_viewed": 1.1
+        },
+        {
+          "line": 48,
+          "model": "Qwen 3.6 27B",
+          "interface": "OpenHands",
+          "balanced_accuracy_pct": 83.3,
+          "positive_accuracy_pct": 79.7,
+          "negative_accuracy_pct": 87.0,
+          "mistake_type_recall_pct": 53.3,
+          "mean_input_tokens": 1258306,
+          "mean_output_tokens": 8999,
+          "mean_tool_calls": 14.9,
+          "mean_images_viewed": 9.4
+        },
+        {
+          "line": 49,
+          "model": "Gemini 3.1 Flash Lite",
+          "interface": "Gemini CLI",
+          "balanced_accuracy_pct": 79.0,
+          "positive_accuracy_pct": 76.7,
+          "negative_accuracy_pct": 81.4,
+          "mistake_type_recall_pct": 44.6,
+          "mean_input_tokens": 1041455,
+          "mean_output_tokens": 708,
+          "mean_tool_calls": 8.1,
+          "mean_images_viewed": 3.6
+        },
+        {
+          "line": 50,
+          "model": "Gemini 3.1 Flash Lite",
+          "interface": "Codex",
+          "balanced_accuracy_pct": 75.4,
+          "positive_accuracy_pct": 61.4,
+          "negative_accuracy_pct": 89.3,
+          "mistake_type_recall_pct": 43.5,
+          "mean_input_tokens": 160174,
+          "mean_output_tokens": 654,
+          "mean_tool_calls": 5.7,
+          "mean_images_viewed": 1.1
+        },
+        {
+          "line": 51,
+          "model": "Gemma 4 26B-A4B",
+          "interface": "OpenCode",
+          "balanced_accuracy_pct": 71.2,
+          "positive_accuracy_pct": 84.7,
+          "negative_accuracy_pct": 57.7,
+          "mistake_type_recall_pct": 33.0,
+          "mean_input_tokens": 243892,
+          "mean_output_tokens": 909,
+          "mean_tool_calls": 3.9,
+          "mean_images_viewed": 1.2
+        },
+        {
+          "line": 52,
+          "model": "Gemini 3.1 Flash Lite",
+          "interface": "OpenHands",
+          "balanced_accuracy_pct": 68.7,
+          "positive_accuracy_pct": 46.6,
+          "negative_accuracy_pct": 90.8,
+          "mistake_type_recall_pct": 40.5,
+          "mean_input_tokens": 175274,
+          "mean_output_tokens": 2540,
+          "mean_tool_calls": 5.7,
+          "mean_images_viewed": 0.9
+        }
+      ]
+    },
+    {
+      "table_id": "S8.T3",
+      "title": "Full-benchmark mistake-type recall",
+      "kind": "author_reported_aggregate",
+      "scope": {
+        "partition": "full-release",
+        "subset": "all 1,373 items (850 negatives; 844 typed)",
+        "note": "Fixed denominators 273 / 232 / 339 over the full release; missing or malformed outputs count as incorrect."
+      },
+      "provenance": {
+        "source_id": "agenthorizon-repo",
+        "revision": "8584a347370ab1d92b908732cfabe72b3a23486d",
+        "path": "docs/supplementary-results.md",
+        "sha256": "3eb0f4d68e2427f0fa3bc78259665ec76ec7292a212631077393262e30e0e554",
+        "lines": [
+          61,
+          77
+        ]
+      },
+      "preamble": [
+        "A prediction is correct only when the judge emits `success=false` and identifies",
+        "the reference failure type. The fixed denominators are 273 Critical Mistakes,",
+        "232 Bad Side Effects, and 339 Misunderstandings; missing or malformed outputs",
+        "count as incorrect."
+      ],
+      "columns": [
+        "model",
+        "interface",
+        "critical_mistake_recall",
+        "bad_side_effect_recall",
+        "misunderstanding_recall"
+      ],
+      "rows": [
+        {
+          "line": 63,
+          "model": "Gemini 3.1 Pro",
+          "interface": "Gemini CLI",
+          "critical_mistake_recall": {
+            "pct": 57.5,
+            "numerator": 157,
+            "denominator": 273
+          },
+          "bad_side_effect_recall": {
+            "pct": 7.3,
+            "numerator": 17,
+            "denominator": 232
+          },
+          "misunderstanding_recall": {
+            "pct": 87.3,
+            "numerator": 296,
+            "denominator": 339
+          }
+        },
+        {
+          "line": 64,
+          "model": "GPT-5.5",
+          "interface": "Codex",
+          "critical_mistake_recall": {
+            "pct": 77.7,
+            "numerator": 212,
+            "denominator": 273
+          },
+          "bad_side_effect_recall": {
+            "pct": 24.1,
+            "numerator": 56,
+            "denominator": 232
+          },
+          "misunderstanding_recall": {
+            "pct": 72.9,
+            "numerator": 247,
+            "denominator": 339
+          }
+        },
+        {
+          "line": 65,
+          "model": "Claude Opus 4.7",
+          "interface": "Claude Code",
+          "critical_mistake_recall": {
+            "pct": 75.8,
+            "numerator": 207,
+            "denominator": 273
+          },
+          "bad_side_effect_recall": {
+            "pct": 12.1,
+            "numerator": 28,
+            "denominator": 232
+          },
+          "misunderstanding_recall": {
+            "pct": 71.4,
+            "numerator": 242,
+            "denominator": 339
+          }
+        },
+        {
+          "line": 66,
+          "model": "GPT-5.4 mini",
+          "interface": "Codex",
+          "critical_mistake_recall": {
+            "pct": 60.8,
+            "numerator": 166,
+            "denominator": 273
+          },
+          "bad_side_effect_recall": {
+            "pct": 2.6,
+            "numerator": 6,
+            "denominator": 232
+          },
+          "misunderstanding_recall": {
+            "pct": 74.6,
+            "numerator": 253,
+            "denominator": 339
+          }
+        },
+        {
+          "line": 67,
+          "model": "Qwen 3.6 27B",
+          "interface": "OpenCode",
+          "critical_mistake_recall": {
+            "pct": 60.4,
+            "numerator": 165,
+            "denominator": 273
+          },
+          "bad_side_effect_recall": {
+            "pct": 5.6,
+            "numerator": 13,
+            "denominator": 232
+          },
+          "misunderstanding_recall": {
+            "pct": 74.3,
+            "numerator": 252,
+            "denominator": 339
+          }
+        },
+        {
+          "line": 68,
+          "model": "Claude Haiku 4.5",
+          "interface": "Claude Code",
+          "critical_mistake_recall": {
+            "pct": 58.6,
+            "numerator": 160,
+            "denominator": 273
+          },
+          "bad_side_effect_recall": {
+            "pct": 8.6,
+            "numerator": 20,
+            "denominator": 232
+          },
+          "misunderstanding_recall": {
+            "pct": 53.4,
+            "numerator": 181,
+            "denominator": 339
+          }
+        },
+        {
+          "line": 69,
+          "model": "Qwen 3.5 122B-A10B",
+          "interface": "OpenCode",
+          "critical_mistake_recall": {
+            "pct": 66.7,
+            "numerator": 182,
+            "denominator": 273
+          },
+          "bad_side_effect_recall": {
+            "pct": 0.9,
+            "numerator": 2,
+            "denominator": 232
+          },
+          "misunderstanding_recall": {
+            "pct": 49.3,
+            "numerator": 167,
+            "denominator": 339
+          }
+        },
+        {
+          "line": 70,
+          "model": "Gemini 3.1 Flash Lite",
+          "interface": "OpenHands",
+          "critical_mistake_recall": {
+            "pct": 60.8,
+            "numerator": 166,
+            "denominator": 273
+          },
+          "bad_side_effect_recall": {
+            "pct": 0.0,
+            "numerator": 0,
+            "denominator": 232
+          },
+          "misunderstanding_recall": {
+            "pct": 27.1,
+            "numerator": 92,
+            "denominator": 339
+          }
+        },
+        {
+          "line": 71,
+          "model": "Gemini 3.1 Flash Lite",
+          "interface": "Codex",
+          "critical_mistake_recall": {
+            "pct": 64.1,
+            "numerator": 175,
+            "denominator": 273
+          },
+          "bad_side_effect_recall": {
+            "pct": 0.0,
+            "numerator": 0,
+            "denominator": 232
+          },
+          "misunderstanding_recall": {
+            "pct": 29.8,
+            "numerator": 101,
+            "denominator": 339
+          }
+        },
+        {
+          "line": 72,
+          "model": "Gemini 3.1 Flash Lite",
+          "interface": "OpenCode",
+          "critical_mistake_recall": {
+            "pct": 50.2,
+            "numerator": 137,
+            "denominator": 273
+          },
+          "bad_side_effect_recall": {
+            "pct": 1.3,
+            "numerator": 3,
+            "denominator": 232
+          },
+          "misunderstanding_recall": {
+            "pct": 49.3,
+            "numerator": 167,
+            "denominator": 339
+          }
+        },
+        {
+          "line": 73,
+          "model": "Qwen 3.6 35B-A3B",
+          "interface": "OpenCode",
+          "critical_mistake_recall": {
+            "pct": 63.0,
+            "numerator": 172,
+            "denominator": 273
+          },
+          "bad_side_effect_recall": {
+            "pct": 6.0,
+            "numerator": 14,
+            "denominator": 232
+          },
+          "misunderstanding_recall": {
+            "pct": 53.1,
+            "numerator": 180,
+            "denominator": 339
+          }
+        },
+        {
+          "line": 74,
+          "model": "Qwen 3.6 27B",
+          "interface": "OpenHands",
+          "critical_mistake_recall": {
+            "pct": 56.8,
+            "numerator": 155,
+            "denominator": 273
+          },
+          "bad_side_effect_recall": {
+            "pct": 3.4,
+            "numerator": 8,
+            "denominator": 232
+          },
+          "misunderstanding_recall": {
+            "pct": 57.8,
+            "numerator": 196,
+            "denominator": 339
+          }
+        },
+        {
+          "line": 75,
+          "model": "Gemini 3.1 Flash Lite",
+          "interface": "Gemini CLI",
+          "critical_mistake_recall": {
+            "pct": 62.3,
+            "numerator": 170,
+            "denominator": 273
+          },
+          "bad_side_effect_recall": {
+            "pct": 1.7,
+            "numerator": 4,
+            "denominator": 232
+          },
+          "misunderstanding_recall": {
+            "pct": 29.2,
+            "numerator": 99,
+            "denominator": 339
+          }
+        },
+        {
+          "line": 76,
+          "model": "Gemma 4 31B",
+          "interface": "OpenCode",
+          "critical_mistake_recall": {
+            "pct": 74.0,
+            "numerator": 202,
+            "denominator": 273
+          },
+          "bad_side_effect_recall": {
+            "pct": 0.0,
+            "numerator": 0,
+            "denominator": 232
+          },
+          "misunderstanding_recall": {
+            "pct": 27.1,
+            "numerator": 92,
+            "denominator": 339
+          }
+        },
+        {
+          "line": 77,
+          "model": "Gemma 4 26B-A4B",
+          "interface": "OpenCode",
+          "critical_mistake_recall": {
+            "pct": 47.6,
+            "numerator": 130,
+            "denominator": 273
+          },
+          "bad_side_effect_recall": {
+            "pct": 0.0,
+            "numerator": 0,
+            "denominator": 232
+          },
+          "misunderstanding_recall": {
+            "pct": 18.6,
+            "numerator": 63,
+            "denominator": 339
+          }
+        }
+      ]
+    }
+  ],
+  "construction_accounting": {
+    "kind": "author_reported_accounting",
+    "provenance": {
+      "source_id": "agenthorizon-repo",
+      "revision": "8584a347370ab1d92b908732cfabe72b3a23486d",
+      "path": "docs/benchmark-construction.md",
+      "sha256": "85e2c060c3b0e94f8c69dcb0e0da239a8e3196c2c69cd9d55bb576ab91ea7051"
+    },
+    "stages": [
+      {
+        "line": 11,
+        "stage": "Human demonstrations in 425 instruction pairs",
+        "positive": 850,
+        "negative": null,
+        "total": 850
+      },
+      {
+        "line": 12,
+        "stage": "Candidate judging tasks after instruction swapping",
+        "positive": 850,
+        "negative": 850,
+        "total": 1700
+      },
+      {
+        "line": 13,
+        "stage": "Confirmed positives after evidence review",
+        "positive": 523,
+        "negative": null,
+        "total": 523
+      },
+      {
+        "line": 14,
+        "stage": "Released benchmark",
+        "positive": 523,
+        "negative": 850,
+        "total": 1373
+      }
+    ],
+    "positive_review": {
+      "direct_agreement": 388,
+      "arbitrated": 462,
+      "retained_after_arbitration": 135,
+      "excluded": 327
+    },
+    "negative_review": {
+      "typed": 844,
+      "untyped_legacy": 6,
+      "hours": 212.5
+    },
+    "qa": {
+      "items_requiring_correction": 404,
+      "dropped_without_replacement": "Twenty-seven",
+      "complete_pairs": 425,
+      "kappa_all_850": 0.802,
+      "kappa_typed_844": 0.81,
+      "residual_model_qa": {
+        "sampled": 156,
+        "flagged_first_pass": 82,
+        "confirmed": 18,
+        "estimate": "11.5% (Wilson 95%: 7.4%-17.5%)",
+        "is_human_validated": false
+      },
+      "inter_annotator_agreement": "not collected (three-reviewer diagnostic on 23/425 pairs used for calibration only)"
+    },
+    "effort": [
+      {
+        "line": 89,
+        "stage": "Annotation",
+        "avg_hours_per_demonstration": 4.0,
+        "total_hours": 3400.0
+      },
+      {
+        "line": 90,
+        "stage": "First review",
+        "avg_hours_per_demonstration": 1.7,
+        "total_hours": 1445.0
+      },
+      {
+        "line": 91,
+        "stage": "Failure-type review",
+        "avg_hours_per_demonstration": 0.25,
+        "total_hours": 212.5
+      },
+      {
+        "line": 92,
+        "stage": "Second-stage review",
+        "avg_hours_per_demonstration": 1.2,
+        "total_hours": 1020.0
+      },
+      {
+        "line": 93,
+        "stage": "Delivered total",
+        "avg_hours_per_demonstration": 7.15,
+        "total_hours": 6077.5
+      }
+    ]
+  },
+  "construction_arithmetic_checks": [
+    {
+      "check": "agree + arbitrated = candidates",
+      "computed": 850,
+      "documented": 850,
+      "ok": true
+    },
+    {
+      "check": "agree + retained = released positives",
+      "computed": 523,
+      "documented": 523,
+      "ok": true
+    },
+    {
+      "check": "retained + excluded = arbitrated",
+      "computed": 462,
+      "documented": 462,
+      "ok": true
+    },
+    {
+      "check": "typed + untyped negatives = 850",
+      "computed": 850,
+      "documented": 850,
+      "ok": true
+    },
+    {
+      "check": "released total",
+      "computed": 1373,
+      "documented": 1373,
+      "ok": true
+    }
+  ],
+  "revised_check_table": {
+    "provenance": {
+      "source_id": "master-prompt",
+      "citation": "MP §2 (attributes the table to S1)",
+      "status": "described_only"
+    },
+    "columns": [
+      "total",
+      "positive",
+      "negative",
+      "critical",
+      "side_effect",
+      "misunderstanding",
+      "untyped"
+    ],
+    "rows": {
+      "AH-D": [
+        162,
+        62,
+        100,
+        32,
+        26,
+        41,
+        1
+      ],
+      "AH": [
+        528,
+        227,
+        301,
+        48,
+        107,
+        142,
+        4
+      ],
+      "AH-S": [
+        683,
+        234,
+        449,
+        193,
+        99,
+        156,
+        1
+      ],
+      "TOTAL": [
+        1373,
+        523,
+        850,
+        273,
+        232,
+        339,
+        6
+      ]
+    }
+  },
+  "revised_check_table_identities": [
+    {
+      "row": "AH-D",
+      "check": "positive + negative = total",
+      "ok": true
+    },
+    {
+      "row": "AH-D",
+      "check": "typed + untyped = negative",
+      "ok": true
+    },
+    {
+      "row": "AH",
+      "check": "positive + negative = total",
+      "ok": true
+    },
+    {
+      "row": "AH",
+      "check": "typed + untyped = negative",
+      "ok": true
+    },
+    {
+      "row": "AH-S",
+      "check": "positive + negative = total",
+      "ok": true
+    },
+    {
+      "row": "AH-S",
+      "check": "typed + untyped = negative",
+      "ok": true
+    },
+    {
+      "row": "TOTAL",
+      "check": "positive + negative = total",
+      "ok": true
+    },
+    {
+      "row": "TOTAL",
+      "check": "typed + untyped = negative",
+      "ok": true
+    },
+    {
+      "row": "TOTAL",
+      "check": "column total sums",
+      "ok": true
+    },
+    {
+      "row": "TOTAL",
+      "check": "column positive sums",
+      "ok": true
+    },
+    {
+      "row": "TOTAL",
+      "check": "column negative sums",
+      "ok": true
+    },
+    {
+      "row": "TOTAL",
+      "check": "column critical sums",
+      "ok": true
+    },
+    {
+      "row": "TOTAL",
+      "check": "column side_effect sums",
+      "ok": true
+    },
+    {
+      "row": "TOTAL",
+      "check": "column misunderstanding sums",
+      "ok": true
+    },
+    {
+      "row": "TOTAL",
+      "check": "column untyped sums",
+      "ok": true
+    }
+  ],
+  "analysis_aggregate_mt_definition": {
+    "question": "Which denominator makes S8's legacy MT columns consistent with S8.T3's exact full-benchmark counts?",
+    "rows": [
+      {
+        "model": "Gemini 3.1 Pro",
+        "interface": "Gemini CLI",
+        "qualifier": null,
+        "full_exact_correct": 470,
+        "mt_challenging": 52.1,
+        "mt_simple": 57.8,
+        "micro_over_typed_negatives (T=844)": {
+          "point": 312.8421052631571,
+          "low": 305.43859649122885,
+          "high": 320.2456140350864
+        },
+        "micro_over_all_negatives_incl_untyped (T=850)": {
+          "point": 373.6842105263154,
+          "low": 366.228070175439,
+          "high": 381.1403508771918
+        }
+      },
+      {
+        "model": "GPT-5.5",
+        "interface": "Codex",
+        "qualifier": null,
+        "full_exact_correct": 515,
+        "mt_challenging": 51.1,
+        "mt_simple": 66.9,
+        "micro_over_typed_negatives (T=844)": {
+          "point": 314.1518987341777,
+          "low": 311.48101265822817,
+          "high": 316.82278481012645
+        },
+        "micro_over_all_negatives_incl_untyped (T=850)": {
+          "point": 339.55696202531624,
+          "low": 336.86708860759575,
+          "high": 342.24683544303747
+        }
+      },
+      {
+        "model": "Claude Opus 4.7",
+        "interface": "Claude Code",
+        "qualifier": null,
+        "full_exact_correct": 477,
+        "mt_challenging": 44.1,
+        "mt_simple": 63.8,
+        "micro_over_typed_negatives (T=844)": {
+          "point": 312.0406091370557,
+          "low": 309.89847715736033,
+          "high": 314.18274111675134
+        },
+        "micro_over_all_negatives_incl_untyped (T=850)": {
+          "point": 331.47208121827384,
+          "low": 329.31472081218294,
+          "high": 333.6294416243651
+        }
+      },
+      {
+        "model": "GPT-5.4 mini",
+        "interface": "Codex",
+        "qualifier": null,
+        "full_exact_correct": 425,
+        "mt_challenging": 36.4,
+        "mt_simple": 58.6,
+        "micro_over_typed_negatives (T=844)": {
+          "point": 313.4414414414412,
+          "low": 311.54054054054063,
+          "high": 315.34234234234236
+        },
+        "micro_over_all_negatives_incl_untyped (T=850)": {
+          "point": 329.27927927927914,
+          "low": 327.3648648648649,
+          "high": 331.1936936936937
+        }
+      },
+      {
+        "model": "Qwen 3.6 27B",
+        "interface": "OpenCode",
+        "qualifier": null,
+        "full_exact_correct": 430,
+        "mt_challenging": 36.7,
+        "mt_simple": 59.3,
+        "micro_over_typed_negatives (T=844)": {
+          "point": 311.9115044247787,
+          "low": 310.04424778761086,
+          "high": 313.7787610619467
+        },
+        "micro_over_all_negatives_incl_untyped (T=850)": {
+          "point": 327.6548672566371,
+          "low": 325.77433628318585,
+          "high": 329.5353982300882
+        }
+      },
+      {
+        "model": "Claude Haiku 4.5",
+        "interface": "Claude Code",
+        "qualifier": null,
+        "full_exact_correct": 361,
+        "mt_challenging": 28.1,
+        "mt_simple": 51.4,
+        "micro_over_typed_negatives (T=844)": {
+          "point": 312.5150214592276,
+          "low": 310.7038626609444,
+          "high": 314.3261802575106
+        },
+        "micro_over_all_negatives_incl_untyped (T=850)": {
+          "point": 325.75107296137355,
+          "low": 323.9270386266097,
+          "high": 327.5751072961374
+        }
+      },
+      {
+        "model": "Qwen 3.5 122B-A10B",
+        "interface": "OpenCode",
+        "qualifier": "splitter",
+        "full_exact_correct": 351,
+        "mt_challenging": 16.6,
+        "mt_simple": 56.4,
+        "micro_over_typed_negatives (T=844)": {
+          "point": 314.1105527638191,
+          "low": 313.0502512562814,
+          "high": 315.17085427135675
+        },
+        "micro_over_all_negatives_incl_untyped (T=850)": {
+          "point": 322.6130653266332,
+          "low": 321.5452261306533,
+          "high": 323.68090452261305
+        }
+      },
+      {
+        "model": "Gemini 3.1 Flash Lite",
+        "interface": "OpenHands",
+        "qualifier": null,
+        "full_exact_correct": 258,
+        "mt_challenging": 13.7,
+        "mt_simple": 40.5,
+        "micro_over_typed_negatives (T=844)": {
+          "point": 312.7611940298509,
+          "low": 311.18656716417917,
+          "high": 314.3358208955223
+        },
+        "micro_over_all_negatives_incl_untyped (T=850)": {
+          "point": 321.8283582089552,
+          "low": 320.242537313433,
+          "high": 323.4141791044775
+        }
+      },
+      {
+        "model": "Gemini 3.1 Flash Lite",
+        "interface": "Codex",
+        "qualifier": null,
+        "full_exact_correct": 276,
+        "mt_challenging": 14.4,
+        "mt_simple": 43.5,
+        "micro_over_typed_negatives (T=844)": {
+          "point": 313.19587628865975,
+          "low": 311.74570446735396,
+          "high": 314.6460481099657
+        },
+        "micro_over_all_negatives_incl_untyped (T=850)": {
+          "point": 322.16494845360825,
+          "low": 320.704467353952,
+          "high": 323.62542955326467
+        }
+      },
+      {
+        "model": "Gemini 3.1 Flash Lite",
+        "interface": "OpenCode",
+        "qualifier": null,
+        "full_exact_correct": 307,
+        "mt_challenging": 20.8,
+        "mt_simple": 45.6,
+        "micro_over_typed_negatives (T=844)": {
+          "point": 313.967741935484,
+          "low": 312.26612903225805,
+          "high": 315.6693548387095
+        },
+        "micro_over_all_negatives_incl_untyped (T=850)": {
+          "point": 325.0000000000001,
+          "low": 323.28629032258067,
+          "high": 326.71370967741933
+        }
+      },
+      {
+        "model": "Qwen 3.6 35B-A3B",
+        "interface": "OpenCode",
+        "qualifier": null,
+        "full_exact_correct": 366,
+        "mt_challenging": 27.8,
+        "mt_simple": 52.5,
+        "micro_over_typed_negatives (T=844)": {
+          "point": 312.14574898785435,
+          "low": 310.4372469635629,
+          "high": 313.85425101214577
+        },
+        "micro_over_all_negatives_incl_untyped (T=850)": {
+          "point": 324.8987854251012,
+          "low": 323.178137651822,
+          "high": 326.6194331983805
+        }
+      },
+      {
+        "model": "Qwen 3.6 27B",
+        "interface": "OpenHands",
+        "qualifier": null,
+        "full_exact_correct": 359,
+        "mt_challenging": 24.3,
+        "mt_simple": 53.3,
+        "micro_over_typed_negatives (T=844)": {
+          "point": 313.28275862068944,
+          "low": 311.8275862068964,
+          "high": 314.73793103448287
+        },
+        "micro_over_all_negatives_incl_untyped (T=850)": {
+          "point": 324.3103448275861,
+          "low": 322.8448275862069,
+          "high": 325.77586206896547
+        }
+      },
+      {
+        "model": "Gemini 3.1 Flash Lite",
+        "interface": "Gemini CLI",
+        "qualifier": null,
+        "full_exact_correct": 273,
+        "mt_challenging": 11.5,
+        "mt_simple": 44.6,
+        "micro_over_typed_negatives (T=844)": {
+          "point": 312.4592145015105,
+          "low": 311.1842900302116,
+          "high": 313.73413897280966
+        },
+        "micro_over_all_negatives_incl_untyped (T=850)": {
+          "point": 320.54380664652575,
+          "low": 319.25981873111795,
+          "high": 321.8277945619336
+        }
+      },
+      {
+        "model": "Gemma 4 31B",
+        "interface": "OpenCode",
+        "qualifier": null,
+        "full_exact_correct": 294,
+        "mt_challenging": 8.6,
+        "mt_simple": 50.3,
+        "micro_over_typed_negatives (T=844)": {
+          "point": 313.0263788968824,
+          "low": 312.01438848920856,
+          "high": 314.0383693045563
+        },
+        "micro_over_all_negatives_incl_untyped (T=850)": {
+          "point": 320.26378896882494,
+          "low": 319.24460431654666,
+          "high": 321.2829736211031
+        }
+      },
+      {
+        "model": "Gemma 4 26B-A4B",
+        "interface": "OpenCode",
+        "qualifier": null,
+        "full_exact_correct": 193,
+        "mt_challenging": 5.8,
+        "mt_simple": 33.0,
+        "micro_over_typed_negatives (T=844)": {
+          "point": 314.4117647058825,
+          "low": 312.8602941176471,
+          "high": 315.9632352941175
+        },
+        "micro_over_all_negatives_incl_untyped (T=850)": {
+          "point": 321.69117647058823,
+          "low": 320.1286764705882,
+          "high": 323.2536764705881
+        }
+      }
+    ],
+    "summary": {
+      "micro_over_typed_negatives (T=844)": {
+        "all_rows": {
+          "n_rows": 15,
+          "mean_implied_n_c": 313.08,
+          "stdev_implied_n_c": 0.78,
+          "intersection_of_rounding_intervals": [
+            313.05,
+            313.73
+          ],
+          "consistent_integers": [],
+          "binding_lower_row": "Qwen 3.5 122B-A10B / OpenCode"
+        },
+        "excluding_splitter_row": {
+          "n_rows": 14,
+          "mean_implied_n_c": 313.01,
+          "stdev_implied_n_c": 0.76,
+          "intersection_of_rounding_intervals": [
+            312.86,
+            313.73
+          ],
+          "consistent_integers": [
+            313
+          ],
+          "binding_lower_row": "Gemma 4 26B-A4B / OpenCode"
+        }
+      },
+      "micro_over_all_negatives_incl_untyped (T=850)": {
+        "all_rows": {
+          "n_rows": 15,
+          "mean_implied_n_c": 328.71,
+          "stdev_implied_n_c": 12.96,
+          "intersection_of_rounding_intervals": [
+            366.23,
+            321.28
+          ],
+          "consistent_integers": [],
+          "binding_lower_row": "Gemini 3.1 Pro / Gemini CLI"
+        },
+        "excluding_splitter_row": {
+          "n_rows": 14,
+          "mean_implied_n_c": 329.15,
+          "stdev_implied_n_c": 13.31,
+          "intersection_of_rounding_intervals": [
+            366.23,
+            321.28
+          ],
+          "consistent_integers": [],
+          "binding_lower_row": "Gemini 3.1 Pro / Gemini CLI"
+        }
+      }
+    },
+    "supported_hypotheses": [
+      "micro_over_typed_negatives (T=844)"
+    ],
+    "conclusion": "Micro-averaging over typed negatives fits every non-splitter row with one model-independent count (n_c in [313]; stdev of per-row implied values 0.78), while the T=850 hypothesis does not (stdev 12.96). The splitter row misses the rounding interval by ~0.1 point, consistent with S8's note that it is affected by its splitter role. Aggregate MT is implemented as exact-type matches over typed negatives; untyped negatives stay in binary denominators only. Inference, not a released definition."
+  },
+  "analysis_legacy_composition": {
+    "method": "Exhaustive search over P in [1, total-1]; a candidate survives only if every model's positive and negative accuracy equals round(100*k/denominator, 1) for some integer k.",
+    "subsets": {
+      "AH-legacy": {
+        "table_id": "S8.T1",
+        "total": 605,
+        "feasible_positive_negative": [
+          [
+            287,
+            318
+          ]
+        ]
+      },
+      "AH-S-legacy": {
+        "table_id": "S8.T2",
+        "total": 768,
+        "feasible_positive_negative": [
+          [
+            236,
+            532
+          ]
+        ]
+      }
+    },
+    "consistency_with_release": {
+      "positives_sum": 523,
+      "negatives_sum": 850,
+      "matches_523_850": true
+    },
+    "implied_failure_typing": {
+      "AH-legacy": {
+        "typed_negatives": 313,
+        "untyped_negatives": 5
+      },
+      "AH-S-legacy": {
+        "typed_negatives": 531,
+        "untyped_negatives": 1
+      },
+      "untyped_total": 6,
+      "matches_6_untyped": true
+    },
+    "status": "inferred reconciliation target; verify against released legacy label files when obtainable"
+  }
+}
