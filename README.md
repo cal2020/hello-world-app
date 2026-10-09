@@ -1,5 +1,7 @@
 # Evidence Link Bench
 
+**Live demo:** https://cal2020.github.io/hello-world-app/ · **Docs:** [Project overview](docs/OVERVIEW.md) · [Roadmap](docs/ROADMAP.md)
+
 A working demonstrator of AI-assisted linking between requirements (e.g. a Cameo model) and external test evidence. It keeps each responsibility in one place:
 
 1. **Integration code retrieves** authoritative records, preserving IDs, revisions, relationship types and access markings.
@@ -20,8 +22,19 @@ npm install
 npm run dev           # local dev server
 npm test              # deterministic checks, staleness, fixtures
 npm run build         # static site in dist/
+npm run build:public  # static site without the interview notes tab
 npm run build:single  # one self-contained HTML file in dist-artifact/
 ```
+
+## Deploy
+
+The public site is served by GitHub Pages from the root of the `gh-pages` branch. Other apps live in subfolders of that branch, so deploy with the script, which replaces only this app's root files:
+
+```sh
+npm run deploy:pages
+```
+
+Don't use tools that rewrite the whole branch (for example `npx gh-pages -d dist`); they would delete the other apps.
 
 ## Layout
 
@@ -33,3 +46,5 @@ npm run build:single  # one self-contained HTML file in dist-artifact/
 | `src/audit.js` | Decision records, fingerprints, staleness on revision change |
 | `src/content.js` | Evaluation plan and interview notes tabs |
 | `src/main.js` | UI |
+| `scripts/deploy-pages.sh` | Publishes the public build to the `gh-pages` root |
+| `docs/` | Project overview and roadmap |
