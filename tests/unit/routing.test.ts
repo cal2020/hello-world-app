@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPath, normalizeBase, parseLocation, routesEqual, type Route } from '../../src/app/routing';
+import { buildPath, isRouteHash, normalizeBase, parseAddress, parseLocation, routeHref, routesEqual, type Route } from '../../src/app/routing';
 import { STRUCTURE_META } from '../../src/content/structures';
 import { LANGS } from '../../src/i18n/languages';
 
@@ -71,5 +71,25 @@ describe('routes', () => {
     expect(normalizeBase('')).toBe('/');
     expect(normalizeBase('atlas')).toBe('/atlas/');
     expect(normalizeBase('/atlas/')).toBe('/atlas/');
+  });
+
+  it('hash routing keeps the whole route after "#" and ignores the page path', () => {
+    const closeup: Route = { lang: 'fr', page: 'cell', structure: 'mitochondria', view: 'closeup', detail: 1 };
+    const href = routeHref(closeup, '/ignored/', true);
+    expect(href).toBe('#/fr/mitochondria/?view=closeup&detail=atp-synthase');
+    // The page itself can live at any path; only the hash is read.
+    const parsed = parseAddress({ pathname: '/artifact/abc/index.html', search: '?x=1', hash: href }, '/ignored/', true);
+    expect(parsed.kind).toBe('route');
+    if (parsed.kind === 'route') expect(routesEqual(parsed.route, closeup)).toBe(true);
+    expect(parseAddress({ pathname: '/anything/', search: '', hash: '' }, '/', true).kind).toBe('root');
+    // Path mode is unchanged.
+    expect(routeHref(closeup, '/', false)).toBe(buildPath(closeup, '/'));
+  });
+
+  it('tells route hashes from in-page anchors', () => {
+    expect(isRouteHash('')).toBe(true);
+    expect(isRouteHash('#/en/nucleus/')).toBe(true);
+    expect(isRouteHash('#reading-panel')).toBe(false);
+    expect(isRouteHash('#atlas-golgi')).toBe(false);
   });
 });

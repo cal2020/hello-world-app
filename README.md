@@ -123,6 +123,7 @@ restore the selection, view and language without reloading.
 | `npm run dev` | Development server with hot reload (port 5173). |
 | `npm run build` | Type check, production build, prerender static pages into `dist/`. |
 | `npm run build:fast` | Build and prerender without the type check. |
+| `npm run build:demo` | Single-page build in `dist-demo/` for hosts that serve one fixed page: routes live after `#`, paths are relative, image export is left out. |
 | `npm run preview` | Serve `dist/` on port 4173. |
 | `npm run typecheck` | TypeScript project check (`tsc -b`). |
 | `npm run lint` | ESLint (TypeScript, React hooks, fast refresh). |

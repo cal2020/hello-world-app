@@ -11,6 +11,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build && tsx scripts/prerender.ts",
     "build:fast": "vite build && tsx scripts/prerender.ts",
+    "build:demo": "vite build --mode demo --base ./ --outDir dist-demo",
     "preview": "vite preview --port 4173 --strictPort",
     "typecheck": "tsc -b",
     "lint": "eslint .",

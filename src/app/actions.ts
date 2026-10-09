@@ -3,7 +3,7 @@ import type { StructureId } from '../content/types';
 import { englishMessages, loadMessages } from '../i18n/load';
 import { LANG_INFO, type Lang } from '../i18n/languages';
 import { createTranslator } from '../i18n/translator';
-import { buildPath, routesEqual, type InspectView, type Route } from './routing';
+import { routeHref, routesEqual, type InspectView, type Route } from './routing';
 import { saveLanguagePreference, saveSettings, type Settings } from './settings';
 import {
   appStore,
@@ -48,7 +48,7 @@ export function currentBase(): string {
 
 function commitHistory(route: Route, mode: HistoryMode): void {
   if (mode === 'none') return;
-  const url = buildPath(route, basePath);
+  const url = routeHref(route, basePath);
   const state = { hca: true, route };
   if (mode === 'push') historyPort.push(url, state);
   else historyPort.replace(url, state);

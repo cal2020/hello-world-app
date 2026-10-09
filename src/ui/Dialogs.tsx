@@ -1,6 +1,6 @@
 import { useApp, useT } from '../app/store';
 import { closeAbout, closeModal, openAbout, showTextAtlas } from '../app/actions';
-import { exportImage } from '../app/exportAction';
+import { EXPORT_AVAILABLE, exportImage } from '../app/exportAction';
 import { DEFAULT_READING_MS } from '../app/tour';
 import { AboutContent } from './AboutContent';
 import { Dialog } from './Dialog';
@@ -40,8 +40,12 @@ function HelpDialog() {
       <p>{t.t('help.freeze')}</p>
       <h3>{t.t('help.qualityTitle')}</h3>
       <p>{t.t('help.quality')}</p>
-      <h3>{t.t('help.exportTitle')}</h3>
-      <p>{t.t('help.export')}</p>
+      {EXPORT_AVAILABLE && (
+        <>
+          <h3>{t.t('help.exportTitle')}</h3>
+          <p>{t.t('help.export')}</p>
+        </>
+      )}
       <h3>{t.t('help.shortcutsTitle')}</h3>
       <p>{t.t('help.shortcutsNote')}</p>
       <table className="shortcut-table">
@@ -115,14 +119,18 @@ function SettingsDialog() {
           <MotionSelect id="settings-motion" />
           <span>{t.t('controls.motionHint')}</span>
         </label>
-        <button type="button" className="btn" onClick={() => void exportImage('clean')} data-testid="export-clean">
-          <Icon name="camera" />
-          {t.t('export.clean')}
-        </button>
-        <button type="button" className="btn" onClick={() => void exportImage('annotated')} data-testid="export-annotated">
-          <Icon name="camera" />
-          {t.t('export.annotated')}
-        </button>
+        {EXPORT_AVAILABLE && (
+          <>
+            <button type="button" className="btn" onClick={() => void exportImage('clean')} data-testid="export-clean">
+              <Icon name="camera" />
+              {t.t('export.clean')}
+            </button>
+            <button type="button" className="btn" onClick={() => void exportImage('annotated')} data-testid="export-annotated">
+              <Icon name="camera" />
+              {t.t('export.annotated')}
+            </button>
+          </>
+        )}
         <button
           type="button"
           className="btn"

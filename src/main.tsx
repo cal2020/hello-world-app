@@ -5,7 +5,7 @@ import './styles/app.css';
 import { App } from './App';
 import { appStore, reducedMotion } from './app/store';
 import { configureHistory, ensureScriptFonts, pushToast } from './app/actions';
-import { buildPath, parseLocation, type Route } from './app/routing';
+import { buildPath, HASH_ROUTING, parseAddress, routeHref, type Route } from './app/routing';
 import { loadLanguagePreference, loadSettings } from './app/settings';
 import { computeLayout } from './app/hooks';
 import { matchLanguage } from './i18n/languages';
@@ -28,8 +28,24 @@ async function boot() {
     base,
   );
 
+  if (HASH_ROUTING) {
+    // In-page anchors (skip links, citations, text-atlas contents) scroll and move focus
+    // without replacing the route that lives in the hash.
+    document.addEventListener('click', (event) => {
+      const link = event.target instanceof Element ? event.target.closest('a[href^="#"]') : null;
+      const href = link?.getAttribute('href');
+      if (!href || href.startsWith('#/')) return;
+      event.preventDefault();
+      const target = href.length > 1 ? document.getElementById(decodeURIComponent(href.slice(1))) : null;
+      if (!target) return;
+      if (!target.matches('a[href], button, input, select, textarea, [tabindex]')) target.setAttribute('tabindex', '-1');
+      target.scrollIntoView({ block: 'start' });
+      target.focus({ preventScroll: true });
+    });
+  }
+
   const preferred = () => loadLanguagePreference() ?? matchLanguage(navigator.languages ?? [navigator.language]);
-  const parsed = parseLocation(window.location.pathname, window.location.search, base);
+  const parsed = parseAddress(window.location, base);
   let route: Route;
   let notFound = false;
   const keepSearch = (path: string) => {
@@ -41,14 +57,16 @@ async function boot() {
     if (!rest) return path;
     return path.includes('?') ? `${path}&${rest}` : `${path}?${rest}`;
   };
+  // In hash mode the query string outside the hash is kept by the browser.
+  const addressFor = (r: Route) => (HASH_ROUTING ? routeHref(r, base) : keepSearch(buildPath(r, base)));
   if (parsed.kind === 'route') {
     route = parsed.route;
-    if (!parsed.canonical) window.history.replaceState(null, '', keepSearch(buildPath(route, base)));
+    if (!parsed.canonical) window.history.replaceState(null, '', addressFor(route));
   } else {
     const lang = parsed.kind === 'not-found' && parsed.lang ? parsed.lang : preferred();
     route = { lang, page: 'cell', structure: null, view: 'cell' };
     notFound = parsed.kind === 'not-found';
-    window.history.replaceState(null, '', keepSearch(buildPath(route, base)));
+    window.history.replaceState(null, '', addressFor(route));
   }
 
   let translator;

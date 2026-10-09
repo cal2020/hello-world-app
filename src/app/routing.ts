@@ -102,6 +102,36 @@ export function parseLocation(pathname: string, search: string, base = '/'): Par
   return { kind: 'route', route, canonical };
 }
 
+/**
+ * Hash routing, for hosts that serve one fixed page (for example an embedded
+ * demo): the route lives after "#" ("#/en/nucleus/?view=closeup"). Turned on at
+ * build time with VITE_ROUTER=hash; path routing stays the default.
+ */
+export const HASH_ROUTING: boolean = import.meta.env?.VITE_ROUTER === 'hash';
+
+/** The address-bar URL for a route, in path or hash form. */
+export function routeHref(route: Route, base = '/', hashMode = HASH_ROUTING): string {
+  return hashMode ? `#${buildPath(route, '/')}` : buildPath(route, base);
+}
+
+/** True for a hash that holds a route rather than an in-page anchor such as "#reading-panel". */
+export function isRouteHash(hash: string): boolean {
+  return hash === '' || hash === '#' || hash.startsWith('#/');
+}
+
+/** Parses an address (window.location by default) in path or hash form. */
+export function parseAddress(
+  location: { pathname: string; search: string; hash: string },
+  base = '/',
+  hashMode = HASH_ROUTING,
+): ParsedLocation {
+  if (!hashMode) return parseLocation(location.pathname, location.search, base);
+  const hash = location.hash.startsWith('#') ? location.hash.slice(1) : location.hash;
+  const query = hash.indexOf('?');
+  const path = query >= 0 ? hash.slice(0, query) : hash;
+  return parseLocation(path || '/', query >= 0 ? hash.slice(query) : '', '/');
+}
+
 export function routesEqual(a: Route, b: Route): boolean {
   const detailA = a.view === 'closeup' ? (a.detail ?? 0) : 0;
   const detailB = b.view === 'closeup' ? (b.detail ?? 0) : 0;

@@ -5,6 +5,7 @@ import { getEngineController, overlays } from '../app/engineBridge';
 import type { QualitySetting } from '../app/quality';
 import type { MotionSetting } from '../app/settings';
 import { Icon } from './icons';
+import { EXPORT_AVAILABLE } from '../app/exportAction';
 
 export function TourButton() {
   const t = useT();
@@ -166,6 +167,7 @@ export function TextAtlasButton({ iconOnly }: { iconOnly?: boolean }) {
 
 export function ExportButton({ iconOnly }: { iconOnly?: boolean }) {
   const t = useT();
+  if (!EXPORT_AVAILABLE) return null;
   return (
     <button
       type="button"

@@ -14,7 +14,7 @@ import {
   toggleLabels,
 } from './actions';
 import { applyHead, headInfo } from './head';
-import { parseLocation } from './routing';
+import { isRouteHash, parseAddress, HASH_ROUTING } from './routing';
 import { getEngineController } from './engineBridge';
 
 export function computeLayout(width: number, height: number): Layout {
@@ -66,7 +66,9 @@ export function useHeadSync(): void {
 export function usePopstate(): void {
   useEffect(() => {
     const onPop = () => {
-      const parsed = parseLocation(window.location.pathname, window.location.search, currentBase());
+      // An in-page anchor in hash mode is not a route change.
+      if (HASH_ROUTING && !isRouteHash(window.location.hash)) return;
+      const parsed = parseAddress(window.location, currentBase());
       if (parsed.kind === 'route') void applyRoute(parsed.route);
     };
     window.addEventListener('popstate', onPop);

@@ -78,7 +78,11 @@ Node.js ≥ 22.12 is required (Vite 8 / Vitest 5 engines).
   close-up view, `/{lang}/about/`. Slugs are stable English identifiers shared
   by every language; titles, descriptions and alternate links are localised.
   `/` redirects to the saved or browser language. Every route is also
-  prerendered as a static page (`scripts/prerender.ts`).
+  prerendered as a static page (`scripts/prerender.ts`). For hosts that serve
+  one fixed page, `npm run build:demo` keeps the same route after `#`
+  (`#/en/nucleus/?view=closeup`), uses relative paths and leaves out image
+  export, which needs downloads; in-page anchors then scroll without touching
+  the route.
 * **Navigation wraps.** Previous/next and arrow keys wrap from the last
   structure to the first and vice versa (stated in Help and on the controls).
 * **Tour.** Uses `history.replaceState` for its steps so that a tour does not
