@@ -252,6 +252,9 @@ def reconcile(root: Path, private_root: Path, ctx: dict) -> dict:
 
     if ctx.get("synthetic"):
         results.append({"check": "release_totals", "status": "not_applicable", "detail": "synthetic fixture"})
+    elif ctx.get("benchmark", "agenthorizon") != "agenthorizon":
+        results.append({"check": "release_totals", "status": "not_applicable",
+                        "detail": f"supplemental benchmark {ctx.get('benchmark')}: AgentHorizon release targets do not apply"})
     else:
         got = comp(examples)
         tgt = RELEASE_TARGETS

@@ -24,6 +24,17 @@ test("coverage, explorer, inspection, pair views", async ({ page }, ti) => {
   await expect(page.getByText("Synthetic test fixture — not benchmark content").first()).toBeVisible();
   await expect(page.getByText("Exact reproduction of the paper's AH / AH-S tables is blocked")).toBeVisible();
   await shot(page, "A-coverage", ti.project.name);
+  // Supplemental sources imported from the pinned AgentRewardBench / OSWorld checkouts (real annotations and
+  // task definitions, no trajectories) — shown apart from the AgentHorizon dataset.
+  const supp = page.getByRole("heading", { name: "Supplemental sources (kept separate)" });
+  await supp.scrollIntoViewIfNeeded();
+  await expect(page.getByRole("heading", { name: "AgentRewardBench" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Annotator agreement in the release/ })).toBeVisible();
+  await page.evaluate(() => {
+    const h = [...document.querySelectorAll("h2")].find((e) => e.textContent?.startsWith("Supplemental sources"));
+    h?.scrollIntoView({ block: "start" });
+  });
+  await page.screenshot({ path: `${SHOTS}/A2-supplemental-${ti.project.name}.png`, fullPage: false });
 
   await page.goto(`/explore/${dv}?min_steps=300`);
   await expect(page.getByText(/matching examples/)).toBeVisible();

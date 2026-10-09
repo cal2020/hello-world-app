@@ -145,12 +145,14 @@ def data_ingest(
     revision: str = typer.Option("main", help="Dataset revision (branch, tag, or commit sha) to pin"),
     local_dir: Path | None = typer.Option(None, help="Directory mirroring the released layout (with --source local)"),
     media: str = typer.Option("none", help="none: index metadata only (lazy media); all: materialize every screenshot"),
+    benchmark: str = typer.Option("agenthorizon", help="Benchmark name (supplemental exports: agentrewardbench, osworld)"),
 ) -> None:
     """Discover, pin, download, validate, normalize, index, and reconcile a release."""
     from agenthorizon.data.ingest import IngestOptions, ingest
     from agenthorizon.sources.hf import HFError
 
-    opts = IngestOptions(source="local" if source == "local" else "hf", revision=revision, local_dir=local_dir, media=media)
+    opts = IngestOptions(source="local" if source == "local" else "hf", revision=revision, local_dir=local_dir, media=media,
+                         benchmark=benchmark)
     try:
         r = ingest(get_settings(), opts, log=typer.echo)
     except HFError as exc:
@@ -601,6 +603,52 @@ def evidence_experiments(output: Path = typer.Option(EVIDENCE_DIR / "EXPERIMENT_
     atomic_write_json(output, {"generated_at": utcnow_iso(), "dataset_version": dataset_version, "counts": counts,
                                "experiments": rows})
     typer.echo(f"{counts}  wrote {output}")
+
+
+# ---- supplemental sources -----------------------------------------------------------------------------------------
+supp_app = typer.Typer(no_args_is_help=True, help="Supplemental sources (AgentRewardBench, OSWorld): import, audit, export")
+app.add_typer(supp_app, name="supplemental")
+
+
+@supp_app.command("import")
+def supplemental_import(
+    source: str = typer.Argument(..., help="agentrewardbench | osworld"),
+    trajectories: Path | None = typer.Option(None, help="ARB: local snapshot of the Hugging Face dataset's cleaned/ directory"),
+    traces: Path | None = typer.Option(None, help="OSWorld: root of a harness results directory (offline trace export)"),
+    run_label: str = typer.Option("operator-run", help="OSWorld: label for the imported trace collection"),
+) -> None:
+    """Import a supplemental source into its own store (never into AgentHorizon datasets or denominators)."""
+    from agenthorizon.supplemental.pipeline import import_arb, import_osworld
+
+    s = get_settings()
+    if source == "agentrewardbench":
+        out = import_arb(s, trajectories)
+    elif source == "osworld":
+        out = import_osworld(s, traces, run_label)
+    else:
+        raise typer.BadParameter("source must be agentrewardbench or osworld")
+    typer.echo(json.dumps(out, indent=2, default=str)[:4000])
+
+
+@supp_app.command("audit")
+def supplemental_audit(output: Path = typer.Option(EVIDENCE_DIR / "DEDUP_AUDIT.json")) -> None:
+    """Exact/possible duplicates, aliases, intentional sharing, and AgentHorizon-overlap flags across all sources."""
+    from agenthorizon.supplemental.pipeline import run_audit
+
+    rep = run_audit(get_settings(), output)
+    typer.echo(json.dumps({k: (len(v) if isinstance(v, list) else v) for k, v in rep.items()
+                           if k not in ("method", "limitations")}, indent=2))
+
+
+@supp_app.command("export")
+def supplemental_export(store: Path = typer.Argument(..., help="Supplemental store directory (var/supplemental/<source>@<rev>)"),
+                        out: Path = typer.Option(..., "--out"), media_root: Path | None = typer.Option(None, "--media-root"),
+                        include_machine_labels: bool = typer.Option(False, "--include-machine-labels")) -> None:
+    """Write trajectories in the release layout for `data ingest --source local --benchmark <source>` (a separate dataset)."""
+    from agenthorizon.supplemental.pipeline import export_for_judging
+
+    typer.echo(json.dumps(export_for_judging(get_settings(), store, out, media_root=media_root,
+                                             include_machine_labels=include_machine_labels), indent=2))
 
 
 # ---- application: bootstrap, database, users, workers, servers -----------------------------------------------

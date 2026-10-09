@@ -169,6 +169,7 @@ def ingest(settings: Settings, opts: IngestOptions, log: Callable[[str], None] |
         bench = "fixture-synthetic" if synthetic else opts.benchmark
         rev = ctx["revision"][:12] if ctx["revision"] else f"local-{ctx['input_digest'][:12]}"
         ctx["synthetic"] = synthetic
+        ctx["benchmark"] = bench
         ctx["dv_id"] = f"{bench}@{rev}+n{NORMALIZER_VERSION.split('/')[-1]}"
         return {"dataset_version_id": ctx["dv_id"], "input_digest": ctx["input_digest"], "synthetic": synthetic}
 
@@ -445,11 +446,11 @@ def ingest(settings: Settings, opts: IngestOptions, log: Callable[[str], None] |
         out = []
         all_ids = sorted(e.example_id for e in ctx["examples"])
         out.append(Manifest(f"{dv_id}:full-release", "Full release (all normalized examples)", dv_id, "full-release",
-                            "evaluation", not ctx["synthetic"], all_ids,
+                            "evaluation", not ctx["synthetic"] and ctx.get("benchmark") == "agenthorizon", all_ids,
                             {"procedure": "all examples with valid structured trajectories"},
                             ["Quarantined records are excluded and listed in reports/validation.json."]))
         for fname, ids in sorted(ctx["membership"].items()):
-            if fname in LEGACY_LABEL_FILES:
+            if fname in LEGACY_LABEL_FILES and ctx.get("benchmark") in ("agenthorizon", "fixture-synthetic"):
                 mid, name = LEGACY_LABEL_FILES[fname]
                 out.append(Manifest(f"{dv_id}:{mid}", name, dv_id, "legacy-submitted", "evaluation", not ctx["synthetic"],
                                     sorted(ids), {"procedure": "membership of released label file", "label_file": fname},

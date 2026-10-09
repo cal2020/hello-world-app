@@ -1,0 +1,723 @@
+{
+  "generated_at": "2026-10-09T21:57:29Z",
+  "items": 1720,
+  "by_source": {
+    "agentrewardbench": {
+      "items": 1302,
+      "with_instruction": 0,
+      "with_screenshots": 0
+    },
+    "osworld": {
+      "items": 418,
+      "with_instruction": 418,
+      "with_screenshots": 0
+    }
+  },
+  "exact_instruction_duplicates": [
+    {
+      "normalized_instruction_sha256": "42901e5e8c11bdee810e06c38db3c6d8552f59cb77689c2bd5d2be1b99eb3115",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_calc/3aaa4e37-dc91-482e-99af-132a612d40f3",
+        "osworld-task:windows/excel/3aaa4e37-dc91-482e-99af-132a612d40f3"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "f6e5ea21b5eafabd5b8b0efbd7d3ef39847c24b2091bbe9bc4a81b4d277b8d38",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_calc/4188d3a4-077d-46b7-9c86-23e1a036f6c1",
+        "osworld-task:windows/excel/4188d3a4-077d-46b7-9c86-23e1a036f6c1"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "6500f7b7c1183d9c66dd7ed27f9d45ddabd9f02a211ebd69f24ee839e40acf34",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_impress/3b27600c-3668-4abd-8f84-7bcdebbccbdb",
+        "osworld-task:windows/ppt/3b27600c-3668-4abd-8f84-7bcdebbccbdb"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "f340dbdc42d1a6e3ba7016426d7b95257d493a366dd0c845b9060aa2dbff0afe",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_impress/5d901039-a89c-4bfb-967b-bf66f4df075e",
+        "osworld-task:windows/ppt/5d901039-a89c-4bfb-967b-bf66f4df075e"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "fd11b295a609fbfcda5474bfaf91e51825f5a8aa76e249bf124914b03cbe8a65",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_impress/a097acff-6266-4291-9fbd-137af7ecd439",
+        "osworld-task:windows/ppt/a097acff-6266-4291-9fbd-137af7ecd439"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "27d16369be71164eab49987e9138573899511fb09482007fc947382ccd1306c8",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_impress/ce88f674-ab7a-43da-9201-468d38539e4a",
+        "osworld-task:windows/ppt/ce88f674-ab7a-43da-9201-468d38539e4a"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "59f1a741ed31c97acf93335a0494038094055d8eca21f3e46d7b8d2d512d7257",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_writer/0810415c-bde4-4443-9047-d5f70165a697",
+        "osworld-task:windows/word/0810415c-bde4-4443-9047-d5f70165a697"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "bce27f3ad7069a5b4493866c01d95c5a7025caca8d59c6cd95967c39e18d4a9b",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_writer/0b17a146-2934-46c7-8727-73ff6b6483e8",
+        "osworld-task:windows/word/0b17a146-2934-46c7-8727-73ff6b6483e8"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "f4646a410bf8bcf6acb0538c08407076ca11d903ff09ae6a8c8edce9fb0a548b",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_writer/0e763496-b6bb-4508-a427-fad0b6c3e195",
+        "osworld-task:windows/word/0e763496-b6bb-4508-a427-fad0b6c3e195"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "9dd424b395efbd714f67049089992b516a72e21b6dac67269ee0218f2d07292c",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_writer/3ef2b351-8a84-4ff2-8724-d86eae9b842e",
+        "osworld-task:windows/word/3ef2b351-8a84-4ff2-8724-d86eae9b842e"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "6b67b130da27f7556cabe8fe707f8f9f484f002a4bcb3f1f8684e15a877f736c",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_writer/4bcb1253-a636-4df4-8cb0-a35c04dfef31",
+        "osworld-task:windows/word/4bcb1253-a636-4df4-8cb0-a35c04dfef31"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "5002c1e55521af7bf2831ba2e43cf5e85455cacd59613e1274db4223902a3ccb",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_writer/6f81754e-285d-4ce0-b59e-af7edb02d108",
+        "osworld-task:windows/word/6f81754e-285d-4ce0-b59e-af7edb02d108"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "c5236f4a48dabc03c6905f7b46a00cf0fc29f38933b74c6741fde5ae73b508f3",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_writer/ecc2413d-8a48-416e-a3a2-d30106ca36cb",
+        "osworld-task:windows/word/ecc2413d-8a48-416e-a3a2-d30106ca36cb"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "e24e3b60d4072d28e364df5a4974372a0c95a24189c5724a51d76bc44cf7446b",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/185f29bd-5da0-40a6-b69c-ba7f4e0324ef",
+        "osworld-task:windows/multi_app/185f29bd-5da0-40a6-b69c-ba7f4e0324ef"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "50cee70545484d7634e50d9b30a34f6fe3cf3648e547ae95750fb50b26bbf574",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/1f18aa87-af6f-41ef-9853-cdb8f32ebdea",
+        "osworld-task:windows/multi_app/1f18aa87-af6f-41ef-9853-cdb8f32ebdea"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "da83126d66dbb791a90518a01dbf5ef984d7539451ac669775269b44597c9d58",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/26150609-0da3-4a7d-8868-0faf9c5f01bb",
+        "osworld-task:windows/multi_app/26150609-0da3-4a7d-8868-0faf9c5f01bb"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "8b5db09bf134fa252a9575aa8e3b0522f121f0e4e1294f76aef737b37b11de3a",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/3a93cae4-ad3e-403e-8c12-65303b271818",
+        "osworld-task:windows/multi_app/3a93cae4-ad3e-403e-8c12-65303b271818"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "58402cb89ec78aed02157080d85e25fabc168833d3a6931b47d67b15604159e2",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/46407397-a7d5-4c6b-92c6-dbe038b1457b",
+        "osworld-task:windows/multi_app/46407397-a7d5-4c6b-92c6-dbe038b1457b"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "073822ff58d1c7d49aae5095589df38850f4330d94e8d7fda53e98e935b5b274",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/6f4073b8-d8ea-4ade-8a18-c5d1d5d5aa9a",
+        "osworld-task:windows/multi_app/6f4073b8-d8ea-4ade-8a18-c5d1d5d5aa9a"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "f33ed57872952cf06a66fc4c7a3340d36736a7521dd1ad619e5d40b4001dbba1",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/897e3b53-5d4d-444b-85cb-2cdc8a97d903",
+        "osworld-task:windows/multi_app/897e3b53-5d4d-444b-85cb-2cdc8a97d903"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "c026854d98803b6ed69c50f2c108d3af4af077c8e1edfa0fd18e7ac2a5a1adc9",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/8e116af7-7db7-4e35-a68b-b0939c066c78",
+        "osworld-task:windows/multi_app/8e116af7-7db7-4e35-a68b-b0939c066c78"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "ebfbd42a7d5e17c66cb529478b26b42abe0ea915ca8c2ef80902a493ebdbb295",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/c867c42d-a52d-4a24-8ae3-f75d256b5618",
+        "osworld-task:windows/multi_app/c867c42d-a52d-4a24-8ae3-f75d256b5618"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "64c4452f0f01e91cca074ba8e3f9564d2b06dfdc71fbce13de5fa3d2868b8735",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/d1acdb87-bb67-4f30-84aa-990e56a09c92",
+        "osworld-task:windows/multi_app/d1acdb87-bb67-4f30-84aa-990e56a09c92"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "4a87d92decafbb8e3f27e40362796d9510667a2ccc165a596047b5a92efbdc52",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/da52d699-e8d2-4dc5-9191-a2199e0b6a9b",
+        "osworld-task:windows/multi_app/da52d699-e8d2-4dc5-9191-a2199e0b6a9b"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "baffcf6aeca30ab8a85a2fad34cd206cf489e1963786965a00bf824e79c34a10",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/eb303e01-261e-4972-8c07-c9b4e7a4922a",
+        "osworld-task:windows/multi_app/eb303e01-261e-4972-8c07-c9b4e7a4922a"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    },
+    {
+      "normalized_instruction_sha256": "dbfe7b7b4a1ca8232367b483e514aa4b3ad5d786226e326c8ffb48c857c23626",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/f918266a-b3e0-4914-865d-4faa564f1aef",
+        "osworld-task:windows/multi_app/f918266a-b3e0-4914-865d-4faa564f1aef"
+      ],
+      "sources": [
+        "osworld"
+      ],
+      "cross_source": false
+    }
+  ],
+  "exact_screenshot_duplicates": [],
+  "intentional_shared_recordings": [],
+  "native_id_aliases": [
+    {
+      "native_id": "osworld:3aaa4e37-dc91-482e-99af-132a612d40f3",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_calc/3aaa4e37-dc91-482e-99af-132a612d40f3",
+        "osworld-task:windows/excel/3aaa4e37-dc91-482e-99af-132a612d40f3"
+      ]
+    },
+    {
+      "native_id": "osworld:4188d3a4-077d-46b7-9c86-23e1a036f6c1",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_calc/4188d3a4-077d-46b7-9c86-23e1a036f6c1",
+        "osworld-task:windows/excel/4188d3a4-077d-46b7-9c86-23e1a036f6c1"
+      ]
+    },
+    {
+      "native_id": "osworld:51b11269-2ca8-4b2a-9163-f21758420e78",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_calc/51b11269-2ca8-4b2a-9163-f21758420e78",
+        "osworld-task:windows/excel/51b11269-2ca8-4b2a-9163-f21758420e78"
+      ]
+    },
+    {
+      "native_id": "osworld:6054afcb-5bab-4702-90a0-b259b5d3217c",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_calc/6054afcb-5bab-4702-90a0-b259b5d3217c",
+        "osworld-task:windows/excel/6054afcb-5bab-4702-90a0-b259b5d3217c"
+      ]
+    },
+    {
+      "native_id": "osworld:7a4e4bc8-922c-4c84-865c-25ba34136be1",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_calc/7a4e4bc8-922c-4c84-865c-25ba34136be1",
+        "osworld-task:windows/excel/7a4e4bc8-922c-4c84-865c-25ba34136be1"
+      ]
+    },
+    {
+      "native_id": "osworld:7efeb4b1-3d19-4762-b163-63328d66303b",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_calc/7efeb4b1-3d19-4762-b163-63328d66303b",
+        "osworld-task:windows/excel/7efeb4b1-3d19-4762-b163-63328d66303b"
+      ]
+    },
+    {
+      "native_id": "osworld:8b1ce5f2-59d2-4dcc-b0b0-666a714b9a14",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_calc/8b1ce5f2-59d2-4dcc-b0b0-666a714b9a14",
+        "osworld-task:windows/excel/8b1ce5f2-59d2-4dcc-b0b0-666a714b9a14"
+      ]
+    },
+    {
+      "native_id": "osworld:a9f325aa-8c05-4e4f-8341-9e4358565f4f",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_calc/a9f325aa-8c05-4e4f-8341-9e4358565f4f",
+        "osworld-task:windows/excel/a9f325aa-8c05-4e4f-8341-9e4358565f4f"
+      ]
+    },
+    {
+      "native_id": "osworld:abed40dc-063f-4598-8ba5-9fe749c0615d",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_calc/abed40dc-063f-4598-8ba5-9fe749c0615d",
+        "osworld-task:windows/excel/abed40dc-063f-4598-8ba5-9fe749c0615d"
+      ]
+    },
+    {
+      "native_id": "osworld:eb03d19a-b88d-4de4-8a64-ca0ac66f426b",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_calc/eb03d19a-b88d-4de4-8a64-ca0ac66f426b",
+        "osworld-task:windows/excel/eb03d19a-b88d-4de4-8a64-ca0ac66f426b"
+      ]
+    },
+    {
+      "native_id": "osworld:ecb0df7a-4e8d-4a03-b162-053391d3afaf",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_calc/ecb0df7a-4e8d-4a03-b162-053391d3afaf",
+        "osworld-task:windows/excel/ecb0df7a-4e8d-4a03-b162-053391d3afaf"
+      ]
+    },
+    {
+      "native_id": "osworld:3b27600c-3668-4abd-8f84-7bcdebbccbdb",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_impress/3b27600c-3668-4abd-8f84-7bcdebbccbdb",
+        "osworld-task:windows/ppt/3b27600c-3668-4abd-8f84-7bcdebbccbdb"
+      ]
+    },
+    {
+      "native_id": "osworld:455d3c66-7dc6-4537-a39a-36d3e9119df7",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_impress/455d3c66-7dc6-4537-a39a-36d3e9119df7",
+        "osworld-task:windows/ppt/455d3c66-7dc6-4537-a39a-36d3e9119df7"
+      ]
+    },
+    {
+      "native_id": "osworld:550ce7e7-747b-495f-b122-acdc4d0b8e54",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_impress/550ce7e7-747b-495f-b122-acdc4d0b8e54",
+        "osworld-task:windows/ppt/550ce7e7-747b-495f-b122-acdc4d0b8e54"
+      ]
+    },
+    {
+      "native_id": "osworld:5d901039-a89c-4bfb-967b-bf66f4df075e",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_impress/5d901039-a89c-4bfb-967b-bf66f4df075e",
+        "osworld-task:windows/ppt/5d901039-a89c-4bfb-967b-bf66f4df075e"
+      ]
+    },
+    {
+      "native_id": "osworld:9ec204e4-f0a3-42f8-8458-b772a6797cab",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_impress/9ec204e4-f0a3-42f8-8458-b772a6797cab",
+        "osworld-task:windows/ppt/9ec204e4-f0a3-42f8-8458-b772a6797cab"
+      ]
+    },
+    {
+      "native_id": "osworld:a097acff-6266-4291-9fbd-137af7ecd439",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_impress/a097acff-6266-4291-9fbd-137af7ecd439",
+        "osworld-task:windows/ppt/a097acff-6266-4291-9fbd-137af7ecd439"
+      ]
+    },
+    {
+      "native_id": "osworld:ce88f674-ab7a-43da-9201-468d38539e4a",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_impress/ce88f674-ab7a-43da-9201-468d38539e4a",
+        "osworld-task:windows/ppt/ce88f674-ab7a-43da-9201-468d38539e4a"
+      ]
+    },
+    {
+      "native_id": "osworld:0810415c-bde4-4443-9047-d5f70165a697",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_writer/0810415c-bde4-4443-9047-d5f70165a697",
+        "osworld-task:windows/word/0810415c-bde4-4443-9047-d5f70165a697"
+      ]
+    },
+    {
+      "native_id": "osworld:0b17a146-2934-46c7-8727-73ff6b6483e8",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_writer/0b17a146-2934-46c7-8727-73ff6b6483e8",
+        "osworld-task:windows/word/0b17a146-2934-46c7-8727-73ff6b6483e8"
+      ]
+    },
+    {
+      "native_id": "osworld:0e763496-b6bb-4508-a427-fad0b6c3e195",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_writer/0e763496-b6bb-4508-a427-fad0b6c3e195",
+        "osworld-task:windows/word/0e763496-b6bb-4508-a427-fad0b6c3e195"
+      ]
+    },
+    {
+      "native_id": "osworld:3ef2b351-8a84-4ff2-8724-d86eae9b842e",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_writer/3ef2b351-8a84-4ff2-8724-d86eae9b842e",
+        "osworld-task:windows/word/3ef2b351-8a84-4ff2-8724-d86eae9b842e"
+      ]
+    },
+    {
+      "native_id": "osworld:4bcb1253-a636-4df4-8cb0-a35c04dfef31",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_writer/4bcb1253-a636-4df4-8cb0-a35c04dfef31",
+        "osworld-task:windows/word/4bcb1253-a636-4df4-8cb0-a35c04dfef31"
+      ]
+    },
+    {
+      "native_id": "osworld:6f81754e-285d-4ce0-b59e-af7edb02d108",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_writer/6f81754e-285d-4ce0-b59e-af7edb02d108",
+        "osworld-task:windows/word/6f81754e-285d-4ce0-b59e-af7edb02d108"
+      ]
+    },
+    {
+      "native_id": "osworld:b21acd93-60fd-4127-8a43-2f5178f4a830",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_writer/b21acd93-60fd-4127-8a43-2f5178f4a830",
+        "osworld-task:windows/word/b21acd93-60fd-4127-8a43-2f5178f4a830"
+      ]
+    },
+    {
+      "native_id": "osworld:e528b65e-1107-4b8c-8988-490e4fece599",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_writer/e528b65e-1107-4b8c-8988-490e4fece599",
+        "osworld-task:windows/word/e528b65e-1107-4b8c-8988-490e4fece599"
+      ]
+    },
+    {
+      "native_id": "osworld:ecc2413d-8a48-416e-a3a2-d30106ca36cb",
+      "members": [
+        "osworld-task:ubuntu/libreoffice_writer/ecc2413d-8a48-416e-a3a2-d30106ca36cb",
+        "osworld-task:windows/word/ecc2413d-8a48-416e-a3a2-d30106ca36cb"
+      ]
+    },
+    {
+      "native_id": "osworld:09a37c51-e625-49f4-a514-20a773797a8a",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/09a37c51-e625-49f4-a514-20a773797a8a",
+        "osworld-task:windows/multi_app/09a37c51-e625-49f4-a514-20a773797a8a"
+      ]
+    },
+    {
+      "native_id": "osworld:185f29bd-5da0-40a6-b69c-ba7f4e0324ef",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/185f29bd-5da0-40a6-b69c-ba7f4e0324ef",
+        "osworld-task:windows/multi_app/185f29bd-5da0-40a6-b69c-ba7f4e0324ef"
+      ]
+    },
+    {
+      "native_id": "osworld:1f18aa87-af6f-41ef-9853-cdb8f32ebdea",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/1f18aa87-af6f-41ef-9853-cdb8f32ebdea",
+        "osworld-task:windows/multi_app/1f18aa87-af6f-41ef-9853-cdb8f32ebdea"
+      ]
+    },
+    {
+      "native_id": "osworld:26150609-0da3-4a7d-8868-0faf9c5f01bb",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/26150609-0da3-4a7d-8868-0faf9c5f01bb",
+        "osworld-task:windows/multi_app/26150609-0da3-4a7d-8868-0faf9c5f01bb"
+      ]
+    },
+    {
+      "native_id": "osworld:26660ad1-6ebb-4f59-8cba-a8432dfe8d38",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/26660ad1-6ebb-4f59-8cba-a8432dfe8d38",
+        "osworld-task:windows/multi_app/26660ad1-6ebb-4f59-8cba-a8432dfe8d38"
+      ]
+    },
+    {
+      "native_id": "osworld:2c1ebcd7-9c6d-4c9a-afad-900e381ecd5e",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/2c1ebcd7-9c6d-4c9a-afad-900e381ecd5e",
+        "osworld-task:windows/multi_app/2c1ebcd7-9c6d-4c9a-afad-900e381ecd5e"
+      ]
+    },
+    {
+      "native_id": "osworld:3a93cae4-ad3e-403e-8c12-65303b271818",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/3a93cae4-ad3e-403e-8c12-65303b271818",
+        "osworld-task:windows/multi_app/3a93cae4-ad3e-403e-8c12-65303b271818"
+      ]
+    },
+    {
+      "native_id": "osworld:46407397-a7d5-4c6b-92c6-dbe038b1457b",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/46407397-a7d5-4c6b-92c6-dbe038b1457b",
+        "osworld-task:windows/multi_app/46407397-a7d5-4c6b-92c6-dbe038b1457b"
+      ]
+    },
+    {
+      "native_id": "osworld:6d72aad6-187a-4392-a4c4-ed87269c51cf",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/6d72aad6-187a-4392-a4c4-ed87269c51cf",
+        "osworld-task:windows/multi_app/6d72aad6-187a-4392-a4c4-ed87269c51cf"
+      ]
+    },
+    {
+      "native_id": "osworld:6f4073b8-d8ea-4ade-8a18-c5d1d5d5aa9a",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/6f4073b8-d8ea-4ade-8a18-c5d1d5d5aa9a",
+        "osworld-task:windows/multi_app/6f4073b8-d8ea-4ade-8a18-c5d1d5d5aa9a"
+      ]
+    },
+    {
+      "native_id": "osworld:74d5859f-ed66-4d3e-aa0e-93d7a592ce41",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/74d5859f-ed66-4d3e-aa0e-93d7a592ce41",
+        "osworld-task:windows/multi_app/74d5859f-ed66-4d3e-aa0e-93d7a592ce41"
+      ]
+    },
+    {
+      "native_id": "osworld:897e3b53-5d4d-444b-85cb-2cdc8a97d903",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/897e3b53-5d4d-444b-85cb-2cdc8a97d903",
+        "osworld-task:windows/multi_app/897e3b53-5d4d-444b-85cb-2cdc8a97d903"
+      ]
+    },
+    {
+      "native_id": "osworld:8e116af7-7db7-4e35-a68b-b0939c066c78",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/8e116af7-7db7-4e35-a68b-b0939c066c78",
+        "osworld-task:windows/multi_app/8e116af7-7db7-4e35-a68b-b0939c066c78"
+      ]
+    },
+    {
+      "native_id": "osworld:a82b78bb-7fde-4cb3-94a4-035baf10bcf0",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/a82b78bb-7fde-4cb3-94a4-035baf10bcf0",
+        "osworld-task:windows/multi_app/a82b78bb-7fde-4cb3-94a4-035baf10bcf0"
+      ]
+    },
+    {
+      "native_id": "osworld:b5062e3e-641c-4e3a-907b-ac864d2e7652",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/b5062e3e-641c-4e3a-907b-ac864d2e7652",
+        "osworld-task:windows/multi_app/b5062e3e-641c-4e3a-907b-ac864d2e7652"
+      ]
+    },
+    {
+      "native_id": "osworld:c867c42d-a52d-4a24-8ae3-f75d256b5618",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/c867c42d-a52d-4a24-8ae3-f75d256b5618",
+        "osworld-task:windows/multi_app/c867c42d-a52d-4a24-8ae3-f75d256b5618"
+      ]
+    },
+    {
+      "native_id": "osworld:d1acdb87-bb67-4f30-84aa-990e56a09c92",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/d1acdb87-bb67-4f30-84aa-990e56a09c92",
+        "osworld-task:windows/multi_app/d1acdb87-bb67-4f30-84aa-990e56a09c92"
+      ]
+    },
+    {
+      "native_id": "osworld:da52d699-e8d2-4dc5-9191-a2199e0b6a9b",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/da52d699-e8d2-4dc5-9191-a2199e0b6a9b",
+        "osworld-task:windows/multi_app/da52d699-e8d2-4dc5-9191-a2199e0b6a9b"
+      ]
+    },
+    {
+      "native_id": "osworld:deec51c9-3b1e-4b9e-993c-4776f20e8bb2",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/deec51c9-3b1e-4b9e-993c-4776f20e8bb2",
+        "osworld-task:windows/multi_app/deec51c9-3b1e-4b9e-993c-4776f20e8bb2"
+      ]
+    },
+    {
+      "native_id": "osworld:e2392362-125e-4f76-a2ee-524b183a3412",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/e2392362-125e-4f76-a2ee-524b183a3412",
+        "osworld-task:windows/multi_app/e2392362-125e-4f76-a2ee-524b183a3412"
+      ]
+    },
+    {
+      "native_id": "osworld:eb303e01-261e-4972-8c07-c9b4e7a4922a",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/eb303e01-261e-4972-8c07-c9b4e7a4922a",
+        "osworld-task:windows/multi_app/eb303e01-261e-4972-8c07-c9b4e7a4922a"
+      ]
+    },
+    {
+      "native_id": "osworld:f918266a-b3e0-4914-865d-4faa564f1aef",
+      "members": [
+        "osworld-task:ubuntu/multi_apps/f918266a-b3e0-4914-865d-4faa564f1aef",
+        "osworld-task:windows/multi_app/f918266a-b3e0-4914-865d-4faa564f1aef"
+      ]
+    }
+  ],
+  "possible_duplicates": [
+    {
+      "a": "osworld-task:ubuntu/multi_apps/e2392362-125e-4f76-a2ee-524b183a3412",
+      "b": "osworld-task:windows/multi_app/e2392362-125e-4f76-a2ee-524b183a3412",
+      "jaccard": 0.979,
+      "cross_source": false,
+      "decision": "review (never auto-merged)"
+    },
+    {
+      "a": "osworld-task:ubuntu/multi_apps/74d5859f-ed66-4d3e-aa0e-93d7a592ce41",
+      "b": "osworld-task:windows/multi_app/74d5859f-ed66-4d3e-aa0e-93d7a592ce41",
+      "jaccard": 0.971,
+      "cross_source": false,
+      "decision": "review (never auto-merged)"
+    },
+    {
+      "a": "osworld-task:ubuntu/multi_apps/b5062e3e-641c-4e3a-907b-ac864d2e7652",
+      "b": "osworld-task:windows/multi_app/b5062e3e-641c-4e3a-907b-ac864d2e7652",
+      "jaccard": 0.967,
+      "cross_source": false,
+      "decision": "review (never auto-merged)"
+    },
+    {
+      "a": "osworld-task:ubuntu/libreoffice_impress/550ce7e7-747b-495f-b122-acdc4d0b8e54",
+      "b": "osworld-task:windows/ppt/550ce7e7-747b-495f-b122-acdc4d0b8e54",
+      "jaccard": 0.96,
+      "cross_source": false,
+      "decision": "review (never auto-merged)"
+    },
+    {
+      "a": "osworld-task:ubuntu/libreoffice_writer/b21acd93-60fd-4127-8a43-2f5178f4a830",
+      "b": "osworld-task:windows/word/b21acd93-60fd-4127-8a43-2f5178f4a830",
+      "jaccard": 0.893,
+      "cross_source": false,
+      "decision": "review (never auto-merged)"
+    },
+    {
+      "a": "osworld-task:ubuntu/multi_apps/a82b78bb-7fde-4cb3-94a4-035baf10bcf0",
+      "b": "osworld-task:windows/multi_app/a82b78bb-7fde-4cb3-94a4-035baf10bcf0",
+      "jaccard": 0.864,
+      "cross_source": false,
+      "decision": "review (never auto-merged)"
+    },
+    {
+      "a": "osworld-task:ubuntu/multi_apps/deec51c9-3b1e-4b9e-993c-4776f20e8bb2",
+      "b": "osworld-task:windows/multi_app/deec51c9-3b1e-4b9e-993c-4776f20e8bb2",
+      "jaccard": 0.85,
+      "cross_source": false,
+      "decision": "review (never auto-merged)"
+    },
+    {
+      "a": "osworld-task:ubuntu/libreoffice_calc/6054afcb-5bab-4702-90a0-b259b5d3217c",
+      "b": "osworld-task:windows/excel/6054afcb-5bab-4702-90a0-b259b5d3217c",
+      "jaccard": 0.842,
+      "cross_source": false,
+      "decision": "review (never auto-merged)"
+    }
+  ],
+  "possible_duplicates_total": 8,
+  "supplemental_overlapping_ah_evaluation": [],
+  "method": {
+    "exact": "sha256 of normalized instruction; sha256 of screenshot bytes",
+    "possible": "token Jaccard >= 0.8 (stopwords removed) with token blocking",
+    "merge_policy": "nothing is merged automatically; matched/crossed AgentHorizon pairs that share a recording are intentional"
+  },
+  "limitations": [
+    "sources without instructions or screenshots here (e.g. annotation-only records) cannot be compared and are counted under by_source only"
+  ],
+  "datasets_and_sources": [
+    "agentrewardbench@05899fcfe52c",
+    "osworld@b138d3482560"
+  ]
+}

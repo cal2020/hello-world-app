@@ -58,6 +58,9 @@ def format_action(action: dict) -> str:
         key = params.get("key", "?")
         return f"{action_type.replace('_', '')} {key}"
 
+    if action_type == "native":  # EXTENSION for supplemental sources only; never present in AgentHorizon data
+        return str(params.get("code", "native"))
+
     return action_type
 
 

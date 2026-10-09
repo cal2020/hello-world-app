@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { api, fmtInt, type DatasetDetail, type DatasetSummary } from "../api";
-import { Banner, C, Empty, ErrorBox, Loading, Meter, Stat, StatusBadge, SyntheticBanner } from "../components/ui";
+import { Banner, C, Empty, ErrorBox, KV, Loading, Meter, Stat, StatusBadge, SyntheticBanner } from "../components/ui";
 
 interface SourcesResp {
   lock_generated_at: string;
@@ -9,10 +9,73 @@ interface SourcesResp {
   availability: { counts: Record<string, number>; artifacts: { artifact_id: string; name: string; status: string; detail: string; benchmark: string; needed_for: string[] | string }[] };
 }
 
+interface SuppSource {
+  store: string; source_id: string; upstream: string; dataset?: string; revision: string; license: string; records: number;
+  summary: Record<string, unknown>; trajectories: Record<string, unknown> | null;
+  annotation_agreement: { pairs: number; by_field: Record<string, { pairs: number; agree: number; rate: number | null; excluded_unsure: number }>; note: string } | null;
+  compatibility: { binary_success: string; failure_categories: string };
+  coverage: { records: number; by_kind: Record<string, number>; missing_material: Record<string, number>; label_kinds: Record<string, number>; records_with_compatible_binary_label: number };
+}
+interface SuppResp { sources: SuppSource[]; audit: Record<string, unknown> | null; policy: string }
+
+function Supplemental({ s }: { s: SuppResp }) {
+  if (!s.sources.length) return <div className="card"><Empty title="No supplemental source imported">Operators can import AgentRewardBench annotations and OSWorld task definitions with <code>agenthorizon supplemental import</code>.</Empty></div>;
+  const a = s.audit as Record<string, number | Record<string, unknown>> | null;
+  return (
+    <>
+      <p className="subtle">{s.policy}</p>
+      <div className="grid grid-2">
+        {s.sources.map((x) => (
+          <div className="card" key={x.store}>
+            <div className="spread"><h3 style={{ margin: 0 }}>{x.source_id === "agentrewardbench" ? "AgentRewardBench" : x.source_id === "osworld" ? "OSWorld" : x.source_id}</h3>
+              <span className="mono subtle">{x.revision.slice(0, 12)}</span></div>
+            <p className="subtle"><a href={x.upstream} target="_blank" rel="noreferrer">{x.upstream}</a> · licence: {x.license}</p>
+            <div className="chip-row" style={{ marginBottom: "0.5rem" }}>
+              {Object.entries(x.coverage.by_kind ?? {}).map(([k, v]) => <span key={k} className="badge">{k.replace(/_/g, " ")}: {v.toLocaleString()}</span>)}
+              {Object.entries(x.coverage.label_kinds ?? {}).map(([k, v]) => <span key={k} className={`badge ${k === "expert_annotation" ? "ok" : "warn"}`}>{k.replace(/_/g, " ")} labels: {v.toLocaleString()}</span>)}
+            </div>
+            <KV rows={[
+              ["Binary success", x.compatibility.binary_success],
+              ["Failure categories", x.compatibility.failure_categories],
+              ["Usable binary labels", x.coverage.records_with_compatible_binary_label.toLocaleString()],
+              ["Missing material", Object.entries(x.coverage.missing_material ?? {}).map(([k, v]) => `${k} (${v})`).join("; ") || "none"],
+            ]} />
+            {x.annotation_agreement ? (
+              <>
+                <h3 style={{ marginTop: "0.75rem" }}>Annotator agreement in the release ({x.annotation_agreement.pairs} pairs)</h3>
+                <div className="table-wrap"><table>
+                  <thead><tr><th>Field</th><th className="num">Agree / pairs</th><th className="num">Rate</th></tr></thead>
+                  <tbody>{Object.entries(x.annotation_agreement.by_field).map(([k, v]) => (
+                    <tr key={k}><td>{k.replace("trajectory_", "").replace(/_/g, " ")}</td><td className="num">{v.agree} / {v.pairs}</td><td className="num">{v.rate === null ? "—" : `${(v.rate * 100).toFixed(1)}%`}</td></tr>
+                  ))}</tbody>
+                </table></div>
+                <p className="subtle">{x.annotation_agreement.note}</p>
+              </>
+            ) : null}
+          </div>
+        ))}
+      </div>
+      {a ? (
+        <div className="card" style={{ marginTop: "1rem" }}>
+          <h3>Deduplication and separation audit</h3>
+          <div className="grid grid-4">
+            <Stat value={String(a.items)} label="records compared" />
+            <Stat value={String(a.exact_instruction_duplicates)} label="exact instruction duplicate groups" />
+            <Stat value={String(a.possible_duplicates_total)} label="possible duplicates (for review)" />
+            <Stat value={String(a.supplemental_overlapping_ah_evaluation)} label="supplemental records overlapping AH evaluation" />
+          </div>
+          <p className="subtle" style={{ marginTop: "0.5rem" }}>{String((a.method as Record<string, string>)?.merge_policy ?? "")}. Aliases: {String(a.native_id_aliases)}.</p>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
 export function CoveragePage() {
   const [sp, setSp] = useSearchParams();
   const datasets = useQuery({ queryKey: ["datasets"], queryFn: () => api.get<{ datasets: DatasetSummary[] }>("/api/datasets") });
   const sources = useQuery({ queryKey: ["sources"], queryFn: () => api.get<SourcesResp>("/api/sources") });
+  const supp = useQuery({ queryKey: ["supplemental"], queryFn: () => api.get<SuppResp>("/api/supplemental") });
   const list = datasets.data?.datasets ?? [];
   const dv = sp.get("dv") ?? list.find((d) => !d.synthetic)?.dataset_version_id ?? list[0]?.dataset_version_id;
   const detail = useQuery({
@@ -51,6 +114,9 @@ export function CoveragePage() {
       ) : detail.isLoading ? <Loading /> : detail.isError ? <ErrorBox error={detail.error} /> : detail.data ? (
         <DatasetCoverage d={detail.data} />
       ) : null}
+
+      <h2 style={{ marginTop: "2rem" }}>Supplemental sources (kept separate)</h2>
+      {supp.isLoading ? <Loading /> : supp.isError ? <ErrorBox error={supp.error} /> : supp.data ? <Supplemental s={supp.data} /> : null}
 
       <h2 style={{ marginTop: "2rem" }}>Sources and provenance</h2>
       {sources.isLoading ? <Loading /> : sources.isError ? <ErrorBox error={sources.error} /> : sources.data ? <Sources s={sources.data} /> : null}

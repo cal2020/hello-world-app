@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api, type AttemptRow, type ExampleDetail, type Page, type RunRow } from "../api";
@@ -21,8 +21,14 @@ function Inspector({ dv, ex }: { dv: string; ex: ExampleDetail }) {
   const clamp = useCallback((i: number) => Math.max(0, Math.min(n - 1, i)), [n]);
   const selected = clamp(Number(sp.get("step") ?? 0) || 0);
   const runId = sp.get("run") ?? "";
+  // Latest selection, updated synchronously: key events that arrive before the re-render (key repeat, fast
+  // presses) must step from the newest position, not from the value captured by the last render.
+  const current = useRef(selected);
+  current.current = selected;
   const select = useCallback((i: number) => {
-    setSp((prev) => { const p = new URLSearchParams(prev); p.set("step", String(clamp(i))); return p; }, { replace: true });
+    const v = clamp(i);
+    current.current = v;
+    setSp((prev) => { const p = new URLSearchParams(prev); p.set("step", String(v)); return p; }, { replace: true });
   }, [setSp, clamp]);
   const canLabels = useCan("research.labels");
   const canReview = useCan("review.write");
@@ -31,17 +37,18 @@ function Inspector({ dv, ex }: { dv: string; ex: ExampleDetail }) {
     function onKey(e: KeyboardEvent) {
       if ((e.target as HTMLElement)?.closest("input, textarea, select")) return;
       const k = e.key;
-      if (k === "ArrowDown" || k === "j") { e.preventDefault(); select(selected + 1); }
-      else if (k === "ArrowUp" || k === "k") { e.preventDefault(); select(selected - 1); }
-      else if (k === "PageDown") { e.preventDefault(); select(selected + 10); }
-      else if (k === "PageUp") { e.preventDefault(); select(selected - 10); }
+      const at = current.current;
+      if (k === "ArrowDown" || k === "j") { e.preventDefault(); select(at + 1); }
+      else if (k === "ArrowUp" || k === "k") { e.preventDefault(); select(at - 1); }
+      else if (k === "PageDown") { e.preventDefault(); select(at + 10); }
+      else if (k === "PageUp") { e.preventDefault(); select(at - 10); }
       else if (k === "Home") { e.preventDefault(); select(0); }
       else if (k === "End") { e.preventDefault(); select(n - 1); }
       else if (k === "g") { e.preventDefault(); document.getElementById("goto-step")?.focus(); }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selected, select, n]);
+  }, [select, n]);
 
   const { byIdx } = useStepWindows(dv, ex.example_id, n, [selected]);
   const step = byIdx.get(selected);

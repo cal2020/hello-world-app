@@ -32,6 +32,7 @@ KNOWN_ACTION_TYPES = {
     "key_down": {"key"},
     "key_up": {"key"},
     "wait": {"duration_s"},
+    "native": {"code"},  # supplemental sources (browser/OS actions kept verbatim); never in AgentHorizon data
 }
 REQUIRED_ACTION_PARAMS = {
     "click": {"x", "y", "button"},
@@ -44,6 +45,7 @@ REQUIRED_ACTION_PARAMS = {
     "key_down": {"key"},
     "key_up": {"key"},
     "wait": {"duration_s"},
+    "native": {"code"},
 }
 
 TOP_LEVEL_FULL = {"version", "trajectory_id", "source", "task", "environment", "steps", "milestones"}

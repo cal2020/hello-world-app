@@ -21,7 +21,8 @@ from agenthorizon.data.standard import ADAPTER_VERSION, RawTrajectory
 from agenthorizon.util.hashing import digest_json, sha256_text
 
 NORMALIZER_VERSION = "ah-normalize/1"
-OBSERVATION_TIMING = "pre_action"
+OBSERVATION_TIMING = "pre_action"  # AgentHorizon: each screenshot shows the screen before its step's action
+TIMINGS = ("pre_action", "post_action")
 
 
 def instruction_id(text: str) -> str:
@@ -98,8 +99,15 @@ def _full_action_text(action: dict) -> str:
     return format_action(action)
 
 
+def observation_timing(t: RawTrajectory) -> str:
+    """Declared by supplemental sources in ``environment.observation_timing`` (e.g. OSWorld: post_action)."""
+    v = (t.environment or {}).get("observation_timing")
+    return v if v in TIMINGS else OBSERVATION_TIMING
+
+
 def normalize_steps(t: RawTrajectory) -> list[NormStep]:
     steps: list[NormStep] = []
+    timing = observation_timing(t)
     for s in t.steps:
         ref = s.screenshot if isinstance(s.screenshot, str) and s.screenshot else None
         asset_key = asset_key_for_ref(ref)
@@ -114,7 +122,7 @@ def normalize_steps(t: RawTrajectory) -> list[NormStep]:
             action_text_full=_full_action_text(action),
             screenshot_ref=ref,
             asset_key=asset_key,
-            observation_timing=OBSERVATION_TIMING,
+            observation_timing=timing,
             timestamp_us=_int_or_none(s.timestamp_us),
             thought=s.thought,
             action_description=s.action_description,

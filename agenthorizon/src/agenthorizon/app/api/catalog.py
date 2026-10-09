@@ -184,13 +184,15 @@ def example_detail(dv: str, eid: str, request: Request, p: Principal = Depends(r
         ms = c.execute(select(manifests.c.manifest_id, manifests.c.name, manifests.c.partition, manifests.c.official)
                        .select_from(manifest_members.join(manifests))
                        .where(manifest_members.c.example_id == eid)).mappings().all()
-        ts = c.execute(select(func.min(steps.c.timestamp_us), func.max(steps.c.timestamp_us))
+        ts = c.execute(select(func.min(steps.c.timestamp_us), func.max(steps.c.timestamp_us), func.min(steps.c.observation_timing))
                        .where(and_(steps.c.dataset_version_id == dv, steps.c.recording_id == ex["recording_id"]))).first()
         synthetic = c.execute(select(dataset_versions.c.synthetic).where(dataset_versions.c.dataset_version_id == dv)).scalar_one()
     ex.pop("search_text", None)
     ex["manifests"] = [dict(m) for m in ms]
-    ex["timing"] = {"first_us": ts[0], "last_us": ts[1], "observation_timing": "pre_action",
-                    "note": "each screenshot is the screen BEFORE its step's action executes (AgentHorizon release)"}
+    timing = ts[2] or "pre_action"
+    ex["timing"] = {"first_us": ts[0], "last_us": ts[1], "observation_timing": timing,
+                    "note": "each screenshot is the screen BEFORE its step's action executes" if timing == "pre_action"
+                    else "each screenshot is the screen AFTER its step's action executed (source-declared timing)"}
     ex["synthetic"] = synthetic
     return ex
 
@@ -296,3 +298,32 @@ def judges(p: Principal = Depends(require("catalog.read"))):
                                    "checks": cap.get("checks", {})}})
     rep = _evidence("MODEL_CAPABILITIES.json") or {}
     return {"generated_at": rep.get("generated_at"), "configs": out}
+
+
+@router.get("/supplemental")
+def supplemental(request: Request, p: Principal = Depends(require("catalog.read"))):
+    """Supplemental sources (separate from AgentHorizon datasets): provenance, coverage, label provenance, audit."""
+    from agenthorizon.supplemental.pipeline import supplemental_stores
+
+    out = []
+    for st in supplemental_stores(request.app.state.settings):
+        v = st.version()
+        out.append({"store": st.root.name, "source_id": v.get("source_id"), "upstream": v.get("upstream"),
+                    "dataset": v.get("dataset"), "revision": v.get("revision"), "license": v.get("license"),
+                    "records": v.get("records"), "records_sha256": v.get("records_sha256"),
+                    "summary": v.get("summary") or v.get("task_definitions"), "trajectories": v.get("trajectories") or v.get("traces"),
+                    "annotation_agreement": v.get("annotation_agreement"), "compatibility": v.get("compatibility"),
+                    "coverage": st.coverage(), "imported_at": v.get("imported_at")})
+    aud = _evidence("DEDUP_AUDIT.json")
+    audit_summary = None
+    if aud:
+        audit_summary = {k: (len(v) if isinstance(v, list) else v) for k, v in aud.items()
+                         if k not in ("method", "limitations", "datasets_and_sources")}
+        audit_summary.update(method=aud.get("method"), limitations=aud.get("limitations"),
+                             sources=aud.get("datasets_and_sources"),
+                             examples={"native_id_aliases": aud.get("native_id_aliases", [])[:5],
+                                       "possible_duplicates": aud.get("possible_duplicates", [])[:10],
+                                       "exact_instruction_duplicates": aud.get("exact_instruction_duplicates", [])[:5]})
+    return {"sources": out, "audit": audit_summary,
+            "policy": "Supplemental records are never blended into AgentHorizon denominators; categories are shown only "
+                      "where annotated under a compatible rubric (none here)."}

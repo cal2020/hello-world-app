@@ -55,6 +55,12 @@ def main() -> int:
     index_dataset_version(scorer, dv, PrivateStore(s.private_dir, dv.id))
     owner = create_engine(owner_url)
     tokens = {role: create_user(owner, f"{role}-e2e", role) for role in ("operator", "researcher", "reviewer", "viewer")}
+    try:  # real supplemental sources from the pinned checkouts (annotation-only / task definitions)
+        from agenthorizon.supplemental.pipeline import import_arb, import_osworld
+        import_arb(s)
+        import_osworld(s)
+    except Exception as exc:  # noqa: BLE001 — checkouts unavailable: the UI shows the empty state
+        print(f"supplemental import skipped: {exc}")
 
     fake = FakeLLMServer()
     verdict = json.dumps({"success": True, "reasoning": "Step 2 shows the export dialog; step 5 confirms the file was saved.",
