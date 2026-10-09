@@ -57,8 +57,9 @@ class PgRunStore:
                     raise RunStoreError(f"{definition.run_id}: stored definition differs from the requested one")
                 c.execute(update(runs).where(runs.c.run_id == definition.run_id).values(
                     controls=runs.c.controls.op("||")(bindparam(None, controls, type_=JSONB))))
+        # No directory is created here: the API mounts runs read-only; the judge worker creates artifact directories
+        # as it writes them (every writer makes its own parents).
         store = cls(engine, definition.run_id, runs_dir)
-        store.dir.mkdir(parents=True, exist_ok=True)
         if created:
             store.emit("run_created", run_id=definition.run_id, n_tasks=len(definition.example_ids))
         return store, created
