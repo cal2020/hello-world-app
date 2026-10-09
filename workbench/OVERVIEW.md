@@ -21,13 +21,13 @@ When an engineering model changes, which APIs, data links and consuming applicat
 
 | Part | What it does | Code |
 |---|---|---|
-| Model importer | Reads model exports and gives each element a stable identity: source, project and the source's own ID, never the name. Tracks revisions through their declared parent. Conflicting, out-of-order, unbased, invalid or partial imports are quarantined, rejected or staged, never applied to the head. Every import attempt is kept as a receipt. | `lucidwb/importer.py` |
+| Model importer | Reads model exports and gives each element a stable identity: source, project and the source's own ID, never the name. Tracks revisions through their declared parent. Conflicting, out-of-order, unbased, invalid or partial imports are quarantined, rejected or staged, and none of them changes the head on arrival. An out-of-order or unbased import can become the head only through an explicit reconciliation checked against the current head; conflicting, invalid and partial imports cannot be promoted. Every import the importer processes is kept as a receipt with its raw bytes, including duplicates and conflicts. Requests refused earlier (unparseable JSON, a wrong project, a missing permission, an oversized body) get an error and an audit entry instead. | `lucidwb/importer.py` |
 | Contract generator | Turns a reviewed "projection" (an allowlist of the fields a consumer may see) into an OpenAPI 3.1.1 contract. Catches removed fields, unit changes (ms → s) and reversed relationships before release. | `lucidwb/projection.py` |
 | Release manager | Builds a candidate. Validates its real HTTP responses against the contract. Asks the consuming app to run its own checks. Switches the live release in one transaction, with rollback. | `lucidwb/release.py` |
 | Mock consuming app | An independent "equipment dashboard" with its own code, database and expectations. It deduplicates events, ignores out-of-date ones, and resynchronizes when it detects a gap. | `consumer_app/` |
 | Link review | Proposes links between maintenance records and model elements, each with exact quotes that must match the stored source bytes. A person must approve. Approval fails if the model changed after the proposal was made. | `lucidwb/links.py`, `lucidwb/ai.py` |
-| Safe retries and delivery | A retried request with the same idempotency key returns the original result instead of repeating the change. Events are written in the same transaction as the change that caused them, and resent until the consumer acknowledges them. | `lucidwb/receipts.py`, `lucidwb/outbox.py` |
-| Web UI | Panels for model revisions, releases and contract changes, link review with highlighted evidence, and the full operation history. | `web/` |
+| Safe retries and delivery | For imports, reconciliation, activation, rollback, link decisions, rebase and link revocation, a retried request with the same idempotency key returns the original result instead of repeating the change. Other management calls, such as building a candidate or running proposals, ignore the key. Events are written in the same transaction as the change that caused them, and resent until the consumer acknowledges them. | `lucidwb/receipts.py`, `lucidwb/outbox.py` |
+| Web UI | Panels for model revisions, releases and contract changes, link review with highlighted evidence, and an operation history panel: outbox events with their delivery attempts, idempotency receipts, and the 200 most recent audit events. | `web/` |
 | Deployment | The in-browser build (published), the recorded walkthrough (published), and a container with an access-code gate ready for Railway (not deployed). | `browser/`, `scripts/build_replay.py`, `Dockerfile`, `DEPLOY.md` |
 
 ## How it works
@@ -54,9 +54,12 @@ When an engineering model changes, which APIs, data links and consuming applicat
 
   All three are checked inside the write transaction.
 - **AI boundary.** Code controls identity, permissions and activation. A model only proposes links. People approve them. Model output cannot set approval, permissions or targets outside the caller's project.
-- **Browser build.** The same request handlers run as Python in the visitor's tab, using Pyodide 314.0.7. Each request is written as raw HTTP bytes into the unchanged handler classes, so routing, permission checks, receipts and errors are the server's code paths. Only two things differ:
-  - the calls between the workbench and the consumer go to an in-process dispatcher instead of the network;
-  - the outbox delivers on a one-second tick and after each request, instead of on a background thread.
+- **Browser build.** The same request handlers run as Python in the visitor's tab, using Pyodide 314.0.7. Each request is written as raw HTTP bytes into the server's own handler classes, so routing, permission checks, receipts and errors run the server's code. The main differences:
+  - the calls between the workbench and the consumer go to an in-process dispatcher instead of the network, and the `/consumer/` dashboard proxy is swapped for one that calls the in-process consumer;
+  - the outbox delivers on a one-second tick and after each request, instead of on a background thread;
+  - requests are handled one at a time, so the server's connection limits do not apply;
+  - state lives in the tab and resets on reload;
+  - Python and jsonschema are the versions Pyodide ships (3.14 and 4.26.0), not the server's pinned 3.11 and 4.23.0.
 
 ## Value
 
@@ -71,22 +74,22 @@ When an engineering model changes, which APIs, data links and consuming applicat
 ## Use cases
 
 - **Systems engineering data.** Keep APIs generated from a model stable while the model changes. This is the pattern described for Digital Forge and Lucid Dream, explored here on synthetic data.
-- **Operational records.** Link maintenance, test or incident records to model elements, with traceable evidence.
+- **Operational records.** Link maintenance records to model elements, with traceable evidence. Test or incident records would need new predicates in the relation vocabulary.
 - **Testing consumers before promotion.** Any platform that publishes data to downstream apps needs to catch breaking changes before release.
 - **Teaching or demonstration.** Contract testing, idempotency and transactional event delivery, shown on a working system.
 
 ## How to use it
 
-1. Open the live app.
+1. Open the live app, and tick **send Idempotency-Key** in *Demo controls* (it is off by default; step 6 needs it).
 2. As **demo-carol** (release manager):
    1. import A;
    2. build from projection 1.0.0;
    3. run the consumer checks;
    4. activate.
 3. Run the proposals. Then switch to **demo-alice** (approver) to accept or reject links.
-4. As carol, import B and then C. You'll see an approval made before the change rejected as stale, and an incompatible release blocked.
-5. Approve projection 1.1.0, then rebuild, retest and activate.
-6. Inject the lost-acknowledgment fault: the consumer records one effect for two deliveries. Retrying the activation with the same key returns `Idempotent-Replay: true`.
+4. As carol, import B. Switch to alice and try to accept MR-1004, which was left open in step 3: its proposal predates the change, so the accept is refused with `409 stale_dependency`. Switch back to carol, import C, build from 1.0.0 and run the consumer checks: the candidate is blocked, and activating it is refused.
+5. Approve projection 1.1.0, then rebuild and run the consumer checks.
+6. Pause the outbox, click **Inject lost-ack fault**, then activate. Click **Outbox: deliver now** twice and resume the outbox: the consumer records one effect for two deliveries. **Retry last request with same key** replays the activation and returns `Idempotent-Replay: true`.
 
 `DEMO_SCRIPT.md` has the timed version with fallbacks. Locally, run `.venv/bin/python scripts/run.py --reset`, then `scripts/seed.py`.
 
@@ -122,8 +125,8 @@ When an engineering model changes, which APIs, data links and consuming applicat
 
 ## What still needs doing for the current scope
 
-1. **Railway.** Deploy if one shared, persistent instance is wanted. The steps are in `DEPLOY.md` and take about 5 minutes in the Railway dashboard.
-2. **Live AI evaluation.** Run it with an API key (`LWB_EVAL_LIVE=1 .venv/bin/python scripts/evaluate.py`), and add human reviewers to measure precision, recall and review time.
+1. **Railway.** Deploy if one shared, persistent instance is wanted. The steps are in `DEPLOY.md` (Option A: eight steps in the Railway dashboard). They have not been run on Railway yet.
+2. **Live AI evaluation.** Install the live adapter (`.venv/bin/pip install -r requirements-live.txt`), set `ANTHROPIC_API_KEY`, and run `LWB_EVAL_LIVE=1 .venv/bin/python scripts/evaluate.py` to score live proposals for recall and precision against the gold labels. Then add human reviewers to measure review time and accepted-incorrect links.
 3. **Merge.** Merge this branch into `master` if it should live there.
 
 ## Roadmap to a robust SaaS application
