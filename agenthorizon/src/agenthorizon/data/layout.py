@@ -82,6 +82,16 @@ def safe_relative(target: str) -> PurePosixPath | None:
     return PurePosixPath(*parts)
 
 
+def asset_key_for_ref(ref: str | None) -> str | None:
+    """Media-store key of a released screenshot reference (``./data/media/images/<dir>/<file>`` -> ``<dir>/<file>``)."""
+    if not isinstance(ref, str) or not ref:
+        return None
+    p = safe_relative(ref)
+    if p is not None and len(p.parts) >= 5 and p.parts[:3] == ("data", "media", "images"):
+        return str(PurePosixPath(*p.parts[3:]))
+    return None
+
+
 @dataclass
 class StagedFile:
     workspace_path: str

@@ -99,7 +99,7 @@ def run_agentic_attempt(
                         "stdout": _store_text(run_dir, keep / "stdout.txt", redact(result.stdout(), secrets)).__dict__,
                         "stderr": _store_text(run_dir, keep / "stderr.txt", redact(stderr, secrets)).__dict__})
         if n > max_rate_limit_retries:
-            return AttemptOutcome("transport_failed", transport_retries=retries, error="rate limited too many times",
+            return AttemptOutcome("rate_limited", transport_retries=retries, error="rate limited too many times",
                                   lineage=lineage, telemetry=Telemetry(wall_time_s=time.monotonic() - t_start).finalize())
         sleep(rate_limit_wait_s)
         if cancel is not None and cancel.is_set():

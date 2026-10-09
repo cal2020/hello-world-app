@@ -13,10 +13,9 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from pathlib import PurePosixPath
 from typing import Any
 
-from agenthorizon.data.layout import safe_relative
+from agenthorizon.data.layout import asset_key_for_ref
 from agenthorizon.data.markdown import format_action
 from agenthorizon.data.standard import ADAPTER_VERSION, RawTrajectory
 from agenthorizon.util.hashing import digest_json, sha256_text
@@ -103,11 +102,7 @@ def normalize_steps(t: RawTrajectory) -> list[NormStep]:
     steps: list[NormStep] = []
     for s in t.steps:
         ref = s.screenshot if isinstance(s.screenshot, str) and s.screenshot else None
-        asset_key = None
-        if ref:
-            p = safe_relative(ref)
-            if p is not None and len(p.parts) >= 5 and p.parts[:3] == ("data", "media", "images"):
-                asset_key = str(PurePosixPath(*p.parts[3:]))
+        asset_key = asset_key_for_ref(ref)
         action = {"type": s.action_type, "parameters": s.action_params}
         steps.append(NormStep(
             index=s.index,

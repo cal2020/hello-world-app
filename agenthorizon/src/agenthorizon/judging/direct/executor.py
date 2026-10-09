@@ -1,7 +1,7 @@
 """Execute one direct-judge attempt.
 
-Mirrors ``llm_judges/evaluate.py``: a rate limit waits and re-sends inside the same attempt (up to 5 waits) and
-does not consume a judgment attempt; any other provider/transport failure ends the attempt (the attempt policy
+Mirrors ``llm_judges/evaluate.py``: a rate limit waits and re-sends inside the same attempt and does not consume a
+judgment attempt; the fifth rate-limited call ends the attempt (``while rate_limit_retries < 5``); any other provider/transport failure ends the attempt (the attempt policy
 may then start a fresh attempt, as the reference's outer retry loop did). Limit violations end the attempt as
 ``serving_incompatible`` — the payload is never truncated. Missing credentials or unavailable models are
 ``blocked``.
@@ -34,7 +34,7 @@ def _store(run_dir: Path, dest: Path, text: str) -> ArtifactRef:
 
 
 def run_direct_attempt(provider, payload: DirectPayload, model: str, sampling: dict, *, run_dir: Path, task_dir: Path,
-                       limits: ProviderLimits, max_rate_limit_waits: int = 5, sleep=time.sleep,
+                       limits: ProviderLimits, max_rate_limit_resends: int = 4, sleep=time.sleep,
                        cancel: threading.Event | None = None) -> AttemptOutcome:
     art = task_dir / "artifacts"
     lim_check = check(payload.n_images, payload.approx_request_bytes, payload.token_estimate, limits)
@@ -44,7 +44,7 @@ def run_direct_attempt(provider, payload: DirectPayload, model: str, sampling: d
         "preprocessing_id": payload.preprocessing_id, "preprocessing_params": payload.params,
         "payload_manifest_digest": payload.manifest_digest, "pillow_version": payload.pillow_version,
         "parser": DIRECT_PARSER_ID, "limits": limits.to_dict(), "limit_check": lim_check,
-        "retry_policy": {"rate_limit_waits_per_attempt": max_rate_limit_waits,
+        "retry_policy": {"rate_limit_resends_per_attempt": max_rate_limit_resends,
                          "other_transport_errors": "end the attempt (attempt policy may start a fresh one)"},
     }
     artifacts = {"payload_manifest": _store(run_dir, art / "payload-manifest.json", json.dumps(payload.manifest(), indent=1))}
@@ -63,8 +63,8 @@ def run_direct_attempt(provider, payload: DirectPayload, model: str, sampling: d
         except RateLimited as exc:
             retries.append({"n": len(retries) + 1, "kind": "rate_limit", "status": exc.status, "retry_after_s": exc.retry_after,
                             "error": str(exc)[:300]})
-            if sum(1 for r in retries if r["kind"] == "rate_limit") > max_rate_limit_waits:
-                return AttemptOutcome("transport_failed", error="rate limited too many times", artifacts=artifacts,
+            if sum(1 for r in retries if r["kind"] == "rate_limit") > max_rate_limit_resends:
+                return AttemptOutcome("rate_limited", error="rate limited too many times", artifacts=artifacts,
                                       transport_retries=retries, lineage=lineage,
                                       telemetry=Telemetry(wall_time_s=time.monotonic() - t0).finalize())
             sleep(exc.retry_after or 60)

@@ -14,6 +14,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from dataclasses import dataclass, field
@@ -114,7 +115,9 @@ def run_in_sandbox(spec: SandboxSpec, cancel: threading.Event | None = None) -> 
         src = lay["workspace"] / rel
         if src.exists():
             binds.append({"src": str(src), "dst": f"{SANDBOX_WORKSPACE}/{rel}", "ro": True})
-    sock = spec.task_dir / "egress.sock"
+    sock_dir = Path(tempfile.mkdtemp(prefix="ahe-"))  # AF_UNIX paths are limited to 108 bytes; run dirs can be deep
+    os.chmod(sock_dir, 0o700)
+    sock = sock_dir / "egress.sock"
     proxy = EgressProxy(str(sock), EgressPolicy(set(spec.allowed_hosts), set(spec.allowed_ports), spec.upstream_proxy)).start()
     init_log = spec.task_dir / "sandbox-init.log"
     sb_spec = {
@@ -169,6 +172,7 @@ def run_in_sandbox(spec: SandboxSpec, cancel: threading.Event | None = None) -> 
                 break
     wall = time.monotonic() - t0
     proxy.stop()
+    shutil.rmtree(sock_dir, ignore_errors=True)
     log_text = init_log.read_text() if init_log.exists() else ""
     try:  # the tmpfs root is gone with the namespace; remove the empty mountpoint
         lay["root"].rmdir()

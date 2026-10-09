@@ -1,0 +1,1138 @@
+{
+  "generated_at": "2026-10-09T20:53:24Z",
+  "live_probes": false,
+  "counts": {
+    "blocked": 23
+  },
+  "note": "Credential checks report variable names only. 'supported' requires a live multimodal probe.",
+  "configurations": [
+    {
+      "config_id": "codex:gpt-5.5",
+      "interface": "codex",
+      "checks": {
+        "model_identifier": {
+          "ok": false,
+          "value": null,
+          "evidence": null
+        },
+        "route": {
+          "ok": true,
+          "value": "chatgpt_subscription"
+        },
+        "installation": {
+          "ok": true,
+          "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/codex",
+          "version": "codex-cli 0.162.1",
+          "package": "@openai/codex"
+        },
+        "isolation": {
+          "ok": true,
+          "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+        },
+        "paper_mode_instructions": {
+          "ok": false,
+          "detail": "official AGENTS.md not located in the release; paper-mode runs need an operator-registered file, extension runs stage the public rubric instead"
+        },
+        "credentials": {
+          "ok": false,
+          "required": [
+            "CODEX_AUTH_JSON"
+          ],
+          "missing": [
+            "CODEX_AUTH_JSON"
+          ]
+        },
+        "multimodal": {
+          "ok": true,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": false,
+          "outcome": "egress_denied",
+          "status": null,
+          "url": "https://chatgpt.com/",
+          "hosts": [
+            "api.openai.com",
+            "auth.openai.com",
+            "chatgpt.com"
+          ],
+          "detail": "proxy refused CONNECT: 403 Forbidden; proxy status: gateway answered 403 to CONNECT (policy denial or upstream failure)"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "no released artifact states the provider model identifier",
+        "credentials missing: CODEX_AUTH_JSON",
+        "route host unreachable from this environment (egress_denied)"
+      ]
+    },
+    {
+      "config_id": "gemini_cli:gemini-3.1-pro",
+      "interface": "gemini_cli",
+      "checks": {
+        "model_identifier": {
+          "ok": true,
+          "value": "gemini-3.1-pro-preview",
+          "evidence": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py usage docstring"
+        },
+        "route": {
+          "ok": true,
+          "value": "google"
+        },
+        "installation": {
+          "ok": true,
+          "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/gemini",
+          "version": "0.63.0",
+          "package": "@google/gemini-cli"
+        },
+        "isolation": {
+          "ok": true,
+          "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+        },
+        "paper_mode_instructions": {
+          "ok": false,
+          "detail": "official AGENTS.md not located in the release; paper-mode runs need an operator-registered file, extension runs stage the public rubric instead"
+        },
+        "credentials": {
+          "ok": false,
+          "required": [
+            "GEMINI_API_KEY"
+          ],
+          "missing": [
+            "GEMINI_API_KEY"
+          ]
+        },
+        "multimodal": {
+          "ok": true,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": true,
+          "outcome": "http_error",
+          "status": 404,
+          "url": "https://generativelanguage.googleapis.com/",
+          "hosts": [
+            "generativelanguage.googleapis.com"
+          ],
+          "detail": "<!DOCTYPE html>\n<html lang=en>\n  <meta charset=utf-8>\n  <meta name=viewport content=\"initial-scale=1, minimum-scale=1, width=device-width\">\n  <title>Error 404 (Not Found)!!1</title>\n  <style>\n    *{margin:0;padding:0}html,code{font:15px/22px arial,sans-serif}html{background:#fff;color:#222;padding:1"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "credentials missing: GEMINI_API_KEY"
+      ]
+    },
+    {
+      "config_id": "claude_code:claude-opus-4.7",
+      "interface": "claude_code",
+      "checks": {
+        "model_identifier": {
+          "ok": true,
+          "value": "claude-opus-4-7",
+          "evidence": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py usage docstring (`--model claude-opus-4-7 --effort xhigh`)"
+        },
+        "route": {
+          "ok": true,
+          "value": "anthropic"
+        },
+        "installation": {
+          "ok": true,
+          "binary": "/opt/node22/bin/claude",
+          "version": "2.1.295 (Claude Code)",
+          "package": "@anthropic-ai/claude-code"
+        },
+        "isolation": {
+          "ok": true,
+          "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+        },
+        "paper_mode_instructions": {
+          "ok": false,
+          "detail": "official AGENTS.md not located in the release; paper-mode runs need an operator-registered file, extension runs stage the public rubric instead"
+        },
+        "credentials": {
+          "ok": false,
+          "required": [
+            "ANTHROPIC_API_KEY"
+          ],
+          "missing": [
+            "ANTHROPIC_API_KEY"
+          ]
+        },
+        "multimodal": {
+          "ok": true,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": true,
+          "outcome": "http_error",
+          "status": 404,
+          "url": "https://api.anthropic.com/",
+          "hosts": [
+            "api.anthropic.com"
+          ],
+          "detail": ""
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "credentials missing: ANTHROPIC_API_KEY"
+      ]
+    },
+    {
+      "config_id": "opencode:qwen3.6-27b",
+      "interface": "opencode",
+      "checks": {
+        "model_identifier": {
+          "ok": true,
+          "value": "qwen36_vllm/Qwen/Qwen3.6-27B",
+          "evidence": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py usage docstring (provider prefix is a local OpenCode config name)"
+        },
+        "route": {
+          "ok": true,
+          "value": "vllm"
+        },
+        "installation": {
+          "ok": true,
+          "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/opencode",
+          "version": "1.18.35",
+          "package": "opencode-ai"
+        },
+        "isolation": {
+          "ok": true,
+          "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+        },
+        "paper_mode_instructions": {
+          "ok": false,
+          "detail": "official AGENTS.md not located in the release; paper-mode runs need an operator-registered file, extension runs stage the public rubric instead"
+        },
+        "credentials": {
+          "ok": true,
+          "required": [
+            "VLLM_API_KEY"
+          ],
+          "missing": []
+        },
+        "multimodal": {
+          "ok": true,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": null,
+          "detail": "operator-hosted endpoint; probe with the configured base URL"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+      ]
+    },
+    {
+      "config_id": "codex:gpt-5.4-mini",
+      "interface": "codex",
+      "checks": {
+        "model_identifier": {
+          "ok": false,
+          "value": null,
+          "evidence": null
+        },
+        "route": {
+          "ok": true,
+          "value": "chatgpt_subscription"
+        },
+        "installation": {
+          "ok": true,
+          "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/codex",
+          "version": "codex-cli 0.162.1",
+          "package": "@openai/codex"
+        },
+        "isolation": {
+          "ok": true,
+          "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+        },
+        "paper_mode_instructions": {
+          "ok": false,
+          "detail": "official AGENTS.md not located in the release; paper-mode runs need an operator-registered file, extension runs stage the public rubric instead"
+        },
+        "credentials": {
+          "ok": false,
+          "required": [
+            "CODEX_AUTH_JSON"
+          ],
+          "missing": [
+            "CODEX_AUTH_JSON"
+          ]
+        },
+        "multimodal": {
+          "ok": true,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": false,
+          "outcome": "egress_denied",
+          "status": null,
+          "url": "https://chatgpt.com/",
+          "hosts": [
+            "api.openai.com",
+            "auth.openai.com",
+            "chatgpt.com"
+          ],
+          "detail": "proxy refused CONNECT: 403 Forbidden; proxy status: gateway answered 403 to CONNECT (policy denial or upstream failure)"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "no released artifact states the provider model identifier",
+        "credentials missing: CODEX_AUTH_JSON",
+        "route host unreachable from this environment (egress_denied)"
+      ]
+    },
+    {
+      "config_id": "opencode:qwen3.6-35b-a3b",
+      "interface": "opencode",
+      "checks": {
+        "model_identifier": {
+          "ok": true,
+          "value": "Qwen/Qwen3.6-35B-A3B",
+          "evidence": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table"
+        },
+        "route": {
+          "ok": true,
+          "value": "vllm"
+        },
+        "installation": {
+          "ok": true,
+          "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/opencode",
+          "version": "1.18.35",
+          "package": "opencode-ai"
+        },
+        "isolation": {
+          "ok": true,
+          "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+        },
+        "paper_mode_instructions": {
+          "ok": false,
+          "detail": "official AGENTS.md not located in the release; paper-mode runs need an operator-registered file, extension runs stage the public rubric instead"
+        },
+        "credentials": {
+          "ok": true,
+          "required": [
+            "VLLM_API_KEY"
+          ],
+          "missing": []
+        },
+        "multimodal": {
+          "ok": true,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": null,
+          "detail": "operator-hosted endpoint; probe with the configured base URL"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+      ]
+    },
+    {
+      "config_id": "openhands:qwen3.6-27b",
+      "interface": "openhands",
+      "checks": {
+        "model_identifier": {
+          "ok": true,
+          "value": "Qwen/Qwen3.6-27B",
+          "evidence": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table"
+        },
+        "route": {
+          "ok": true,
+          "value": "vllm"
+        },
+        "installation": {
+          "ok": true,
+          "binary": "/home/user/hello-world-app/agenthorizon/var/tools/uv/bin/openhands",
+          "version": "OpenHands CLI 1.16.0",
+          "package": "openhands (PyPI, CLI)"
+        },
+        "isolation": {
+          "ok": true,
+          "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+        },
+        "paper_mode_instructions": {
+          "ok": false,
+          "detail": "official AGENTS.md not located in the release; paper-mode runs need an operator-registered file, extension runs stage the public rubric instead"
+        },
+        "credentials": {
+          "ok": true,
+          "required": [
+            "VLLM_API_KEY"
+          ],
+          "missing": []
+        },
+        "multimodal": {
+          "ok": true,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": null,
+          "detail": "operator-hosted endpoint; probe with the configured base URL"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+      ]
+    },
+    {
+      "config_id": "claude_code:claude-haiku-4.5",
+      "interface": "claude_code",
+      "checks": {
+        "model_identifier": {
+          "ok": true,
+          "value": "claude-haiku-4-5",
+          "evidence": "agenthorizon-repo@8584a347:scripts/compare_runs.py PRICE table key"
+        },
+        "route": {
+          "ok": true,
+          "value": "anthropic"
+        },
+        "installation": {
+          "ok": true,
+          "binary": "/opt/node22/bin/claude",
+          "version": "2.1.295 (Claude Code)",
+          "package": "@anthropic-ai/claude-code"
+        },
+        "isolation": {
+          "ok": true,
+          "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+        },
+        "paper_mode_instructions": {
+          "ok": false,
+          "detail": "official AGENTS.md not located in the release; paper-mode runs need an operator-registered file, extension runs stage the public rubric instead"
+        },
+        "credentials": {
+          "ok": false,
+          "required": [
+            "ANTHROPIC_API_KEY"
+          ],
+          "missing": [
+            "ANTHROPIC_API_KEY"
+          ]
+        },
+        "multimodal": {
+          "ok": true,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": true,
+          "outcome": "http_error",
+          "status": 404,
+          "url": "https://api.anthropic.com/",
+          "hosts": [
+            "api.anthropic.com"
+          ],
+          "detail": ""
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "credentials missing: ANTHROPIC_API_KEY"
+      ]
+    },
+    {
+      "config_id": "opencode:gemini-3.1-flash-lite",
+      "interface": "opencode",
+      "checks": {
+        "model_identifier": {
+          "ok": false,
+          "value": null,
+          "evidence": null
+        },
+        "route": {
+          "ok": false,
+          "value": null
+        },
+        "installation": {
+          "ok": true,
+          "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/opencode",
+          "version": "1.18.35",
+          "package": "opencode-ai"
+        },
+        "isolation": {
+          "ok": true,
+          "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+        },
+        "paper_mode_instructions": {
+          "ok": false,
+          "detail": "official AGENTS.md not located in the release; paper-mode runs need an operator-registered file, extension runs stage the public rubric instead"
+        },
+        "credentials": {
+          "ok": null,
+          "required": [],
+          "missing": []
+        },
+        "multimodal": {
+          "ok": true,
+          "detail": "registry (vendor description); verified only by a live probe"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "no released artifact states the provider model identifier",
+        "serving route not stated by any accessible source"
+      ]
+    },
+    {
+      "config_id": "gemini_cli:gemini-3.1-flash-lite",
+      "interface": "gemini_cli",
+      "checks": {
+        "model_identifier": {
+          "ok": true,
+          "value": "gemini-3.1-flash-lite-preview",
+          "evidence": "agenthorizon-repo@8584a347:llm_judges/README.md (evaluate.py --model gemini-3.1-flash-lite-preview)"
+        },
+        "route": {
+          "ok": true,
+          "value": "google"
+        },
+        "installation": {
+          "ok": true,
+          "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/gemini",
+          "version": "0.63.0",
+          "package": "@google/gemini-cli"
+        },
+        "isolation": {
+          "ok": true,
+          "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+        },
+        "paper_mode_instructions": {
+          "ok": false,
+          "detail": "official AGENTS.md not located in the release; paper-mode runs need an operator-registered file, extension runs stage the public rubric instead"
+        },
+        "credentials": {
+          "ok": false,
+          "required": [
+            "GEMINI_API_KEY"
+          ],
+          "missing": [
+            "GEMINI_API_KEY"
+          ]
+        },
+        "multimodal": {
+          "ok": true,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": true,
+          "outcome": "http_error",
+          "status": 404,
+          "url": "https://generativelanguage.googleapis.com/",
+          "hosts": [
+            "generativelanguage.googleapis.com"
+          ],
+          "detail": "<!DOCTYPE html>\n<html lang=en>\n  <meta charset=utf-8>\n  <meta name=viewport content=\"initial-scale=1, minimum-scale=1, width=device-width\">\n  <title>Error 404 (Not Found)!!1</title>\n  <style>\n    *{margin:0;padding:0}html,code{font:15px/22px arial,sans-serif}html{background:#fff;color:#222;padding:1"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "credentials missing: GEMINI_API_KEY"
+      ]
+    },
+    {
+      "config_id": "openhands:gemini-3.1-flash-lite",
+      "interface": "openhands",
+      "checks": {
+        "model_identifier": {
+          "ok": true,
+          "value": "gemini-3.1-flash-lite-preview",
+          "evidence": "agenthorizon-repo@8584a347:llm_judges/README.md (evaluate.py --model gemini-3.1-flash-lite-preview)"
+        },
+        "route": {
+          "ok": true,
+          "value": "google"
+        },
+        "installation": {
+          "ok": true,
+          "binary": "/home/user/hello-world-app/agenthorizon/var/tools/uv/bin/openhands",
+          "version": "OpenHands CLI 1.16.0",
+          "package": "openhands (PyPI, CLI)"
+        },
+        "isolation": {
+          "ok": true,
+          "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+        },
+        "paper_mode_instructions": {
+          "ok": false,
+          "detail": "official AGENTS.md not located in the release; paper-mode runs need an operator-registered file, extension runs stage the public rubric instead"
+        },
+        "credentials": {
+          "ok": false,
+          "required": [
+            "GEMINI_API_KEY"
+          ],
+          "missing": [
+            "GEMINI_API_KEY"
+          ]
+        },
+        "multimodal": {
+          "ok": true,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": true,
+          "outcome": "http_error",
+          "status": 404,
+          "url": "https://generativelanguage.googleapis.com/",
+          "hosts": [
+            "generativelanguage.googleapis.com"
+          ],
+          "detail": "<!DOCTYPE html>\n<html lang=en>\n  <meta charset=utf-8>\n  <meta name=viewport content=\"initial-scale=1, minimum-scale=1, width=device-width\">\n  <title>Error 404 (Not Found)!!1</title>\n  <style>\n    *{margin:0;padding:0}html,code{font:15px/22px arial,sans-serif}html{background:#fff;color:#222;padding:1"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "credentials missing: GEMINI_API_KEY"
+      ]
+    },
+    {
+      "config_id": "opencode:gemma-4-26b-a4b",
+      "interface": "opencode",
+      "checks": {
+        "model_identifier": {
+          "ok": true,
+          "value": "google/gemma-4-26B-A4B-it",
+          "evidence": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table"
+        },
+        "route": {
+          "ok": true,
+          "value": "vllm"
+        },
+        "installation": {
+          "ok": true,
+          "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/opencode",
+          "version": "1.18.35",
+          "package": "opencode-ai"
+        },
+        "isolation": {
+          "ok": true,
+          "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+        },
+        "paper_mode_instructions": {
+          "ok": false,
+          "detail": "official AGENTS.md not located in the release; paper-mode runs need an operator-registered file, extension runs stage the public rubric instead"
+        },
+        "credentials": {
+          "ok": true,
+          "required": [
+            "VLLM_API_KEY"
+          ],
+          "missing": []
+        },
+        "multimodal": {
+          "ok": true,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": null,
+          "detail": "operator-hosted endpoint; probe with the configured base URL"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+      ]
+    },
+    {
+      "config_id": "codex:gemini-3.1-flash-lite",
+      "interface": "codex",
+      "checks": {
+        "model_identifier": {
+          "ok": true,
+          "value": "google/gemini-3.1-flash-lite-preview",
+          "evidence": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py _model_slug PRESET_TO_MODEL"
+        },
+        "route": {
+          "ok": true,
+          "value": "openrouter"
+        },
+        "installation": {
+          "ok": true,
+          "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/codex",
+          "version": "codex-cli 0.162.1",
+          "package": "@openai/codex"
+        },
+        "isolation": {
+          "ok": true,
+          "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+        },
+        "paper_mode_instructions": {
+          "ok": false,
+          "detail": "official AGENTS.md not located in the release; paper-mode runs need an operator-registered file, extension runs stage the public rubric instead"
+        },
+        "credentials": {
+          "ok": false,
+          "required": [
+            "OPENROUTER_API_KEY"
+          ],
+          "missing": [
+            "OPENROUTER_API_KEY"
+          ]
+        },
+        "multimodal": {
+          "ok": true,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": false,
+          "outcome": "egress_denied",
+          "status": null,
+          "url": "https://openrouter.ai/api/v1/models",
+          "hosts": [
+            "openrouter.ai"
+          ],
+          "detail": "proxy refused CONNECT: 403 Forbidden; proxy status: gateway answered 403 to CONNECT (policy denial or upstream failure)"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "credentials missing: OPENROUTER_API_KEY",
+        "route host unreachable from this environment (egress_denied)"
+      ]
+    },
+    {
+      "config_id": "opencode:gemma-4-31b",
+      "interface": "opencode",
+      "checks": {
+        "model_identifier": {
+          "ok": true,
+          "value": "google/gemma-4-31B-it",
+          "evidence": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table"
+        },
+        "route": {
+          "ok": true,
+          "value": "vllm"
+        },
+        "installation": {
+          "ok": true,
+          "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/opencode",
+          "version": "1.18.35",
+          "package": "opencode-ai"
+        },
+        "isolation": {
+          "ok": true,
+          "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+        },
+        "paper_mode_instructions": {
+          "ok": false,
+          "detail": "official AGENTS.md not located in the release; paper-mode runs need an operator-registered file, extension runs stage the public rubric instead"
+        },
+        "credentials": {
+          "ok": true,
+          "required": [
+            "VLLM_API_KEY"
+          ],
+          "missing": []
+        },
+        "multimodal": {
+          "ok": true,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": null,
+          "detail": "operator-hosted endpoint; probe with the configured base URL"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+      ]
+    },
+    {
+      "config_id": "opencode:qwen3.5-122b-a10b:splitter",
+      "interface": "opencode",
+      "checks": {
+        "model_identifier": {
+          "ok": true,
+          "value": "Qwen/Qwen3.5-122B-A10B",
+          "evidence": "agenthorizon-repo@8584a347:scripts/aggregate_difficulty.py SPLITTER_MODEL"
+        },
+        "route": {
+          "ok": true,
+          "value": "vllm"
+        },
+        "installation": {
+          "ok": true,
+          "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/opencode",
+          "version": "1.18.35",
+          "package": "opencode-ai"
+        },
+        "isolation": {
+          "ok": true,
+          "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+        },
+        "paper_mode_instructions": {
+          "ok": false,
+          "detail": "official AGENTS.md not located in the release; paper-mode runs need an operator-registered file, extension runs stage the public rubric instead"
+        },
+        "credentials": {
+          "ok": true,
+          "required": [
+            "VLLM_API_KEY"
+          ],
+          "missing": []
+        },
+        "multimodal": {
+          "ok": null,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": null,
+          "detail": "operator-hosted endpoint; probe with the configured base URL"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+      ]
+    },
+    {
+      "config_id": "opencode:qwen3.5-122b-a10b:splitter:revised",
+      "interface": "opencode",
+      "checks": {
+        "model_identifier": {
+          "ok": true,
+          "value": "Qwen/Qwen3.5-122B-A10B",
+          "evidence": "agenthorizon-repo@8584a347:scripts/aggregate_difficulty.py SPLITTER_MODEL"
+        },
+        "route": {
+          "ok": true,
+          "value": "vllm"
+        },
+        "installation": {
+          "ok": true,
+          "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/opencode",
+          "version": "1.18.35",
+          "package": "opencode-ai"
+        },
+        "isolation": {
+          "ok": true,
+          "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+        },
+        "paper_mode_instructions": {
+          "ok": false,
+          "detail": "official AGENTS.md not located in the release; paper-mode runs need an operator-registered file, extension runs stage the public rubric instead"
+        },
+        "credentials": {
+          "ok": true,
+          "required": [
+            "VLLM_API_KEY"
+          ],
+          "missing": []
+        },
+        "multimodal": {
+          "ok": null,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": null,
+          "detail": "operator-hosted endpoint; probe with the configured base URL"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+      ]
+    },
+    {
+      "config_id": "opencode:inkling:splitter:revised",
+      "interface": "opencode",
+      "checks": {
+        "model_identifier": {
+          "ok": false,
+          "value": null,
+          "evidence": null
+        },
+        "route": {
+          "ok": false,
+          "value": null
+        },
+        "installation": {
+          "ok": true,
+          "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/opencode",
+          "version": "1.18.35",
+          "package": "opencode-ai"
+        },
+        "isolation": {
+          "ok": true,
+          "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+        },
+        "paper_mode_instructions": {
+          "ok": false,
+          "detail": "official AGENTS.md not located in the release; paper-mode runs need an operator-registered file, extension runs stage the public rubric instead"
+        },
+        "credentials": {
+          "ok": null,
+          "required": [],
+          "missing": []
+        },
+        "multimodal": {
+          "ok": null,
+          "detail": "registry (vendor description); verified only by a live probe"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "no released artifact states the provider model identifier",
+        "serving route not stated by any accessible source"
+      ]
+    },
+    {
+      "config_id": "opencode:kimi-k2.7-code:splitter:revised",
+      "interface": "opencode",
+      "checks": {
+        "model_identifier": {
+          "ok": false,
+          "value": null,
+          "evidence": null
+        },
+        "route": {
+          "ok": false,
+          "value": null
+        },
+        "installation": {
+          "ok": true,
+          "binary": "/home/user/hello-world-app/agenthorizon/var/tools/npm/node_modules/.bin/opencode",
+          "version": "1.18.35",
+          "package": "opencode-ai"
+        },
+        "isolation": {
+          "ok": true,
+          "detail": "user+mount+net+pid namespaces, pivot_root, capability drop"
+        },
+        "paper_mode_instructions": {
+          "ok": false,
+          "detail": "official AGENTS.md not located in the release; paper-mode runs need an operator-registered file, extension runs stage the public rubric instead"
+        },
+        "credentials": {
+          "ok": null,
+          "required": [],
+          "missing": []
+        },
+        "multimodal": {
+          "ok": null,
+          "detail": "registry (vendor description); verified only by a live probe"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "no released artifact states the provider model identifier",
+        "serving route not stated by any accessible source"
+      ]
+    },
+    {
+      "config_id": "direct:qwen3.5-9b:native-512x332",
+      "interface": "direct",
+      "checks": {
+        "model_identifier": {
+          "ok": true,
+          "value": "Qwen/Qwen3.5-9B",
+          "evidence": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table"
+        },
+        "route": {
+          "ok": true,
+          "value": "vllm"
+        },
+        "installation": {
+          "ok": true,
+          "sdk": "httpx"
+        },
+        "credentials": {
+          "ok": true,
+          "required": [
+            "VLLM_API_KEY"
+          ],
+          "missing": []
+        },
+        "multimodal": {
+          "ok": null,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": null,
+          "detail": "operator-hosted endpoint; probe with the configured base URL"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+      ]
+    },
+    {
+      "config_id": "direct:gemini-3.1-flash-lite:native-512x332",
+      "interface": "direct",
+      "checks": {
+        "model_identifier": {
+          "ok": true,
+          "value": "gemini-3.1-flash-lite-preview",
+          "evidence": "agenthorizon-repo@8584a347:llm_judges/README.md (evaluate.py --model gemini-3.1-flash-lite-preview)"
+        },
+        "route": {
+          "ok": true,
+          "value": "google"
+        },
+        "installation": {
+          "ok": true,
+          "sdk": "google.genai"
+        },
+        "credentials": {
+          "ok": false,
+          "required": [
+            "GEMINI_API_KEY"
+          ],
+          "missing": [
+            "GEMINI_API_KEY"
+          ]
+        },
+        "multimodal": {
+          "ok": true,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": true,
+          "outcome": "http_error",
+          "status": 404,
+          "url": "https://generativelanguage.googleapis.com/",
+          "hosts": [
+            "generativelanguage.googleapis.com"
+          ],
+          "detail": "<!DOCTYPE html>\n<html lang=en>\n  <meta charset=utf-8>\n  <meta name=viewport content=\"initial-scale=1, minimum-scale=1, width=device-width\">\n  <title>Error 404 (Not Found)!!1</title>\n  <style>\n    *{margin:0;padding:0}html,code{font:15px/22px arial,sans-serif}html{background:#fff;color:#222;padding:1"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "credentials missing: GEMINI_API_KEY"
+      ]
+    },
+    {
+      "config_id": "direct:gemini-3.1-pro:native-512x332",
+      "interface": "direct",
+      "checks": {
+        "model_identifier": {
+          "ok": true,
+          "value": "gemini-3.1-pro-preview",
+          "evidence": "agenthorizon-repo@8584a347:scripts/evaluate_trajectories.py usage docstring"
+        },
+        "route": {
+          "ok": true,
+          "value": "google"
+        },
+        "installation": {
+          "ok": true,
+          "sdk": "google.genai"
+        },
+        "credentials": {
+          "ok": false,
+          "required": [
+            "GEMINI_API_KEY"
+          ],
+          "missing": [
+            "GEMINI_API_KEY"
+          ]
+        },
+        "multimodal": {
+          "ok": true,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": true,
+          "outcome": "http_error",
+          "status": 404,
+          "url": "https://generativelanguage.googleapis.com/",
+          "hosts": [
+            "generativelanguage.googleapis.com"
+          ],
+          "detail": "<!DOCTYPE html>\n<html lang=en>\n  <meta charset=utf-8>\n  <meta name=viewport content=\"initial-scale=1, minimum-scale=1, width=device-width\">\n  <title>Error 404 (Not Found)!!1</title>\n  <style>\n    *{margin:0;padding:0}html,code{font:15px/22px arial,sans-serif}html{background:#fff;color:#222;padding:1"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "credentials missing: GEMINI_API_KEY"
+      ]
+    },
+    {
+      "config_id": "direct:qwen3.6-27b:native-512x332",
+      "interface": "direct",
+      "checks": {
+        "model_identifier": {
+          "ok": true,
+          "value": "Qwen/Qwen3.6-27B",
+          "evidence": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table"
+        },
+        "route": {
+          "ok": true,
+          "value": "vllm"
+        },
+        "installation": {
+          "ok": true,
+          "sdk": "httpx"
+        },
+        "credentials": {
+          "ok": true,
+          "required": [
+            "VLLM_API_KEY"
+          ],
+          "missing": []
+        },
+        "multimodal": {
+          "ok": true,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": null,
+          "detail": "operator-hosted endpoint; probe with the configured base URL"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+      ]
+    },
+    {
+      "config_id": "direct:gemma-4-31b:native-512x332",
+      "interface": "direct",
+      "checks": {
+        "model_identifier": {
+          "ok": true,
+          "value": "google/gemma-4-31B-it",
+          "evidence": "agenthorizon-repo@8584a347:llm_judges/README.md endpoint table"
+        },
+        "route": {
+          "ok": true,
+          "value": "vllm"
+        },
+        "installation": {
+          "ok": true,
+          "sdk": "httpx"
+        },
+        "credentials": {
+          "ok": true,
+          "required": [
+            "VLLM_API_KEY"
+          ],
+          "missing": []
+        },
+        "multimodal": {
+          "ok": true,
+          "detail": "registry (vendor description); verified only by a live probe"
+        },
+        "route_egress": {
+          "ok": null,
+          "detail": "operator-hosted endpoint; probe with the configured base URL"
+        }
+      },
+      "status": "blocked",
+      "reasons": [
+        "self-hosted endpoint required (operator supplies --base-url and GPU serving)"
+      ]
+    }
+  ]
+}

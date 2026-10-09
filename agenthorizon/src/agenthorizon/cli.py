@@ -212,46 +212,270 @@ def fixture_build(out: Path = typer.Option(..., help="Output directory for the s
     typer.echo(json.dumps({k: v for k, v in s.items() if k != "gold"}, indent=2))
 
 
+def _run_scoring(s, dv, manifest_id: str, ps, selection: list[str] | None):
+    from agenthorizon.data.dataset import PrivateStore
+    from agenthorizon.scoring.protocol import score, score_with_selection
+
+    sm = PrivateStore(s.private_dir, dv.id).scoring_manifest(dv.manifest(manifest_id))
+    if selection is not None and set(selection) != {i.example_id for i in sm.items}:
+        both = score_with_selection(sm, ps, set(selection) & {i.example_id for i in sm.items})
+        rep = both["canonical_full_manifest"]
+        rep["selection_subset"] = {k: v for k, v in both["selection_subset"].items() if k != "_per_item_outcome"}
+    else:
+        rep = score(sm, ps)
+    if dv.synthetic:
+        rep["warning"] = "SYNTHETIC FIXTURE dataset — not a benchmark result"
+    return rep
+
+
 @app.command("score")
 def score_cmd(
-    dataset_version: str = typer.Option(..., "--dataset-version"),
-    manifest: str = typer.Option(..., help="Manifest id (see manifests/ in the dataset version)"),
+    dataset_version: str | None = typer.Option(None, "--dataset-version", help="Required unless --run is given"),
+    manifest: str | None = typer.Option(None, help="Manifest id; defaults to the run's scoring manifest"),
     results_dir: Path | None = typer.Option(None, help="Authors'-format results directory (<trajectory_id>.json)"),
     submission: Path | None = typer.Option(None, help="Authors' submission-template JSONL"),
     run: str | None = typer.Option(None, help="Run id produced by this system"),
     output: Path | None = typer.Option(None, help="Write the JSON score report here"),
     markdown: Path | None = typer.Option(None, help="Write a Markdown rendering here"),
 ) -> None:
-    """Score predictions against a locked manifest with fixed denominators."""
-    from agenthorizon.data.dataset import PrivateStore
+    """Score predictions against a locked manifest with fixed denominators (missing items count as errors)."""
     from agenthorizon.scoring.predictions import load_authors_results_dir, load_submission_jsonl
-    from agenthorizon.scoring.protocol import score
     from agenthorizon.scoring.report import render_markdown
     from agenthorizon.util.io import atomic_write_json, atomic_write_text
 
     s = get_settings()
-    dv = _dataset(dataset_version)
-    m = dv.manifest(manifest)
-    sm = PrivateStore(s.private_dir, dv.id).scoring_manifest(m)
     if sum(x is not None for x in (results_dir, submission, run)) != 1:
         raise typer.BadParameter("give exactly one of --results-dir, --submission, --run")
+    selection = None
+    if run:
+        from agenthorizon.runs.store import FileRunStore
+
+        store = FileRunStore(s.runs_dir / run)
+        if not store.exists():
+            raise typer.BadParameter(f"no run {run}")
+        d = store.definition()
+        if dataset_version and dataset_version != d.dataset_version_id:
+            raise typer.BadParameter(f"run {run} is on {d.dataset_version_id}, not {dataset_version}")
+        dataset_version = d.dataset_version_id
+        manifest = manifest or d.scoring_manifest_id or d.selection.get("manifest_id")
+        selection = d.example_ids
+    if not dataset_version or not manifest:
+        raise typer.BadParameter("--dataset-version and --manifest are required")
+    dv = _dataset(dataset_version)
     if results_dir:
         ps = load_authors_results_dir(results_dir, dv.id, dv.example_ids())
     elif submission:
         ps = load_submission_jsonl(submission, dv.id, dv.example_ids())
     else:
-        from agenthorizon.runs.store import RunStore
-
-        ps = RunStore(s.runs_dir / run).prediction_set(dv)
-    rep = score(sm, ps)
+        ps = store.prediction_set(dv.example_ids())
+    rep = _run_scoring(s, dv, manifest, ps, selection)
     rep.pop("_per_item_outcome", None)
-    if dv.synthetic:
-        rep["warning"] = "SYNTHETIC FIXTURE dataset — not a benchmark result"
+    if run:
+        rep["run_id"] = run
+        rep["result_kind"] = d.classification.get("result_kind")
     if output:
         atomic_write_json(output, rep)
     if markdown:
         atomic_write_text(markdown, render_markdown(rep))
     typer.echo(render_markdown(rep))
+
+
+# ---- judges -------------------------------------------------------------------------------------------
+judges_app = typer.Typer(no_args_is_help=True, help="Judge configuration registry and capability diagnostics")
+app.add_typer(judges_app, name="judges")
+
+
+@judges_app.command("list")
+def judges_list() -> None:
+    """Every registered paper configuration with its evidence class and identifier status."""
+    from agenthorizon.judging.registry import CONFIGS
+
+    for c in CONFIGS:
+        typer.echo(f"{c.config_id:<52} {c.evidence_class:<17} route={c.route or '?':<21} id={c.provider_model_id or 'UNKNOWN'}")
+
+
+@judges_app.command("doctor")
+def judges_doctor(
+    output: Path = typer.Option(EVIDENCE_DIR / "MODEL_CAPABILITIES.json", help="Where to write the report"),
+    live: bool = typer.Option(False, "--live", help="Send one tiny multimodal probe per runnable direct config (costs tokens)"),
+    network: bool = typer.Option(True, "--network/--no-network", help="Probe route reachability (no credentials sent)"),
+) -> None:
+    """Report installation, credentials (names only), identifiers, routes, egress, isolation, multimodality."""
+    from agenthorizon.judging.doctor import doctor
+    from agenthorizon.util.io import atomic_write_json
+
+    rep = doctor(probe_network=network, live=live)
+    atomic_write_json(output, rep)
+    for r in rep["configurations"]:
+        typer.echo(f"{r['status']:<12} {r['config_id']:<52} {'; '.join(r['reasons'])[:150]}")
+    typer.echo(f"{rep['counts']}  wrote {output}")
+
+
+# ---- runs ---------------------------------------------------------------------------------------------
+runs_app = typer.Typer(no_args_is_help=True, help="Inspect and control runs")
+app.add_typer(runs_app, name="runs")
+
+
+def _price_override(price_input: float | None, price_output: float | None, price_source: str | None) -> dict | None:
+    if price_input is None and price_output is None:
+        return None
+    if price_input is None or price_output is None or not price_source:
+        raise typer.BadParameter("--price-input, --price-output and --price-source must be given together")
+    return {"input_per_mtok": price_input, "output_per_mtok": price_output, "source": price_source}
+
+
+@app.command("run")
+def run_cmd(
+    config: Path | None = typer.Option(None, "--config", help="Run configuration JSON (schema ah-run-config/1)"),
+    dataset_version: str | None = typer.Option(None, "--dataset-version"),
+    judge: str | None = typer.Option(None, "--judge", help="Registered configuration id (see `judges list`)"),
+    manifest: str | None = typer.Option(None, "--manifest"),
+    smoke: int | None = typer.Option(None, "--smoke", help="Deterministic engineering-smoke subset of N items"),
+    model_id: str | None = typer.Option(None, "--model-id", help="Verified provider model id (operator input)"),
+    route: str | None = typer.Option(None, "--route"),
+    base_url: str | None = typer.Option(None, "--base-url", help="Self-hosted endpoint (vLLM)"),
+    instructions: str | None = typer.Option(None, "--instructions",
+                                            help="rubric-extension | none | path to the official AGENTS.md"),
+    trial: int = typer.Option(1, "--trial", help="Repeated-trial index (a separate run identity)"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Resolve, check, and forecast only; nothing is executed"),
+    budget_usd: float | None = typer.Option(None, "--budget-usd", help="Explicit paid-run budget (required for live runs)"),
+    concurrency: int = typer.Option(2, "--concurrency"),
+    max_tasks: int | None = typer.Option(None, "--max-tasks", help="Pilot: start at most N unfinished tasks"),
+    price_input: float | None = typer.Option(None, "--price-input", help="USD per million input tokens (operator)"),
+    price_output: float | None = typer.Option(None, "--price-output", help="USD per million output tokens (operator)"),
+    price_source: str | None = typer.Option(None, "--price-source", help="Where the operator price comes from"),
+) -> None:
+    """Plan (always) and execute (unless --dry-run) a judge run with a canonical identity."""
+    from agenthorizon.data.media import LocalMediaStore
+    from agenthorizon.runs.judges import build_judge, estimate_items, load_secrets, required_secret_names
+    from agenthorizon.runs.orchestrator import Orchestrator, RunControls
+    from agenthorizon.runs.plan import RunConfig, preflight, resolve, write_plan
+    from agenthorizon.runs.policy import POLICIES
+    from agenthorizon.runs.pricing import price_for, route_cost_basis
+    from agenthorizon.runs.store import FileRunStore
+
+    s = get_settings()
+    if config:
+        cfg = RunConfig.load(config)
+    else:
+        if not (dataset_version and judge):
+            raise typer.BadParameter("give --config, or --dataset-version and --judge")
+        cfg = RunConfig(dataset_version=dataset_version, judge_config=judge, manifest=manifest, smoke_n=smoke)
+    for k, v in (("provider_model_id", model_id), ("route", route), ("base_url", base_url), ("instructions", instructions)):
+        if v is not None:
+            setattr(cfg, k, v)
+    if trial != 1:
+        cfg.trial = trial
+    override = _price_override(price_input, price_output, price_source)
+    definition, info = resolve(s, cfg)
+    plan = preflight(s, definition, info["dataset_version"], info["problems"], budget_usd=budget_usd, price_override=override)
+    path = write_plan(s, plan)
+    typer.echo(json.dumps({k: plan[k] for k in ("run_id", "n_tasks", "classification", "blocked", "problems",
+                                                "ready_for_live_run")}, indent=2))
+    f = plan["forecast"]
+    typer.echo(f"forecast: {f['basis']}; total ${f['total_cost_usd']} over {f['n_items']} items "
+               f"({f['items_with_cost']} priced)  plan: {path}")
+    if dry_run:
+        return
+    if not plan["ready_for_live_run"]:
+        typer.echo("NOT EXECUTED: resolve the blocks above (no live results were produced).", err=True)
+        raise typer.Exit(3)
+    dv = info["dataset_version"]
+    j = definition.judge
+    secrets, _ = load_secrets(required_secret_names(j["interface"], j["route"]))
+    price = price_for(j["route"], j["provider_model_id"], override)
+    metered = route_cost_basis(j["route"], price).get("metered", True)
+    est = estimate_items(definition, dv, override)
+    store, created = FileRunStore.create_or_open(s.runs_dir, definition, {"budget_usd": budget_usd, "concurrency": concurrency})
+    typer.echo(f"{'created' if created else 'resuming'} {store.run_id}")
+    orch = Orchestrator(store, build_judge(definition, dv, LocalMediaStore(s.media_dir), secrets),
+                        POLICIES[definition.attempt_policy["policy_id"]],
+                        controls=RunControls(concurrency=concurrency, budget_usd=budget_usd, metered=metered,
+                                             max_new_tasks=max_tasks),
+                        item_cost={i["example_id"]: i["cost_usd"] for i in est["items"]}, price=price)
+    typer.echo(json.dumps(orch.run(), indent=2))
+
+
+@runs_app.command("list")
+def runs_list() -> None:
+    from agenthorizon.runs.store import list_runs
+
+    for r in list_runs(get_settings().runs_dir):
+        typer.echo(f"{r['run_id']}  {r['status']:<10} {r['judge']:<48} n={r['n_tasks']:<5} {r['result_kind']}  {r['created_at']}")
+
+
+@runs_app.command("show")
+def runs_show(run_id: str) -> None:
+    from agenthorizon.runs.orchestrator import run_summary
+    from agenthorizon.runs.store import FileRunStore
+
+    typer.echo(json.dumps(run_summary(FileRunStore(get_settings().runs_dir / run_id)), indent=2))
+
+
+@runs_app.command("events")
+def runs_events(run_id: str, after: int = typer.Option(0, "--after")) -> None:
+    from agenthorizon.runs.store import FileRunStore
+
+    for e in FileRunStore(get_settings().runs_dir / run_id).events(after=after):
+        typer.echo(json.dumps(e))
+
+
+@runs_app.command("cancel")
+def runs_cancel(run_id: str, reason: str | None = typer.Option(None)) -> None:
+    """Stop dispatching and cancel running attempts (history is kept; resume continues the same run)."""
+    from agenthorizon.runs.store import FileRunStore
+
+    FileRunStore(get_settings().runs_dir / run_id).request("cancel", by="cli", reason=reason)
+    typer.echo("cancel requested")
+
+
+@runs_app.command("pause")
+def runs_pause(run_id: str, reason: str | None = typer.Option(None)) -> None:
+    """Stop dispatching; running attempts finish normally."""
+    from agenthorizon.runs.store import FileRunStore
+
+    FileRunStore(get_settings().runs_dir / run_id).request("pause", by="cli", reason=reason)
+    typer.echo("pause requested")
+
+
+@runs_app.command("retry-errors")
+def runs_retry_errors(run_id: str, reason: str = typer.Option(..., help="Why (recorded in the audit log)")) -> None:
+    """Re-open tasks that ended WITHOUT a response after execution errors (one audited pass, as the reference resume)."""
+    from agenthorizon.runs.orchestrator import retry_errors
+    from agenthorizon.runs.policy import POLICIES
+    from agenthorizon.runs.store import FileRunStore
+
+    store = FileRunStore(get_settings().runs_dir / run_id)
+    ids = retry_errors(store, POLICIES[store.definition().attempt_policy["policy_id"]], by="cli", reason=reason)
+    typer.echo(f"re-opened {len(ids)} tasks; run `agenthorizon run` with the same configuration to execute them")
+
+
+@app.command("export")
+def export_cmd(
+    run: str = typer.Option(..., "--run"),
+    output: Path = typer.Option(..., "--output", help="Bundle path (.tar.gz)"),
+    manifest: str | None = typer.Option(None, help="Include a score report against this manifest (label-derived)"),
+    with_score: bool = typer.Option(False, "--with-score", help="Score against the run's scoring manifest"),
+    include_artifacts: bool = typer.Option(False, "--include-artifacts", help="Add redacted stdout/stderr/transcripts"),
+) -> None:
+    """Write a deterministic, credential-free research bundle for a run."""
+    from agenthorizon.runs.export import build_bundle, write_tar_gz
+    from agenthorizon.runs.store import FileRunStore
+    from agenthorizon.scoring.report import render_markdown
+
+    s = get_settings()
+    store = FileRunStore(s.runs_dir / run)
+    d = store.definition()
+    rep = md = None
+    mid = manifest or ((d.scoring_manifest_id or d.selection.get("manifest_id")) if with_score else None)
+    if mid:
+        dv = _dataset(d.dataset_version_id)
+        rep = _run_scoring(s, dv, mid, store.prediction_set(dv.example_ids()), d.example_ids)
+        md = render_markdown(rep)
+    files, man = build_bundle(s, run, score_report=rep, score_markdown=md, include_artifacts=include_artifacts)
+    digest = write_tar_gz(files, output)
+    typer.echo(json.dumps({"output": str(output), "sha256": digest, "files": len(man["files"]),
+                           "redactions_applied": man["redactions_applied"]}, indent=2))
 
 
 def main() -> None:  # pragma: no cover

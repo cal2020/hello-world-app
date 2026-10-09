@@ -16,12 +16,14 @@ from agenthorizon.judging.parsing import Verdict
 
 AttemptStatus = Literal[
     "completed",  # a response was obtained (it may still be an invalid verdict)
-    "transport_failed",  # provider/transport errors exhausted the transport-retry budget
+    "transport_failed",  # a provider/transport error ended the attempt
+    "rate_limited",  # rate-limit waits inside the attempt exceeded the policy's limit
     "timed_out",
     "process_failed",  # harness exited non-zero
     "cancelled",
     "serving_incompatible",  # the configuration cannot represent this item faithfully (no truncation)
     "blocked",  # missing credential / identifier / instruction file / isolation backend
+    "interrupted",  # the worker died mid-attempt (recorded on recovery; never produced by an executor)
 ]
 
 TELEMETRY_FIELDS = ("input_tokens", "output_tokens", "cached_input_tokens", "reasoning_tokens", "tool_calls",
