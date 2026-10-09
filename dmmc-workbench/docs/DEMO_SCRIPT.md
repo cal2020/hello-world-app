@@ -3,6 +3,8 @@
 Setup (before the call): `export DMMC_NOW=2026-09-23T15:00:00Z; .venv/bin/python -m workbench serve`,
 browser at 125% zoom, identity `bob`, dashboard open, **Reset demo state** clicked. Fallback: the recorded
 transcript `sample-exports/demo-cli-transcript.txt` and `docs/screenshots/` (say that they are recordings).
+The same flow works without setup in the live browser build
+(https://cal2020.github.io/hello-world-app/dmmc-workbench/app/); click **Reset demo state** first.
 
 | Time | Say | Do | Expect |
 |---|---|---|---|

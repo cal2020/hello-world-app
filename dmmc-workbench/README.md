@@ -71,11 +71,13 @@ Screenshots: [docs/screenshots/](docs/screenshots/). Evaluation: [reports/evalua
 | `schemas/` | NIST OSCAL 1.2.3 component-definition JSON Schema (unmodified release asset) |
 | `eval/` | Acceptance cases, expected values, baseline comparison |
 
-Docs: [architecture](docs/ARCHITECTURE.md) · [threat and authority boundaries](docs/THREAT_AND_AUTHORITY.md) ·
+Docs: [overview: what was built, limitations, next steps](docs/OVERVIEW.md) · [architecture](docs/ARCHITECTURE.md) · [threat and authority boundaries](docs/THREAT_AND_AUTHORITY.md) ·
 [model export contract](docs/MODEL_EXPORT_CONTRACT.md) · [simulated integrations](docs/SIMULATED_INTEGRATIONS.md) ·
 [five-minute script](docs/DEMO_SCRIPT.md).
 
 ## Provenance of this code
 
-This prototype was generated in one AI-assisted coding session (September 23, 2026) from a written brief.
-It has not been deployed or used by anyone else, and it has not been reviewed by a security assessor.
+This prototype was generated in one AI-assisted coding session (September 23, 2026) from a written brief, and the
+browser build was added and reviewed in later AI-assisted sessions. Its only deployment is the public static demo
+above (no server, synthetic data). It has not been used by anyone else, and it has not been reviewed by a security
+assessor.
